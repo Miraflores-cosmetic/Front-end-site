@@ -1,4 +1,4 @@
-@use "@/style/variables.scss" as *;
+@use '@/style/variables.scss' as *;
 .left {
   position: relative;
   width: 50%;
@@ -35,7 +35,6 @@
   }
 
   .goBack {
-    cursor: pointer;
     position: absolute;
     top: 38px;
     left: 0;
@@ -84,7 +83,7 @@
     }
 
     .paymentTitle {
-      font-family: "trial";
+      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
       font-size: 24px;
       font-weight: 300;
       text-transform: uppercase;

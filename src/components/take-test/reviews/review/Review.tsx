@@ -1,6 +1,8 @@
-import React from "react";
-import styles from "./Review.module.scss";
-import star from "@/assets/icons/star.svg";
+import React from 'react';
+import styles from './Review.module.scss';
+import star from '@/assets/icons/star.svg';
+import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
+import { normalizeMediaUrl } from '@/utils/mediaUrl';
 
 interface ReviewProps {
   images: string[];
@@ -11,20 +13,26 @@ interface ReviewProps {
   date: string;
 }
 
-export const Review: React.FC<ReviewProps> = ({
-  images,
-  title,
-  subtitle,
-  text,
-  rating,
-  date,
-}) => {
+export const Review: React.FC<ReviewProps> = ({ images, title, subtitle, text, rating, date }) => {
   return (
     <div className={styles.review}>
       <div className={styles.images}>
-        {images.map((img, i) => (
-          <img key={i} src={img} alt={title} />
-        ))}
+        {images && images.length > 0 ? (
+          images.map((img, i) => (
+            <ImageWithFallback 
+              key={i} 
+              src={normalizeMediaUrl(img)} 
+              alt={title}
+              className={styles.reviewImage}
+            />
+          ))
+        ) : (
+          <ImageWithFallback 
+            src="" 
+            alt={title}
+            className={styles.reviewImage}
+          />
+        )}
       </div>
 
       <div className={styles.rating}>

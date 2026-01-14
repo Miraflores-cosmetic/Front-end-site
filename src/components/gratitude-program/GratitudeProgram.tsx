@@ -1,52 +1,156 @@
-import React from "react";
-import styles from "./GratitudeProgram.module.scss";
-import krem from "@/assets/images/krem.webp";
-import gratitudeLine from "@/assets/icons/gratitudeLine.svg";
-
-const gratitudeAmounts = ["от 5000₽", "от 10.000₽", "от 15.000₽", "от 20.000₽"];
-const gratitudeImages = [krem, krem, krem, krem];
+import React, { useEffect, useState } from 'react';
+import styles from './GratitudeProgram.module.scss';
+import gratitudeLine from '@/assets/icons/gratitudeLine.svg';
+import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
+import { editorJsToHtml } from '@/utils/editorJsParser';
+import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
 
 export const GratitudeProgram: React.FC = () => {
+  const [page, setPage] = useState<PageNode | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchPage = async () => {
+      try {
+        setLoading(true);
+        const pageData = await getPageBySlug('programma-blagodarnosti');
+        if (pageData) {
+          setPage(pageData);
+        }
+      } catch (err: any) {
+        console.error('Error fetching gratitude program page:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPage();
+  }, []);
+
+  // Извлекаем данные из атрибутов
+  const getGiftInfo = (index: number): { text: string; image: string | null } => {
+    if (!page?.assignedAttributes) {
+      return { text: '', image: null };
+    }
+
+    // Ищем атрибут "Информация о подарке - N" (rich-text)
+    const giftInfoAttr = page.assignedAttributes.find(
+      (attr) => attr.attribute?.slug === `informaciya-o-podarke-${index}` ||
+                attr.attribute?.name?.toLowerCase() === `информация о подарке - ${index}`.toLowerCase()
+    );
+    
+    // Ищем атрибут "Фото подарка - N" (file)
+    const giftPhotoAttr = page.assignedAttributes.find(
+      (attr) => attr.attribute?.slug === `foto-podarka-${index}` ||
+                attr.attribute?.name?.toLowerCase() === `фото подарка - ${index}`.toLowerCase()
+    );
+
+    // Для rich-text атрибутов нужно обработать Editor.js формат
+    let text = '';
+    if (giftInfoAttr) {
+      if (giftInfoAttr.textValue) {
+        text = giftInfoAttr.textValue;
+      } else if (giftInfoAttr.values && giftInfoAttr.values.length > 0) {
+        const value = giftInfoAttr.values[0];
+        if (value.plainText) {
+          text = value.plainText;
+        } else if (value.name) {
+          try {
+            const parsed = JSON.parse(value.name);
+            if (parsed && parsed.blocks) {
+              text = editorJsToHtml(parsed);
+            } else {
+              text = value.name;
+            }
+          } catch (e) {
+            text = value.name;
+          }
+        }
+      }
+    }
+    
+    const image = giftPhotoAttr?.fileValue?.url || null;
+
+    return { text, image };
+  };
+
+  // Извлекаем суммы из атрибутов или используем дефолтные
+  const getGiftAmounts = (): string[] => {
+    // Можно добавить логику извлечения сумм из атрибутов, если они там есть
+    // Пока используем дефолтные значения
+    return ['от 5000₽', 'от 10.000₽', 'от 15.000₽', 'от 20.000₽'];
+  };
+
+  const giftAmounts = getGiftAmounts();
+  const gifts = [1, 2, 3, 4].map(index => getGiftInfo(index));
+
+  // Если данные загружаются, показываем дефолтный контент
+  const title = page?.title || 'Программа благодарности';
+  const content = page?.content;
+
   return (
-    <section className={styles.gratitudeContainer}>
+    <section className={styles.gratitudeContainer} id="gratitude-program">
       <div className={styles.titleWrapper}>
-        <p className={styles.title}>Программа благодарности</p>
-        <div className={styles.descWrapper}>
-          <p className={styles.desc}>
-            Знали ли вы, что даже самое эффективное средство не сработает, если
-            кожа неправильно очищена.
-          </p>
-          <p className={styles.desc}>
-            Агрессивное умывание всего за минуту может нарушить защитный барьер
-            и сделать кожу уязвимой
-          </p>
-        </div>
+        <p className={styles.title} id="title">{title}</p>
+        {content && (
+          <div 
+            className={styles.descWrapper}
+            dangerouslySetInnerHTML={{ 
+              __html: (() => {
+                try {
+                  const parsed = typeof content === 'string' 
+                    ? JSON.parse(content) 
+                    : content;
+                  if (parsed && parsed.blocks && Array.isArray(parsed.blocks)) {
+                    return editorJsToHtml(parsed);
+                  }
+                  return typeof content === 'string' ? content : String(content);
+                } catch (e) {
+                  return typeof content === 'string' ? content : String(content);
+                }
+              })()
+            }}
+          />
+        )}
+        {!content && (
+          <div className={styles.descWrapper}>
+            <p className={styles.desc}>
+            У нас каждый получает подарки!
+            Не нужно ничего копить ,  дополнительно регистрироваться, переживать,
+            что бонусы сгорят.
+            </p>
+            {/* <p className={styles.desc}>
+              Агрессивное умывание всего за минуту может нарушить защитный барьер и сделать кожу
+              уязвимой
+            </p> */}
+          </div>
+        )}
       </div>
 
       <div className={styles.content}>
         <div className={styles.gratitudeImageWrapper}>
           <div className={styles.gratitudeWrapper}>
-            {gratitudeAmounts.map((amount, index) => (
+            {giftAmounts.map((amount, index) => (
               <p key={index} className={styles.gratitude}>
                 {amount}
               </p>
             ))}
           </div>
-          <img
-            src={gratitudeLine}
-            alt="gratitude line"
-            className={styles.gratitudeLine}
-          />
+          <img src={gratitudeLine} alt='gratitude line' className={styles.gratitudeLine} />
         </div>
 
         <div className={styles.gratitudeImages}>
-          {gratitudeImages.map((imageSrc, index) => (
-            <div key={index} className={styles.imageBlock}>
-              <img
-                src={imageSrc}
-                alt={`product ${index + 1}`}
-                className={styles.kremImage}
-              />
+          {gifts.map((gift, index) => (
+            <div key={index} id={`gift-${index + 1}`} className={styles.imageBlock}>
+              {gift.image ? (
+                <ImageWithFallback 
+                  src={gift.image} 
+                  alt={`gift ${index + 1}`} 
+                  className={styles.kremImage}
+                />
+              ) : (
+                <div className={styles.placeholderImage} />
+              )}
             </div>
           ))}
         </div>

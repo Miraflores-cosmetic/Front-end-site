@@ -1,69 +1,89 @@
-# React + TypeScript + Vite
+# 🌿 Miraflores Front
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Фронтенд часть проекта **Miraflores** — современный косметический бренд с элегантным дизайном и плавными анимациями.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Стек технологий
 
-## Expanding the ESLint configuration
+- **React 19** + **Vite 7**
+- **TypeScript 5.8**
+- **Redux Toolkit**
+- **React Router 7**
+- **Sass (SCSS modules)**
+- **Prettier / ESLint**
+- **Vite Plugins:**  
+  `vite-plugin-svgr`, `vite-plugin-compression`, `vite-plugin-imagemin`, `vite-tsconfig-paths`
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+---
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## ⚙️ Команды
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+| Команда                   | Назначение                                              |
+| ------------------------- | ------------------------------------------------------- |
+| `npm run dev`             | Запуск проекта в режиме разработки (localhost:5173)     |
+| `npm run build`           | Сборка проекта                                          |
+| `npm run build:optimize`  | Оптимизированная сборка для продакшена                  |
+| `npm run preview`         | Предпросмотр собранного проекта                         |
+| `npm run lint`            | Проверка и автоисправление кода ESLint                  |
+| `npm run format`          | Форматирование кода через Prettier                      |
+| `npm run type-check`      | Проверка типов TypeScript                               |
+| `npm run optimize:images` | Оптимизация изображений (mozjpeg, pngquant, svgo, webp) |
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## 🧠 Структура проекта
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+src/
+├─ assets/ # Изображения, иконки, шрифты
+├─ components/ # UI-компоненты
+├─ hooks/ # Кастомные хуки
+├─ pages/ # Страницы сайта
+├─ store/ # Redux Toolkit слайсы
+├─ styles/ # SCSS, переменные, миксины, глобальные стили
+├─ App.tsx
+└─ main.tsx
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+---
+
+## 🎨 Шрифты
+
+- **Avenir Next** — основной (Regular, Medium, DemiBold, Bold)
+- **Oceanic** — декоративный / акцентный
+- **Onest (Google Fonts)** — универсальный variable шрифт
+
+---
+
+## 🧩 Полезные плагины
+
+- **vite-plugin-svgr** — импорт SVG как React-компонентов
+- **vite-tsconfig-paths** — поддержка алиасов `@/`
+- **vite-plugin-compression** — Gzip/Brotli для продакшена
+- **vite-plugin-imagemin** — автоматическая оптимизация картинок
+
+---
+
+## 👨‍💻 Разработка
+
+1. Установить зависимости
+   ```bash
+   npm install
+   Запустить dev-сервер
+   ```
+
+npm run dev
+
+Открыть в браузере
+
+http://localhost:5173
+
+📦 Сборка
+npm run build:optimize
+
+Файлы появятся в директории /dist.
+
+🧹 Форматирование и линтинг
+npm run lint
+npm run format
+
+© Miraflores 2025 — Frontend by Zet Web @z_web

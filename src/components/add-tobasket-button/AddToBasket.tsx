@@ -1,68 +1,119 @@
-import React, { useState } from "react";
-import styles from "./AddToBasket.module.scss";
-import blackBasketTrash from "@/assets/icons/blackBasketTrash.svg";
-import whiteBasketTrash from "@/assets/icons/whiteBasketTrash.svg";
-import add from "@/assets/icons/add.svg";
-import minus from "@/assets/icons/minus.svg";
+import React, { useState } from 'react';
+import styles from './AddToBasket.module.scss';
+import { useDispatch, useSelector } from 'react-redux';
+import { useToast } from '@/components/toast/toast';
+import { 
+  addItemToCart, 
+  increaseQuantity, 
+  decreaseQuantity, 
+  removeItemFromCart 
+} from '@/store/slices/checkoutSlice';
+import { RootState } from '@/store/store';
+import { FavoriteButton } from '@/components/favorite-button/FavoriteButton';
 
 interface AddToCartButtonProps {
   defaultText?: string;
   hoverText?: string;
   activeText?: string;
-  onClick?: () => void;
+  activeVariantId: string | null;
+  title: string;
+  thumbnail: string;
+  price: number;
+  oldPrice?: number | null;
+  discount?: number | null;
+  size: string;
+  disabled?: boolean;
+  productId?: string;
+  variant?: 'home' | 'product'; // 'home' для главной, 'product' для страницы товара
 }
 
 const AddToCartButton: React.FC<AddToCartButtonProps> = ({
-  defaultText = "Добавить в корзину",
-  hoverText = "Оформить Заказ",
-  activeText = "Добавлено",
+  defaultText = 'Добавить в корзину',
+  hoverText = 'Добавить в корзину',
+  activeText = 'Добавлено',
+  activeVariantId,
+  title,
+  thumbnail,
+  price,
+  oldPrice = null,
+  discount = null,
+  size,
+  disabled = false,
+  productId,
+  variant = 'home' // По умолчанию для главной страницы
 }) => {
-  const [count, setCount] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
-  const [iconHovered, setIconHovered] = useState(false); // <— for the icon
+
+  const dispatch = useDispatch();
+  const toast = useToast();
+
+  // Get the actual quantity from Redux store
+  const cartItem = useSelector((state: RootState) => 
+    state.checkout.lines.find(item => item.variantId === activeVariantId)
+  );
+  
+  const count = cartItem?.quantity || 0;
 
   const handleAdd = () => {
-    setCount((prev) => prev + 1);
+    if (disabled || !activeVariantId) return;
+    
+    if (count === 0) {
+      // First time adding - use addItemToCart
+      dispatch(
+        addItemToCart({
+          variantId: activeVariantId,
+          quantity: 1,
+          title: title,
+          thumbnail: thumbnail,
+          price: price,
+          oldPrice: oldPrice,
+          discount: discount,
+          size: size
+        })
+      );
+      toast.success('Товар добавлен в корзину');
+    } else {
+      // Already in cart - just increase quantity
+      dispatch(increaseQuantity(activeVariantId));
+      toast.success('Количество увеличено');
+    }
   };
 
   const handleRemove = () => {
-    setCount((prev) => Math.max(prev - 1, 0));
+    if (!activeVariantId) return;
+    
+    if (count > 1) {
+      dispatch(decreaseQuantity(activeVariantId));
+      toast.success('Количество уменьшено');
+    } else {
+      // If count is 1, remove item completely
+      dispatch(removeItemFromCart(activeVariantId));
+      toast.success('Товар удален из корзины');
+    }
   };
 
-  const buttonText =
-    count === 0 ? (isHovered ? hoverText : defaultText) : activeText;
+
+  const buttonText = count === 0 ? (isHovered ? hoverText : defaultText) : activeText;
+  const isProductPage = variant === 'product';
 
   return (
-    <div className={styles.wrapper}>
-      {count === 0 ? (
-        <button
-          onClick={handleAdd}
-          className={styles.mainBtn}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-          type="button"
-        >
-          {buttonText}
-        </button>
-      ) : (
-        <div className={styles.mainWrapper}>
-          <img src={add} alt="basket icon" onClick={handleAdd} />
+    <div className={`${styles.wrapper} ${isProductPage ? styles.productPageWrapper : styles.homeWrapper}`}>
+      <button
+        onClick={handleAdd}
+        className={`${styles.mainBtn} ${isProductPage ? styles.productPageBtn : styles.homeBtn}`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        type='button'
+        disabled={disabled}
+      >
+        {buttonText}
+      </button>
 
-          <span className={styles.count}>{count}</span>
-          <img src={minus} alt="basket icon" onClick={handleRemove} />
+      {productId && !isProductPage && (
+        <div className={styles.favoriteWrapper}>
+          <FavoriteButton productId={productId} className={styles.favoriteButtonInBasket} />
         </div>
       )}
-
-      <div
-        className={styles.iconCircle}
-        onMouseEnter={() => setIconHovered(true)}
-        onMouseLeave={() => setIconHovered(false)}
-      >
-        <img
-          src={iconHovered ? whiteBasketTrash : blackBasketTrash}
-          alt="basket icon"
-        />
-      </div>
     </div>
   );
 };

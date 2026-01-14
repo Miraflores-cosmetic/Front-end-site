@@ -1,0 +1,84 @@
+.reviewsPage {
+  min-height: 100vh;
+  padding: 40px 0;
+  background: #F6F5EF;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.title {
+  font-family: 'Avenir Next', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 48px;
+  line-height: 66px;
+  color: #000000;
+  margin: 0;
+  text-transform: uppercase;
+
+  @media (max-width: 768px) {
+    font-size: 32px;
+    line-height: 44px;
+  }
+}
+
+.createButton {
+  font-family: 'Avenir Next', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 22px;
+  color: #000000;
+  text-decoration: none;
+  padding: 12px 24px;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: #000000;
+    color: #FFFFFF;
+  }
+}
+
+.reviewsList {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.loading {
+  text-align: center;
+  padding: 60px 20px;
+  font-family: 'Avenir Next', sans-serif;
+  font-size: 18px;
+  color: #6E6D67;
+}
+
+.noReviews {
+  text-align: center;
+  padding: 60px 20px;
+
+  p {
+    font-family: 'Avenir Next', sans-serif;
+    font-size: 24px;
+    color: #6E6D67;
+    margin-bottom: 30px;
+  }
+}
+
+
+

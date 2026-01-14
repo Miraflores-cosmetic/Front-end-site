@@ -1,6 +1,6 @@
-import React from "react";
-import starIcon from "@/assets/icons/green-star.svg";
-import styles from "./StarRating.module.scss";
+import React from 'react';
+import starIcon from '@/assets/icons/green-star.svg';
+import styles from './StarRating.module.scss';
 
 interface StarRatingProps {
   rating: number;
@@ -23,9 +23,7 @@ const StarRating: React.FC<StarRatingProps> = ({ rating, max = 5, text }) => {
           if (isFull) className = `${styles.star} ${styles.full}`;
           else if (isHalf) className = `${styles.star} ${styles.half}`;
 
-          return (
-            <img key={i} src={starIcon} alt="star" className={className} />
-          );
+          return <img key={i} src={starIcon} alt='star' className={className} />;
         })}
       </div>
       {text && <p>{text}</p>}

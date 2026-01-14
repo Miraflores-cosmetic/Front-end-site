@@ -1,8 +1,8 @@
-@use "@/style/variables.scss" as *;
+@use '@/style/variables.scss' as *;
 
 .orderContainer {
   padding: 0 32px;
-  height: 100vh;
+  min-height: 100vh;
   background-color: $white;
   overflow-x: hidden;
 

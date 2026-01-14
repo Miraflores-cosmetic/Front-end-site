@@ -1,8 +1,43 @@
 .wrapper {
+  width: 100%;
   display: flex;
-  background: #f6f5ef;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+}
+
+.tabs {
   display: inline-flex;
-  height: 39px;
+  background-color: #f6f5ef; // как в макете
+  padding: 4px 6px;
+  border-radius: 2px;
+  gap: 2px;
+}
+
+.tab {
+  background-color: transparent;
+  border: none;
+  color: #000;
+  font-size: 14px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
+  &.active {
+    background-color: #297230;
+    color: #fff;
+  }
+
+  @media (max-width: 600px) {
+    font-size: 13px;
+    padding: 6px 12px;
+  }
 }
 
 .tab {

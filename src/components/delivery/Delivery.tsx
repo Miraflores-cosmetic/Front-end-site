@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import styles from "./Delivery.module.scss";
-import CustomCheckbox from "../custom-checkBox/CustomCheckbox";
+import React, { useState } from 'react';
+import styles from './Delivery.module.scss';
+import CustomCheckbox from '../custom-checkBox/CustomCheckbox';
 
 interface Address {
   id: number;
@@ -18,23 +18,23 @@ const Delivery: React.FC<DeliveryProps> = ({ showTitle = true }) => {
   const [addresses, setAddresses] = useState<Address[]>([
     {
       id: 1,
-      type: "Пункт СДЭК",
-      city: "г. Суздаль",
-      street: "ул. Ленина, 138/2",
+      type: 'Пункт СДЭК',
+      city: 'г. Суздаль',
+      street: 'ул. Ленина, 138/2'
     },
     {
       id: 2,
-      type: "Пункт Почта России",
-      city: "г. Москва",
-      street: "ул. Тверская, 162 к. 5",
+      type: 'Пункт Почта России',
+      city: 'г. Москва',
+      street: 'ул. Тверская, 162 к. 5'
     },
     {
       id: 3,
-      type: "Курьером по адресу",
-      city: "г. Суздаль",
-      street: "ул. Тверская, 10 кв. 15",
-      comment: "Осторожно, злая собака!",
-    },
+      type: 'Курьером по адресу',
+      city: 'г. Суздаль',
+      street: 'ул. Тверская, 10 кв. 15',
+      comment: 'Осторожно, злая собака!'
+    }
   ]);
 
   const [selectedId, setSelectedId] = useState<number>(1);
@@ -44,8 +44,8 @@ const Delivery: React.FC<DeliveryProps> = ({ showTitle = true }) => {
     const newAddress: Address = {
       id: newId,
       type: `Новый адрес ${newId}`,
-      city: "г. Новый город",
-      street: "ул. Новая, 1",
+      city: 'г. Новый город',
+      street: 'ул. Новая, 1'
     };
     setAddresses([...addresses, newAddress]);
     setSelectedId(newId);
@@ -53,9 +53,9 @@ const Delivery: React.FC<DeliveryProps> = ({ showTitle = true }) => {
 
   return (
     <div className={styles.delivery}>
-      {showTitle && <h2 className={styles.title}>Доставка</h2>}{" "}
+      {showTitle && <h2 className={styles.title}>Доставка</h2>} {/* 👈 условный рендер */}
       <ul className={styles.list}>
-        {addresses.map((address) => (
+        {addresses.map(address => (
           <li key={address.id} className={styles.item}>
             <label className={styles.label}>
               <CustomCheckbox

@@ -4,7 +4,7 @@
   gap: 40px;
   .infoTitleWrapper {
     .infoTitle {
-      font-family: "trial";
+      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
       font-size: 36px;
       font-weight: 300;
     }
@@ -25,28 +25,66 @@
       }
     }
     .aboutWrapper {
-      display: flex;
-      gap: 118px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px 118px;
+      margin-top: 16px;
+
+      @media (max-width: 1200px) {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 24px 60px;
+      }
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
 
       .name {
         color: #6e6d67;
         font-size: 14px;
         margin-bottom: 4px;
+        display: block;
       }
       .value {
         font-size: 15px;
         font-weight: 500;
+        display: block;
       }
       .wrapper {
-        min-width: 33%;
-        width: 300px;
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+      .input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 1px solid #6e6d6799;
+        border-radius: 4px;
+        font-size: 15px;
+        font-weight: 500;
+        background: white;
+        box-sizing: border-box;
+        margin-top: 4px;
+        transition: border-color 0.2s;
+        &:focus {
+          outline: none;
+          border-color: #000;
+        }
+        &:disabled {
+          background: #f5f5f5;
+          cursor: not-allowed;
+        }
       }
     }
     .changeBtn {
       cursor: pointer;
-      position: absolute;
-      right: 0px;
-      top: 85px;
+      position: relative;
+      z-index: 10;
+      background: transparent;
+      padding: 4px 0;
+      border: none;
+      margin-left: 0;
 
       p {
         font-size: 16px;
@@ -54,6 +92,12 @@
         text-decoration: underline;
         text-transform: uppercase;
         color: #6e6d67;
+        margin: 0;
+        white-space: nowrap;
+      }
+      
+      &:hover p {
+        color: #000;
       }
     }
   }
@@ -76,6 +120,15 @@
       display: flex;
       align-items: center;
       gap: 10px;
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      
+      &:hover {
+        opacity: 0.7;
+      }
+      
       .telegramIcon {
         width: 20px;
         height: 20px;

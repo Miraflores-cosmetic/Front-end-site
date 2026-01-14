@@ -1,5 +1,5 @@
-@use "@/style/variables.scss" as *;
-@use "@/style/mixins.scss" as mixins;
+@use '@/style/variables.scss' as *;
+@use '@/style/mixins.scss' as mixins;
 
 .orderCart {
   @include mixins.flex(flex-start, stretch, row, 20px);
@@ -16,11 +16,18 @@
     }
 
     .kremImage {
-      width: 133px;
-      height: 133px;
+      width: 442px;
+      height: 452px;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover;
+      display: block;
+      margin: 0;
       @media (max-width: 450px) {
-        min-width: 66px;
-        height: 66px;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 442 / 452;
+        object-fit: cover;
       }
     }
   }

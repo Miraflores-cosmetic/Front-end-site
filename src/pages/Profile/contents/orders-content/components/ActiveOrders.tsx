@@ -1,6 +1,6 @@
-import { ActiveOrder } from "@/pages/Profile/types";
-import styles from "../OrdersContent.module.scss";
-import OrderItem from "./OrderItem";
+import { ActiveOrder } from '@/pages/Profile/types';
+import styles from '../OrdersContent.module.scss';
+import OrderItem from './OrderItem';
 
 interface ActiveOrdersProps {
   order: ActiveOrder;
@@ -8,10 +8,10 @@ interface ActiveOrdersProps {
 
 export const ActiveOrders: React.FC<ActiveOrdersProps> = ({ order }) => {
   const fields = [
-    { label: "Номер заказа", value: order.id },
-    { label: "Дата заказа", value: order.date },
-    { label: "Сумма заказа", value: order.amount },
-    { label: "Статус заказа", value: order.status },
+    { label: 'Номер заказа', value: order.id },
+    { label: 'Дата заказа', value: order.date },
+    { label: 'Сумма заказа', value: order.amount },
+    { label: 'Статус заказа', value: order.status }
   ];
 
   return (

@@ -1,17 +1,15 @@
-import React, { useState } from "react";
-import styles from "./FaceCard.module.scss";
-import gift from "@/assets/icons/gift.svg";
-import moon from "@/assets/icons/moon.svg";
-import whiteGift from "@/assets/icons/whiteGift.webp";
-import { useDispatch } from "react-redux";
-import {
-  addBestSellerToList,
-  setBestSeller,
-} from "@/store/slices/bestSellerSlice";
-import { useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import styles from './FaceCard.module.scss';
+import gift from '@/assets/icons/gift.svg';
+import sun from '@/assets/icons/sun.svg';
+import moon from '@/assets/icons/moon.svg';
+import whiteGift from '@/assets/icons/whiteGift.webp';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { addItemToCart } from '@/store/slices/checkoutSlice';
 
 interface Product {
-  id: number;
+  id: number | string;
   title: string;
   description: string;
   price: number;
@@ -30,20 +28,29 @@ export const FaceCard: React.FC<{ product: Product }> = ({ product }) => {
   const navigate = useNavigate();
 
   const handleAddToCart = () => {
-    dispatch(setBestSeller(product));
-    dispatch(addBestSellerToList(product));
-    navigate("/bestseller");
+    dispatch(
+      addItemToCart({
+        variantId: String(product.id),
+        quantity: 1,
+        title: product.title,
+        thumbnail: product.image,
+        price: product.price,
+        oldPrice: product.oldPrice ?? null,
+        discount: product.discount ?? null,
+        size: product.label ?? '50 мл'
+      })
+    );
   };
 
   return (
     <div
-      className={styles.card}
+      className={`${styles.card} ${isHovered ? styles.cardHovered : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className={styles.wrapperImage}>
         <figure className={styles.imageContens}>
-          <img src={isHovered ? product.hoverImage : product.image} alt="" />
+          <img src={isHovered ? product.hoverImage : product.image} alt='' />
         </figure>
         <div>
           {product.discount ? (
@@ -53,7 +60,7 @@ export const FaceCard: React.FC<{ product: Product }> = ({ product }) => {
           )}
         </div>
         <div className={styles.type}>
-          {product.type === "moon" && <img src={moon} alt="" />}
+          <img src={product.type === 'sun' ? sun : moon} alt='' />
         </div>
 
         {isHovered && (
@@ -66,16 +73,14 @@ export const FaceCard: React.FC<{ product: Product }> = ({ product }) => {
               onMouseEnter={() => setIsHoveredGift(true)}
               onMouseLeave={() => setIsHoveredGift(false)}
             >
-              <img src={isHoveredGift ? whiteGift : gift} alt="gift" />
+              <img src={isHoveredGift ? whiteGift : gift} alt='gift' />
             </div>
           </div>
         )}
-        {!isHovered && (
-          <div className={styles.sizeWrapperContent}>
-            <button className={styles.size50}>50 мл</button>
-            <button className={styles.size100}>100 мл</button>
-          </div>
-        )}
+        <div className={styles.sizeWrapperContent}>
+          <button className={styles.size50}>50 мл</button>
+          <button className={styles.size100}>100 мл</button>
+        </div>
       </div>
       <div className={styles.info}>
         <div className={styles.txtWrapper}>
@@ -83,9 +88,7 @@ export const FaceCard: React.FC<{ product: Product }> = ({ product }) => {
           <p className={styles.desc}>{product.description}</p>
         </div>
         <div className={styles.priceWrapper}>
-          {product.oldPrice && (
-            <span className={styles.oldPrice}>{product.oldPrice}₽</span>
-          )}
+          {product.oldPrice && <span className={styles.oldPrice}>{product.oldPrice}₽</span>}
           <span className={styles.price}>{product.price}₽</span>
         </div>
       </div>

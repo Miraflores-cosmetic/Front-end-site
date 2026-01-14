@@ -1,0 +1,81 @@
+/* === Avenir Next Regular === */
+@font-face {
+  font-family: 'Avenir Next';
+  src: url('@/assets/fonts/avenir-next/AvenirNext-Regular.eot'); /* IE9 Compat Modes */
+  src:
+    url('@/assets/fonts/avenir-next/AvenirNext-Regular.eot?#iefix') format('embedded-opentype'),
+    url('@/assets/fonts/avenir-next/AvenirNext-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Avenir Next Medium === */
+@font-face {
+  font-family: 'Avenir Next';
+  src: url('@/assets/fonts/avenir-next/AvenirNext-Medium.eot');
+  src:
+    url('@/assets/fonts/avenir-next/AvenirNext-Medium.eot?#iefix') format('embedded-opentype'),
+    url('@/assets/fonts/avenir-next/AvenirNext-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Avenir Next DemiBold === */
+@font-face {
+  font-family: 'Avenir Next';
+  src: url('@/assets/fonts/avenir-next/AvenirNext-DemiBold.eot');
+  src:
+    url('@/assets/fonts/avenir-next/AvenirNext-DemiBold.eot?#iefix') format('embedded-opentype'),
+    url('@/assets/fonts/avenir-next/AvenirNext-DemiBold.ttf') format('truetype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Avenir Next Bold === */
+@font-face {
+  font-family: 'Avenir Next';
+  src: url('@/assets/fonts/avenir-next/AvenirNext-Bold.eot');
+  src:
+    url('@/assets/fonts/avenir-next/AvenirNext-Bold.eot?#iefix') format('embedded-opentype'),
+    url('@/assets/fonts/avenir-next/AvenirNext-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Oceanic === */
+/* === Oceanic Light === */
+@font-face {
+  font-family: 'Oceanic';
+  src: url('@/assets/fonts/trial-oceanic/Oceanic-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Oceanic Regular === */
+@font-face {
+  font-family: 'Oceanic';
+  src: url('@/assets/fonts/trial-oceanic/Oceanic-Regular.woff') format('woff');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* === Bimbo Regular === */
+@font-face {
+  font-family: 'Bimbo';
+  src: url('@/assets/fonts/bimbo/Bimbo-Regular.eot'); /* IE9 Compat Modes */
+  src:
+    url('@/assets/fonts/bimbo/Bimbo-Regular.eot?#iefix') format('embedded-opentype'),
+    url('@/assets/fonts/bimbo/Bimbo-Regular.woff2') format('woff2'),
+    url('@/assets/fonts/bimbo/Bimbo-Regular.woff') format('woff'),
+    url('@/assets/fonts/bimbo/Bimbo-Regular.ttf') format('truetype'),
+    url('@/assets/fonts/bimbo/Bimbo-Regular.svg#Bimbo-Regular') format('svg');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

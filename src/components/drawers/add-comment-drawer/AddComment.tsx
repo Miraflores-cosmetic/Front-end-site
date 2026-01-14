@@ -1,10 +1,10 @@
-import React from "react";
-import styles from "./AddComment.module.scss";
+import React from 'react';
+import styles from './AddComment.module.scss';
 
-import { useDispatch } from "react-redux";
-import { closeDrawer } from "@/store/slices/drawerSlice";
+import { useDispatch } from 'react-redux';
+import { closeDrawer } from '@/store/slices/drawerSlice';
 
-import CommentCart from "./CommentCart";
+import CommentCart from './CommentCart';
 
 const AddCommentDrawer: React.FC = () => {
   const dispatch = useDispatch();
@@ -14,10 +14,7 @@ const AddCommentDrawer: React.FC = () => {
       <div className={styles.contentWrapper}>
         <div className={styles.header}>
           <p className={styles.title}>ОСтавить отзыв</p>
-          <p
-            onClick={() => dispatch(closeDrawer())}
-            className={styles.closeTxt}
-          >
+          <p onClick={() => dispatch(closeDrawer())} className={styles.closeTxt}>
             Закрыть
           </p>
         </div>

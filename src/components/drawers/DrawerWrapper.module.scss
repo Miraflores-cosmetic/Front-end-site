@@ -8,6 +8,19 @@
   }
 }
 
+:global(.menu-drawer) {
+  z-index: 1001 !important;
+}
+
+:global(.basket-drawer) {
+  z-index: 1001 !important;
+}
+
+// Когда drawer открыт, добавляем класс к body чтобы header мог реагировать
+:global(body.drawer-open) {
+  overflow: hidden;
+}
+
 .center {
   position: fixed !important;
   top: 0 !important;

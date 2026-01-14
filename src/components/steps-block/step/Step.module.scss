@@ -1,116 +1,142 @@
 .step {
   position: relative;
   cursor: pointer;
-  overflow: visible;
-  transition: all 0.3s ease;
-  width: 100%;
-  height: 280px;
+  overflow: hidden;
+  width: 280px;
+  height: 320px;
+  border-radius: 0;
+  background-color: #fff;
+  transition:
+    width 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    height 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.4s ease,
+    transform 0.4s ease;
+  //box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  transform-origin: center top;
+  flex-shrink: 0;
 
-  &.active {
-    height: 594px;
-    width: 480px;
-
-    .stepImage {
-      height: 480px;
-      width: 480px;
-      object-fit: cover;
-    }
-
-    .textContent {
-      opacity: 1;
-      transform: translateY(0);
-    }
+  @media (max-width: 768px) {
+    min-width: 280px;
+    width: 280px;
   }
 
-  &.inactive {
-    height: 280px;
-    width: 280px;
-
-    .stepImage {
-      height: 280px;
+  &:hover {
+    width: 500px; /* карточка становится шире */
+    height: 640px; /* карточка выше */
+    //box-shadow: 0 16px 45px rgba(0, 0, 0, 0.18);
+    z-index: 10;
+    
+    @media (max-width: 768px) {
       width: 280px;
-      object-fit: cover;
+      height: 320px;
     }
   }
 
   .stepWrapper {
     position: relative;
     width: 100%;
-    height: 100%;
-    transition: all 0.3s ease;
+    height: 320px;
+    overflow: hidden;
+    border-radius: 0;
+    transition: height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
 
     .stepEtap {
       position: absolute;
-      height: 43px;
-      width: 64px;
-      top: 0;
-      left: 0;
+      top: 10px;
+      left: 10px;
       background-color: #297230;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
+      color: #fff;
       font-size: 14px;
       font-weight: 500;
-      z-index: 3;
+      padding: 5px 10px;
+      border-radius: 3px;
+      z-index: 2;
     }
 
     .stepImage {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      transition: all 0.3s ease;
+      border-radius:  0;
+      transition:
+        transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+        width 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+        height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+  }
+
+  &:hover .stepWrapper {
+    height: 480px;
+
+    .stepImage {
+      width: 480px;
+      height: 480px;
+      transform: scale(1.03);
+      margin: 0 auto;
     }
   }
 
   .textContent {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: white;
-    color: #333;
-    padding-top: 24px;
     opacity: 0;
-    transform: translateY(20px);
-    transition: all 0.5s ease;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
+    transform: translateY(30px);
+    transition:
+      opacity 0.5s ease 0.25s,
+      transform 0.6s ease 0.25s;
+    padding: 24px 20px 28px 0px;
+    background-color: #fff;
+    border-radius: 0 0 12px 12px;
 
     .textTitle {
-      font-size: 16px;
+      font-size: 18px;
       font-weight: 600;
-      color: black;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+      color: #000;
     }
 
     .textDesc {
       font-size: 15px;
       font-weight: 400;
-      color: black;
+      color: #444;
+      line-height: 1.6;
+    }
+  }
+
+  &:hover .textContent {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  &.active {
+    @media (max-width: 768px) {
+      width: 500px;
+      height: 640px;
+      z-index: 10;
+
+      .stepWrapper {
+        height: 480px;
+
+        .stepImage {
+          width: 480px;
+          height: 480px;
+          transform: scale(1.03);
+          margin: 0 auto;
+        }
+      }
+
+      .textContent {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   }
 }
 
-@media (max-width: 1024px) {
-  .step {
-    &.active {
-      height: 415px;
-      width: 316px;
-
-      .stepImage {
-        height: 316px;
-        width: 316px;
-      }
-    }
-
-    &.inactive {
-      height: 380px;
-      width: 220px;
-      .stepImage {
-        height: 220px;
-        width: 220px;
-      }
-    }
-  }
+/* контейнер карточек */
+.stepsGrid {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+  flex-wrap: wrap;
+  position: relative;
 }

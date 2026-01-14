@@ -1,5 +1,5 @@
-import React from "react";
-import styles from "./SocialButton.module.scss";
+import React from 'react';
+import styles from './SocialButton.module.scss';
 
 interface SocialButtonProps {
   icon: string; // например <img /> или <SvgIcon />
@@ -7,14 +7,10 @@ interface SocialButtonProps {
   onClick: () => void;
 }
 
-export const SocialButton: React.FC<SocialButtonProps> = ({
-  icon,
-  text,
-  onClick,
-}) => {
+export const SocialButton: React.FC<SocialButtonProps> = ({ icon, text, onClick }) => {
   return (
     <button className={styles.button} onClick={onClick}>
-      <img src={icon} alt={text} className={styles.socialIcon} />{" "}
+      <img src={icon} alt={text} className={styles.socialIcon} />{' '}
       <p className={styles.name}>{text}</p>
     </button>
   );

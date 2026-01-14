@@ -1,15 +1,11 @@
-import React, { useState } from "react";
-import styles from "./TotalAccardion.module.scss";
-import { TotalAccordionProps } from "../types";
-import promoImage from "@/assets/icons/promocode.svg";
-import addImage from "@/assets/icons/add.svg";
-import userImage from "@/assets/images/userImage.webp";
+import React, { useState } from 'react';
+import styles from './TotalAccardion.module.scss';
+import { TotalAccordionProps } from '../types';
+import promoImage from '@/assets/icons/promocode.svg';
+import addImage from '@/assets/icons/add.svg';
+import userImage from '@/assets/images/userImage.webp';
 
-const TotalAccordion: React.FC<TotalAccordionProps> = ({
-  total,
-  totalOld,
-  products,
-}) => {
+const TotalAccordion: React.FC<TotalAccordionProps> = ({ total, totalOld, products }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -17,7 +13,7 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
       <button className={styles.header} onClick={() => setIsOpen(!isOpen)}>
         <div className={styles.headerLeft}>
           <span className={styles.title}>Итого</span>
-          <div className={`${styles.arrow} ${isOpen ? styles.open : ""}`} />
+          <div className={`${styles.arrow} ${isOpen ? styles.open : ''}`} />
         </div>
         <div className={styles.price}>
           <p className={styles.count}>3 товара</p>
@@ -29,18 +25,14 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
       {isOpen && (
         <article className={styles.content}>
           <section className={styles.productList}>
-            {products.map((item) => (
+            {products.map(item => (
               <div key={item.id} className={styles.productItem}>
                 <div className={styles.imageWrapper}>
                   <div className={styles.countWrapper}>
-                    {" "}
+                    {' '}
                     <p className={styles.count}>{1}</p>
-                  </div>{" "}
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className={styles.image}
-                  />
+                  </div>{' '}
+                  <img src={item.image} alt={item.name} className={styles.image} />
                 </div>
                 <div className={styles.productInfo}>
                   <div className={styles.nameSize}>
@@ -55,12 +47,8 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
                         <p className={styles.priceOld}>{totalOld}</p>
                       </div>
                     )}
-                    {item.discount && (
-                      <span className={styles.discount}>{item.discount}</span>
-                    )}
-                    {item.isGift && (
-                      <span className={styles.gift}>Подарок</span>
-                    )}
+                    {item.discount && <span className={styles.discount}>{item.discount}</span>}
+                    {item.isGift && <span className={styles.gift}>Подарок</span>}
                   </p>
                 </div>
               </div>
@@ -68,13 +56,20 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
           </section>
           <section className={styles.addPromo}>
             <div className={styles.promoWrapper}>
-              <img src={promoImage} alt={"promo"} className={styles.promo} />
-              <p className={styles.promoTxt}>
-                Добавить промокод или сертификат
-              </p>
+              <img src={promoImage} alt={'promo'} className={styles.promo} />
+              <p className={styles.promoTxt}>Добавить промокод или сертификат</p>
             </div>
-            <img src={addImage} alt={"addImage"} className={styles.addImage} />
+            <img src={addImage} alt={'addImage'} className={styles.addImage} />
           </section>
+
+          {/* <section className={styles.summary}>
+            <p>
+              Скидка: <span>-{discount}₽</span>
+            </p>
+            <p>
+              Промокод: <span>-{promo}₽</span>
+            </p>
+          </section> */}
 
           <section className={styles.sectionSumDiscount}>
             <div className={styles.sumWrapper}>
@@ -96,11 +91,7 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
 
           <section className={styles.infoWrapper}>
             <div className={styles.userWrapper}>
-              <img
-                className={styles.userImage}
-                src={userImage}
-                alt="user image"
-              />
+              <img className={styles.userImage} src={userImage} alt='user image' />
               <div className={styles.userInfo}>
                 <p className={styles.userName}>Дмитрий Патрацкий</p>
                 <p className={styles.userRole}>CEO</p>
@@ -108,13 +99,13 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
             </div>
             <div className={styles.textsWrapper}>
               <p className={styles.text}>
-                Многие наши товары изготавливаются непосредственно после заказа,
-                поэтому срок от приёма заказа до его отправки такого заказа
-                составляет <span>3-5 рабочих дня</span> после 100% оплаты.
+                Многие наши товары изготавливаются непосредственно после заказа, поэтому срок от
+                приёма заказа до его отправки такого заказа составляет <span>3-5 рабочих дня</span>{' '}
+                после 100% оплаты.
               </p>
               <p className={styles.text}>
-                После обработки заказа нашими операторами, информация о заказе
-                будет отправлена на e-mail, указанный при оформлении заказа
+                После обработки заказа нашими операторами, информация о заказе будет отправлена на
+                e-mail, указанный при оформлении заказа
               </p>
             </div>
           </section>

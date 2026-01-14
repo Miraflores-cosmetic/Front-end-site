@@ -5,12 +5,15 @@
   background-color: #f6f5ef;
   padding: 26px;
   margin: auto;
+
   @media (max-width: 940px) {
     padding: 26px 10px;
   }
+
   @media (max-width: 720px) {
     display: none;
   }
+
   .centerImageContainer {
     display: flex;
     flex-direction: column;
@@ -18,6 +21,14 @@
     position: absolute;
     bottom: 35px;
     left: -100px;
+
+    img {
+      width: 100%;
+      max-width: 340px;
+      height: auto;
+      display: block;
+    }
+
     button {
       width: 188px;
       height: 40px;
@@ -27,6 +38,30 @@
       font-size: 15px;
       font-weight: 500;
       text-transform: uppercase;
+    }
+
+    @media (max-width: 1024px) {
+      img {
+        max-width: 300px;
+      }
+    }
+
+    @media (max-width: 940px) {
+      img {
+        max-width: 260px;
+      }
+    }
+
+    @media (max-width: 840px) {
+      img {
+        max-width: 220px;
+      }
+    }
+
+    @media (max-width: 750px) {
+      img {
+        max-width: 200px;
+      }
     }
   }
 
@@ -54,11 +89,15 @@
     .imgWrapper {
       position: relative;
       width: 432px;
-      height: 432px;
-      background-color: white;
+      height: auto;
       display: flex;
       justify-content: center;
       align-items: center;
+
+      :global(.sizeRow) {
+        display: none !important;
+      }
+
       .lineTo {
         position: absolute;
         width: 142px;
@@ -70,150 +109,50 @@
           left: -120px;
           bottom: 250px;
         }
+
         @media (max-width: 940px) {
           width: 100px;
           left: -100px;
           bottom: 170px;
         }
+
         @media (max-width: 840px) {
           width: 100px;
           left: -100px;
           bottom: 110px;
         }
+
         @media (max-width: 750px) {
           width: 90px;
           left: -90px;
         }
       }
+
       .textTo {
-        font-family: "bimbo";
+        font-family: 'Bimbo', 'Avenir Next', sans-serif;
         font-size: 24px;
         color: #297230;
         position: absolute;
         width: 340px;
         left: -200px;
-        top: -110px;
+        top: -80px;
         transform: rotate(-10.45deg);
+
         @media (max-width: 1024px) {
-          top: -100px;
+          top: -70px;
         }
+
         @media (max-width: 940px) {
-          top: -90px;
+          top: -60px;
         }
       }
-      @media (max-width: 940px) {
-        width: 332px;
-        height: 332px;
-      }
-
-      @media (max-width: 840px) {
-        width: 250px;
-        height: 250px;
-      }
-      .kosmetika {
-        @media (max-width: 840px) {
-          width: 200px;
-        }
-      }
-    }
-
-    .sun {
-      position: absolute;
-      right: 5px;
-      top: 5px;
-    }
-    .discount {
-      position: absolute;
-      left: 0;
-      top: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 14px;
-      font-weight: 500;
-      width: 54px;
-      height: 43px;
-      background-color: #297230;
-      color: white;
-    }
-    .size {
-      display: flex;
-
-      position: absolute;
-      left: 0;
-      bottom: 0;
-      .size50 {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 57px;
-        height: 43px;
-        background-color: #0000003d;
-        color: white;
-        font-size: 14px;
-      }
-      .size100 {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        width: 65px;
-        height: 43px;
-        background-color: #0000001a;
-        color: white;
-        font-size: 14px;
-      }
-    }
-    .infoWrapper {
-      width: 432px;
-      display: flex;
-      flex-direction: column;
 
       @media (max-width: 940px) {
         width: 332px;
       }
+
       @media (max-width: 840px) {
         width: 250px;
-      }
-      .infoTop {
-        display: flex;
-        justify-content: space-between;
-        gap: 8px;
-        .infoTopName {
-          font-size: 16px;
-          font-weight: 600;
-        }
-        .infoPrice {
-          display: flex;
-          gap: 4px;
-          .to {
-            font-size: 16px;
-            font-weight: 600;
-          }
-          .from {
-            position: relative;
-            color: #6e6d67;
-            font-size: 16px;
-            font-weight: 600;
-            &::after {
-              content: "";
-              position: absolute;
-              left: -5%;
-              top: 50%;
-              width: 110%;
-              height: 2px;
-              background: #ff0808;
-              transform: rotate(-10deg);
-            }
-          }
-        }
-      }
-      .description {
-        font-size: 14px;
-        color: #6e6d67;
-        width: 287px;
-        @media (max-width: 940px) {
-          width: 220px;
-        }
       }
     }
   }

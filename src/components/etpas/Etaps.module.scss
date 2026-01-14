@@ -9,6 +9,11 @@
       display: flex;
       align-items: start;
       gap: 8px;
+      
+      @media (max-width: 450px) {
+        gap: 0px;
+      }
+      
       .etapTextWrapper {
         .etapTitle {
           font-weight: 600;
@@ -23,6 +28,7 @@
           font-size: 16px;
           @media (max-width: 450px) {
             font-size: 13px;
+            line-height: 1.2;
           }
           @media (max-width: 956px) {
             font-size: 14px;

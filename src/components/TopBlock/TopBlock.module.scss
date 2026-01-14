@@ -4,94 +4,338 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  
+  @media (max-width: 768px) {
+    height: auto;
+  }
 }
 
 .topBlockContainer {
   display: flex;
   width: 100%;
+  padding-right: 32px;
   max-width: 1536px;
   margin: 0 auto;
-  margin-bottom: 160px;
-  @media (max-width: 1536px) {
-    padding: 0 32px;
+  margin-bottom: 0;
+  height: 100%;
+  transition: height 0.5s ease;
+
+  @media (max-width: 768px) {
+    height: auto;
   }
+
   @media (max-width: 450px) {
-    margin-bottom: 60px;
-    padding: 0 12px;
+    margin-bottom: 100px;
+    padding-right: 12px;
+    padding-bottom: 0;
+    height: auto;
   }
 }
 
 .left {
   width: 50%;
-  height: 861px;
+  height: 100%;
   position: relative;
 }
 
 .right {
   width: 50%;
-  height: 861px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  position: relative;
 }
+
 .right img {
   width: 100%;
-  height: 861px;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
 }
 
 .imageWrapper {
   margin-top: 80px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  position: relative;
+  z-index: 10;
+  // Позволяем тексту налазить на правую картинку, особенно буква "я"
+  margin-right: -15%;
+  
+  @media (max-width: 1200px) {
+    margin-right: -12%;
+  }
+  
+  @media (max-width: 1000px) {
+    margin-right: -8%;
+  }
+  
+  @media (max-width: 768px) {
+    margin-right: 0;
+  }
+}
+
+.heroTitle {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  
+  span {
+    display: block;
+    color: #297230;
+    font-family: "TRIAL Oceanic Light", serif;
+    font-size: 99px;
+    font-style: normal;
+    font-weight: 300;
+    line-height: normal;
+    text-transform: uppercase;
+    line-height: 60px;
+  }
+  
+  .secondLine {
+    display: flex;
+    align-items: baseline;
+    color: #297230;
+    font-family: "TRIAL Oceanic Light", serif;
+    font-size: 99px;
+    font-style: normal;
+    font-weight: 300;
+    line-height: normal;
+    text-transform: uppercase;
+  }
+  
+  .dropIcon {
+    width: 59px;
+    height: 76px;
+    aspect-ratio: 59/76;
+    display: inline-block;
+    vertical-align: baseline;
+    margin: 0 2px;
+    flex-shrink: 0;
+    position: relative;
+    top: 5px;
+  }
+  
+  @media (max-width: 768px) {
+    span,
+    .secondLine {
+      font-size: 48px;
+    }
+    
+    .dropIcon {
+      width: 35px;
+      height: 45px;
+    }
+  }
+  
+  @media (max-width: 450px) {
+    span,
+    .secondLine {
+      font-size: 36px;
+    }
+    
+    .dropIcon {
+      width: 26px;
+      height: 33px;
+    }
+  }
+}
+
+.meristemText {
+  color: #297230;
+  font-family: "Avenir Next", sans-serif;
+  font-size: 20px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  text-transform: uppercase;
+  margin-top: 10px;
 }
 
 .textWrapper {
   margin-right: 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  @media (max-width: 768px) {
+    margin-right: 0;
+    align-items: flex-end;
+  }
+  
+  @media (max-width: 450px) {
+    margin-right: 0;
+    align-items: baseline;
+    position: absolute;
+    bottom: 20px;
+    left: 160px;
+    text-align: left;
+    margin-bottom: 0;
+  }
 }
 
 .textWrapperTitle {
   font-size: 16px;
-  font-weight: 500;
+  font-weight: 400;
+  
+  &[role="button"] {
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+    
+    &:hover {
+      opacity: 0.7;
+    }
+    
+    &:active {
+      opacity: 0.5;
+    }
+  }
+
+  @media (max-width: 768px) {
+    text-align: right;
+  }
 }
 
 .textWrappertxt {
-  font-weight: 500;
+  font-weight: 400;
   font-size: 16px;
   color: #0000004d;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+  
+  &:hover {
+    opacity: 0.7;
+  }
+  
+  &:active {
+    opacity: 0.5;
+  }
+
+  @media (max-width: 768px) {
+    text-align: right;
+  }
 }
 
 .content {
   position: relative;
   display: flex;
   align-items: end;
+
+  // Маленькая картинка в нижнем левом углу
+  img:first-of-type {
+    position: absolute;
+    width: 136px;
+    height: 181px;
+    left: 0;
+    bottom: 0;
+    object-fit: cover;
+    z-index: 1;
+    
+    @media (max-width: 1024px) {
+      width: 120px;
+      height: 160px;
+    }
+    
+    @media (max-width: 768px) {
+      width: 100px;
+      height: 133px;
+    }
+    
+    @media (max-width: 450px) {
+      position: relative;
+      width: 100px;
+      height: 133px;
+      left: auto;
+      bottom: auto;
+      order: 2;
+      margin-top: 20px;
+    }
+  }
+
   .contentText {
-    margin-left: 220px;
+    margin-left: 300px;
+
     @media (max-width: 1200px) {
       margin-left: 160px;
     }
+
     @media (max-width: 1000px) {
       margin-left: 150px;
     }
+
+    @media (max-width: 768px) {
+      margin-left: 0;
+      margin-right: auto;
+      text-align: left;
+    }
+
     @media (max-width: 450px) {
-      margin-left: 65px;
+      margin-left: 0;
+      margin-right: auto;
+      text-align: left;
+      order: 3;
+      width: 100%;
+      margin-top: 20px;
     }
+
     @media (max-width: 350px) {
-      margin-left: 60px;
+      margin-left: 0;
+      margin-right: auto;
+      text-align: left;
     }
+  }
+  
+  @media (max-width: 450px) {
+    flex-direction: column;
+    align-items: flex-start;
+    position: relative;
+    margin-top: 150px;
   }
 }
 
 .lineTo {
   position: absolute;
-  bottom: 30px;
-  left: 210px;
+  bottom: 60px;
+  left: 160px;
+  z-index: 2;
+  
+  @media (max-width: 450px) {
+    position: absolute;
+    left: 95px;
+    bottom: 30px;
+  }
 }
 
 .info {
   position: absolute;
-  bottom: 165px;
-  left: 100px;
+  bottom: 170px;
+  left: 90px;
+  z-index: 5;
+  
+  @media (max-width: 450px) {
+    position: absolute;
+    bottom: 140px;
+    left: 50px;
+    z-index: 5;
+  }
 }
 
 .textIcon {
-  font-family: "TRIAL";
+  font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
   font-size: 64px;
   color: rgba(41, 114, 48, 1);
+  text-transform: uppercase;
+  position: relative;
+  z-index: 10;
+}
+
+@media (max-width: 768px) {
+  .textIcon {
+    line-height: 60px;
+    z-index: 10;
+  }
 }
 
 .marqueeContent {
@@ -99,12 +343,19 @@
   flex-direction: column;
   margin-top: -60px;
   animation: marquee 10s linear infinite;
+  position: relative;
+  z-index: 10;
+  
+  @media (max-width: 450px) {
+    margin-top: -40px;
+  }
 }
 
 @keyframes marquee {
   from {
     transform: translateX(100%);
   }
+
   to {
     transform: translateX(-100%);
   }
@@ -112,48 +363,106 @@
 
 @media (max-width: 1200px) {
   .lineTo {
-    left: 150px;
+    left: 160px;
+    bottom: 60px;
   }
 }
 
-@media (max-width: 1200px) {
-  .lineTo {
-    bottom: 45px;
-  }
-}
+  @media (max-width: 800px) {
+    .topBlockContainer {
+      flex-direction: column-reverse;
+      margin-bottom: 100px;
+      height: auto;
+      
+      @media (max-width: 450px) {
+        margin-bottom: 100px;
+        height: auto;
+      }
+    }
 
-@media (max-width: 800px) {
-  .topBlockContainer {
-    flex-direction: column-reverse;
-  }
   .right {
     height: auto;
     width: 100%;
+    margin-top: 0;
+    padding-top: 0;
   }
 
   .left {
     width: 100%;
     height: auto;
+    
+    @media (max-width: 450px) {
+      margin-top: 120px;
+    }
   }
 
   .right img {
-    height: 478px;
-    object-fit: fill;
+    height: auto;
+    object-fit: cover;
+    margin-top: 0;
+    padding-top: 0;
   }
+
   .wrapper {
     justify-content: initial;
     gap: 120px;
+    display: flex;
+    flex-direction: column;
+    
+    @media (max-width: 450px) {
+      gap: 0;
+      flex-direction: column;
+    }
   }
+
   .imageWrapper {
     margin-top: 0;
+    z-index: 10;
+    
+    @media (max-width: 450px) {
+      margin-top: 0;
+      order: 1;
+      margin-bottom: 20px;
+    }
   }
+  
+  .marqueeWrapper {
+    @media (max-width: 450px) {
+      order: 1;
+      margin-bottom: 20px;
+      position: relative;
+      top: -110px;
+    }
+  }
+
   .content {
     width: 100%;
+    
+    @media (max-width: 450px) {
+      margin-top: 0;
+      order: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
-}
-
-@media (max-width: 450px) {
-  .lineTo {
-    left: 135px;
+  
+  @media (max-width: 450px) {
+    .topBlockContainer {
+      .right {
+        margin-top: 0;
+        padding-top: 0;
+      }
+      
+      .right img {
+        margin-top: 0;
+        padding-top: 0;
+      }
+    }
+    
+    .lineTo {
+      left: 95px;
+      bottom: 30px;
+    }
   }
 }

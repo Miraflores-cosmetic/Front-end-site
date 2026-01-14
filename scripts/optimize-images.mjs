@@ -1,13 +1,13 @@
-import sharp from "sharp";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import sharp from 'sharp';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 async function optimizeImages() {
-  const imageDirs = ["src/assets/images", "src/assets/icons"];
+  const imageDirs = ['src/assets/images', 'src/assets/icons'];
 
   let optimizedCount = 0;
   let totalSavings = 0;
@@ -16,7 +16,7 @@ async function optimizeImages() {
     if (!fs.existsSync(dir)) continue;
 
     const files = fs.readdirSync(dir);
-    const imageFiles = files.filter((file) => /\.(png|jpe?g|gif)$/i.test(file));
+    const imageFiles = files.filter(file => /\.(png|jpe?g|gif)$/i.test(file));
 
     console.log(`🔍 Found ${imageFiles.length} images to optimize in ${dir}`);
 
@@ -30,16 +30,12 @@ async function optimizeImages() {
 
         let optimizedBuffer;
 
-        if (ext === ".png") {
+        if (ext === '.png') {
           // Create WebP version first
-          const webpPath = inputPath.replace(/\.png$/i, ".webp");
+          const webpPath = inputPath.replace(/\.png$/i, '.webp');
           await sharp(inputPath).webp({ quality: 85 }).toFile(webpPath);
 
-          console.log(
-            `✅ Converted PNG to WebP: ${imageFile} → ${path.basename(
-              webpPath
-            )}`
-          );
+          console.log(`✅ Converted PNG to WebP: ${imageFile} → ${path.basename(webpPath)}`);
 
           // Remove original PNG file after successful WebP conversion
           fs.unlinkSync(inputPath);
@@ -47,16 +43,14 @@ async function optimizeImages() {
 
           // Don't optimize the PNG buffer since we're removing the file
           optimizedBuffer = null;
-        } else if (ext === ".jpg" || ext === ".jpeg") {
+        } else if (ext === '.jpg' || ext === '.jpeg') {
           // Optimize JPEG
           optimizedBuffer = await sharp(inputPath)
             .jpeg({ quality: 85, progressive: true })
             .toBuffer();
-        } else if (ext === ".gif") {
+        } else if (ext === '.gif') {
           // Optimize GIF
-          optimizedBuffer = await sharp(inputPath)
-            .gif({ optimizationLevel: 7 })
-            .toBuffer();
+          optimizedBuffer = await sharp(inputPath).gif({ optimizationLevel: 7 }).toBuffer();
         }
 
         if (optimizedBuffer) {

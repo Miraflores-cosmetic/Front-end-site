@@ -1,101 +1,70 @@
-import React, { useState } from "react";
-import styles from "./OrderRightPart.module.scss";
-
-import Miraflores_logo from "@/assets/icons/Miraflores_logo.svg";
-import krem from "@/assets/images/krem.webp";
-
-import { useScreenMatch } from "@/hooks/useScreenMatch";
-import CardList from "../order-components/CardList";
-import Sertificate from "../order-components/Sertificate";
-import SumDiscount from "../order-components/SumDiscount";
-import InfoContent from "../order-components/Info";
-import { CardItem } from "../types";
+import React, { useMemo } from 'react';
+import styles from './OrderRightPart.module.scss';
+import Miraflores_logo from '@/assets/icons/Miraflores_logo.svg';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
+import CardList, { OrderProduct } from '../order-components/CardList'; // Import the Type
+import Sertificate from '../order-components/Sertificate';
+import SumDiscount from '../order-components/SumDiscount';
+import InfoContent from '../order-components/Info';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 
 const OrderRightPart: React.FC = () => {
   const isTablet = useScreenMatch(956);
-  const [isPromoOpen, setIsPromoOpen] = useState(true); // 👈 состояние для аккордеона
+  // Get raw lines from Redux
+  const { lines } = useSelector((state: RootState) => state.checkout);
 
-  const handleTogglePromo = () => {
-    setIsPromoOpen((prev) => !prev);
-  };
+  // 1. Transform Redux Data to match CardList Interface
+  const formattedCartData: OrderProduct[] = useMemo(() => {
+    if (!lines) return [];
 
-  const cartData: CardItem[] = [
-    {
-      id: 1,
-      image: krem,
-      alt: "krem",
-      name: "Цветочный мист с экстрактами розы",
-      size: "50 мл",
-      discount: "-23%",
-      count: "1 шт.",
-      priceOld: "4800₽",
-      priceNew: "3590₽",
-      isGift: false,
-    },
-    {
-      id: 2,
-      image: krem,
-      alt: "krem",
-      name: "Цветочный мист с экстрактами розы",
-      size: "50 мл",
-      discount: "-23%",
-      count: "1 шт.",
-      priceOld: "4800₽",
-      priceNew: "3590₽",
-      isGift: false,
-    },
-    {
-      id: 3,
-      image: krem,
-      alt: "krem",
-      name: "Цветочный мист с экстрактами розы",
-      size: "50 мл",
-      discount: "-23%",
-      count: "1 шт.",
-      priceOld: "4800₽",
-      priceNew: "3590₽",
-      isGift: false,
-    },
-    {
-      id: 4,
-      image: krem,
-      alt: "tonic",
-      name: "Тоник для лица с розой",
-      size: "100 мл",
-      discount: "",
-      count: "1 шт.",
-      isGift: true,
-    },
-  ];
+    return lines.map((line: any) => {
+      // Logic to calculate discount % if needed
+      const price = line.price || 0;
+      const oldPrice = line.oldPrice || 0;
+
+      let discountLabel = null;
+      if (oldPrice > price) {
+        const percent = Math.round(((oldPrice - price) / oldPrice) * 100);
+        discountLabel = `${percent}`; // The CardList adds the % sign
+      }
+
+      return {
+        variantId: line.variantId,
+        title: line.title || 'Product',
+        // In Saleor, the variant name is usually the size (e.g. "50ml")
+        size: line.size || '',
+        thumbnail: line.thumbnail || '',
+        quantity: line.quantity,
+        price: price,
+        oldPrice: oldPrice > price ? oldPrice : null,
+        discount: discountLabel,
+        isGift: false, // Add logic here if you have gift items
+      };
+    });
+  }, [lines]);
+  console.log(formattedCartData)
 
   return (
     <>
       {!isTablet && (
         <section className={styles.right}>
           <article className={styles.listWrapper}>
-            <img
-              src={Miraflores_logo}
-              alt={"Miraflores_logo"}
-              className={styles.Miraflores_logo}
-            />
-            <CardList cartData={cartData} />
+            <img src={Miraflores_logo} alt={'Miraflores_logo'} className={styles.Miraflores_logo} />
+
+            {/* 2. Pass the WHOLE array to CardList once, do not map here */}
+            <CardList cartData={formattedCartData} />
+
           </article>
-
-          <Sertificate isOpen={isPromoOpen} onToggle={handleTogglePromo} />
-
-          {isPromoOpen && (
-            <>
-              <section className={styles.discountPromo}>
-                <p>
-                  Скидка по промо-кодам НЕ РАСПРОСТРАНЯЕТСЯ на товары уже со
-                  скидками, наборы, товары не нашего производства и электронные
-                  продукты.
-                </p>
-              </section>
-              <SumDiscount />
-              <InfoContent />
-            </>
-          )}
+          <Sertificate />
+          <section className={styles.discountPromo}>
+            <p>
+              Скидка по промо-кодам НЕ РАСПРОСТРАНЯЕТСЯ на товары уже со скидками, наборы, товары не
+              нашего производства и электронные продукты.
+            </p>
+          </section>
+          <SumDiscount />
+          <InfoContent />
         </section>
       )}
     </>

@@ -9,7 +9,7 @@
 }
 .nameMenuWrapper {
   .userName {
-    font-family: "trial";
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
     font-size: 48px;
     font-weight: 300;
     margin-bottom: 46px;
@@ -62,7 +62,7 @@
     font-weight: 500;
     position: relative;
     color:black &::after {
-      content: "•";
+      content: '•';
       position: absolute;
       right: -10px;
       color: #000;

@@ -1,0 +1,360 @@
+// Родительский класс для карточки товара - все стили применяются только внутри этого класса
+.productCard {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0;
+  gap: 18px;
+  width: 432px;
+  height: 540px;
+  box-sizing: border-box;
+
+  @media (max-width: 450px) {
+    width: 360px;
+    height: auto;
+  }
+
+  .skeleton {
+    width: 432px;
+    min-height: 500px;
+    background-color: lightgray;
+    border-radius: 0;
+
+    @media (max-width: 450px) {
+      width: 360px;
+    }
+  }
+
+  .imageBox {
+    position: relative;
+    width: 432px;
+    height: 432px;
+    background: #F6F5EF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+
+    @media (max-width: 450px) {
+      width: 360px;
+      height: 360px;
+    }
+
+    .addToCardWrapper {
+      position: absolute;
+      bottom: 5px; /* Выше вариантов товара */
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 0 10px;
+      z-index: 6; /* Выше вариантов */
+    }
+
+    .imageLink {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      position: relative;
+    }
+
+    img {
+      width: 442px;
+      height: 452px;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover;
+      display: block;
+      margin: 0;
+      transition: opacity 0.3s ease;
+
+      @media (max-width: 450px) {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 442 / 452;
+      }
+    }
+
+    .productImage {
+      width: 442px;
+      height: 452px;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: cover;
+      display: block;
+      margin: 0;
+      transition: opacity 0.3s ease;
+
+      @media (max-width: 450px) {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 442 / 452;
+      }
+    }
+
+    .mainImage {
+      position: relative;
+      z-index: 1;
+      
+      &.hidden {
+        opacity: 0;
+        position: absolute;
+        top: 0;
+        left: 0;
+      }
+    }
+
+    .hoverImage {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      
+      &.visible {
+        opacity: 1;
+      }
+      
+      &.hidden {
+        opacity: 0;
+      }
+    }
+
+    .discount {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 54px;
+      height: 43px;
+      background: #297230;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Avenir Next', sans-serif;
+      font-style: normal;
+      font-weight: 500;
+      font-size: 14px;
+      line-height: 19px;
+      color: #FFFFFF;
+      z-index: 2;
+    }
+
+    .sizeRow {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      padding: 0;
+      gap: 0;
+      z-index: 5; /* Увеличиваем z-index, чтобы варианты были видны поверх кнопки */
+      max-width: 100%;
+      overflow-x: auto; /* Если вариантов много, можно прокрутить */
+      opacity: 1;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+      visibility: visible;
+    }
+
+    .sizeRowHidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .sizePill,
+    .sizePillActive {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: center;
+      padding: 12px 10px;
+      gap: 10px;
+      height: 43px;
+      font-family: 'Avenir Next', sans-serif;
+      font-style: normal;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 19px;
+      color: #FFFFFF;
+      border: none;
+      cursor: pointer;
+      box-sizing: border-box;
+    }
+
+    .sizePill {
+      background: rgba(0, 0, 0, 0.1);
+      min-width: 57px;
+    }
+
+    .sizePillActive {
+      background: rgba(0, 0, 0, 0.24);
+      min-width: 57px;
+    }
+  }
+
+  .info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 0;
+    gap: 8px;
+    width: 432px;
+    box-sizing: border-box;
+
+    @media (max-width: 450px) {
+      width: 360px;
+    }
+
+    .titleRow {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0;
+      gap: 8px;
+      width: 100%;
+      height: 44px;
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        align-items: flex-start;
+        height: auto;
+        gap: 8px;
+      }
+
+      .titleLink {
+        text-decoration: none;
+        color: inherit;
+      }
+
+      .title {
+        margin: 0;
+        width: 292px;
+        height: auto;
+        min-height: 44px;
+        font-family: 'Avenir Next', sans-serif;
+        font-style: normal;
+        font-weight: 600;
+        font-size: 16px;
+        line-height: 22px;
+        text-transform: uppercase;
+        color: #000000;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        word-wrap: break-word;
+        flex: 1;
+
+        @media (max-width: 768px) {
+          width: 100%;
+        }
+      }
+
+      .priceWrapper {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: flex-end; /* Прижимаем цены к правому краю */
+        padding: 0;
+        gap: 6px;
+        min-width: 113px;
+        height: 20px;
+        flex-shrink: 0;
+        white-space: nowrap;
+        margin-left: auto; /* Дополнительно прижимаем к правому краю */
+
+        @media (max-width: 768px) {
+          min-width: auto;
+          margin-left: 0;
+          justify-content: flex-start;
+          margin-top: 4px;
+        }
+
+        .oldPrice {
+          position: relative;
+          min-width: auto;
+          height: 20px;
+          font-family: 'Onest', sans-serif;
+          font-style: normal;
+          font-weight: 600;
+          font-size: 16px;
+          line-height: 20px;
+          text-transform: uppercase;
+          color: #6E6D67;
+          margin: 0;
+          white-space: nowrap;
+
+          &::after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 0;
+            left: 0;
+            top: 4.5px;
+            border: 1px solid #FF0808;
+            transform: rotate(-11.31deg);
+          }
+        }
+
+        .price {
+          min-width: auto;
+          height: 20px;
+          font-family: 'Onest', sans-serif;
+          font-style: normal;
+          font-weight: 600;
+          font-size: 16px;
+          line-height: 20px;
+          text-transform: uppercase;
+          color: #000000;
+          margin: 0;
+          white-space: nowrap;
+        }
+      }
+    }
+
+    .desc {
+      width: 100%;
+      max-width: 287px;
+      height: auto;
+      min-height: 38px;
+      font-family: 'Avenir Next', sans-serif;
+      font-style: normal;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 19px;
+      color: #6E6D67;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      word-wrap: break-word;
+      margin: 0;
+    }
+
+    .volume {
+      width: 100%;
+      max-width: 287px;
+      height: auto;
+      font-family: 'Avenir Next', sans-serif;
+      font-style: normal;
+      font-weight: 400;
+      font-size: 14px;
+      line-height: 19px;
+      color: #6E6D67;
+      margin: 0;
+      margin-top: 4px;
+    }
+  }
+}
+
+// Оставляем .card для обратной совместимости
+.card {
+  @extend .productCard;
+}

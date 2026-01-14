@@ -1,23 +1,26 @@
-import React from "react";
-import styles from "./TextField.module.scss";
+import React from 'react';
+import styles from './TextField.module.scss';
 
-interface TextFieldProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'value' | 'onChange'> {
+interface TextFieldProps {
   label?: string;
-  value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  type?: string;
+  value: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  placeholder?: string;
   rightLinkText?: string;
   onRightLinkClick?: () => void;
+  disabled?: boolean;
 }
 
 export const TextField: React.FC<TextFieldProps> = ({
   label,
-  type = "text",
+  type = 'text',
   value,
   onChange,
   placeholder,
   rightLinkText,
   onRightLinkClick,
-  ...rest
+  disabled
 }) => (
   <div className={styles.wrapper}>
     <div className={styles.labelRow}>
@@ -34,7 +37,7 @@ export const TextField: React.FC<TextFieldProps> = ({
       value={value}
       onChange={onChange}
       placeholder={placeholder}
-      {...rest}
+      disabled={disabled}
     />
   </div>
 );

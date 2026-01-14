@@ -33,7 +33,7 @@
     border-bottom: 1px solid #00000029;
     padding-bottom: 40px;
     max-width: 1070px;
-    height: 273px;
+    min-height: 273px;
     @media (max-width: 700px) {
       height: auto;
       flex-direction: column;

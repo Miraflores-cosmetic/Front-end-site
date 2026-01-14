@@ -1,12 +1,18 @@
-import React from "react";
-import styles from "./TopBlock.module.scss";
-import txt1 from "@/assets/icons/Ботаническая1.svg";
-import txt2 from "@/assets/icons/Ботаническая2.svg";
+import React from 'react';
+import styles from './TopBlock.module.scss';
+import drop from '@/assets/images/drop.svg';
 
 const DesktopTextImages: React.FC = () => (
   <div className={styles.imageWrapper}>
-    <img src={txt2} alt="Ботаническая" />
-    <img src={txt1} alt="Косметика" />
+    <h1 className={styles.heroTitle}>
+      <span>БОТАНИЧЕСКАЯ</span>
+      <span className={styles.secondLine}>
+        К
+        <img src={drop} alt='' className={styles.dropIcon} />
+        СМЕТИКА
+      </span>
+    </h1>
+    <p className={styles.meristemText}>С меристемными экстрактами</p>
   </div>
 );
 

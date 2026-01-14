@@ -7,23 +7,27 @@
   align-items: start;
   gap: 100px;
   max-width: 1536px;
-  margin: 0 auto;
-  margin-bottom: 16px;
+  margin: 0 auto 16px;
 
-  @media (max-width: 1536px) {
-    padding-right: 32px !important;
-    padding-left: 32px !important;
-  }
   @media (max-width: 1290px) {
     gap: 50px;
   }
+
   @media (max-width: 1100px) {
     gap: 25px;
   }
 
-  @media (max-width: 456px) {
-    padding-right: 12px !important;
-    padding-left: 12px !important;
+  @media (max-width: 1100px) {
+    padding: 0 12px;
+  }
+
+  @media (max-width: 480px) {
+    margin-bottom: 0;
+    height: 420px;
+  }
+
+  @media (max-width:420px) {
+    padding: 0;
   }
 
   .footerMobile {
@@ -31,47 +35,68 @@
     display: flex;
     flex-direction: column;
     width: 100%;
-
+    @media (max-width:656px) {
+      justify-content: space-between;
+      height: 100%;
+    }
     .mobileContainer {
       width: 100%;
       display: flex;
       justify-content: space-between;
-      gap: 10px;
+      // gap: 10px;
+
       .mobileLeft {
+
         .bimoTxtMobile {
           position: absolute;
           bottom: 20px;
+          text-decoration: none;
+
           @media (max-width: 656px) {
             bottom: 175px;
-            font-family: "bimbo";
+            font-family: 'Bimbo', 'Avenir Next', sans-serif;
             font-size: 20px;
             font-weight: 400;
             color: #9747ff;
             transform: rotate(-10.45deg);
           }
+
           @media (max-width: 360px) {
             font-size: 16px;
           }
+          
+          &:hover {
+            text-decoration: underline;
+          }
         }
+
         .lineToMobile {
           position: absolute;
           bottom: 30px;
           left: 30px;
         }
+
       }
+
       .mobileRight {
         display: flex;
         flex-direction: column;
         gap: 20px;
       }
     }
+
     .footerBottomMobile {
       display: flex;
       justify-content: space-between;
       width: 100%;
+
+      @media (max-width: 480px) {
+        margin-top: 20px;
+      }
+
       p {
         color: #6e6d67;
-        font-size: 13px;
+        font-size: 14px;
       }
     }
   }
@@ -81,59 +106,103 @@
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
+
     @media (max-width: 1290px) {
       width: 420px;
     }
+
     @media (max-width: 1100px) {
       width: 400px;
     }
+
     @media (max-width: 1040px) {
       width: 380px;
     }
   }
+
   .footerRightWrapper {
-    width: 100%;
+    flex: 1;
     display: flex;
+    height: 100%;
     flex-direction: column;
     justify-content: space-between;
-    height: 100%;
+
     .footerRight {
       display: flex;
       justify-content: space-between;
-      width: 100%;
-      gap: 10px;
+      align-items: flex-start;
+      gap: 80px; // 👈 увеличиваем отступ между колонками
     }
+
     .footerBottom {
       position: relative;
       display: flex;
-      justify-content: space-between;
-      width: 100%;
+      gap: 130px;
+      align-items: center;
+
+      @media (min-width:1030px) {
+        gap: 220px;
+      }
+
+      @media (max-width:1024px) {
+        justify-content: space-between;
+      }
+
       .fotterBottmotxt {
         font-size: 14px;
         color: #6e6d67;
       }
+
       .bimoTxt {
-        font-family: "bimbo";
-        font-weight: 400;
         position: absolute;
+        left: -90px;
+        bottom: 180px;
+        transform: rotate(-10deg);
+        font-family: 'Bimbo', 'Avenir Next', sans-serif;
+        font-size: 22px;
         color: #9747ff;
-        transform: rotate(-10.45deg);
-        bottom: 160px;
-        left: -30px;
-        font-size: 20px;
-        @media (max-width: 1024px) {
-          left: -30px;
-          bottom: 150px;
+        font-weight: 400;
+        text-decoration: none;
+        
+        &:hover {
+          text-decoration: underline;
+        }
+
+        @media (max-width:1024px) and (min-width: 657px) {
+          transform: rotate(10deg);
+          left: 40px;
+          bottom: 170px;
+
+        }
+
+        @media (max-width:656px) {
+          left: -90px;
+          bottom: 180px;
+          transform: rotate(-10deg);
         }
       }
+
       .lineTo {
-        height: 110px;
         position: absolute;
+        left: -10px;
         bottom: 20px;
-        left: 15px;
-      }
-      @media (max-width: 1024px) {
-        left: 25px;
+        height: 140px;
+
+
+        @media (max-width:1024px) and (min-width: 657px) {
+          -webkit-transform: scaleX(-1);
+          transform: scaleX(-1);
+          left: 40px;
+        }
+
+        @media (max-width:656px) {
+          -webkit-transform: scaleX(1);
+          transform: scaleX(1);
+          left: -10px;
+          bottom: 20px;
+        }
+
+
       }
     }
   }

@@ -20,4 +20,4 @@ export interface ActiveOrder {
   status: string;
 }
 
-export type TabType = "active" | "all";
+export type TabType = 'active' | 'all';

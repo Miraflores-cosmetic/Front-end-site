@@ -1,30 +1,38 @@
-import React from "react";
-import styles from "./InfoMobileContent.module.scss";
-import DeliveryProfile from "@/components/delivary-profile/DeliveryProfile";
-import { openDrawer } from "@/store/slices/drawerSlice";
-import telegram from "@/assets/icons/telegram.svg";
-import ArrowToRight from "@/assets/icons/ArrowToRight.svg";
-import { useDispatch } from "react-redux";
-import { TabId } from "@/pages/Profile/side-bar/SideBar";
-import { useScreenMatch } from "@/hooks/useScreenMatch";
+import React from 'react';
+import styles from './InfoMobileContent.module.scss';
+import DeliveryProfile from '@/components/delivary-profile/DeliveryProfile';
+// import { openDrawer } from "@/store/slices/drawerSlice";
+import telegram from '@/assets/icons/telegram.svg';
+import ArrowToRight from '@/assets/icons/ArrowToRight.svg';
+// import { useDispatch } from "react-redux";
+import { TabId } from '@/pages/Profile/side-bar/SideBar';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
+import { AddressInfo } from '@/types/auth';
 
 interface InfoMobileContentProps {
-  setOpenAccordion: React.Dispatch<React.SetStateAction<TabId | null>>;
+  setOpenAccordion: React.Dispatch<React.SetStateAction<TabId | null>>; // ✅ type matches Sidebar
 }
 
-const InfoMobileContent: React.FC<InfoMobileContentProps> = ({
-  setOpenAccordion,
-}) => {
-  const dispatch = useDispatch();
+const InfoMobileContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion }) => {
+  // const dispatch = useDispatch();
   const isMobile = useScreenMatch(450);
 
+  const [selectedAddress, setSelectedAddress] = React.useState<AddressInfo | null>(null);
+
   const handleChange = () => {
-    dispatch(openDrawer("about"));
+    // dispatch(openDrawer("about"));
   };
 
   const handleCloseAccordion = () => {
     setOpenAccordion(null);
   };
+
+    const handleAddressSelect = (address: AddressInfo) => {
+      setSelectedAddress(address);
+      
+      // Auto-fill phone from address if the input is currently empty
+    
+    };
 
   return (
     <article className={styles.infoMobileContent}>
@@ -65,18 +73,15 @@ const InfoMobileContent: React.FC<InfoMobileContentProps> = ({
         </p>
       </article>
 
-      <DeliveryProfile />
+      <DeliveryProfile onSelectAddress={handleAddressSelect}/>
+      {/* ✅ Close button */}
       <article className={styles.telegramContainer}>
         <div className={styles.telegramwrapper}>
           <div className={styles.top}>
-            <img src={telegram} alt="telegram icon" className={styles.check} />
+            <img src={telegram} alt='telegram icon' className={styles.check} />
             <p>Авторизуйтесь через Телеграм</p>
           </div>
-          <img
-            src={ArrowToRight}
-            alt="ArrowToRight"
-            className={styles.ArrowToRight}
-          />
+          <img src={ArrowToRight} alt='ArrowToRight' className={styles.ArrowToRight} />
         </div>
         <p className={styles.desc}>
           Чтобы получать уведомления о доставке и специальные предложения

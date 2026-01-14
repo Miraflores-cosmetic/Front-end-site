@@ -1,12 +1,30 @@
 .wrapper {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: hidden; // Предотвращаем выход за пределы
 }
 
 .tabs {
   display: flex;
-  gap: 24px;
+  gap: 40px;
   margin-bottom: 8px;
   border-bottom: 1px solid #6e6d67b3;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  overflow-x: auto; // Разрешаем горизонтальный скролл если табы не помещаются
+  overflow-y: hidden;
+  
+  // Скрываем scrollbar
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+  
+  &::-webkit-scrollbar {
+    display: none; /* Chrome, Safari */
+  }
 }
 
 .tab {
@@ -17,13 +35,14 @@
   padding-bottom: 15px;
   cursor: pointer;
   position: relative;
+  user-select: none;
 
   &.active {
     color: black;
     font-weight: 500;
 
     &::after {
-      content: "";
+      content: '';
       position: absolute;
       bottom: -1px;
       left: 0;

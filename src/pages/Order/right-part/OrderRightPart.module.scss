@@ -1,5 +1,5 @@
-@use "@/style/variables.scss" as *;
-@use "@/style/mixins.scss" as mixins;
+@use '@/style/variables.scss' as *;
+@use '@/style/mixins.scss' as mixins;
 
 .right {
   width: 50%;
@@ -33,8 +33,13 @@
         height: 180px;
 
         .kremImage {
-          width: 133px;
-          height: 133px;
+          width: 442px;
+          height: 452px;
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: cover;
+          display: block;
+          margin: 0;
         }
       }
 
@@ -93,6 +98,48 @@
           }
         }
       }
+    }
+  }
+
+  .promoInputWrapper {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .promoInput {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid #6e6d67;
+    border-radius: 4px;
+    font-size: 14px;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: #000;
+    }
+  }
+
+  .promoApplyBtn {
+    padding: 10px 20px;
+    background: #000;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+
+    &:hover:not(:disabled) {
+      background: #333;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
     }
   }
 

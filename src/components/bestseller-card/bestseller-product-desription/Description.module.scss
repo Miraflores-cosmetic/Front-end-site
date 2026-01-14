@@ -3,9 +3,65 @@
   flex-direction: column;
   gap: 32px;
   max-width: 748px;
+
+  @media (max-width: 650px) {
+    max-width: calc(100vw - 16px);
+    padding: 0 16px;
+  }  
   .desc {
-    margin-top: 24px;
+    //margin-top: 24px;
     font-size: 16px;
+    overflow: visible;
+    text-overflow: clip;
+    display: block;
+    -webkit-line-clamp: none;
+    -webkit-box-orient: horizontal;
+    max-height: none;
+    white-space: normal;
+    word-wrap: break-word;
+    
+    // Стили для HTML элементов внутри
+    :global {
+      p {
+        margin: 0 0 12px 0;
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+      
+      strong {
+        font-weight: 600;
+      }
+      
+      em {
+        font-style: italic;
+      }
+      
+      ul, ol {
+        margin: 12px 0;
+        padding-left: 24px;
+        
+        li {
+          margin-bottom: 8px;
+        }
+      }
+      
+      h1, h2, h3, h4, h5, h6 {
+        font-weight: 600;
+        margin: 16px 0 12px 0;
+        &:first-child {
+          margin-top: 0;
+        }
+      }
+      
+      blockquote {
+        border-left: 3px solid #297230;
+        padding-left: 16px;
+        margin: 12px 0;
+        font-style: italic;
+      }
+    }
+    
     @media (max-width: 450px) {
       font-size: 13px;
     }

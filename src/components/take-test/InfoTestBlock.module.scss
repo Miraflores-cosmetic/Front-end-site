@@ -5,14 +5,21 @@
   justify-content: center;
   flex-direction: column;
   align-items: center;
+  padding-right: 32px;
   max-width: 1536px;
   margin: 0 auto;
-  @media (max-width: 1536px) {
-    padding: 0 32px;
-    padding-top: 200px;
+  @media (max-width: 768px) {
+    padding-top: 0;
+    padding-bottom: 100px;
+    margin-top: 0;
+    margin-bottom: 0;
   }
   @media (max-width: 450px) {
-    padding: 0 12px;
+    padding-right: 12px;
+    padding-top: 0;
+    padding-bottom: 100px;
+    margin-top: 0;
+    margin-bottom: 0;
   }
   .textWrapper {
     position: relative;
@@ -22,7 +29,7 @@
     align-items: center;
   }
   p {
-    font-family: "trial";
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
     text-transform: uppercase;
 
     font-size: 64px;
@@ -71,6 +78,16 @@
       color: white;
       border: none;
       font-size: 15px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: background-color 0.2s ease;
+      
+      &:hover {
+        background-color: #1f5a24;
+      }
     }
     .btnWrite {
       font-size: 15px;
@@ -80,9 +97,17 @@
       color: #297230;
       background-color: white;
       border: 1px solid #297230;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      
+      &:hover {
+        background-color: #297230;
+        color: white;
+      }
     }
-  }
-  @media (max-width: 576px) {
-    padding-top: 100px;
   }
 }

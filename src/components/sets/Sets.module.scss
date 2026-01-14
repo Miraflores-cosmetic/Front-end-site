@@ -1,9 +1,12 @@
+@use '@/style/variables.scss' as *;
+
 @mixin flex-center($direction: row, $justify: center, $align: center) {
   display: flex;
   flex-direction: $direction;
   justify-content: $justify;
   align-items: $align;
   max-width: 1536px;
+  margin: auto;
 }
 
 @mixin circle($size, $bg: #f6f5ef) {
@@ -17,25 +20,34 @@
 .setsContainer {
   width: 100%;
   padding-top: 251px;
+  padding-right: 32px;
+  max-width: 1536px;
+  margin: 0 auto 220px auto;
   height: 655px;
-  @include flex-center(column);
-  @media (max-width: 1536px) {
-    padding: 0 32px;
-    margin-top: 200px;
+  display: flex;
+  flex-direction: column;
+  @media (max-width: 768px) {
+    padding-top: 0;
+    padding-bottom: 100px;
+    margin-top: 0;
+    margin-bottom: 0;
   }
   @media (max-width: 450px) {
-    padding: 0 12px;
-    margin-top: 100px;
+    padding-top: 0;
+    padding-bottom: 100px;
+    padding-right: 12px;
+    margin-top: 0;
+    margin-bottom: 0;
   }
 
   .title {
-    font-family: "trial";
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
     text-transform: uppercase;
     font-weight: 300;
     font-size: 64px;
     width: 100%;
     text-align: start;
-    margin-bottom: 49px;
+    margin-bottom: 16px;
     @media (max-width: 450px) {
       font-size: 24px;
       margin-bottom: 16px;
@@ -43,18 +55,28 @@
   }
 
   .setsWrapper {
-    .setsCart {
-      min-width: 432px;
-    }
-    @include flex-center(row, space-between);
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch;
     width: 100%;
+    max-width: 1536px;
+    margin: 0 auto;
     height: 100%;
     gap: 20px;
+    padding-right: 32px;
+    @media (max-width: 450px) {
+      padding-right: 12px;
+    }
 
     .left {
-      @include flex-center(column, space-between, flex-start);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: space-between;
       height: 100%;
-      width: 100%;
+      flex: 1;
+      min-width: 0;
 
       .leftTitle {
         font-size: 16px;
@@ -69,6 +91,16 @@
         text-transform: uppercase;
         gap: 10px;
         width: 100%;
+        a {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          p {
+            font-weight: $button-font-weight;
+            font-size: 16px;
+            margin: 0;
+          }
+        }
         img {
           cursor: pointer;
         }
@@ -107,40 +139,56 @@
     }
 
     .center {
-      @include flex-center(column, space-between);
-      width: 100%;
-
-      img {
-        width: 100%;
-        height: 432px;
-        object-fit: fill;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-width: 0;
+      width: 432px;
+      
+      @media (max-width: 450px) {
+        width: 360px;
       }
+    }
 
-      .centerWrapper {
-        @include flex-center(column);
-        width: 100%;
-        display: flex;
-        justify-content: start;
-        align-items: start;
-
-        .centerTitleWrapper {
-          @include flex-center(row, space-between);
-          .centerTitle {
-            font-size: 16px;
-            font-weight: 600;
-          }
+    /* --- адаптив --- */
+    @media (max-width: 1024px) {
+      .center {
+        .image {
+          height: 380px;
         }
 
-        .centerDesc {
-          font-size: 14px;
-          color: #6e6d67;
+        .centerWrapper {
+          padding-top: 12px;
+
+          .centerTitleWrapper {
+            .centerTitle,
+            .centerPrice {
+              font-size: 15px;
+            }
+          }
+
+          .centerDesc {
+            font-size: 13px;
+          }
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      .center {
+        .image {
+          height: 340px;
         }
       }
     }
 
     .right {
-      @include flex-center(row, center, flex-start);
-      width: 100%;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      align-items: flex-start;
+      flex: 1;
+      min-width: 0;
       height: 100%;
 
       .rightWrapper {
@@ -157,6 +205,13 @@
 
         img {
           transform: rotate(10.45deg);
+        }
+
+        .setImage {
+          transform: rotate(10.45deg);
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
         }
       }
     }

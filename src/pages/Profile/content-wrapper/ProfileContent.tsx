@@ -1,6 +1,6 @@
-import React from "react";
-import styles from "./ProfileContent.module.scss";
-import { TabId } from "../side-bar/SideBar";
+import React from 'react';
+import styles from './ProfileContent.module.scss';
+import { TabId } from '../side-bar/SideBar';
 
 interface ProfileMainProps {
   activeTab?: TabId;

@@ -1,9 +1,9 @@
-@use "@/style/variables.scss" as *;
-@use "@/style/mixins.scss" as mixins;
+@use '@/style/variables.scss' as *;
+@use '@/style/mixins.scss' as mixins;
 
 .accordion {
   margin: 20px 0;
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
 
   .header {
     width: 100%;

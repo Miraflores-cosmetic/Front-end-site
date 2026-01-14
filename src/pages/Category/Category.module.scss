@@ -1,0 +1,173 @@
+@use '@/style/variables.scss' as *;
+
+.faceContainer {
+  padding: 0 32px;
+  min-height: 100vh;
+  background-color: $white;
+  overflow-x: hidden;
+
+  /* Скрываем скроллбар */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+  max-width: 1536px;
+  margin: 0 auto;
+  @media (max-width: 450px) {
+    padding: 0 12px;
+  }
+
+  .wrapper {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+    padding-top: 56px;
+    padding-bottom: 240px;
+
+    @media (max-width: 1150px) {
+      gap: 32px 20px;
+    }
+
+    @media (max-width: 956px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    @media (max-width: 700px) {
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    }
+
+    @media (max-width: 450px) {
+      grid-template-columns: 1fr;
+      justify-items: center;
+      padding-bottom: 60px;
+    }
+  }
+
+  .categoryWrapper {
+    padding-bottom: 240px;
+  }
+  .title {
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 300;
+    font-size: 64px;
+    margin-bottom: 24px;
+    text-transform: uppercase;
+
+    @media (max-width: 450px) {
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+  }
+  .subtitle {
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 300;
+    font-size:40px;
+    margin-top: 43px;
+    margin-bottom: 1px;
+    text-transform: uppercase;
+  }
+  .description{
+    font-family: "Avenir Next", sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #6e6d67;
+    max-width: 30%;
+  }
+}
+
+.imageSlider {
+  :global {
+    .slick-slide {
+      padding: 0 10px;
+      box-sizing: border-box;
+    }
+
+    // убираем левый паддинг у первого слайда
+    .slick-slide:first-child {
+      padding-left: 0;
+    }
+
+    // убираем правый паддинг у последнего слайда
+    .slick-slide:last-child {
+      padding-right: 0;
+    }
+
+    // у списка тогда НЕ нужен отрицательный margin
+    .slick-list {
+      margin: 0;
+    }
+  }
+  .imagesWrapper {
+    display: flex !important;
+    flex-direction: column;
+    gap: 12px;
+    .slideImage {
+      width: 100%;
+      display: block;
+      height: 320px;
+      object-fit: cover;
+    }
+    .discountWrapper {
+      display: flex;
+      justify-content: space-between;
+      .name {
+        font-size: 16px;
+        font-weight: 600;
+
+      }
+      .name:hover{
+        cursor:pointer
+      }
+      .discount {
+        font-size: 14px;
+        font-weight: 500;
+        color: #297230;
+      }
+    }
+  }
+}
+
+.wrapper {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 32px;
+  padding-top: 56px;
+  padding-bottom: 240px;
+
+  @media (max-width: 1150px) {
+    gap: 24px;
+  }
+
+  @media (max-width: 700px) {
+    gap: 16px;
+    padding-bottom: 80px;
+  }
+
+  @media (max-width: 450px) {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    gap: 20px;
+  }
+
+  .card {
+    transition:
+      transform 0.3s ease,
+      box-shadow 0.3s ease;
+    &:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+.noProductsWrapper{
+  width: 100%;
+  min-height: 300px;
+}
+
+.noProducts{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+min-height: 300px;
+}

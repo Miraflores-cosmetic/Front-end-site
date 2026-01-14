@@ -1,57 +1,84 @@
-import React from "react";
-import styles from "../right-part/OrderRightPart.module.scss";
+import React from 'react';
+import styles from '../right-part/OrderRightPart.module.scss';
+import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
 
-export interface CartItem {
-  id: number;
-  image: string;
-  alt: string;
-  name: string;
-  size: string;
-  discount?: string;
-  count: string;
-  priceOld?: string;
-  priceNew?: string;
-  isGift?: boolean;
+// 1. Update Interface to match your Real Data
+export interface OrderProduct {
+  variantId: string;
+  title: string;
+  size: string; // In your data, this seems to be the name or description
+  thumbnail: string;
+  price: number;
+  oldPrice: number | null;
+  discount: number | string | null;
+  quantity: number;
+  isGift?: boolean; // Optional, in case you handle gifts logic later
 }
 
 interface OrderCartListProps {
-  cartData: CartItem[];
+  cartData: OrderProduct[];
 }
 
 const CardList: React.FC<OrderCartListProps> = ({ cartData }) => {
+  
+  // Helper to format 880 -> 880 ₽
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('ru-RU', {
+      style: 'currency',
+      currency: 'RUB',
+      maximumFractionDigits: 0,
+    }).format(price);
+  };
+
   return (
     <>
       {cartData.map((item) => (
-        <div className={styles.orderCart} key={item.id}>
+        
+        <div className={styles.orderCart} key={item.variantId}>
+          {/* Image */}
           <figure className={styles.cartImageWrapper}>
-            <img src={item.image} alt={item.alt} className={styles.kremImage} />
+            <ImageWithFallback 
+              src={item.thumbnail} 
+              alt={item.title} 
+              className={styles.kremImage}
+            />
           </figure>
 
           <div className={styles.cardInfoWrapper}>
             <div className={styles.top}>
               <div className={styles.texts}>
-                <p className={styles.name}>{item.name}</p>
-                <p className={styles.size}>{item.size}</p>
+                {/* Title */}
+                <p className={styles.name}>{item.title}</p>
+                
+                {/* Size - check to ensure it's not identical to title to avoid duplicate text */}
+                {item.size && item.size !== item.title && (
+                   <p className={styles.size}>{item.size}</p>
+                )}
               </div>
 
+              {/* Discount - render only if exists */}
               {item.discount && (
-                <div className={styles.discount}>{item.discount}</div>
+                <div className={styles.discount}>
+                    {/* Add % sign if it's just a number */}
+                    {typeof item.discount === 'number' ? `-${item.discount}%` : item.discount}
+                </div>
               )}
             </div>
 
             <div className={styles.bottom}>
-              {
-                <p className={styles.count}>
-                  {item.discount ? item.count : null}
-                </p>
-              }
+              {/* Quantity */}
+              <p className={styles.count}>{item.quantity} шт.</p>
 
               {item.isGift ? (
                 <div className={styles.surprise}>Подарок</div>
               ) : (
                 <div className={styles.price}>
-                  <p className={styles.priceOld}>{item.priceOld}</p>
-                  <p className={styles.priceNew}>{item.priceNew}</p>
+                  {/* Old Price - render only if exists */}
+                  {item.oldPrice && (
+                     <p className={styles.priceOld}>{formatPrice(item.oldPrice)}</p>
+                  )}
+                  {/* New/Current Price */}
+                  <p className={styles.priceNew}>{formatPrice(item.price)}</p>
                 </div>
               )}
             </div>

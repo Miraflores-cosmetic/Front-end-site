@@ -1,0 +1,229 @@
+.faqContainer {
+  width: 100%;
+  padding-top: 80px;
+  padding-right: 32px;
+  padding-left: 32px;
+  max-width: 1536px;
+  margin: 0 auto 40px auto;
+
+  @media (max-width: 768px) {
+    padding-top: 0;
+    padding-bottom: 100px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  @media (max-width: 450px) {
+    padding-top: 0;
+    padding-bottom: 100px;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+.faqContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 48px;
+  align-items: start;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+}
+
+.leftColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 1024px) {
+    display: grid;
+    grid-template-columns: 369px 326px;
+    gap: 12px;
+    height: 752px;
+    grid-auto-flow: row dense;
+  }
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 22px;
+  overflow: hidden;
+  transition: transform 0.5s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  // Первое изображение - верх-лево (369x336) - shablon1 - image_faq_1
+  &:nth-child(1) {
+    @media (min-width: 1024px) {
+      grid-column: 1;
+      grid-row: 1;
+      width: 369px;
+      height: 336px;
+    }
+    @media (max-width: 1024px) {
+      height: 220px;
+      border-radius: 16px;
+    }
+  }
+
+  // Второе изображение - верх-право, row-span-2 (326x504) - shablon3 - image_faq_3
+  &:nth-child(2) {
+    @media (min-width: 1024px) {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+      width: 326px;
+      height: 504px;
+    }
+    @media (max-width: 1024px) {
+      display: none;
+    }
+  }
+
+  // Третье изображение - низ-лево, row-span-2 (369x396) - shablon2 - image_faq_2
+  // Начинается со строки 2, т.к. строка 1 уже занята 1-м элементом
+  &:nth-child(3) {
+    @media (min-width: 1024px) {
+      grid-column: 1;
+      grid-row: 2 / span 2;
+      width: 369px;
+      height: 396px;
+    }
+    @media (max-width: 1024px) {
+      display: none;
+    }
+  }
+
+  // Четвертое изображение - низ-право (326x228) - shablon4 - image_faq_4
+  // В строке 3, колонке 2 (после того как 2-й элемент заканчивается в строке 2)
+  &:nth-child(4) {
+    @media (min-width: 1024px) {
+      grid-column: 2;
+      grid-row: 3;
+      width: 326px;
+      height: 228px;
+    }
+    @media (max-width: 1024px) {
+      height: 220px;
+      border-radius: 16px;
+    }
+  }
+}
+
+.staticImage {
+  display: none;
+}
+
+.images {
+  display: none;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rightColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.title {
+  font-size: 48px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0;
+  font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+
+  @media (max-width: 768px) {
+    font-size: 32px;
+  }
+}
+
+.faqList {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.faqItem {
+  border-bottom: 1px solid #e0e0e0;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.question {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 0;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: color 0.2s;
+  
+  &:hover {
+    color: #297230;
+  }
+}
+
+.questionText {
+  font-size: 18px;
+  font-weight: 500;
+  color: #1a1a1a;
+  flex: 1;
+  padding-right: 16px;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
+}
+
+.arrow {
+  font-size: 20px;
+  color: #666;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+
+.answer {
+  padding: 0 0 20px 0;
+  font-size: 16px;
+  line-height: 1.6;
+  color: #666;
+  max-height: 0;
+  overflow: hidden;
+  opacity: 0;
+  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out;
+  
+  &.expanded {
+    max-height: 1000px;
+    opacity: 1;
+    padding: 0 0 20px 0;
+  }
+  
+  :global {
+    p {
+      margin: 0 0 12px 0;
+      
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import styles from "../OrdersContent.module.scss";
+import styles from '../OrdersContent.module.scss';
 
 interface OrderItemProps {
   label: string;

@@ -1,49 +1,86 @@
-import React, { useState } from "react";
-import styles from "./SizeTabs.module.scss";
+'use client';
 
-type Option = {
-  id: string;
-  label: string;
-  price: number;
-  oldPrice?: number;
-  discount?: number;
-};
+import React from 'react';
+import styles from './SizeTabs.module.scss';
+import { ProductVariant } from '@/types/productSlice';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/store/store';
+
+import { setActiveVariantId } from '@/store/slices/productSlice';
 
 interface ProductTabsProps {
-  options: Option[];
+  options: ProductVariant[];
+  activeVariantId: string | null;
 }
 
-const SizeTabs: React.FC<ProductTabsProps> = ({ options }) => {
-  const [activeId, setActiveId] = useState(options[0].id);
-  const activeOption = options.find((o) => o.id === activeId)!;
+const SizeTabs: React.FC<ProductTabsProps> = ({ options, activeVariantId }) => {
+  const activeOption = options.find(o => o.node.id === activeVariantId);
+  const dispatch = useDispatch<AppDispatch>();
 
-  return (
-    <div className={styles.wrapper}>
-      <div className={styles.tabs}>
-        {options.map((opt) => (
-          <button
-            key={opt.id}
-            className={`${styles.tab} ${
-              opt.id === activeId ? styles.active : ""
-            }`}
-            onClick={() => setActiveId(opt.id)}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
+  const getVolumeFromVariant = (variant: ProductVariant): string => {
+    if (!variant?.node?.attributes || !Array.isArray(variant.node.attributes)) {
+      return variant?.node?.name || '';
+    }
+    
+    const volumeAttr = variant.node.attributes.find((attr: any) => {
+      const slug = attr.attribute?.slug?.toLowerCase() || '';
+      const name = attr.attribute?.name?.toLowerCase() || '';
+      return slug === 'obem' || 
+             slug === 'volume' ||
+             name.includes('объем') ||
+             name.includes('volume');
+    });
+    
+    if (volumeAttr) {
+      const value = volumeAttr.values?.[0];
+      if (value?.name) {
+        return value.name;
+      } else if (value?.plainText) {
+        return value.plainText;
+      } else if (value?.slug) {
+        return value.slug;
+      }
+    }
+    
+    return variant?.node?.name || '';
+  };
 
-      <div className={styles.info}>
-        <span className={styles.price}>{activeOption.price}₽</span>
-        {activeOption.oldPrice && (
-          <span className={styles.oldPrice}>{activeOption.oldPrice}₽</span>
-        )}
-        {activeOption.discount && (
-          <span className={styles.discount}>-{activeOption.discount}%</span>
-        )}
+  const setActiveId = (id: string) => {
+    dispatch(setActiveVariantId(id));
+  };
+
+  if (activeVariantId === null) return null;
+  if (activeVariantId !== null)
+    return (
+      <div className={styles.wrapper}>
+        <div className={styles.tabs}>
+          {options.map(opt => {
+            const volume = getVolumeFromVariant(opt);
+            return (
+              <button
+                key={opt.node.id}
+                className={`${styles.tab} ${opt.node.id === activeVariantId ? styles.active : ''}`}
+                onClick={() => setActiveId(opt.node.id)}
+              >
+                {volume}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className={styles.info}>
+          <span className={styles.price}>{activeOption?.node.pricing.price.gross.amount}₽</span>
+          {activeOption?.node.pricing.discount && (
+            <span className={styles.oldPrice}>
+              {activeOption.node.pricing.priceUndiscounted.gross.amount}₽
+            </span>
+          )}
+          {/* {getDiscountPercentage(activeOption) && (
+          <span className={styles.discount}>-{getDiscountPercentage(activeOption)}%</span>
+        )} */}
+        </div>
       </div>
-    </div>
-  );
+    );
 };
 
 export default SizeTabs;

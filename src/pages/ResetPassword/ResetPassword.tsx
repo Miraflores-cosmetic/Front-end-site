@@ -1,136 +1,118 @@
-import React, { useState } from "react";
-import { useForm } from "react-hook-form";
-import styles from "./ResetPassword.module.scss";
-import { useNavigate } from "react-router-dom";
-import logo from "@/assets/icons/Miraflores_logo.svg";
+import React, { useState, useEffect } from 'react';
+import styles from './ResetPassword.module.scss';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import logo from '@/assets/icons/Miraflores_logo.svg';
 
-import { TextField } from "@/components/text-field/TextField";
-import { Button } from "@/components/button/Button";
-
-interface ResetPasswordFormData {
-  newPassword: string;
-  repeatedPassword: string;
-}
+import { TextField } from '@/components/text-field/TextField';
+import { Button } from '@/components/button/Button';
+import { setPassword } from '@/graphql/queries/auth.service';
+import { useToast } from '@/components/toast/toast';
+import { useDispatch } from 'react-redux';
+import { AppDispatch } from '@/store/store';
+import { sendSignInData } from '@/store/slices/authSlice';
 
 const ResetPassword: React.FC = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setError: setFormError,
-    watch,
-  } = useForm<ResetPasswordFormData>();
-  const [apiNewPasswordError, setApiNewPasswordError] = useState<string | null>(
-    null
-  );
-  const [apiRepeatedPasswordError, setApiRepeatedPasswordError] = useState<
-    string | null
-  >(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [repetedPassword, setRepetedPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const toast = useToast();
+  const dispatch = useDispatch<AppDispatch>();
 
-  const newPassword = watch("newPassword");
+  const token = searchParams.get('token');
 
-  const handleNavigatetoHome = () => navigate("/");
+  useEffect(() => {
+    if (!token) {
+      toast.error('Неверная ссылка для сброса пароля');
+      navigate('/forgot-password');
+    }
+  }, [token, navigate, toast]);
 
-  const onSubmit = async (data: ResetPasswordFormData) => {
-    // Clear API errors
-    setApiNewPasswordError(null);
-    setApiRepeatedPasswordError(null);
+  const handleNavigatetoHome = () => navigate('/');
+  
+  const handleRequest = async () => {
+    if (!newPassword.trim()) {
+      toast.error('Введите новый пароль');
+      return;
+    }
 
+    if (newPassword.length < 8) {
+      toast.error('Пароль должен содержать минимум 8 символов');
+      return;
+    }
+
+    if (newPassword !== repetedPassword) {
+      toast.error('Пароли не совпадают');
+      return;
+    }
+
+    if (!token) {
+      toast.error('Неверная ссылка для сброса пароля');
+      return;
+    }
+
+    setLoading(true);
     try {
-      // TODO: Implement reset password API call
-      // await authApi.resetPassword({
-      //   newPassword: data.newPassword,
-      //   repeatedPassword: data.repeatedPassword
-      // });
-      console.log("Reset password:", data.newPassword);
-      // Navigate to success page or sign in
-      navigate("/sign-in");
-    } catch (error: any) {
-      const errorMessage =
-        error.response?.data?.message ||
-        "Ошибка при сбросе пароля. Попробуйте снова.";
-
-      const errorData = error.response?.data;
-      if (
-        errorData?.field === "newPassword" ||
-        errorMessage.toLowerCase().includes("новый пароль") ||
-        errorMessage.toLowerCase().includes("password")
-      ) {
-        setApiNewPasswordError(errorMessage);
-        setFormError("newPassword", { message: errorMessage });
-      } else if (
-        errorData?.field === "repeatedPassword" ||
-        errorMessage.toLowerCase().includes("повторите") ||
-        errorMessage.toLowerCase().includes("repeat")
-      ) {
-        setApiRepeatedPasswordError(errorMessage);
-        setFormError("repeatedPassword", { message: errorMessage });
+      const result = await setPassword(token, newPassword);
+      
+      if (result.token && result.user) {
+        // Сохраняем токены
+        localStorage.setItem('token', result.token);
+        if (result.refreshToken) {
+          localStorage.setItem('refreshToken', result.refreshToken);
+        }
+        
+        toast.success('Пароль успешно изменен!');
+        
+        // Автоматически входим пользователя
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
       } else {
-        setApiNewPasswordError(errorMessage);
-        setFormError("newPassword", { message: errorMessage });
+        toast.error('Ошибка при сбросе пароля');
       }
+    } catch (error: any) {
+      console.error('Error resetting password:', error);
+      toast.error(error?.message || 'Ошибка при сбросе пароля');
+    } finally {
+      setLoading(false);
     }
   };
+
+  if (!token) {
+    return null;
+  }
 
   return (
     <section className={styles.resetContainer}>
       <div className={styles.resetWrapper}>
         <div className={styles.imageWrapper}>
-          <img
-            src={logo}
-            alt="logo"
-            className={styles.logo}
-            onClick={handleNavigatetoHome}
-          />
+          <img src={logo} alt='logo' className={styles.logo} onClick={handleNavigatetoHome} />
         </div>
         <h2 className={styles.title}>Придумайте пароль</h2>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className={styles.textFieldWrapper}>
-            <div className={styles.newPasswordWrapper}>
-              <TextField
-                label="Новый пароль"
-                type="password"
-                {...register("newPassword", {
-                  required: "Пожалуйста, введите новый пароль",
-                  minLength: {
-                    value: 6,
-                    message: "Пароль должен содержать минимум 6 символов",
-                  },
-                  onChange: () => {
-                    setApiNewPasswordError(null);
-                  },
-                })}
-              />
-              {(errors.newPassword || apiNewPasswordError) && (
-                <div className={styles.errorMessage}>
-                  {errors.newPassword?.message || apiNewPasswordError}
-                </div>
-              )}
-            </div>
-            <div className={styles.repeatedPasswordWrapper}>
-              <TextField
-                label="Повторите пароль"
-                type="password"
-                {...register("repeatedPassword", {
-                  required: "Пожалуйста, повторите пароль",
-                  validate: (value) =>
-                    value === newPassword || "Пароли не совпадают",
-                  onChange: () => {
-                    setApiRepeatedPasswordError(null);
-                  },
-                })}
-              />
-              {(errors.repeatedPassword || apiRepeatedPasswordError) && (
-                <div className={styles.errorMessage}>
-                  {errors.repeatedPassword?.message || apiRepeatedPasswordError}
-                </div>
-              )}
-            </div>
-          </div>
-          <Button text="Далее" type="submit" />
-        </form>
+        <div className={styles.textFieldWrapper}>
+          <TextField
+            label='Новый пароль'
+            type='password'
+            value={newPassword}
+            onChange={e => setNewPassword(e.target.value)}
+            disabled={loading}
+          />
+          <TextField
+            label='Повторите пароль'
+            type='password'
+            value={repetedPassword}
+            onChange={e => setRepetedPassword(e.target.value)}
+            disabled={loading}
+          />
+        </div>
+        <Button 
+          text={loading ? 'Сохранение...' : 'Далее'} 
+          onClick={handleRequest}
+          disabled={loading || !newPassword.trim() || !repetedPassword.trim()}
+        />
       </div>
     </section>
   );

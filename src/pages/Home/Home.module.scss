@@ -1,41 +1,27 @@
-@use "@/style/variables.scss" as *;
+@use '@/style/variables.scss' as *;
 
-.preHeaderContent {
-  .preHeaderTxt {
-    width: 100%;
-    background-color: black;
-    color: #fffcf2;
-    height: 27px;
-    font-size: 12px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+.preHeaderTxt {
+  width: 100%;
+  background-color: black;
+  color: #fffcf2;
+  height: 27px;
+  font-size: 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .homeContainer {
-  // height: 100vh;
+  padding: 0 0 0 32px;
   background-color: $white;
-  display: flex;
-  flex-direction: column;
-  // overflow-x: hidden;
+  overflow-x: hidden;
 
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
+}
 
-  .bestSellersContainer {
-    @media (max-width: 1546px) {
-      padding-left: 32px;
-    }
-    @media (max-width: 450px) {
-      padding-left: 12px;
-    }
-  }
-  .headeWrapper {
-    position: sticky;
-    top: 0;
-    z-index: 1000;
-    background-color: $white;
-    margin: 0 auto;
+@media (max-width: 450px) {
+  .homeContainer {
+    padding: 0 0 0 12px;
   }
 }

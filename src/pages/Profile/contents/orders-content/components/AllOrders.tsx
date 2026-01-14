@@ -1,6 +1,6 @@
-import { AllOrdersStats } from "@/pages/Profile/types";
-import styles from "../OrdersContent.module.scss";
-import OrderItem from "./OrderItem";
+import { AllOrdersStats } from '@/pages/Profile/types';
+import styles from '../OrdersContent.module.scss';
+import OrderItem from './OrderItem';
 
 interface AllOrdersProps {
   stats: AllOrdersStats;
@@ -8,8 +8,8 @@ interface AllOrdersProps {
 
 export const AllOrders: React.FC<AllOrdersProps> = ({ stats }) => {
   const fields = [
-    { label: "Всего заказов", value: stats.totalOrders },
-    { label: "Общая сумма заказов", value: stats.totalAmount },
+    { label: 'Всего заказов', value: stats.totalOrders },
+    { label: 'Общая сумма заказов', value: stats.totalAmount }
   ];
 
   return (

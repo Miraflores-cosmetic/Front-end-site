@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 
 export function useScreenMatch(maxWidth: number = 450) {
   const [isScreenMatch, setScreenMatch] = useState(
-    typeof window !== "undefined" ? window.innerWidth < maxWidth : false
+    typeof window !== 'undefined' ? window.innerWidth < maxWidth : false
   );
 
   useEffect(() => {
@@ -10,9 +10,9 @@ export function useScreenMatch(maxWidth: number = 450) {
       setScreenMatch(window.innerWidth < maxWidth);
     };
 
-    window.addEventListener("resize", handleResize);
+    window.addEventListener('resize', handleResize);
 
-    return () => window.removeEventListener("resize", handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [maxWidth]);
 
   return isScreenMatch;

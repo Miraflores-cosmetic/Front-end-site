@@ -1,5 +1,5 @@
-import React from "react";
-import styles from "./ProductDetails.module.scss";
+import React from 'react';
+import styles from './ProductDetails.module.scss';
 
 export interface DetailItem {
   label: string;
@@ -12,8 +12,8 @@ interface ProductDetailsProps {
 }
 
 const ProductDetails: React.FC<ProductDetailsProps> = ({
-  title = "Подробные характеристики",
-  details,
+  title = 'Подробные характеристики',
+  details
 }) => {
   return (
     <section className={styles.wrapper}>

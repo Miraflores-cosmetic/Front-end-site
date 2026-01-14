@@ -1,0 +1,92 @@
+.successContainer {
+  min-height: calc(100vh - 200px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+}
+
+.content {
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+.title {
+  font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 36px;
+  font-weight: 300;
+  margin-bottom: 16px;
+  color: #000;
+
+  @media (max-width: 768px) {
+    font-size: 28px;
+  }
+}
+
+.subtitle {
+  font-size: 16px;
+  color: #6e6d67;
+  margin-bottom: 32px;
+  line-height: 1.5;
+}
+
+.buttons {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.buttonPrimary {
+  display: inline-block;
+  padding: 12px 32px;
+  background-color: #000;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  text-transform: uppercase;
+
+  &:hover {
+    background-color: #333;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+.buttonSecondary {
+  display: inline-block;
+  padding: 12px 32px;
+  background-color: transparent;
+  color: #000;
+  text-decoration: none;
+  border: 1px solid #000;
+  border-radius: 30px;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s;
+  text-transform: uppercase;
+
+  &:hover {
+    background-color: #000;
+    color: #fff;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+
+

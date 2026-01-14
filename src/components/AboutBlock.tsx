@@ -1,10 +1,11 @@
-import React from "react";
-import styles from "./AboutBlock.module.scss";
-import AvoutCenter from "@/assets/images/AvoutCenter.webp";
-import AboutRight from "@/assets/images/AboutRight.webp";
-import AboutLeft from "@/assets/images/AboutLeft.webp";
-import arrowToRoght from "@/assets/icons/ArrowToRight.svg";
-import { useScreenMatch } from "@/hooks/useScreenMatch";
+import React from 'react';
+import styles from './AboutBlock.module.scss';
+import AvoutCenter from '@/assets/images/AvoutCenter.webp';
+import AboutRight from '@/assets/images/AboutRight.webp';
+import AboutLeft from '@/assets/images/AboutLeft.webp';
+import arrowToRoght from '@/assets/icons/ArrowToRight.svg';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
+import { Link } from 'react-router-dom';
 
 const AboutText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <p className={styles.text}>{children}</p>
@@ -20,12 +21,14 @@ const AboutImage: React.FC<{
 
 const AboutMore: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => (
   <div className={isMobile ? styles.mobileMore : styles.more}>
-    <p>БОЛЬШЕ О НАС</p>
-    <img
-      src={arrowToRoght}
-      alt="arrowToRoght"
-      className={isMobile ? styles.mobileArrowToRoght : styles.arrowToRoght}
-    />
+    <Link to='/about'>
+      <p>БОЛЬШЕ О НАС</p>{' '}
+      <img
+        src={arrowToRoght}
+        alt='arrowToRoght'
+        className={isMobile ? styles.mobileArrowToRoght : styles.arrowToRoght}
+      />
+    </Link>
   </div>
 );
 
@@ -43,48 +46,41 @@ const AboutBlock: React.FC = () => {
         <div className={styles.left}>
           <div className={styles.leftTop}>
             <AboutText>
-              С 2007 года мы разрабатываем и производим безопасные и эффективные
-              средства ухода. У нас полностью своё производство, включая выпуск
-              собственных растительных ингредиентов: меристемных экстрактов,
-              мацератов и гидролатов.
+              С 2007 года мы разрабатываем и производим безопасные и эффективные средства ухода. У
+              нас полностью своё производство, включая выпуск собственных растительных ингредиентов:
+              меристемных экстрактов, мацератов и гидролатов.
             </AboutText>
           </div>
 
           <div className={isMobile ? styles.mobileBottom : styles.leftBottom}>
-            {!isMobile && !isTablet && (
-              <AboutImage src={AboutLeft} alt="LeftFoto" />
-            )}
+            {!isMobile && !isTablet && <AboutImage src={AboutLeft} alt='LeftFoto' />}
             <AboutText>
-              Мы уверены: природа уже создала всё необходимое для здоровья и
-              красоты кожи — наша задача лишь научиться грамотно это
-              использовать. В каждом средстве Miraflores — чистые формулы,
-              запатентованные разработки и сила растений, раскрытая с научной
-              точностью.
+              Мы уверены: природа уже создала всё необходимое для здоровья и красоты кожи — наша
+              задача лишь научиться грамотно это использовать. В каждом средстве Miraflores — чистые
+              формулы, запатентованные разработки и сила растений, раскрытая с научной точностью.
             </AboutText>
           </div>
         </div>
 
+        {/* Center */}
         <div className={styles.center}>
-          <AboutImage src={AvoutCenter} alt="CenterFoto" />
+          <AboutImage src={AvoutCenter} alt='CenterFoto' />
         </div>
 
+        {/* Right Column */}
         <div className={styles.right}>
           <div className={styles.smallImageWrapper}>
-            {!isMobile && !isTablet && (
-              <AboutImage src={AboutRight} alt="RightFoto" />
-            )}
+            {!isMobile && !isTablet && <AboutImage src={AboutRight} alt='RightFoto' />}
           </div>
 
-          <div
-            className={isMobile ? styles.mobileTextWrapper : styles.textWrapper}
-          >
+          <div className={isMobile ? styles.mobileTextWrapper : styles.textWrapper}>
             <AboutText>
-              Выбирая осознанный уход, вы выбираете гармонию: между кожей,
-              составом и окружающей средой.
+              Выбирая осознанный уход, вы выбираете гармонию: между кожей, составом и окружающей
+              средой.
             </AboutText>
             <AboutText>
-              Miraflores — это качество, проверенное временем, и команда,
-              которая по-настоящему влюблена в своё дело.
+              Miraflores — это качество, проверенное временем, и команда, которая по-настоящему
+              влюблена в своё дело.
             </AboutText>
           </div>
 

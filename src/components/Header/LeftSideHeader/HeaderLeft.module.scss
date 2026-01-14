@@ -1,16 +1,50 @@
-@use "@/style/variables.scss" as *;
+@use '@/style/variables.scss' as *;
 
 .navLeft {
   display: flex;
-  gap: 32px;
-}
-.navLeft a {
-  text-decoration: none;
-  color: $black;
-  font-size: 14px;
-  text-transform: uppercase;
+  align-items: center;
+  gap: 57px;
+
+  a {
+    position: relative;
+    text-decoration: none;
+    color: $black;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition:
+      color 0.3s ease,
+      transform 0.3s ease;
+
+    &:hover {
+      color: $green-297;
+      transform: translateY(-2px);
+    }
+
+    // underline hover (как на правом блоке — можно отключить, если не нужно)
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: -4px;
+      left: 0;
+      width: 0;
+      height: 1.5px;
+      background-color: $green-297;
+      transition: width 0.3s ease;
+    }
+
+    &:hover::after {
+      width: 100%;
+    }
+  }
+
+  // убираем правый отступ у последнего элемента
+  > *:last-child {
+    margin-right: 0;
+  }
 }
 
+/* адаптив */
 @media (max-width: 1024px) {
   .navLeft {
     gap: 20px;
@@ -22,4 +56,9 @@
     font-size: 14px;
     gap: 8px;
   }
+}
+
+.menuButton {
+  border: none;
+  background: transparent;
 }

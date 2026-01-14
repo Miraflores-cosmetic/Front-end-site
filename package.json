@@ -1,19 +1,35 @@
 {
   "name": "miraflores-front",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "concurrently -n \"cdek,yookassa,vite\" -c \"blue,yellow,green\" \"npm run cdek-proxy\" \"npm run yookassa-api\" \"vite\"",
+    "dev:all": "concurrently -n \"cdek,yookassa,vite\" -c \"blue,yellow,green\" \"npm run cdek-proxy\" \"npm run yookassa-api\" \"vite\"",
     "build": "tsc -b && vite build",
     "build:optimize": "tsc -b && vite build --mode production",
+    "preview": "vite preview",
+    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:stop": "pm2 stop ecosystem.config.js",
+    "pm2:restart": "pm2 restart ecosystem.config.js",
+    "pm2:delete": "pm2 delete ecosystem.config.js",
+    "type-check": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx --fix",
+    "format": "prettier --write .",
     "optimize:images": "node scripts/optimize-images.mjs",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "cdek-proxy": "node server/cdek-proxy.mjs",
+    "yookassa-api": "node server/yookassa-api.mjs"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.9.0",
     "axios": "^1.13.1",
+    "classnames": "^2.5.1",
+    "cors": "^2.8.5",
+    "express": "^4.22.1",
+    "framer-motion": "^12.23.24",
+    "graphql-request": "^7.3.4",
+    "lucide-react": "^0.553.0",
+    "node-fetch": "^2.7.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hook-form": "^7.66.0",
@@ -22,16 +38,16 @@
     "react-router-dom": "^7.8.2",
     "react-slick": "^0.31.0",
     "sass": "^1.91.0",
-    "slick-carousel": "^1.8.1"
+    "slick-carousel": "^1.8.1",
+    "dotenv": "^16.4.7"
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/node": "^24.3.0",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
-    "@types/react-router-dom": "^5.3.3",
     "@types/react-slick": "^0.23.13",
-    "@vitejs/plugin-react": "^5.0.0",
+    "@vitejs/plugin-react": "^5.1.0",
     "eslint": "^9.33.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
@@ -40,12 +56,16 @@
     "imagemin-pngquant": "^10.0.0",
     "imagemin-svgo": "^11.0.1",
     "imagemin-webp": "^8.0.0",
-    "path": "^0.12.7",
     "prettier": "^3.6.2",
+    "concurrently": "^9.1.2",
+    "serve": "^14.2.4",
     "sharp": "^0.34.4",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2",
-    "vite-plugin-imagemin": "^0.6.1"
+    "vite-plugin-compression": "^0.5.1",
+    "vite-plugin-imagemin": "^0.6.1",
+    "vite-plugin-svgr": "^4.2.0",
+    "vite-tsconfig-paths": "^5.1.2"
   }
 }

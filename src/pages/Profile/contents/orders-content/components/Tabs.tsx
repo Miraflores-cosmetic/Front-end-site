@@ -1,5 +1,5 @@
-import { TabType } from "@/pages/Profile/types";
-import styles from "../OrdersContent.module.scss";
+import { TabType } from '@/pages/Profile/types';
+import styles from '../OrdersContent.module.scss';
 
 interface TabsProps {
   activeTab: TabType;
@@ -7,8 +7,8 @@ interface TabsProps {
 }
 
 const TABS: { id: TabType; label: string }[] = [
-  { id: "active", label: "АКТИВНЫЕ ЗАКАЗЫ" },
-  { id: "all", label: "ВСЕ ЗАКАЗЫ" },
+  { id: 'active', label: 'АКТИВНЫЕ ЗАКАЗЫ' },
+  { id: 'all', label: 'ВСЕ ЗАКАЗЫ' }
 ];
 
 export const Tabs: React.FC<TabsProps> = ({ activeTab, onChange }) => (
@@ -16,7 +16,7 @@ export const Tabs: React.FC<TabsProps> = ({ activeTab, onChange }) => (
     {TABS.map(({ id, label }) => (
       <button
         key={id}
-        className={`${styles.tab} ${activeTab === id ? styles.active : ""}`}
+        className={`${styles.tab} ${activeTab === id ? styles.active : ''}`}
         onClick={() => onChange(id)}
       >
         {label}

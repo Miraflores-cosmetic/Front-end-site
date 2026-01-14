@@ -2,20 +2,18 @@
   width: 100%;
   padding-top: 70px;
   padding-bottom: 70px;
-  border-bottom: 1px solid #00000014;
+  padding-left: 0;
+  padding-right: 0;
   max-width: 1536px;
   margin: 0 auto;
-  @media (max-width: 1536px) {
-    padding-right: 32px;
-    padding-left: 32px;
-  }
-
+  border-bottom: 1px solid #00000014;
   @media (max-width: 450px) {
-    padding-right: 12px;
-    padding-left: 12px;
     padding-top: 40px;
     padding-bottom: 32px;
     border-bottom: none;
+    margin-left: -16px;
+    width: calc(100% + 16px);
+    
   }
 }
 
@@ -23,15 +21,13 @@
   display: flex;
   gap: 24px;
   margin-bottom: 8px;
-  border-bottom: 1px solid #00000014;
+  border-bottom: 1px solid #6e6d67b3;
 }
 
 .tab {
-  font-family: "avanir";
   background: none;
   border: none;
   font-size: 16px;
-  font-weight: 500;
   color: #6e6d67b3;
   padding-bottom: 15px;
   cursor: pointer;
@@ -45,9 +41,10 @@
 
   &.active {
     color: black;
+    font-weight: 500;
 
     &::after {
-      content: "";
+      content: '';
       position: absolute;
       bottom: -1px;
       left: 0;
@@ -64,12 +61,17 @@
   color: black;
   font-size: 13px;
   font-weight: 600;
+
+  @media (max-width: 650px) {
+    padding: 0 16px;
+  }
 }
 
 .info {
   display: flex;
   align-items: center;
   gap: 10px;
+  overflow: visible !important;
 }
 
 .price {
@@ -90,4 +92,7 @@
   padding: 2px 6px;
   font-size: 14px;
   font-weight: 500;
+}
+.activeContent {
+  margin-top: 24px;
 }

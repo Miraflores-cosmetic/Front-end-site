@@ -1,5 +1,6 @@
-import React from "react";
-import styles from "./OrderCard.module.scss";
+import React from 'react';
+import styles from './OrderCard.module.scss';
+import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
 
 export interface CartItem {
   id: number;
@@ -18,10 +19,14 @@ interface OrderCartListProps {
 const CardList: React.FC<OrderCartListProps> = ({ cartData }) => {
   return (
     <>
-      {cartData.map((item) => (
+      {cartData.map(item => (
         <div className={styles.orderCart} key={item.id}>
           <figure className={styles.cartImageWrapper}>
-            <img src={item.image} alt={item.alt} className={styles.kremImage} />
+            <ImageWithFallback 
+              src={item.image} 
+              alt={item.alt} 
+              className={styles.kremImage}
+            />
           </figure>
 
           <div className={styles.cardInfoWrapper}>

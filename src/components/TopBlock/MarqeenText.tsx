@@ -1,5 +1,5 @@
-import React from "react";
-import styles from "./TopBlock.module.scss";
+import React from 'react';
+import styles from './TopBlock.module.scss';
 
 const MarqueeText: React.FC = () => (
   <div className={styles.marqueeWrapper}>

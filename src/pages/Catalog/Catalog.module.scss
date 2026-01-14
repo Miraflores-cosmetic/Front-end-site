@@ -1,73 +1,28 @@
-@use "@/style/variables.scss" as *;
+@use '@/style/variables.scss' as *;
 
 .catalogContainer {
+  padding: 0 32px;
   min-height: 100vh;
   background-color: $white;
+  overflow-x: hidden;
   padding-bottom: 32px;
 
   scrollbar-width: none;
   -ms-overflow-style: none;
-
-  .titleWrapper {
-    max-width: 1536px;
-    margin: 0 auto;
-    margin-top: 24px;
-    @media (max-width: 1536px) {
-      padding: 0 32px;
-    }
-    @media (max-width: 450px) {
-      padding: 0;
-    }
-  }
-
-  .catalogsWrapper {
-    max-width: 1536px;
-    margin: 0 auto;
-    @media (max-width: 1536px) {
-      padding: 0 32px;
-    }
-    @media (max-width: 450px) {
-      padding: 0;
-    }
-  }
-
-  .bestsellerWrapper {
-    @media (max-width: 1536px) {
-      padding-left: 32px;
-    }
-    @media (max-width: 450px) {
-      padding-left: 0;
-    }
-  }
-
-  .footerWrapper {
-    max-width: 1536px;
-    margin: 0 auto;
-    margin-top: 140px;
-
-    @media (max-width: 450px) {
-      footer {
-        padding: 0 !important;
-      }
-      margin-top: 60px;
-    }
-  }
-
   .title {
-    font-family: "trial";
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
     font-weight: 300;
     font-size: 64px;
     margin-bottom: 64px;
     text-transform: uppercase;
-
     @media (max-width: 450px) {
       font-size: 32px;
       margin-top: 20px;
     }
   }
-
   .elipseWrapper {
     position: relative;
+
     display: flex;
     height: 476px;
     width: 100%;
@@ -85,9 +40,9 @@
 
     .kremgroup {
       width: 230px;
+
       z-index: 22;
     }
-
     .name {
       position: absolute;
       bottom: -44px;

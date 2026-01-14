@@ -1,69 +1,106 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
-import path from "path";
-import viteImagemin from "vite-plugin-imagemin";
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import viteImagemin from 'vite-plugin-imagemin';
+import tsconfigPaths from 'vite-tsconfig-paths';
+import viteCompression from 'vite-plugin-compression';
+import svgr from 'vite-plugin-svgr';
 
+// https://vite.dev/config/
 export default defineConfig({
   plugins: [
     react(),
+    tsconfigPaths(),
+    svgr(),
+    viteCompression(),
     viteImagemin({
-      // Optimize PNG images and convert to WebP
       pngquant: {
         quality: [0.8, 0.9],
-        speed: 4,
+        speed: 4
       },
-      // Generate WebP versions
       webp: {
-        quality: 85,
+        quality: 85
       },
-      // Optimize JPEG images
       mozjpeg: {
-        quality: 80,
+        quality: 80
       },
-      // Optimize SVG files
       svgo: {
         plugins: [
-          {
-            name: "removeViewBox",
-            active: false,
-          },
-          {
-            name: "removeEmptyAttrs",
-            active: false,
-          },
-        ],
+          { name: 'removeViewBox', active: false },
+          { name: 'removeEmptyAttrs', active: false }
+        ]
       },
-      // Optimize GIF images
       gifsicle: {
         optimizationLevel: 7,
-        interlaced: false,
-      },
-    }),
+        interlaced: false
+      }
+    })
   ],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
+      '@': path.resolve(__dirname, './src')
+    }
   },
   build: {
-    // Enable asset optimization
-    assetsInlineLimit: 4096, // 4kb
+    assetsInlineLimit: 4096,
     rollupOptions: {
       output: {
-        // Organize assets by type
-        assetFileNames: (assetInfo) => {
-          const info = assetInfo.name?.split(".") || [];
-          const ext = info[info.length - 1];
-          if (
-            /\.(png|jpe?g|svg|gif|tiff|bmp|ico|webp)$/i.test(
-              assetInfo.name || ""
-            )
-          ) {
-            return `assets/images/[name]-[hash][extname]`;
+        assetFileNames: assetInfo => {
+          if (/\.(png|jpe?g|svg|gif|tiff|bmp|ico|webp)$/i.test(assetInfo.name || '')) {
+            return 'assets/images/[name]-[hash][extname]';
           }
-          return `assets/[name]-[hash][extname]`;
-        },
-      },
-    },
+          return 'assets/[name]-[hash][extname]';
+        }
+      }
+    }
   },
+  css: {
+    devSourcemap: true
+  },
+
+  server: {
+    port: 5173,
+    open: true,
+    // Proxy GraphQL requests to the backend during development to avoid CORS issues.
+    // In development set VITE_GRAPHQL_URL to '/graphql' so the client calls the same origin
+    // and the dev server forwards requests to the real backend.
+    proxy: {
+      '/graphql': {
+        target: 'https://miraflores-shop.com',
+        changeOrigin: true,
+        secure: true
+      },
+      '/api/cdek': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false
+      },
+      '/api/yookassa': {
+        target: 'http://localhost:3002',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/yookassa/, '') // Remove /api/yookassa prefix
+      },
+      '/voucher': { // Proxy for voucher validation
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      },
+      '/auth': { // Proxy for auth endpoints
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      },
+      '/api/checkout': { // Proxy for checkout endpoints
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      },
+      '/checkout': { // Proxy for checkout endpoints (alternative path)
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  }
 });

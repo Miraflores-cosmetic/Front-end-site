@@ -1,12 +1,108 @@
 .basketCardWrapper {
   width: 100%;
+  box-sizing: border-box;
   display: flex;
+  padding: 0 30px 0 0;
   flex-direction: column;
+
+  @media (max-width: 664px) {
+    padding: 0;
+  }
+
   .addProduct {
     width: 100%;
     display: flex;
-    justify-content: space-between;
+    align-items: center;
     margin-top: 6px;
+    gap: 8px;
+    flex: 2;
+
+    .addProductInner {
+      border: 1px solid #00000014;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5px;
+      height: 30px;
+      width: 90px;
+    }
+
+    @media (max-width: 720px) {
+      justify-content: flex-start;
+      width: 95%;
+    }
+
+    @media (max-width: 480px) {
+      margin-top: 4px;
+      gap: 6px;
+    }
+
+    .trashImage,
+    .addImage {
+      cursor: pointer;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      transition: opacity 0.2s;
+
+      &:hover {
+        opacity: 0.7;
+      }
+
+      &:active {
+        opacity: 0.5;
+      }
+
+      @media (max-width: 480px) {
+        width: 18px;
+        height: 18px;
+      }
+
+      @media (max-width: 393px) {
+        width: 16px;
+        height: 16px;
+      }
+    }
+
+    .trashCount {
+      font-size: 15px;
+      font-weight: 600;
+      color: black;
+      min-width: 20px;
+      text-align: center;
+
+      @media (max-width: 480px) {
+        font-size: 14px;
+        min-width: 18px;
+      }
+
+      @media (max-width: 393px) {
+        font-size: 13px;
+        min-width: 16px;
+      }
+    }
+  }
+
+  .mobileBottomWrapper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    width: 100%;
+    // margin-top: -20px;
+    gap: 10px;
+    flex-wrap: nowrap; // ← prevent wrapping
+    overflow: hidden;
+
+    @media (max-width: 480px) {
+      margin-top: 16px;
+      gap: 8px;
+      height: auto;
+    }
+
+    @media (max-width: 393px) {
+      gap: 6px;
+    }
   }
 }
 
@@ -14,129 +110,328 @@
   display: flex;
   width: 100%;
   height: 142px;
+  align-items: center;
   justify-content: space-between;
+  gap: 10px;
+
   @media (max-width: 664px) {
-    height: 88px;
+    height: auto;
+    gap: 8px;
   }
+
+  @media (max-width: 393px) {
+    gap: 6px;
+  }
+
   .basketImage {
+    flex-shrink: 0;
+    width: 142px;
+    height: 142px;
+    overflow: hidden;
+    background: #f6f5ef;
+
     @media (max-width: 664px) {
-      width: 88px;
-      height: 88px;
+      width: 95px;
+      height: 95px;
     }
+
     img {
-      background-color: #f6f5ef;
-      width: 142px;
-      height: 142px;
-      @media (max-width: 664px) {
-        width: 88px;
-        height: 88px;
-      }
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .placeholder {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #f6f5ef 0%, #ecebe4 50%, #f6f5ef 100%);
     }
   }
+
   .basketInfo {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     width: 100%;
     height: 100%;
-    margin-left: 10px;
+
+    @media (max-width: 664px) {
+      height: auto;
+    }
+
     .topInfo {
       display: flex;
       flex-direction: column;
       height: 100%;
+      gap: 4px;
+
+      @media (max-width: 664px) {
+        height: auto;
+      }
+
+      @media (max-width: 480px) {
+        gap: 3px;
+      }
+
       .productName {
         font-size: 16px;
         font-weight: 600;
         color: black;
+        line-height: 1.3;
+        margin: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        text-transform: uppercase;
+
         @media (max-width: 664px) {
           font-size: 13px;
+          line-height: 1.2;
+          -webkit-line-clamp: 1;
+        }
+
+        @media (max-width: 393px) {
+          font-size: 12px;
         }
       }
+
       .productSize {
         font-size: 14px;
         font-weight: 600;
+
         color: #6e6d67;
+        line-height: 1.2;
+
+        @media (max-width: 664px) {
+          font-size: 12px;
+        }
+
+        @media (max-width: 393px) {
+          font-size: 11px;
+        }
       }
+
       .fromToMobile {
         display: flex;
-        gap: 10px;
+        gap: 8px;
+        align-items: center;
+        flex-shrink: 1; // ← allow shrinking
+        min-width: 0; // ← allow ellipsis
+        flex: 1;
+
+        @media (max-width: 480px) {
+          gap: 6px;
+        }
+
+        @media (max-width: 393px) {
+          gap: 5px;
+        }
+
+        .fromMobile,
+        .toMobile {
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 100%; // ← prevent overflow
+        }
+
         .fromMobile {
           position: relative;
           color: #6e6d67;
           font-size: 13px;
           font-weight: 600;
+          line-height: 1;
+
+          @media (max-width: 393px) {
+            font-size: 12px;
+          }
+
           &::after {
-            content: "";
+            content: '';
             position: absolute;
             left: -5%;
             top: 50%;
             width: 110%;
-            height: 2px;
+            height: 1.5px;
             background: #ff0808;
-            transform: rotate(-10deg);
+            transform: translateY(-50%) rotate(-10deg);
           }
         }
+
         .toMobile {
           font-size: 13px;
           font-weight: 600;
+          color: black;
+          line-height: 1;
+
+          @media (max-width: 393px) {
+            font-size: 12px;
+          }
         }
       }
     }
+
     .bottomInfo {
       display: flex;
       align-items: center;
-      gap: 10px;
-      .trashCount {
-        font-size: 15px;
-        font-weight: 600;
-      }
+      border: 1px solid #00000014;
+      width: 116px;
+      justify-content: space-between;
+      padding: 10px;
+
       @media (max-width: 664px) {
         display: none;
       }
+
+      @media (max-width: 768px) {
+        gap: 8px;
+      }
+
+      .trashImage,
+      .addImage {
+        cursor: pointer;
+        width: 20px;
+        height: 20px;
+        flex-shrink: 0;
+        transition: opacity 0.2s;
+
+        &:hover {
+          opacity: 0.7;
+        }
+
+        &:active {
+          opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+          width: 18px;
+          height: 18px;
+        }
+      }
+
+      .trashCount {
+        font-size: 15px;
+        font-weight: 600;
+        color: black;
+        min-width: 24px;
+        text-align: center;
+
+        @media (max-width: 768px) {
+          font-size: 14px;
+          min-width: 20px;
+        }
+      }
     }
   }
+
   .baskePrice {
     display: flex;
     height: 100%;
     flex-direction: column;
-    justify-content: space-around;
-    align-items: end;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-shrink: 0;
+
+    @media (max-width: 664px) {
+      display: none;
+    }
+
     .discount {
-      width: 54px;
+      min-width: 54px;
       height: 31px;
+      padding: 0 8px;
       background-color: #297230;
       display: flex;
       justify-content: center;
       align-items: center;
       color: white;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 2px;
+       user-select: none;
+
+      @media (max-width: 768px) {
+        min-width: 48px;
+        height: 28px;
+        font-size: 13px;
+        padding: 0 6px;
+      }
+
+
+     
     }
+ .discountEmpty{
+        min-width: 54px;
+      height: 31px;
+      padding: 0 8px;
+      background-color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 2px;
+      user-select: none;
+
+      @media (max-width: 768px) {
+        min-width: 48px;
+        height: 28px;
+        font-size: 13px;
+        padding: 0 6px;
+      }
+      }
     .fromTo {
       display: flex;
       gap: 10px;
+      align-items: center;
+
+      @media (max-width: 768px) {
+        gap: 8px;
+      }
+
       .from {
         position: relative;
         color: #6e6d67;
         font-size: 16px;
         font-weight: 600;
+        line-height: 1;
+        white-space: nowrap;
+
+        @media (max-width: 768px) {
+          font-size: 15px;
+        }
+
         &::after {
-          content: "";
+          content: '';
           position: absolute;
           left: -5%;
           top: 50%;
           width: 110%;
           height: 2px;
           background: #ff0808;
-          transform: rotate(-10deg);
+          transform: translateY(-50%) rotate(-10deg);
         }
       }
+
       .to {
         font-size: 16px;
         font-weight: 600;
+        color: black;
+        line-height: 1;
+        white-space: nowrap;
+
+        @media (max-width: 768px) {
+          font-size: 15px;
+        }
       }
     }
-
-    @media (max-width: 664px) {
-      display: none;
-    }
   }
+}
+
+.basketCard + .basketCard {
+  margin-top: 0;
 }

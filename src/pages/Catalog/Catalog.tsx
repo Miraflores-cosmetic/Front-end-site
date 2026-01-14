@@ -1,112 +1,59 @@
-import React from "react";
-import styles from "./Catalog.module.scss";
+import React from 'react';
+import { useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import styles from './Catalog.module.scss';
 
-import { useScreenMatch } from "@/hooks/useScreenMatch";
-import Header from "@/components/Header/Header";
-import Footer from "@/components/Footer/Footer";
-import krem from "@/assets/images/krem.webp";
-import krem2 from "@/assets/images/krem2.webp";
-import Ellipse from "@/assets/images/Ellipse.webp";
-import footerImageCatalog from "@/assets/images/footerImageCatalog.webp";
-import kremgroup from "@/assets/images/kremGroupElipse.webp";
-import girlwithsmile from "@/assets/images/girlsmile.webp";
-import Bestsellers from "@/components/bestsellers/Bestsellers";
-import CatalogList from "@/components/catalog-list/CatalogList";
+import { useScreenMatch } from '@/hooks/useScreenMatch';
+import Header from '@/components/Header/Header';
+import Footer from '@/components/Footer/Footer';
+import krem from '@/assets/images/krem.webp';
+import krem2 from '@/assets/images/krem2.webp';
+import Ellipse from '@/assets/images/Ellipse.webp';
+import footerImageCatalog from '@/assets/images/footerImageCatalog.webp';
+import kremgroup from '@/assets/images/kremGroupElipse.webp';
+import girlwithsmile from '@/assets/images/girlsmile.webp';
+import Bestsellers from '@/components/bestsellers/Bestsellers';
+import CatalogList from '@/components/catalog-list/CatalogList';
+import Layout from '@/components/Layout/Layout';
+
 
 const Catalog: React.FC = () => {
   const isMobile = useScreenMatch(768);
-  const products = [
-    {
-      id: 1,
-      title: "Цветочный мист с экстрактами розы",
-      description: "Мист для влажной, глянцевой кожи с экстрактом розы",
-      price: 3590,
-      oldPrice: 4600,
-      discount: 22,
-      image: krem,
-      hoverImage: girlwithsmile,
-    },
-    {
-      id: 1,
-      title: "Цветочный мист",
-      description: "Мист для влажной, глянцевой кожи с экстрактом розы",
-      price: 3590,
-      oldPrice: 4600,
-      discount: 22,
-      image: krem2,
-      hoverImage: girlwithsmile,
-    },
-    {
-      id: 2,
-      title: "Цветочный мист",
-      description: "Мист для мягкой и сияющей кожи с экстрактом розы",
-      price: 3590,
-      oldPrice: 4600,
-      discount: 23,
-      image: krem,
-      hoverImage: girlwithsmile,
-    },
-    {
-      id: 3,
-      title: "Цветочный мист",
-      description: "Мист для мягкой и сияющей кожи с экстрактом розы",
-      price: 3590,
-      label: "Новинка",
-      image: krem,
-      hoverImage: girlwithsmile,
-    },
-    {
-      id: 4,
-      title: "Цветочный мист",
-      description: "Мист для мягкой и сияющей кожи с экстрактом розы",
-      price: 3590,
-      label: "Новинка",
-      image: krem,
-      hoverImage: girlwithsmile,
-    },
-    {
-      id: 5,
-      title: "Цветочный мист",
-      description: "Мист для мягкой и сияющей кожи с экстрактом розы",
-      price: 3590,
-      label: "Новинка",
-      image: krem,
-      hoverImage: girlwithsmile,
-    },
-    {
-      id: 6,
-      title: "Цветочный мист",
-      description: "Мист для мягкой и сияющей кожи с экстрактом розы",
-      price: 3590,
-      label: "Новинка",
-      image: krem,
-      hoverImage: girlwithsmile,
-    },
-  ];
+  const location = useLocation();
+
+  useEffect(() => {
+    // Если есть hash в URL, скроллим к элементу
+    if (location.hash) {
+      const element = document.querySelector(location.hash);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
+      }
+    } else {
+      // Если нет hash, скроллим наверх
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [location]);
+
 
   return (
     <main className={styles.catalogContainer}>
       <Header />
-      <div className={styles.titleWrapper}>
+      <Layout>
         <p className={styles.title}>Каталог</p>
-      </div>
-      {isMobile && (
-        <div className={styles.elipseWrapper}>
-          <img src={Ellipse} alt="Ellipse" className={styles.elipsImage} />
-          <img src={kremgroup} alt="kremgroup" className={styles.kremgroup} />
-          <p className={styles.name}>Наборы</p>
-        </div>
-      )}
-      <div className={styles.catalogsWrapper}>
+        {isMobile && (
+          <div className={styles.elipseWrapper}>
+            <img src={Ellipse} alt='Ellipse' className={styles.elipsImage} />
+            <img src={kremgroup} alt='kremgroup' className={styles.kremgroup} />
+            <p className={styles.name}>Наборы</p>
+          </div>
+        )}
+
         <CatalogList />
-      </div>
-      <div className={styles.bestsellerWrapper}>
-        <Bestsellers products={products} />
-      </div>
-      <div className={styles.footerWrapper}>
-        {" "}
-        <Footer footerImage={footerImageCatalog} />
-      </div>{" "}
+        <Bestsellers />
+      </Layout>
+      <Footer footerImage={footerImageCatalog} />
     </main>
   );
 };

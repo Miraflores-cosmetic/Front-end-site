@@ -1,27 +1,37 @@
-import React from "react";
-import styles from "./HeaderLeft.module.scss";
-import { Link } from "react-router-dom";
-import menu from "@/assets/icons/menu.svg";
-import { useScreenMatch } from "@/hooks/useScreenMatch";
+import React, {useEffect}from 'react';
+import { Link } from 'react-router-dom';
+import { openDrawer } from '@/store/slices/drawerSlice';
+import { useSelector, useDispatch } from 'react-redux';
+import styles from './HeaderLeft.module.scss';
+import menu from '@/assets/icons/menu.svg';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
+import { RootState, AppDispatch } from '@/store/store';
+import { getMenuItems } from '@/store/slices/navSlice'
+
 
 const HeaderLeft: React.FC = () => {
+  const  items  = useSelector((state: RootState) => state.nav.items);
   const isMobile = useScreenMatch(850);
+  const dispatch = useDispatch<AppDispatch>();
 
-  console.log(isMobile, "isMobile");
+  useEffect(() => {
+    // Загружаем меню только если оно еще не загружено
+    if (items.length === 0) {
+      dispatch(getMenuItems());
+    }
+  }, [dispatch, items.length])
+
   return (
     <div>
       {isMobile ? (
-        <div className={styles.logo}>
-          <img src={menu} alt="menu" />
-        </div>
+        <button className={styles.menuButton} onClick={() => dispatch(openDrawer('menu'))}>
+          <img src={menu} alt='menu' />
+        </button>
       ) : (
         <nav className={styles.navLeft}>
-          <Link to="#" className={styles.link}>
-            Наборы
-          </Link>
-          <Link to="/face">Лицо</Link>
-          <Link to="#">Волосы</Link>
-          <Link to="#">Эфирные масла</Link>
+          {items.map(item=>(
+            <Link to={'/category/' + item.category.slug} key={item.id}>{item.name}</Link>
+          ))}
         </nav>
       )}
     </div>

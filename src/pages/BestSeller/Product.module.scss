@@ -158,8 +158,8 @@
         overflow-x: hidden; // Предотвращаем горизонтальный overflow
         overflow-y: visible; // Разрешаем вертикальный overflow
         
-        // Ограничиваем все дочерние элементы
-        > * {
+        // Ограничиваем все дочерние элементы, кроме .desc
+        > *:not(.desc) {
           max-width: 100%;
           min-width: 0;
           box-sizing: border-box;
@@ -189,24 +189,29 @@
             font-size: 24px;
           }
         }
-        .desc {
-          color: #6e6d67;
-          font-size: 16px;
-          word-wrap: break-word;
-          overflow-wrap: break-word;
-          word-break: break-word; // Принудительный перенос длинных слов
-          max-width: 100%;
-          min-width: 0; // Разрешаем сжатие
-          box-sizing: border-box;
-          overflow-x: hidden; // Предотвращаем выход текста за пределы
-          overflow-y: visible; // Разрешаем вертикальный overflow
-          text-overflow: clip; // Убираем ellipsis
-          display: block; // Убираем -webkit-box если был
-          -webkit-line-clamp: none; // Убираем ограничение по строкам
-          -webkit-box-orient: horizontal; // Убираем вертикальную ориентацию
-          max-height: none; // Убираем ограничение по высоте
-          white-space: normal; // Разрешаем перенос строк
-          line-height: 1.5; // Добавляем нормальный межстрочный интервал
+        
+        // Стили для описания - без ограничений по высоте
+        .desc,
+        p.desc {
+          color: #6e6d67 !important;
+          font-size: 16px !important;
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
+          word-break: break-word !important; // Принудительный перенос длинных слов
+          max-width: 100% !important;
+          min-width: 0 !important; // Разрешаем сжатие
+          box-sizing: border-box !important;
+          overflow: visible !important; // Полностью убираем overflow
+          overflow-x: visible !important;
+          overflow-y: visible !important;
+          text-overflow: clip !important; // Убираем ellipsis
+          display: block !important; // Убираем -webkit-box если был
+          -webkit-line-clamp: unset !important; // Убираем ограничение по строкам
+          -webkit-box-orient: unset !important; // Убираем вертикальную ориентацию
+          max-height: none !important; // Убираем ограничение по высоте
+          height: auto !important; // Автоматическая высота
+          white-space: normal !important; // Разрешаем перенос строк
+          line-height: 1.5 !important; // Добавляем нормальный межстрочный интервал
         }
         
         // Ограничиваем компоненты SizeTabs внутри infoWrapper

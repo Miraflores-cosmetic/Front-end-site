@@ -25,6 +25,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Product } from '@/types/types';
 import { getSingleProduct } from '@/graphql/queries/products.service';
 import { generateBestsellerTabsOptions } from '@/utils/tabsGenerator';
+import { editorJsToHtml } from '@/utils/editorJsParser';
 
 import { getProductBySlug } from '@/store/slices/productSlice';
 
@@ -205,38 +206,7 @@ const LazyComponent: React.FC = () => {
     setActiveSize(option);
   };
 
-  function editorJsToHtml(data: any): string {
-    if (typeof data === 'string') {
-      try {
-        data = JSON.parse(data);
-      } catch (e) {
-        console.error('Failed to parse JSON string:', e);
-        return '';
-      }
-    }
-
-    if (!data || !data.blocks || !Array.isArray(data.blocks)) {
-      return '';
-    }
-
-    const result = data.blocks
-      .map((block: any) => {
-        if (block.type === 'paragraph') {
-          const text = block.data?.text || '';
-
-          const temp = document.createElement('div');
-          temp.innerHTML = text;
-          const plainText = temp.textContent || temp.innerText || '';
-
-          return `<p>${plainText}</p>`;
-        }
-        return '';
-      })
-      .filter(Boolean)
-      .join('');
-
-    return result;
-  }
+  // Используем импортированную функцию editorJsToHtml из utils, которая правильно обрабатывает все блоки
 
   if (loading || !item) {
     return null;
@@ -285,18 +255,48 @@ const LazyComponent: React.FC = () => {
                   return attributes?.find((attr: any) => attr.attribute?.slug === slug);
                 };
                 
+                // Используем "Короткое описание на странице товара" из атрибутов
                 const shortDescAttr = getAttributeBySlug(item.attributes || [], 'korotkoe-opisanie-na-stranice-tovara') ||
                                      getAttributeBySlug(item.attributes || [], 'korotkoe-opisanie-tovara') ||
                                      getAttributeBySlug(item.attributes || [], 'short_description');
                 
-                let shortDescription = '';
-                if (shortDescAttr?.values && Array.isArray(shortDescAttr.values) && shortDescAttr.values.length > 0) {
-                  shortDescription = shortDescAttr.values[0]?.plainText || 
-                                   shortDescAttr.values[0]?.name || 
-                                   shortDescAttr.values[0]?.richText || '';
+                // Логируем для отладки
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('Short desc attr:', shortDescAttr);
+                  console.log('Item description:', item.description);
+                  console.log('Item description type:', typeof item.description);
+                  if (item.description && typeof item.description === 'string') {
+                    console.log('Item description length:', item.description.length);
+                    console.log('Item description preview:', item.description.substring(0, 200));
+                  }
                 }
                 
-                if (shortDescription && shortDescription.trim()) {
+                let shortDescription = '';
+                if (shortDescAttr?.values && Array.isArray(shortDescAttr.values) && shortDescAttr.values.length > 0) {
+                  // Приоритет: richText (полный текст) > plainText (может быть обрезан) > name
+                  shortDescription = shortDescAttr.values[0]?.richText || 
+                                   shortDescAttr.values[0]?.plainText || 
+                                   shortDescAttr.values[0]?.name || '';
+                  
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('Short description found:', shortDescription);
+                    console.log('Short description length:', shortDescription.length);
+                    console.log('Short description ends with ...:', shortDescription.trim().endsWith('...'));
+                    console.log('Has richText:', !!shortDescAttr.values[0]?.richText);
+                    console.log('Has plainText:', !!shortDescAttr.values[0]?.plainText);
+                  }
+                }
+                
+                // Проверяем, не обрезано ли короткое описание
+                // Если оно заканчивается на "..." или слишком короткое, используем полное описание
+                const isTruncated = shortDescription && (
+                  shortDescription.trim().endsWith('...') || 
+                  shortDescription.trim().endsWith('…') ||
+                  (shortDescription.length < 150 && item.description) // Если короткое описание меньше 150 символов и есть полное
+                );
+                
+                // Если есть короткое описание и оно не обрезано, используем его
+                if (shortDescription && shortDescription.trim() && !isTruncated) {
                   let htmlContent = shortDescription;
                   if (typeof shortDescription === 'string' && shortDescription.trim().startsWith('{')) {
                     try {
@@ -309,6 +309,10 @@ const LazyComponent: React.FC = () => {
                     htmlContent = shortDescription.replace(/\n/g, '<br>');
                   }
                   
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('Using short description, HTML length:', htmlContent.length);
+                  }
+                  
                   return (
                     <p
                       className={styles.desc}
@@ -319,11 +323,23 @@ const LazyComponent: React.FC = () => {
                   );
                 }
                 
+                // Если короткого описания нет, используем полное описание как fallback
+                if (!item.description) {
+                  return null;
+                }
+                
+                const fullDescriptionHtml = editorJsToHtml(item.description);
+                
+                if (process.env.NODE_ENV === 'development') {
+                  console.log('Using full description, HTML length:', fullDescriptionHtml.length);
+                  console.log('Full description HTML preview:', fullDescriptionHtml.substring(0, 300));
+                }
+                
                 return (
                   <p
                     className={styles.desc}
                     dangerouslySetInnerHTML={{
-                      __html: editorJsToHtml(item.description)
+                      __html: fullDescriptionHtml
                     }}
                   />
                 );

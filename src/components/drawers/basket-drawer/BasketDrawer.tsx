@@ -127,14 +127,6 @@ const BasketDrawer: React.FC = () => {
             <button className={styles.orderButtonLeft} onClick={handleOrder}>
               {isAuth ? 'Оформить заказ' : 'Войти'}
             </button>
-            <button
-              onClick={handleClearCart}
-              className={styles.clearButton}
-              title='Очистить корзину'
-              disabled={lines.length === 0}
-            >
-              <img src={whiteBasketTrash} alt='Очистить корзину' />
-            </button>
           </div>
         </div>
       </div>

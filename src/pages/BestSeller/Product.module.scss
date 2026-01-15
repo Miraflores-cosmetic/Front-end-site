@@ -199,6 +199,14 @@
           min-width: 0; // Разрешаем сжатие
           box-sizing: border-box;
           overflow-x: hidden; // Предотвращаем выход текста за пределы
+          overflow-y: visible; // Разрешаем вертикальный overflow
+          text-overflow: clip; // Убираем ellipsis
+          display: block; // Убираем -webkit-box если был
+          -webkit-line-clamp: none; // Убираем ограничение по строкам
+          -webkit-box-orient: horizontal; // Убираем вертикальную ориентацию
+          max-height: none; // Убираем ограничение по высоте
+          white-space: normal; // Разрешаем перенос строк
+          line-height: 1.5; // Добавляем нормальный межстрочный интервал
         }
         
         // Ограничиваем компоненты SizeTabs внутри infoWrapper

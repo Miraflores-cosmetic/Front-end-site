@@ -3,22 +3,52 @@
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+
   @media (max-width: 756px) {
     width: 100%;
   }
+  @media (max-width: 550px) {
+    gap: 60px;
+  }
 }
 .nameMenuWrapper {
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 46px;
+    @media (max-width: 756px) {
+      margin-bottom: 0px;
+      align-items: baseline;
+    }
+    @media (max-width: 550px) {
+      margin-bottom:40px ;
+    }
+
+    .logoutLink {
+      font-size: 13px;
+      text-transform: uppercase;
+      color: #7b7b7b;
+      cursor: pointer;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+    }
+  }
+
   .userName {
     font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
     font-size: 48px;
     font-weight: 300;
-    margin-bottom: 46px;
+    text-transform: uppercase;
+    @media (max-width: 756px) {
+      font-size: 32px;
+    }
   }
 
   .menu {
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    // gap: 24px;
   }
 
   .menuItem {
@@ -30,43 +60,61 @@
     color: #6e6d67;
     cursor: pointer;
     transition: 0.2s;
-    border-top: 1px solid #6e6d6799;
-    padding-top: 24px;
+    border-top: 1px solid #e5e5e5;
+    padding: 24px 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    text-transform: uppercase;
+
+    @media (max-width: 756px) {
+      font-size: 14px;
+      color: #7b7b7b;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+    }
 
     &:hover {
       opacity: 1;
       color: black;
     }
   }
+  
+  .menuItemWrapper:last-child .menuItem {
+    border-bottom: 1px solid #e5e5e5;
+  }
 
   .activeDot {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    border: 1px solid gray;
-    background-color: #6e6d67;
+    background-color: transparent;
+    border: 1px solid #d1d1d1;
+    position: relative;
+    &::after {
+        content: '';
+        position: absolute;
+        width: 3px;
+        height: 3px;
+        background-color: #6e6d67;
+        border-radius: 50%;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
   }
 
   .notActiveDot {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
-    border: 1px solid gray;
+    border: 1px solid #d1d1d1;
   }
 
   .active {
     opacity: 1;
-    font-weight: 500;
     position: relative;
-    color:black &::after {
-      content: '•';
-      position: absolute;
-      right: -10px;
-      color: #000;
-    }
+    color: #000;
   }
 }
 

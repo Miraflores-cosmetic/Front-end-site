@@ -48,23 +48,32 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside className={styles.sidebar}>
       <div className={styles.nameMenuWrapper}>
-        <h1 className={styles.userName}>{userName}</h1>
+        <div className={styles.header}>
+          <h1 className={styles.userName}>{userName}</h1>
+          {isMobile && (
+            <span className={styles.logoutLink} onClick={() => handleClick('logout')}>
+              ВЫЙТИ
+            </span>
+          )}
+        </div>
 
         <nav className={styles.menu}>
-          {menuItems.map(item => (
-            <div key={item.id} className={styles.menuItemWrapper}>
-              <li
-                className={`${styles.menuItem} ${activeTab === item.id ? styles.active : ''}`}
-                onClick={() => handleClick(item.id)}
-              >
-                {item.label}
-                <div className={activeTab === item.id ? styles.activeDot : styles.notActiveDot} />
-              </li>
-              {isMobile && openAccordion === item.id && item.content && (
-                <div className={styles.accordionContent}>{item.content}</div>
-              )}
-            </div>
-          ))}
+          {menuItems
+            .filter(item => !isMobile || item.id !== 'logout')
+            .map(item => (
+              <div key={item.id} className={styles.menuItemWrapper}>
+                <li
+                  className={`${styles.menuItem} ${activeTab === item.id ? styles.active : ''}`}
+                  onClick={() => handleClick(item.id)}
+                >
+                  {item.label}
+                  <div className={activeTab === item.id ? styles.activeDot : styles.notActiveDot} />
+                </li>
+                {isMobile && openAccordion === item.id && item.content && (
+                  <div className={styles.accordionContent}>{item.content}</div>
+                )}
+              </div>
+            ))}
         </nav>
       </div>
       {isMobile && <Bestsellers />}

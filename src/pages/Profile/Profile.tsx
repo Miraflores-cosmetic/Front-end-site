@@ -12,7 +12,7 @@ import FavoritesContent from './contents/favorites-content/FavoritesContent';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
-import { getMe, logout } from '@/store/slices/authSlice'
+import { getMe, logout } from '@/store/slices/authSlice';
 
 const ProfilePage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -32,27 +32,27 @@ const ProfilePage: React.FC = () => {
   const menuMobileItems = [
     {
       id: 'info' as TabId,
-      label: 'Общая информация',
+      label: 'ОБЩАЯ ИНФОРМАЦИЯ',
       content: <InfoMobileContent setOpenAccordion={() => setOpenAccordion(null)} />
     },
     {
       id: 'orders' as TabId,
-      label: 'Заказы',
+      label: 'ЗАКАЗЫ',
       content: <OrdersContent setOpenAccordion={() => setOpenAccordion(null)} />
     },
     {
       id: 'favorites' as TabId,
-      label: 'Избранное',
+      label: 'ВИШЛИТС',
       content: <FavoritesContent setOpenAccordion={() => setOpenAccordion(null)} />
     },
     {
       id: 'bonus' as TabId,
-      label: 'Бонусный счёт',
+      label: 'БОНУСНЫЙ СЧЕТ',
       content: <div>Контент избранного44</div>
     },
     {
       id: 'logout' as TabId,
-      label: 'Выйти',
+      label: 'ВЫЙТИ',
       content: <div>Выход из аккаунта...</div>
     }
   ];
@@ -117,8 +117,8 @@ const ProfilePage: React.FC = () => {
         // Если токен истек или ошибка авторизации - редирект на вход
         const errorMessage = error?.message || error?.error?.message || '';
         if (
-          errorMessage.includes('TokenExpired') || 
-          errorMessage.includes('expired') || 
+          errorMessage.includes('TokenExpired') ||
+          errorMessage.includes('expired') ||
           errorMessage.includes('PermissionDenied') ||
           errorMessage.includes('Signature has expired') ||
           errorMessage.includes('ExpiredSignatureError') ||
@@ -141,7 +141,7 @@ const ProfilePage: React.FC = () => {
         }
       }
     };
-    
+
     // Проверяем авторизацию только один раз при монтировании
     // App.tsx уже проверит при загрузке, но если пользователь перешел на /profile напрямую
     checkAuth();
@@ -154,7 +154,7 @@ const ProfilePage: React.FC = () => {
         <div className={styles.profile}>
           {/* ЛЕВАЯ КОЛОНКА */}
           <Sidebar
-            userName={me?.firstName || ""}
+            userName={me?.firstName || ''}
             menuItems={menuMobileItems}
             activeTab={activeTab}
             setActiveTab={setActiveTab}

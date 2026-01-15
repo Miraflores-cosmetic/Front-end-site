@@ -40,7 +40,7 @@ const InfoMobileContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion 
 
   return (
     <article className={styles.infoMobileContent}>
-      <p className={styles.title}>Общая информация</p>
+      {/* <p className={styles.title}>Общая информация</p> */}
 
       <article className={styles.infoWrapper}>
         <section className={styles.info}>

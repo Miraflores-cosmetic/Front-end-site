@@ -1,10 +1,11 @@
 import React from 'react';
 import styles from './InfoMobileContent.module.scss';
 import DeliveryProfile from '@/components/delivary-profile/DeliveryProfile';
-// import { openDrawer } from "@/store/slices/drawerSlice";
+import { openDrawer } from '@/store/slices/drawerSlice';
 import telegram from '@/assets/icons/telegram.svg';
 import ArrowToRight from '@/assets/icons/ArrowToRight.svg';
-// import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/store/store';
 import { TabId } from '@/pages/Profile/side-bar/SideBar';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { AddressInfo } from '@/types/auth';
@@ -14,25 +15,28 @@ interface InfoMobileContentProps {
 }
 
 const InfoMobileContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion }) => {
-  // const dispatch = useDispatch();
+  const dispatch = useDispatch();
+  const { me } = useSelector((state: RootState) => state.authSlice);
   const isMobile = useScreenMatch(450);
 
   const [selectedAddress, setSelectedAddress] = React.useState<AddressInfo | null>(null);
 
   const handleChange = () => {
-    // dispatch(openDrawer("about"));
+    dispatch(openDrawer('about'));
   };
 
   const handleCloseAccordion = () => {
     setOpenAccordion(null);
   };
 
-    const handleAddressSelect = (address: AddressInfo) => {
-      setSelectedAddress(address);
-      
-      // Auto-fill phone from address if the input is currently empty
-    
-    };
+  const handleAddressSelect = (address: AddressInfo) => {
+    setSelectedAddress(address);
+  };
+
+  const fullName = me ? `${me.firstName || ''} ${me.lastName || ''}`.trim() : 'Не указано';
+  // Phone and Birthday are not currently in MeInfo, using placeholders to avoid confusion with mock data
+  const phone = 'Не указано';
+  const birthday = 'Не указано';
 
   return (
     <article className={styles.infoMobileContent}>
@@ -41,12 +45,12 @@ const InfoMobileContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion 
       <article className={styles.infoWrapper}>
         <section className={styles.info}>
           <p className={styles.category}>ФИО</p>
-          <p className={styles.value}>Фёдор Ники́форович Плевако́</p>
+          <p className={styles.value}>{fullName || 'Не указано'}</p>
         </section>
 
         <section className={styles.info}>
           <p className={styles.category}>Телефон</p>
-          <p className={styles.value}>+7(913) 910 30-70</p>
+          <p className={styles.value}>{phone}</p>
         </section>
 
         <section className={styles.infoPass}>
@@ -60,7 +64,7 @@ const InfoMobileContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion 
 
         <section className={styles.info}>
           <p className={styles.category}>Дата рождения</p>
-          <p className={styles.value}>23 декабря</p>
+          <p className={styles.value}>{birthday}</p>
         </section>
 
         <section className={styles.info}>
@@ -73,7 +77,7 @@ const InfoMobileContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion 
         </p>
       </article>
 
-      <DeliveryProfile onSelectAddress={handleAddressSelect}/>
+      <DeliveryProfile onSelectAddress={handleAddressSelect} />
       {/* ✅ Close button */}
       <article className={styles.telegramContainer}>
         <div className={styles.telegramwrapper}>

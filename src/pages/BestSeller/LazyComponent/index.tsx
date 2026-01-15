@@ -59,61 +59,72 @@ const LazyComponent: React.FC = () => {
     console.log(item);
   },[item])
 
-  const etapsData: Etap[] = [
-    { id: 1, title: 'Этап 1', name: 'Очищение', icon: check },
-    { id: 2, title: 'Подходит для', name: 'Всех типов кожи', icon: check },
-    { id: 3, title: 'Подходит для', name: 'Всех типов кожи', icon: check }
-  ];
-
   const getCurrentProductEtap = (): string | null => {
     if (!item?.attributes) return null;
     const careStageAttr = item.attributes.find((attr: any) => attr.attribute?.slug === 'care_stage');
     if (!careStageAttr?.values || careStageAttr.values.length === 0) return null;
     
     const value = careStageAttr.values[0];
+    const slug = (value.slug || '').toLowerCase();
+    const name = (value.name || '').toLowerCase();
+    const plainText = (value.plainText || '').toLowerCase();
     
-    if (value.slug) {
-      return value.slug;
-    }
-    
-    if (value.name) {
-      const name = value.name.toLowerCase();
-      if (name.includes('очищение') || name.includes('etap-1') || name.includes('этап 1')) {
+    // Нормализуем реальные значения из БД в стандартные этапы
+    // Сначала проверяем slug - нормализуем реальные значения из БД
+    if (slug) {
+      // Реальные slug из БД: ochishchenie-etap-1, pitanie-i-uvlazhnenie-etap-31, sos-ukhod-etap-30
+      if (slug.includes('etap-1') || slug.includes('ochishchenie') || slug === 'etap-1') {
         return 'etap-1';
       }
-      if (name.includes('тонизация') || name.includes('etap-2') || name.includes('этап 2')) {
+      if (slug.includes('etap-2') || slug.includes('tonizatsiia') || slug === 'etap-2') {
         return 'etap-2';
       }
-      if (name.includes('3.1') || name.includes('3-1')) {
+      if (slug.includes('etap-31') || slug.includes('etap-3-1') || slug.includes('etap-3.1') || slug === 'etap-3-1') {
         return 'etap-3-1';
       }
-      if (name.includes('питание') || name.includes('увлажнение') || name.includes('etap-3') || name.includes('этап 3')) {
+      if (slug.includes('etap-3') || slug.includes('etap-30') || slug.includes('pitanie') || slug.includes('uvlazhnenie') || slug === 'etap-3') {
         return 'etap-3';
       }
     }
     
-    if (value.plainText) {
-      const text = value.plainText.toLowerCase();
-      if (text.includes('очищение') || text.includes('etap-1') || text.includes('этап 1')) {
-        return 'etap-1';
-      }
-      if (text.includes('тонизация') || text.includes('etap-2') || text.includes('этап 2')) {
-        return 'etap-2';
-      }
-      if (text.includes('3.1') || text.includes('3-1')) {
+    // Затем проверяем name
+    if (name) {
+      if (name.includes('3.1') || name.includes('3-1') || name.includes('etap-3-1') || name.includes('etap-31')) {
         return 'etap-3-1';
       }
-      if (text.includes('питание') || text.includes('увлажнение') || text.includes('etap-3') || text.includes('этап 3')) {
+      if ((name.includes('питание') || name.includes('увлажнение') || name.includes('этап 3') || name.includes('etap-3')) && 
+          !name.includes('3.1') && !name.includes('3-1')) {
         return 'etap-3';
+      }
+      if (name.includes('очищение') || name.includes('этап 1') || name.includes('etap-1')) {
+        return 'etap-1';
+      }
+      if (name.includes('тонизация') || name.includes('этап 2') || name.includes('etap-2')) {
+        return 'etap-2';
+      }
+    }
+    
+    // И наконец проверяем plainText
+    if (plainText) {
+      if (plainText.includes('3.1') || plainText.includes('3-1') || plainText.includes('etap-3-1') || plainText.includes('etap-31')) {
+        return 'etap-3-1';
+      }
+      if ((plainText.includes('питание') || plainText.includes('увлажнение') || plainText.includes('этап 3') || plainText.includes('etap-3')) && 
+          !plainText.includes('3.1') && !plainText.includes('3-1')) {
+        return 'etap-3';
+      }
+      if (plainText.includes('очищение') || plainText.includes('этап 1') || plainText.includes('etap-1')) {
+        return 'etap-1';
+      }
+      if (plainText.includes('тонизация') || plainText.includes('этап 2') || plainText.includes('etap-2')) {
+        return 'etap-2';
       }
     }
     
     return null;
   };
 
-  const currentProductEtap = getCurrentProductEtap();
-  const [activeEtap, setActiveEtap] = React.useState<string | null>(null);
-
+  // Список всех этапов
   const allEtaps: BestSellerEtap[] = [
     { id: 1, title: 'Этап 1', name: 'Очищение', slug: 'etap-1' },
     { id: 2, title: 'Этап 2', name: 'Тонизация', slug: 'etap-2' },
@@ -121,12 +132,71 @@ const LazyComponent: React.FC = () => {
     { id: 4, title: 'Этап 3.1', name: 'Питание и увлажнение', slug: 'etap-3-1' }
   ];
 
-  const availableEtaps = allEtaps.filter(etap => {
-    if (!currentProductEtap) return true;
-    const etapSlug = etap.slug?.toLowerCase();
-    const currentSlug = currentProductEtap.toLowerCase();
-    return etapSlug !== currentSlug;
+  // Вычисляем этап текущего товара
+  const currentProductEtap = React.useMemo(() => {
+    return getCurrentProductEtap();
+  }, [item?.id, item?.attributes]);
+
+  // Получаем реальные данные из товара
+  const getAttributeValue = (slug: string): string | null => {
+    if (!item?.attributes) return null;
+    const attr = item.attributes.find((a: any) => a.attribute?.slug === slug);
+    if (!attr?.values || attr.values.length === 0) return null;
+    const value = attr.values[0];
+    return value.name || value.plainText || value.slug || null;
+  };
+
+  // Получаем этап товара (нормализованный)
+  const productEtap = currentProductEtap;
+  const etapTitle = productEtap 
+    ? allEtaps.find(e => e.slug === productEtap)?.title || 'Этап'
+    : null;
+  const etapName = productEtap
+    ? allEtaps.find(e => e.slug === productEtap)?.name || ''
+    : '';
+
+  // Получаем "для чего" (purpose)
+  const purposeValue = getAttributeValue('purpose') || getAttributeValue('dlya-chego');
+  
+  // Получаем тип продукта (product_type)
+  const productTypeValue = getAttributeValue('product_type') || getAttributeValue('tip-produkta');
+
+  const etapsData: Etap[] = [
+    ...(productEtap ? [{ id: 1, title: etapTitle || 'Этап', name: etapName, icon: check }] : []),
+    ...(purposeValue ? [{ id: 2, title: 'Подходит для', name: purposeValue, icon: check }] : []),
+    ...(productTypeValue ? [{ id: 3, title: 'Тип продукта', name: productTypeValue, icon: check }] : [])
+  ];
+
+  // Инициализируем activeEtap из currentProductEtap сразу при первом рендере
+  const [activeEtap, setActiveEtap] = React.useState<string | null>(() => {
+    // При первом рендере пытаемся определить этап из item, если он уже загружен
+    if (item?.attributes) {
+      const etap = getCurrentProductEtap();
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[LazyComponent] Инициализация activeEtap при первом рендере:', etap);
+      }
+      return etap;
+    }
+    return null;
   });
+
+  // Обновляем activeEtap при загрузке/изменении товара
+  useEffect(() => {
+    if (item && item.id && currentProductEtap) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[LazyComponent] Обновляем activeEtap:', currentProductEtap, 'текущий:', activeEtap);
+      }
+      // Всегда обновляем, если товар загружен и есть этап
+      setActiveEtap(currentProductEtap);
+    } else if (item && item.id && !currentProductEtap) {
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[LazyComponent] Товар загружен, но этап не найден');
+      }
+    }
+  }, [item?.id, currentProductEtap]);
+
+  // Показываем все этапы - исключаем только сам товар из списка товаров, а не этап
+  const availableEtaps = allEtaps;
 
 
   const isMobile = useScreenMatch(756);
@@ -168,12 +238,12 @@ const LazyComponent: React.FC = () => {
     return result;
   }
 
-  if (loading) {
+  if (loading || !item) {
     return null;
   }
 
-  if (!loading) {
-    const activeVariant = item.variants.find(i => i.node.id === activeVariantId);
+  if (item) {
+    const activeVariant = (item.variants || []).find((i: any) => i.node.id === activeVariantId);
     const currentPrice = activeVariant?.node.pricing.price.gross.amount || 0;
     const undiscountedPrice = activeVariant?.node.pricing.priceUndiscounted ? (activeVariant.node.pricing.priceUndiscounted as any)?.gross?.amount : null;
     const oldPrice = undiscountedPrice && undiscountedPrice > currentPrice ? undiscountedPrice : null;
@@ -209,7 +279,7 @@ const LazyComponent: React.FC = () => {
             <div className={styles.infoWrapper}>
               {/* Заголовок для десктопа - скрыт на мобилке */}
               <p className={styles.title}>{item.name}</p>
-              <StarRating rating={item.rating ?? 5} text={`${item.reviews.length} отзывов`} />
+              <StarRating rating={item.rating ?? 5} text={`${(item.reviews || []).length} отзывов`} />
               {(() => {
                 const getAttributeBySlug = (attributes: any[], slug: string) => {
                   return attributes?.find((attr: any) => attr.attribute?.slug === slug);
@@ -260,7 +330,7 @@ const LazyComponent: React.FC = () => {
               })()}
 
               {activeVariantId !== 'example' && (
-                <SizeTabs options={item.variants} activeVariantId={activeVariantId} />
+                <SizeTabs options={item.variants || []} activeVariantId={activeVariantId} />
               )}
             </div>
             <div className={styles.bottomWrapper}>
@@ -327,13 +397,16 @@ const LazyComponent: React.FC = () => {
             onEtapClick={(etapSlug) => setActiveEtap(etapSlug)}
           />
         </div>
-        <Bestsellers 
-          isTitleHidden 
-          isProductPage 
-          filterByEtap={activeEtap}
-          excludeProductId={item.id}
-          excludeProductSlug={item.slug}
-        />
+        {!loading && item && (
+          <Bestsellers 
+            key={`bestsellers-${activeEtap || 'all'}-${item.id}`}
+            isTitleHidden 
+            isProductPage 
+            filterByEtap={activeEtap}
+            excludeProductId={item.id}
+            excludeProductSlug={item.slug}
+          />
+        )}
         
         {item.id && (
           <ReviewModal

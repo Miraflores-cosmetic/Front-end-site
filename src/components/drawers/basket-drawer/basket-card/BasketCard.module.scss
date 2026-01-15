@@ -5,7 +5,7 @@
   padding: 0 30px 0 0;
   flex-direction: column;
 
-  @media (max-width: 664px) {
+  @media (max-width: 550px) {
     padding: 0;
   }
 
@@ -83,26 +83,52 @@
     }
   }
 
-  .mobileBottomWrapper {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 100%;
-    width: 100%;
-    // margin-top: -20px;
-    gap: 10px;
-    flex-wrap: nowrap; // ← prevent wrapping
-    overflow: hidden;
-
-    @media (max-width: 480px) {
-      margin-top: 16px;
-      gap: 8px;
-      height: auto;
-    }
-
-    @media (max-width: 393px) {
-      gap: 6px;
-    }
+  /* Defines styles for the new Mobile Price Row */
+  .mobilePriceRow {
+      display: flex;
+      align-items: center;
+      gap: 4px; /* from Frame 1948759631 */
+      margin-top: 0;
+      
+      .toMobile {
+          font-family: 'Onest', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          line-height: 17px;
+          color: black;
+          text-transform: uppercase;
+      }
+      
+      .fromMobile {
+          font-family: 'Onest', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          line-height: 17px;
+          color: #6E6D67;
+          text-transform: uppercase;
+          text-decoration: none; /* remove default strike */
+          position: relative;
+          
+           &::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 100%;
+            height: 1px;
+            background: #FF0808;
+            transform: rotate(-8.84deg); /* Exact rotation from dump */
+          }
+      }
+      
+      .mobileDiscount {
+          font-family: 'Avenir Next', sans-serif;
+          font-size: 13px;
+          font-weight: 500;
+          line-height: 18px;
+          color: #297230;
+          margin-left: 4px;
+      }
   }
 }
 
@@ -114,9 +140,10 @@
   justify-content: space-between;
   gap: 10px;
 
-  @media (max-width: 664px) {
+  @media (max-width: 550px) {
     height: auto;
-    gap: 8px;
+    gap: 10px; /* Frame 1948759811 gap */
+    align-items: center; 
   }
 
   @media (max-width: 393px) {
@@ -130,9 +157,13 @@
     overflow: hidden;
     background: #f6f5ef;
 
-    @media (max-width: 664px) {
-      width: 95px;
-      height: 95px;
+    @media (max-width: 550px) {
+      width: 88px; /* Rectangle 4575 */
+      height: 88px;
+      padding: 11px; /* Image inside is 66x66, so (88-66)/2 = 11px padding */
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     img {
@@ -140,6 +171,12 @@
       height: 100%;
       object-fit: cover;
       display: block;
+      
+      @media (max-width: 550px) {
+         width: 66px;
+         height: 66px;
+         object-fit: contain; /* Ensure full product shows */
+      }
     }
 
     .placeholder {
@@ -156,8 +193,10 @@
     width: 100%;
     height: 100%;
 
-    @media (max-width: 664px) {
-      height: auto;
+    @media (max-width: 550px) {
+      height: 88px; /* Match image height */
+      justify-content: center;
+      gap: 2px; /* Frame 1948759810 gap */
     }
 
     .topInfo {
@@ -166,12 +205,13 @@
       height: 100%;
       gap: 4px;
 
-      @media (max-width: 664px) {
+      @media (max-width: 550px) {
         height: auto;
+        justify-content: center;
       }
 
       @media (max-width: 480px) {
-        gap: 3px;
+        gap: 2px;
       }
 
       .productName {
@@ -184,92 +224,31 @@
         text-overflow: ellipsis;
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2; /* Standard property */
         -webkit-box-orient: vertical;
         text-transform: uppercase;
 
-        @media (max-width: 664px) {
+        @media (max-width: 550px) {
+          font-family: 'Avenir Next', sans-serif;
           font-size: 13px;
-          line-height: 1.2;
-          -webkit-line-clamp: 1;
-        }
-
-        @media (max-width: 393px) {
-          font-size: 12px;
+          line-height: 18px;
+          font-weight: 600;
         }
       }
 
       .productSize {
         font-size: 14px;
         font-weight: 600;
-
         color: #6e6d67;
         line-height: 1.2;
 
-        @media (max-width: 664px) {
+        @media (max-width: 550px) {
+          font-family: 'Avenir Next', sans-serif;
           font-size: 12px;
-        }
-
-        @media (max-width: 393px) {
-          font-size: 11px;
-        }
-      }
-
-      .fromToMobile {
-        display: flex;
-        gap: 8px;
-        align-items: center;
-        flex-shrink: 1; // ← allow shrinking
-        min-width: 0; // ← allow ellipsis
-        flex: 1;
-
-        @media (max-width: 480px) {
-          gap: 6px;
-        }
-
-        @media (max-width: 393px) {
-          gap: 5px;
-        }
-
-        .fromMobile,
-        .toMobile {
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 100%; // ← prevent overflow
-        }
-
-        .fromMobile {
-          position: relative;
-          color: #6e6d67;
-          font-size: 13px;
-          font-weight: 600;
-          line-height: 1;
-
-          @media (max-width: 393px) {
-            font-size: 12px;
-          }
-
-          &::after {
-            content: '';
-            position: absolute;
-            left: -5%;
-            top: 50%;
-            width: 110%;
-            height: 1.5px;
-            background: #ff0808;
-            transform: translateY(-50%) rotate(-10deg);
-          }
-        }
-
-        .toMobile {
-          font-size: 13px;
-          font-weight: 600;
-          color: black;
-          line-height: 1;
-
-          @media (max-width: 393px) {
-            font-size: 12px;
-          }
+          line-height: 16px;
+          font-weight: 400;
+          color: #6E6D67;
+          margin-top: 0;
         }
       }
     }
@@ -282,7 +261,7 @@
       justify-content: space-between;
       padding: 10px;
 
-      @media (max-width: 664px) {
+      @media (max-width: 550px) {
         display: none;
       }
 
@@ -335,7 +314,7 @@
     align-items: flex-end;
     flex-shrink: 0;
 
-    @media (max-width: 664px) {
+    @media (max-width: 550px) {
       display: none;
     }
 
@@ -359,9 +338,6 @@
         font-size: 13px;
         padding: 0 6px;
       }
-
-
-     
     }
  .discountEmpty{
         min-width: 54px;
@@ -434,4 +410,51 @@
 
 .basketCard + .basketCard {
   margin-top: 0;
+  
+   /* Add margin top for cards on mobile to separate them? Desktop has 0. */
+   @media (max-width: 550px) {
+       margin-top: 16px; /* Separation */
+       border-bottom: none; /* No border here, border is on controls maybe? or just space */
+       padding-bottom: 0;
+   }
+}
+
+.mobileControlsRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-top: 6px; /* Gap between info and controls */
+    height: 33px; /* Frame 1948759714 height */
+    background: #fff;
+    border: 0.5px solid rgba(0, 0, 0, 0.08); /* Frame 1948759714 border */
+    padding: 8px 12px;
+    box-sizing: border-box;
+    
+    .controlBtn {
+        width: 16px;
+        height: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        border: none;
+        cursor: pointer;
+        padding: 0;
+        
+        img {
+            width: 100%;
+            height: 100%;
+        }
+    }
+    
+    .quantityDisplay {
+        font-family: 'Onest', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 17px;
+        text-align: center;
+        text-transform: uppercase;
+        color: #000000;
+    }
 }

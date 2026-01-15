@@ -294,7 +294,6 @@ const OrderLeftPart: React.FC = () => {
           }}
           type='text'
           placeholder='+8 (999) 999-99-99'
-          maxLength={18}
         />
       </section>
 

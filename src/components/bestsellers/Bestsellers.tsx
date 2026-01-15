@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Slider from 'react-slick';
 import styles from './Bestsellers.module.scss';
 import { BestSellerProductCard } from './bestSellerCard';
@@ -8,6 +8,8 @@ import Layout from '@/components/Layout/Layout';
 import { getBestSellers } from '@/store/slices/bestsellersSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
+import { getAllProducts } from '@/graphql/queries/products.service';
+import type { BestSellersProduct } from '@/types/products';
 
 interface BestsellersProps {
   isTitleHidden?: boolean;
@@ -146,19 +148,244 @@ export default function Bestsellers({
 
   const { bestSellers, loading, error, hasAttemptedLoad } = useSelector((state: RootState) => state.bestsellerSlice);
   const dispatch = useDispatch<AppDispatch>();
+  
+  // Состояние для всех товаров, загруженных через GraphQL
+  const [allProducts, setAllProducts] = useState<BestSellersProduct[]>([]);
+  const [loadingAllProducts, setLoadingAllProducts] = useState(false);
 
+  // Загружаем обычные bestSellers, если нет фильтра по этапу
   useEffect(() => {
-    if (!hasAttemptedLoad && !loading) {
+    if (!filterByEtap && !hasAttemptedLoad && !loading) {
       dispatch(getBestSellers());
     }
-  }, [dispatch, hasAttemptedLoad, loading]);
+  }, [dispatch, hasAttemptedLoad, loading, filterByEtap]);
+
+  // Загружаем все товары через GraphQL, если указан фильтр по этапу
+  useEffect(() => {
+    if (filterByEtap && filterByEtap.trim() !== '') {
+      const loadAllProducts = async () => {
+        setLoadingAllProducts(true);
+        try {
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Bestsellers] Загружаем все товары для фильтрации по этапу:', filterByEtap);
+          }
+          
+          const result = await getAllProducts(100);
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Bestsellers] Получено товаров:', result.edges.length);
+          }
+          
+          // Преобразуем данные из GraphQL формата в формат BestSellersProduct
+          const formattedProducts: BestSellersProduct[] = result.edges.map((edge: any) => {
+            const productNode = edge.node;
+            // productVariants может быть массивом ProductVariant или объектом с edges
+            let variant = productNode.defaultVariant;
+            if (!variant && productNode.productVariants) {
+              if (Array.isArray(productNode.productVariants)) {
+                variant = productNode.productVariants[0]?.node || productNode.productVariants[0];
+              } else if (productNode.productVariants.edges) {
+                variant = productNode.productVariants.edges[0]?.node;
+              }
+            }
+            
+            const variantId = variant?.id || productNode.id;
+            
+            let variantName = variant?.name || '';
+            if (variant?.attributes && Array.isArray(variant.attributes)) {
+              const volumeAttr = variant.attributes.find((attr: any) => 
+                attr.attribute?.slug === 'obem' || 
+                attr.attribute?.slug === 'volume' ||
+                attr.attribute?.name?.toLowerCase().includes('объем') ||
+                attr.attribute?.name?.toLowerCase().includes('volume')
+              );
+              if (volumeAttr?.values?.[0]?.name) {
+                variantName = volumeAttr.values[0].name;
+              } else if (volumeAttr?.values?.[0]?.plainText) {
+                variantName = volumeAttr.values[0].plainText;
+              }
+            }
+            
+            const variantPrice = variant?.pricing?.price?.gross?.amount || 0;
+            const variantUndiscountedPrice = variant?.pricing?.priceUndiscounted?.gross?.amount;
+            
+            let oldPrice: number | undefined = undefined;
+            if (variantUndiscountedPrice && variantUndiscountedPrice > variantPrice && variantPrice > 0) {
+              oldPrice = variantUndiscountedPrice;
+            }
+            
+            let discountPercent: number | undefined = undefined;
+            if (oldPrice && oldPrice > 0 && variantPrice > 0) {
+              discountPercent = Math.round(((oldPrice - variantPrice) / oldPrice) * 100);
+              if (discountPercent <= 0) {
+                discountPercent = undefined;
+                oldPrice = undefined;
+              }
+            }
+            
+            let description = '';
+            if (productNode.attributes && Array.isArray(productNode.attributes)) {
+              const descAttr = productNode.attributes.find((attr: any) => 
+                attr.attribute?.slug === 'opisanie-v-kartochke-tovara' || 
+                attr.attribute?.name?.toLowerCase().includes('описание') ||
+                attr.attribute?.name?.toLowerCase().includes('description')
+              );
+              if (descAttr?.values?.[0]?.plainText) {
+                description = descAttr.values[0].plainText;
+              } else if (descAttr?.values?.[0]?.name) {
+                description = descAttr.values[0].name;
+              }
+            }
+            
+            if (!description && productNode.description) {
+              try {
+                const parsed = typeof productNode.description === 'string' 
+                  ? JSON.parse(productNode.description) 
+                  : productNode.description;
+                description = parsed?.blocks?.[0]?.data?.text || '';
+              } catch (e) {
+                description = '';
+              }
+            }
+            
+            return {
+              id: variantId,
+              productId: productNode.id,
+              size: variantName,
+              title: productNode.name || '',
+              description,
+              price: variantPrice,
+              oldPrice: oldPrice,
+              discount: discountPercent,
+              images: productNode.media?.map((item: any) => item.url) || [],
+              thumbnail: productNode.thumbnail?.url || '',
+              slug: productNode.slug || '',
+              attributes: productNode.attributes || [],
+              productVariants: (() => {
+                let variants = [];
+                if (Array.isArray(productNode.productVariants)) {
+                  variants = productNode.productVariants;
+                } else if (productNode.productVariants?.edges) {
+                  variants = productNode.productVariants.edges;
+                }
+                
+                return variants.map((v: any) => {
+                  const variantNode = v.node || v;
+                  let variantName = variantNode?.name || '';
+                  
+                  if (variantNode?.attributes && Array.isArray(variantNode.attributes)) {
+                    const volumeAttr = variantNode.attributes.find((attr: any) => 
+                      attr.attribute?.slug === 'obem' || 
+                      attr.attribute?.slug === 'volume' ||
+                      attr.attribute?.name?.toLowerCase().includes('объем') ||
+                      attr.attribute?.name?.toLowerCase().includes('volume')
+                    );
+                    if (volumeAttr?.values?.[0]?.name) {
+                      variantName = volumeAttr.values[0].name;
+                    } else if (volumeAttr?.values?.[0]?.plainText) {
+                      variantName = volumeAttr.values[0].plainText;
+                    }
+                  }
+                  
+                  return {
+                    node: {
+                      ...variantNode,
+                      name: variantName
+                    }
+                  };
+                });
+              })(),
+              collections: productNode.collections || []
+            };
+          });
+          
+          // Фильтруем товары по этапу на клиенте
+          const filteredByEtap = formattedProducts.filter(product => {
+            // Находим этап товара из атрибутов
+            // Нужно найти этап из структуры атрибутов товара
+            const productEtap = (() => {
+              const attrs = product.attributes || [];
+              for (const attr of attrs) {
+                if (attr?.attribute?.slug === 'care_stage') {
+                  const values = attr?.values || [];
+                  if (values.length > 0) {
+                    const value = values[0];
+                    const slug = (value.slug || '').toLowerCase();
+                    const name = (value.name || '').toLowerCase();
+                    const plainText = (value.plainText || '').toLowerCase();
+                    
+                    if (slug) {
+                      if (slug.includes('etap-1') || slug.includes('ochishchenie')) return 'etap-1';
+                      if (slug.includes('etap-2') || slug.includes('tonizatsiia')) return 'etap-2';
+                      if (slug.includes('etap-31') || slug.includes('etap-3-1') || slug.includes('etap-3.1')) return 'etap-3-1';
+                      if (slug.includes('etap-3') || slug.includes('etap-30') || slug.includes('pitanie') || slug.includes('uvlazhnenie')) return 'etap-3';
+                    }
+                    
+                    if (name) {
+                      if (name.includes('3.1') || name.includes('3-1') || name.includes('etap-3-1') || name.includes('etap-31')) return 'etap-3-1';
+                      if ((name.includes('питание') || name.includes('увлажнение') || name.includes('этап 3') || name.includes('etap-3')) && 
+                          !name.includes('3.1') && !name.includes('3-1')) return 'etap-3';
+                      if (name.includes('очищение') || name.includes('этап 1') || name.includes('etap-1')) return 'etap-1';
+                      if (name.includes('тонизация') || name.includes('этап 2') || name.includes('etap-2')) return 'etap-2';
+                    }
+                    
+                    if (plainText) {
+                      if (plainText.includes('3.1') || plainText.includes('3-1') || plainText.includes('etap-3-1') || plainText.includes('etap-31')) return 'etap-3-1';
+                      if ((plainText.includes('питание') || plainText.includes('увлажнение') || plainText.includes('этап 3') || plainText.includes('etap-3')) && 
+                          !plainText.includes('3.1') && !plainText.includes('3-1')) return 'etap-3';
+                      if (plainText.includes('очищение') || plainText.includes('этап 1') || plainText.includes('etap-1')) return 'etap-1';
+                      if (plainText.includes('тонизация') || plainText.includes('этап 2') || plainText.includes('etap-2')) return 'etap-2';
+                    }
+                  }
+                }
+              }
+              return null;
+            })();
+            return productEtap === filterByEtap;
+          });
+          
+          // Исключаем товар по slug или id
+          const finalProducts = filteredByEtap.filter(product => {
+            if (excludeProductSlug && product.slug === excludeProductSlug) return false;
+            if (excludeProductId && (product.productId === excludeProductId || product.id === excludeProductId)) return false;
+            return true;
+          });
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log('[Bestsellers] Отформатировано товаров:', formattedProducts.length);
+            console.log('[Bestsellers] Отфильтровано по этапу', filterByEtap, ':', finalProducts.length);
+          }
+          
+          setAllProducts(finalProducts);
+        } catch (err) {
+          console.error('[Bestsellers] Ошибка загрузки всех товаров через GraphQL:', err);
+          setAllProducts([]);
+        } finally {
+          setLoadingAllProducts(false);
+        }
+      };
+      
+      loadAllProducts();
+    } else {
+      setAllProducts([]);
+    }
+  }, [filterByEtap, excludeProductSlug, excludeProductId]);
+
+  // Определяем, какие товары использовать
+  const sourceProducts = React.useMemo(() => {
+    // Если указан фильтр по этапу, используем товары, загруженные через GraphQL и отфильтрованные на клиенте
+    if (filterByEtap && filterByEtap.trim() !== '') {
+      return allProducts;
+    }
+    // Иначе используем обычные bestSellers
+    return bestSellers;
+  }, [filterByEtap, allProducts, bestSellers]);
 
   const filteredProducts = React.useMemo(() => {
-    let filtered = [...bestSellers];
+    let filtered = [...sourceProducts];
 
     if (excludeProductSlug && excludeProductSlug.trim() !== '') {
       const excludeSlugLower = excludeProductSlug.toLowerCase().trim();
-      const beforeCount = filtered.length;
       filtered = filtered.filter(product => {
         if (!product.slug || product.slug.trim() === '') {
           if (excludeProductId) {
@@ -169,97 +396,40 @@ export default function Bestsellers({
         const productSlugLower = product.slug.toLowerCase().trim();
         return productSlugLower !== excludeSlugLower;
       });
-      
-      if (process.env.NODE_ENV === 'development') {
-        const afterCount = filtered.length;
-        if (beforeCount !== afterCount) {
-          console.log(`[Bestsellers] Исключено ${beforeCount - afterCount} товар(ов) по slug: ${excludeProductSlug}`);
-        }
-      }
     }
     else if (excludeProductId && excludeProductId.trim() !== '') {
-      const beforeCount = filtered.length;
       filtered = filtered.filter(product => {
         const hasProductId = product.productId && product.productId === excludeProductId;
         const hasVariantId = product.id && product.id === excludeProductId;
         return !hasProductId && !hasVariantId;
       });
-      
-      if (process.env.NODE_ENV === 'development') {
-        const afterCount = filtered.length;
-        if (beforeCount !== afterCount) {
-          console.log(`[Bestsellers] Исключено ${beforeCount - afterCount} товар(ов) по ID: ${excludeProductId}`);
-        }
-      }
     }
 
-    if (filterByEtap && filterByEtap !== '') {
-      filtered = filtered.filter(product => {
-        if (!product.attributes) return false;
-        
-        const careStageAttr = product.attributes.find((attr: any) => 
-          attr.attribute?.slug === 'care_stage'
-        );
-        
-        if (!careStageAttr?.values || careStageAttr.values.length === 0) return false;
-        
-        const value = careStageAttr.values[0];
-        const filterSlug = filterByEtap.toLowerCase();
-        
-        if (value.slug && value.slug.toLowerCase() === filterSlug) {
-          return true;
-        }
-        
-        if (value.name) {
-          const name = value.name.toLowerCase();
-          if (
-            (filterSlug === 'etap-1' && (name.includes('очищение') || name.includes('этап 1'))) ||
-            (filterSlug === 'etap-2' && (name.includes('тонизация') || name.includes('этап 2'))) ||
-            (filterSlug === 'etap-3-1' && (name.includes('3.1') || name.includes('3-1'))) ||
-            (filterSlug === 'etap-3' && (name.includes('питание') || name.includes('увлажнение') || name.includes('этап 3')))
-          ) {
-            return true;
-          }
-        }
-        
-        if (value.plainText) {
-          const text = value.plainText.toLowerCase();
-          if (
-            (filterSlug === 'etap-1' && (text.includes('очищение') || text.includes('этап 1'))) ||
-            (filterSlug === 'etap-2' && (text.includes('тонизация') || text.includes('этап 2'))) ||
-            (filterSlug === 'etap-3-1' && (text.includes('3.1') || text.includes('3-1'))) ||
-            (filterSlug === 'etap-3' && (text.includes('питание') || text.includes('увлажнение') || text.includes('этап 3')))
-          ) {
-            return true;
-          }
-        }
-        
-        return false;
-      });
-    }
+    // Если товары загружены через REST API по этапу, они уже отфильтрованы на бэкенде
+    // Дополнительная фильтрация не нужна
 
     return filtered;
-  }, [bestSellers, filterByEtap, excludeProductId, excludeProductSlug]);
+  }, [sourceProducts, excludeProductId, excludeProductSlug]);
 
   return (
     <section className={`${styles.bestsellers} ${isProductPage ? styles.productPage : ''}`} style={isOversize ? undefined : {}}>
       <Layout>
         {!isTitleHidden && <h2 className={styles.title}>Бестселлеры</h2>}
-        {loading && bestSellers.length === 0 && <h4>Загрузка</h4>}
+        {(loading || loadingAllProducts) && filteredProducts.length === 0 && <h4>Загрузка</h4>}
 
         {filteredProducts.length > 0 && (
           <Slider {...settings} className={styles.slider}>
             {filteredProducts.map(product => (
-              <BestSellerProductCard key={product.id} product={product} loading={loading} />
+              <BestSellerProductCard key={product.id} product={product} loading={loading || loadingAllProducts} />
             ))}
           </Slider>
         )}
         
-        {!loading && filteredProducts.length === 0 && bestSellers.length > 0 && (
+        {!(loading || loadingAllProducts) && filteredProducts.length === 0 && sourceProducts.length > 0 && (
           <p>Товары не найдены для выбранного этапа</p>
         )}
         
-        {!loading && bestSellers.length === 0 && (
+        {!(loading || loadingAllProducts) && sourceProducts.length === 0 && (
           <p>Товары не найдены</p>
         )}
       </Layout>

@@ -41,7 +41,6 @@ export interface ProductDetailNode  {
 
   isPublished: boolean;  
   description: string;
-  descriptionPlaintext: string;
   productType: {
     name: string;
   };

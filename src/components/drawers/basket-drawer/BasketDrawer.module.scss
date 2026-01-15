@@ -12,7 +12,8 @@
 
   .contentWrapper {
     width: 100%;
-    height: calc(100% - 127px);
+    flex: 1; /* Grow to fill available space */
+    min-height: 0; /* Essential for nested flex scrolling */
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -179,6 +180,7 @@
         margin-top: 24px;
         padding: 0 16px 16px;
         gap: 20px;
+        height: 100%;
       }
 
       @media (max-width: 393px) {
@@ -203,228 +205,350 @@
         }
       }
     }
+
+  .promoSection {
+    padding: 16px 24px;
+    border-top: 1px solid #f0f0f0;
+    
+    @media (max-width: 550px) {
+        padding: 0;
+        border: none;
+        margin-top: 24px;
+        margin-bottom: 12px; /* Reduced to 12px as requested */
+        padding: 0 16px; 
+    }
+
+    .promoRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+
+      @media (max-width: 550px) {
+        height: 50px;
+        background: #fff;
+        border: 0.5px solid rgba(0, 0, 0, 0.08);
+        border-radius: 0;
+        padding: 0 12px; 
+        gap: 20px;
+      }
+      
+      .promoIcon {
+        width: 20px;
+        height: 20px;
+        
+        @media (max-width: 550px) {
+            width: 18px;
+            height: 18px;
+        }
+      }
+
+      .promoText {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+        color: #000;
+        
+        @media (max-width: 550px) {
+             font-family: 'Avenir Next', sans-serif;
+             font-size: 13px;
+             line-height: 18px;
+             font-weight: 500;
+             color: #000000;
+             margin-left: 8px;
+        }
+      }
+
+      .promoPlus {
+        font-size: 20px;
+        font-weight: 400;
+        
+        @media (max-width: 550px) {
+            font-size: 16px;
+        }
+      }
+    }
   }
+      padding: 16px 24px;
+      border-top: 1px solid #f0f0f0;
+
+      @media (max-width: 550px) {
+          padding: 0;
+          border: none;
+          margin-top: 24px;
+          margin-bottom: 12px;
+          padding: 0 16px; 
+      }
+
+      .promoRow {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      gap: 12px;
+      padding: 12px 16px;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+
+      @media (max-width: 550px) {
+        height: 50px;
+        background: #fff;
+        border: 0.5px solid rgba(0, 0, 0, 0.08); /* Frame 1948759714 border */
+        border-radius: 0;
+        padding: 0 12px; 
+        gap: 20px;
+      }
+/* ... existing inner styles ... */
+      .promoIcon {
+        width: 20px;
+        height: 20px;
+        
+        @media (max-width: 550px) {
+            width: 18px;
+            height: 18px; /* Tag-2 size */
+        }
+      }
+
+      .promoText {
+        flex: 1;
+        font-size: 14px;
+        font-weight: 500;
+        color: #000;
+        
+        @media (max-width: 550px) {
+             font-family: 'Avenir Next', sans-serif;
+             font-size: 13px;
+             line-height: 18px;
+             font-weight: 500;
+             color: #000000;
+             margin-left: 8px; /* Gap 8px between icon and text */
+        }
+      }
+
+      .promoPlus {
+        font-size: 20px;
+        font-weight: 400;
+        
+        @media (max-width: 550px) {
+            font-size: 16px; /* Add icon size */
+        }
+      }
+    }
+  }
+}
 
   .orderButtonContainer {
     height: 127px;
     min-height: 127px;
     background-color: white;
-    display: flex;
-    flex-direction: column;
     padding: 16px 24px;
-    gap: 20px;
     flex-shrink: 0;
     border-top: 1px solid #f0f0f0;
 
-    @media (max-width: 480px) {
+    @media (max-width: 550px) {
       height: auto;
-      min-height: 110px;
+      min-height: auto;
       padding: 16px;
-      gap: 16px;
     }
 
-    @media (max-width: 393px) {
-      padding: 12px;
-      gap: 12px;
-    }
-
-    .txtWrapper {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
-
-      .price {
+    .footerContent {
         display: flex;
-        gap: 10px;
+        flex-direction: column;
+        height: 100%;
+        justify-content: space-between;
+
+        @media (max-width: 550px) {
+            flex-direction: row;
+            align-items: center;
+            gap: 12px;
+        }
+    }
+
+    .totalInfo {
+        display: flex;
+        flex-direction: row-reverse; /* Count on Left, Price on Right for Desktop */
+        justify-content: space-between;
         align-items: center;
-        flex-direction: row-reverse;
-        @media (max-width: 393px) {
-          gap: 6px;
+        width: 100%;
+
+        @media (max-width: 550px) {
+            flex-direction: column;
+            align-items: flex-start;
+            width: auto;
+            gap: 2px;
         }
-        .priceCurrency1 {
-          font-size: 14px;
-          font-weight: 600;
-          color: #a3a3a3;
 
-          @media (max-width: 480px) {
-            font-size: 14px;
-          }
-
-          @media (max-width: 393px) {
-            font-size: 12px;
-          }
-        }
-        .priceCurrency2 {
-          font-size: 14px;
-          font-weight: 600;
-          color: black;
-          text-transform: lowercase;
-
-          @media (max-width: 480px) {
-            font-size: 14px;
-          }
-
-          @media (max-width: 393px) {
-            font-size: 12px;
-          }
-        }
-        .priceOld {
-          position: relative;
-          font-size: 20px;
-          font-weight: 600;
-          color: #a3a3a3;
-
-          @media (max-width: 480px) {
-            font-size: 18px;
-          }
-
-          @media (max-width: 393px) {
+        .itemCount {
             font-size: 16px;
-          }
+            color: black;
+            font-weight: 500;
+             /* "Summa" label styling */
+            .desktopSumLabel {
+                font-weight: 600;
+                margin-right: 4px;
+                @media (max-width: 550px) {
+                    display: none;
+                }
+            }
 
-          &::after {
-            content: '';
-            position: absolute;
-            left: -5%;
-            top: 50%;
-            width: 110%;
-            height: 2px;
-            background: #a3a3a3;
-            transform: translateY(-50%);
-          }
+            @media (max-width: 550px) {
+                font-size: 12px;
+                color: #a3a3a3; /* Gray for item count on mobile */
+                order: 2; /* Price first, Count second */
+            }
         }
 
-        .priceNew {
-          font-size: 20px;
-          font-weight: 600;
-          color: black;
+        .priceRow {
+            display: flex;
+            align-items: center;
+            gap: 10px;
 
-          @media (max-width: 480px) {
-            font-size: 18px;
-          }
+            @media (max-width: 550px) {
+                gap: 4px; /* Fix gap between them as per context (was 8px) */
+                order: 1;
+            }
 
-          @media (max-width: 393px) {
-            font-size: 16px;
-          }
+            .mainPrice {
+                font-size: 20px;
+                font-weight: 600;
+                color: black;
+
+                @media (max-width: 550px) {
+                    font-size: 16px;
+                    /* Use style from Onest 14px bold if needed, but keeping 16px/14px logic? */
+                    /* User image shows main price 13590 and old price 24800. size looks similar. */
+                    /* But user provided CSS ONLY for .fromMobile (oldPrice). */
+                }
+            }
+
+            .oldPrice {
+                font-size: 16px;
+                color: #a3a3a3;
+                text-decoration: line-through;
+                
+                @media (max-width: 550px) {
+                  /* User provided exact CSS */
+                  font-family: 'Onest', sans-serif;
+                  font-size: 13px;
+                  font-weight: 600;
+                  line-height: 17px;
+                  color: #6E6D67;
+                  text-transform: uppercase;
+                  text-decoration: none; /* remove default strike */
+                  position: relative;
+                  
+                   &::after {
+                    content: '';
+                    position: absolute;
+                    left: 0;
+                    top: 50%;
+                    width: 100%;
+                    height: 1px;
+                    background: #FF0808;
+                    transform: rotate(-8.84deg); /* Exact rotation */
+                  }
+                }
+            }
         }
-      }
+    }
 
-      .sum {
+    .actions {
         display: flex;
+        align-items: center;
         gap: 10px;
-        font-size: 20px;
-        font-weight: 600;
-        align-items: center;
+        width: 100%;
+        margin-top: auto; /* Push to bottom on desktop */
 
-        @media (max-width: 480px) {
-          font-size: 18px;
-          gap: 8px;
+        @media (max-width: 550px) {
+            width: auto;
+            margin-top: 0;
+            gap: 8px;
         }
 
-        @media (max-width: 393px) {
-          font-size: 16px;
-          gap: 6px;
+        .orderButtonLeft {
+            flex: 1;
+            height: 48px;
+            background-color: black;
+            color: white;
+            border-radius: 50px;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+
+            &:hover {
+                opacity: 0.8;
+            }
+
+            @media (max-width: 550px) {
+                height: 40px;
+                font-size: 14px;
+                padding: 0 24px;
+            }
         }
-      }
+
+        .clearButton {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: transparent; /* Transparent on desktop? Old was transparent with img */
+            /* Mobile design shows BLACK CIRCLE with white icon. Desktop? */
+            /* Old desktop design: transparent background, black/white icon image */
+            /* New JSX uses clearButton with whiteBasketTrash icon for mobile? 
+               Wait, I used whiteBasketTrash in JSX.
+               If I want desktop to look like before (maybe black trash icon?), I should have kept blackBasketTrash for desktop.
+               I can use CSS to invert filter or just background color.
+               
+               Let's assume Desktop should keep clear button simple.
+               Mobile: Black circle.
+            */
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0;
+            
+            img {
+                 width: 24px;
+                 height: 24px;
+            }
+
+            @media (max-width: 550px) {
+                 background-color: black;
+                 width: 40px;
+                 height: 40px;
+                 
+                 img {
+                     width: 16px;
+                     height: 16px;
+                     /* Icon is whiteBasketTrash, so it's white. fits on black bg. */
+                 }
+            }
+            
+             /* Desktop adjustment: If JSX uses white icon, it will be invisible on white background!
+                I need to handle this.
+                The old code imported 'blackBasketTrash'.
+                My new code imports 'whiteBasketTrash'.
+                I should probably use CSS variables or background-image, or just use filter: invert(1) on desktop if it's white?
+                Or bring back black icon?
+                
+                Actually, I can just use a background color on desktop too if that looks okay?
+                Or I can revert JSX to use conditional icon?
+                Conditionals in JSX are messy.
+                Better: Use CSS Mask or Filter.
+                If icon is white, `filter: invert(1)` makes it black.
+            */
+            @media (min-width: 551px) {
+                 filter: invert(1);
+            }
+        }
     }
-
-    .btnWrapper {
-      height: 40px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-
-      @media (max-width: 393px) {
-        gap: 8px;
-      }
-
-      .orderButtonLeft {
-        flex: 1;
-        min-width: 0;
-        height: 40px;
-        border-radius: 50px;
-        background-color: black;
-        color: white;
-        border: none;
-        font-size: 15px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background-color 0.2s;
-        white-space: nowrap;
-
-        &:hover {
-          background-color: #333;
-        }
-
-        &:active {
-          background-color: #000;
-        }
-
-        @media (max-width: 480px) {
-          font-size: 14px;
-        }
-
-        @media (max-width: 393px) {
-          font-size: 13px;
-          height: 36px;
-        }
-      }
-
-      .clearButton {
-        width: 40px;
-        height: 40px;
-        flex-shrink: 0;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: opacity 0.2s, transform 0.2s;
-
-        &:hover:not(:disabled) {
-          opacity: 0.7;
-          transform: scale(1.1);
-        }
-
-        &:active:not(:disabled) {
-          transform: scale(0.95);
-        }
-
-        &:disabled {
-          opacity: 0.3;
-          cursor: not-allowed;
-        }
-
-        img {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-        }
-
-        @media (max-width: 393px) {
-          width: 36px;
-          height: 36px;
-        }
-      }
-
-      img {
-        width: 40px;
-        height: 40px;
-        flex-shrink: 0;
-        object-fit: contain;
-
-        @media (max-width: 393px) {
-          width: 36px;
-          height: 36px;
-        }
-      }
-    }
-  }
 }
 
 .drawer-transition {
@@ -438,3 +562,4 @@
 .drawer-closed {
   transform: translateX(100%);
 }
+

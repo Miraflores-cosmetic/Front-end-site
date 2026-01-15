@@ -24,60 +24,39 @@ const BasketCard: React.FC<BasketCardProps> = ({
   oldPrice,
   price
 }) => {
-  const isMobile = useScreenMatch(664);
+  const isMobile = useScreenMatch(550); // Using 550 as requested
   const dispatch = useDispatch();
 
   return (
     <div className={styles.basketCardWrapper}>
       <div className={styles.basketCard}>
         <div className={styles.basketImage}>
-        {thumbnail ? (
-          <img src={thumbnail} alt={title} className={styles.kremImage} />
-        ) : (
-          <div className="placeholder" />
-        )}
+          {thumbnail ? (
+            <img src={thumbnail} alt={title} className={styles.kremImage} />
+          ) : (
+            <div className='placeholder' />
+          )}
         </div>
+
         <div className={styles.basketInfo}>
           <div className={styles.topInfo}>
             <div>
               <p className={styles.productName}>{title}</p>
               <p className={styles.productSize}>{size}</p>
-              {isMobile && (
-                <div className={styles.mobileBottomWrapper}>
-                  <div className={styles.addProduct}>
-                    <div className={styles.addProductInner}>
-                      {Boolean(quantity > 1) && (
-                        <img
-                          src={minus}
-                          alt='trash'
-                          className={styles.trashImage}
-                          onClick={() => dispatch(decreaseQuantity(variantId))}
-                        />
-                      )}
-                      {Boolean(quantity < 2) && (
-                        <img
-                          src={trash}
-                          alt='trash'
-                          className={styles.trashImage}
-                          onClick={() => dispatch(removeItemFromCart(variantId))}
-                        />
-                      )}
 
-                      <p className={styles.trashCount}>{quantity}</p>
-                      <img
-                        src={add}
-                        alt='add'
-                        className={styles.addImage}
-                        onClick={() => dispatch(increaseQuantity(variantId))}
-                      />
-                    </div>
-                  </div>
-                  <div className={styles.fromToMobile}>
-                    {oldPrice && typeof oldPrice === 'number' && oldPrice > 0 && oldPrice > price && (
-                      <p className={styles.fromMobile}>{Math.round(oldPrice).toLocaleString('ru-RU') + '₽'}</p>
-                    )}
-                    <p className={styles.toMobile}>{Math.round(price).toLocaleString('ru-RU') + '₽'}</p>
-                  </div>
+              {isMobile && (
+                <div className={styles.mobilePriceRow}>
+                  <p className={styles.toMobile}>
+                    {Math.round(price).toLocaleString('ru-RU') + '₽'}
+                  </p>
+                  {oldPrice && typeof oldPrice === 'number' && oldPrice > 0 && oldPrice > price && (
+                    <p className={styles.fromMobile}>
+                      {Math.round(oldPrice).toLocaleString('ru-RU') + '₽'}
+                    </p>
+                  )}
+                  {discount && discount > 0 && (
+                    <span className={styles.mobileDiscount}>-{discount}%</span>
+                  )}
                 </div>
               )}
             </div>
@@ -87,7 +66,7 @@ const BasketCard: React.FC<BasketCardProps> = ({
             {Boolean(quantity > 1) && (
               <img
                 src={minus}
-                alt='trash'
+                alt='minus'
                 className={styles.trashImage}
                 onClick={() => dispatch(decreaseQuantity(variantId))}
               />
@@ -109,8 +88,13 @@ const BasketCard: React.FC<BasketCardProps> = ({
             />
           </div>
         </div>
+
         <div className={styles.baskePrice}>
-          <p className={Boolean(discount == null || discount === 0) ? styles.discountEmpty : styles.discount}>
+          <p
+            className={
+              Boolean(discount == null || discount === 0) ? styles.discountEmpty : styles.discount
+            }
+          >
             {Boolean(discount == null || discount === 0) ? ' ' : '-' + discount + '%'}
           </p>
           <div className={styles.fromTo}>
@@ -121,6 +105,35 @@ const BasketCard: React.FC<BasketCardProps> = ({
           </div>
         </div>
       </div>
+
+      {isMobile && (
+        <div className={styles.mobileControlsRow}>
+          {Boolean(quantity === 1) ? (
+            <button
+              className={styles.controlBtn}
+              onClick={() => dispatch(removeItemFromCart(variantId))}
+            >
+              <img src={trash} alt='remove' />
+            </button>
+          ) : (
+            <button
+              className={styles.controlBtn}
+              onClick={() => dispatch(decreaseQuantity(variantId))}
+            >
+              <img src={minus} alt='decrease' />
+            </button>
+          )}
+
+          <span className={styles.quantityDisplay}>{quantity}</span>
+
+          <button
+            className={styles.controlBtn}
+            onClick={() => dispatch(increaseQuantity(variantId))}
+          >
+            <img src={add} alt='increase' />
+          </button>
+        </div>
+      )}
     </div>
   );
 };

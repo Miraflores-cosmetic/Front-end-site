@@ -25,8 +25,8 @@ const AddressDrawer: React.FC = () => {
         firstName: '',
         lastName: '',
         phone: '',
-        companyName: '',
-        country: 'RU',
+        companyName: '', // Оставляем в formData для API, но не показываем в UI
+        country: 'RU', // Оставляем в formData для API, но не показываем в UI
         city: '',
         cityArea: '',
         streetAddress1: '',
@@ -59,7 +59,8 @@ const AddressDrawer: React.FC = () => {
             
             // Clean up empty optional fields to avoid backend validation issues
             // (Some backends hate "null", some hate "", so we ensure it matches the Type)
-            if (!payload.companyName) payload.companyName = "";
+            // companyName всегда пустая строка, не показываем в UI
+            payload.companyName = "";
             if (!payload.cityArea) payload.cityArea = "";
             if (!payload.countryArea) payload.countryArea = "";
             // Example: Creating a Shipping address
@@ -125,13 +126,6 @@ const AddressDrawer: React.FC = () => {
                             />
                         </div>
                     )}
-
-                    <Input
-                        label='Страна'
-                        placeholder='Код страны (напр. RU, AF)'
-                        value={formData.country}
-                        onChange={(e) => handleChange('country', e.target.value)}
-                    />
 
                     <Input
                         label='Улица, дом, квартира'

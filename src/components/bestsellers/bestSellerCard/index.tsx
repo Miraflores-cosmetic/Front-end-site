@@ -27,6 +27,11 @@ export const BestSellerProductCard: React.FC<{
   const activeVariantId = product.id || (product.productVariants && product.productVariants.length > 0 
     ? product.productVariants[0].node.id 
     : null);
+  
+  // Получаем активный вариант для правильного размера
+  const activeVariant = product.productVariants && product.productVariants.length > 0
+    ? product.productVariants.find(v => v.node.id === product.id) || product.productVariants[0]
+    : null;
 
   const getVolumeFromVariant = (variant: any): string => {
     if (!variant?.node?.attributes || !Array.isArray(variant.node.attributes)) {
@@ -139,7 +144,7 @@ export const BestSellerProductCard: React.FC<{
                   price={product.price}
                   oldPrice={product.oldPrice}
                   discount={product.discount}
-                  size={volumeRange || product.size || ''}
+                  size={activeVariant ? getVolumeFromVariant(activeVariant) : (product.size || '')}
                   productId={product.id}
                 />
               </div>

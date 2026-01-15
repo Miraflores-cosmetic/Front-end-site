@@ -96,6 +96,16 @@ export default defineConfig({
         changeOrigin: true,
         secure: false
       },
+      '/api/products': { // Proxy for products by care stage endpoint
+        target: 'https://miraflores-shop.com',
+        changeOrigin: true,
+        secure: true
+      },
+      '/api/steps': { // Proxy for steps endpoint
+        target: 'https://miraflores-shop.com',
+        changeOrigin: true,
+        secure: true
+      },
       '/checkout': { // Proxy for checkout endpoints (alternative path)
         target: 'http://localhost:8000',
         changeOrigin: true,

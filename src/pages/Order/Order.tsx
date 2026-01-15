@@ -5,6 +5,7 @@ import OrderRightPart from './right-part/OrderRightPart';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe } from '@/store/slices/authSlice';
+import Header from '@/components/Header/Header';
 
 const Order: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -21,10 +22,13 @@ const Order: React.FC = () => {
   }, [dispatch, me]);
 
   return (
-    <main className={styles.orderContainer}>
-      <OrderLeftPart />
-      <OrderRightPart />
-    </main>
+    <>
+      <Header />
+      <main className={styles.orderContainer}>
+        <OrderLeftPart />
+        <OrderRightPart />
+      </main>
+    </>
   );
 };
 

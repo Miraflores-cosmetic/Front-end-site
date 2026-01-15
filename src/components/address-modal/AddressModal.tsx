@@ -108,7 +108,7 @@ const AddressModal: React.FC<AddressModalProps> = ({
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!formData.country) newErrors.country = 'Обязательное поле';
+    // country всегда 'RU', не проверяем
     if (!formData.countryArea.trim()) newErrors.countryArea = 'Обязательное поле';
     if (!formData.city.trim()) newErrors.city = 'Обязательное поле';
     

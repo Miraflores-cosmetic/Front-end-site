@@ -44,7 +44,6 @@ export interface ProductNode extends Node {
  */
 export interface ProductDetailNode extends ProductNode {
   description: string;
-  descriptionPlaintext: string;
   productType: {
     name: string;
   };

@@ -7,6 +7,10 @@
   border-bottom: none;
   transition: border-bottom 0.3s ease, z-index 0.3s ease;
   --header-height: 72px; /* 18px padding * 2 + 36px logo height */
+  // Slide Down анимация
+  opacity: 0;
+  transform: translateY(-100%);
+  animation: slideDown 0.6s ease-out 0.1s forwards;
 
   &.scrolled {
     border-bottom: 0.5px solid rgba(0, 0, 0, 0.3019607843);
@@ -44,6 +48,17 @@
       grid-column: 3;
       justify-self: end;
     }
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 

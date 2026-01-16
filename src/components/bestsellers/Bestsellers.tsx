@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import Slider from 'react-slick';
 import styles from './Bestsellers.module.scss';
 import { BestSellerProductCard } from './bestSellerCard';
@@ -29,8 +29,102 @@ export default function Bestsellers({
   excludeProductSlug
 }: BestsellersProps) {
   const [activeIndex, setActiveIndex] = React.useState(0);
+  const [sliderError, setSliderError] = useState<string | null>(null);
+  const sliderRef = React.useRef<Slider>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = React.useRef<{ x: number; y: number; time: number } | null>(null);
+  const isDraggingRef = React.useRef(false);
+  const sliderWrapperRef = React.useRef<HTMLDivElement>(null);
+  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
+  const sectionRef = React.useRef<HTMLElement>(null);
 
-  const settings = {
+  // Глобальный обработчик для блокировки кликов во время драга
+  React.useEffect(() => {
+    const handleClick = (e: MouseEvent) => {
+      if (isDraggingRef.current && sliderWrapperRef.current) {
+        // Проверяем, что клик внутри слайдера
+        if (sliderWrapperRef.current.contains(e.target as Node)) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          return false;
+        }
+      }
+    };
+
+    // Используем capture phase для перехвата событий раньше
+    document.addEventListener('click', handleClick, true);
+    document.addEventListener('mousedown', handleClick, true);
+
+    return () => {
+      document.removeEventListener('click', handleClick, true);
+      document.removeEventListener('mousedown', handleClick, true);
+    };
+  }, []);
+
+  // Оптимизированный обработчик изменения слайда
+  const handleAfterChange = useCallback((current: number) => {
+    try {
+      const num = Number.isInteger(current) ? current : Math.ceil(current);
+      setActiveIndex(num);
+    } catch (error) {
+      console.error('[Bestsellers] Error in afterChange:', error);
+    }
+  }, []);
+
+  // Мемоизированная функция для кастомных точек с accessibility
+  const customPaging = useCallback((i: number) => (
+    <div 
+      className={`${styles.customDot} ${i === activeIndex ? styles.activeDot : ''}`}
+      role="button"
+      tabIndex={0}
+      aria-label={`Перейти к слайду ${i + 1}`}
+      aria-pressed={i === activeIndex}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          // Можно добавить логику перехода к слайду
+        }
+      }}
+    />
+  ), [activeIndex]);
+
+  // Обработчики для отслеживания драга
+  const handleBeforeChange = useCallback(() => {
+    // Не сбрасываем сразу, даем время для блокировки клика
+    setTimeout(() => {
+      setIsDragging(false);
+      isDraggingRef.current = false;
+    }, 400);
+  }, []);
+
+  const handleSwipe = useCallback(() => {
+    setIsDragging(true);
+    isDraggingRef.current = true;
+    // Сбрасываем флаг через задержку после окончания свайпа
+    setTimeout(() => {
+      setIsDragging(false);
+      isDraggingRef.current = false;
+    }, 400);
+  }, []);
+
+  // Обработчик начала драга
+  const handleDragStart = useCallback(() => {
+    setIsDragging(true);
+    isDraggingRef.current = true;
+  }, []);
+
+  // Обработчик окончания драга
+  const handleDragEnd = useCallback(() => {
+    // Даем больше времени для блокировки случайных кликов
+    setTimeout(() => {
+      setIsDragging(false);
+      isDraggingRef.current = false;
+    }, 400);
+  }, []);
+
+  // Мемоизированные настройки слайдера
+  const settings = useMemo(() => ({
     dots: true,
     arrows: false,
     infinite: false,
@@ -39,14 +133,35 @@ export default function Bestsellers({
     speed: 500,
     slidesToShow,
     slidesToScroll: 1,
-
-    afterChange: (current: number) => {
-      const num = Number.isInteger(current) ? current : Math.ceil(current);
-      setActiveIndex(num);
-    },
-    customPaging: (i: number) => (
-      <div className={`${styles.customDot} ${i === activeIndex ? styles.activeDot : ''}`}></div>
+    swipe: true,
+    touchMove: true,
+    accessibility: true, // Включить keyboard navigation
+    focusOnSelect: true,
+    afterChange: handleAfterChange,
+    beforeChange: handleBeforeChange,
+    onSwipe: handleSwipe,
+    onSwipeStart: handleDragStart,
+    onSwipeEnd: handleDragEnd,
+    customPaging,
+    appendDots: (dots: React.ReactNode) => (
+      <ul 
+        className="slick-dots" 
+        style={{ display: 'block' }}
+      >
+        {dots}
+      </ul>
     ),
+    // Обработка ошибок инициализации
+    onInit: () => {
+      setSliderError(null);
+    },
+    onReInit: () => {
+      setSliderError(null);
+    },
+    onError: (error: Error) => {
+      console.error('[Bestsellers] Slider error:', error);
+      setSliderError('Ошибка инициализации слайдера');
+    },
 
     responsive: [
       {
@@ -140,7 +255,8 @@ export default function Bestsellers({
         }
       }
     ]
-  };
+  }), [slidesToShow, handleAfterChange, customPaging, handleBeforeChange, handleSwipe, handleDragStart, handleDragEnd]);
+  
   const width = useWindowWidth();
 
   const isOversize = useScreenMatch(1536);
@@ -411,26 +527,244 @@ export default function Bestsellers({
     return filtered;
   }, [sourceProducts, excludeProductId, excludeProductSlug]);
 
-  return (
-    <section className={`${styles.bestsellers} ${isProductPage ? styles.productPage : ''}`} style={isOversize ? undefined : {}}>
-      <Layout>
-        {!isTitleHidden && <h2 className={styles.title}>Бестселлеры</h2>}
-        {(loading || loadingAllProducts) && filteredProducts.length === 0 && <h4>Загрузка</h4>}
+  // Обработка ошибок и пустых состояний
+  const hasError = sliderError !== null;
+  const hasProducts = filteredProducts.length > 0;
+  const isLoading = loading || loadingAllProducts;
 
-        {filteredProducts.length > 0 && (
-          <Slider {...settings} className={styles.slider}>
-            {filteredProducts.map(product => (
-              <BestSellerProductCard key={product.id} product={product} loading={loading || loadingAllProducts} />
-            ))}
-          </Slider>
+  // Intersection Observer для запуска анимации при скролле к секции
+  React.useEffect(() => {
+    if (!sectionRef.current || isSectionLoaded) return;
+
+    // Проверяем, видна ли секция сразу при загрузке
+    const checkVisibility = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+        return isVisible;
+      }
+      return false;
+    };
+
+    // Проверяем сразу
+    if (checkVisibility()) {
+      setIsSectionLoaded(true);
+      return;
+    }
+
+    // Небольшая задержка для повторной проверки (на случай если DOM еще не готов)
+    const timer = setTimeout(() => {
+      if (checkVisibility()) {
+        setIsSectionLoaded(true);
+        return;
+      }
+    }, 100);
+
+    // Создаем Intersection Observer
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Если секция видна в viewport, запускаем анимацию
+          if (entry.isIntersecting && !isSectionLoaded) {
+            setIsSectionLoaded(true);
+          }
+        });
+      },
+      {
+        // Запускаем анимацию когда секция видна на 20%
+        threshold: 0.2,
+        // Небольшой отступ сверху для более раннего запуска
+        rootMargin: '0px 0px -100px 0px'
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      clearTimeout(timer);
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, [isSectionLoaded]);
+
+  // Применяем класс к точкам после инициализации слайдера и когда секция загружена
+  React.useEffect(() => {
+    if (isSectionLoaded && hasProducts) {
+      let retryTimer: NodeJS.Timeout | null = null;
+      
+      // Небольшая задержка, чтобы слайдер успел инициализироваться
+      const timer = setTimeout(() => {
+        // Находим элемент с точками и добавляем класс
+        const dotsElement = sectionRef.current?.querySelector('.slick-dots');
+        if (dotsElement) {
+          dotsElement.classList.add('dotsAnimated');
+        } else {
+          // Если не нашли сразу, пробуем еще раз через небольшую задержку
+          retryTimer = setTimeout(() => {
+            const retryDotsElement = sectionRef.current?.querySelector('.slick-dots');
+            if (retryDotsElement) {
+              retryDotsElement.classList.add('dotsAnimated');
+            }
+          }, 200);
+        }
+      }, 100);
+      
+      return () => {
+        clearTimeout(timer);
+        if (retryTimer) {
+          clearTimeout(retryTimer);
+        }
+      };
+    }
+  }, [isSectionLoaded, hasProducts]);
+
+  return (
+    <section 
+      ref={sectionRef}
+      className={`${styles.bestsellers} ${isProductPage ? styles.productPage : ''} ${isSectionLoaded ? styles.sectionAnimated : ''}`} 
+      style={isOversize ? undefined : {}}
+      aria-label="Секция бестселлеров"
+    >
+      <Layout>
+        {!isTitleHidden && (
+          <h2 className={styles.title}>
+            Бестселлеры
+          </h2>
         )}
         
-        {!(loading || loadingAllProducts) && filteredProducts.length === 0 && sourceProducts.length > 0 && (
-          <p>Товары не найдены для выбранного этапа</p>
+        {isLoading && !hasProducts && (
+          <div role="status" aria-live="polite">
+            <h4>Загрузка</h4>
+          </div>
+        )}
+
+        {hasError && (
+          <div role="alert" className={styles.errorMessage}>
+            <p>{sliderError}</p>
+            <button 
+              onClick={() => {
+                setSliderError(null);
+                window.location.reload();
+              }}
+              aria-label="Перезагрузить слайдер"
+            >
+              Перезагрузить
+            </button>
+          </div>
+        )}
+
+        {!hasError && hasProducts && (
+          <div 
+            ref={sliderWrapperRef}
+            className={`${styles.sliderWrapper} ${isDragging ? styles.isDragging : ''}`}
+            onMouseDown={(e) => {
+              // Отслеживаем начало драга
+              dragStartRef.current = {
+                x: e.clientX,
+                y: e.clientY,
+                time: Date.now()
+              };
+            }}
+            onMouseMove={(e) => {
+              // Проверяем, был ли реальный драг (смещение больше 5px)
+              if (dragStartRef.current) {
+                const deltaX = Math.abs(e.clientX - dragStartRef.current.x);
+                const deltaY = Math.abs(e.clientY - dragStartRef.current.y);
+                const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+                
+                // Если смещение больше 5px, считаем это драгом
+                if (distance > 5) {
+                  setIsDragging(true);
+                  isDraggingRef.current = true;
+                }
+              }
+            }}
+            onMouseUp={() => {
+              // Сбрасываем флаг драга через задержку
+              if (dragStartRef.current) {
+                const dragTime = Date.now() - dragStartRef.current.time;
+                // Если драг был быстрым (< 300ms), это может быть клик, даем больше времени
+                const delay = dragTime < 300 ? 400 : 300;
+                setTimeout(() => {
+                  setIsDragging(false);
+                  isDraggingRef.current = false;
+                }, delay);
+              }
+              dragStartRef.current = null;
+            }}
+            onMouseLeave={() => {
+              // При выходе мыши с области слайдера сбрасываем флаг
+              setTimeout(() => {
+                setIsDragging(false);
+                isDraggingRef.current = false;
+              }, 300);
+              dragStartRef.current = null;
+            }}
+            onWheel={(e) => {
+              // Поддержка прокрутки тачпадом (горизонтальная прокрутка)
+              // Проверяем горизонтальную прокрутку (deltaX) или Shift + вертикальная прокрутка
+              const isHorizontalScroll = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+              const isShiftScroll = e.shiftKey && Math.abs(e.deltaY) > 0;
+              
+              if (isHorizontalScroll || isShiftScroll) {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(true);
+                
+                if (sliderRef.current) {
+                  const delta = isHorizontalScroll ? e.deltaX : e.deltaY;
+                  if (delta > 0) {
+                    sliderRef.current.slickNext();
+                  } else {
+                    sliderRef.current.slickPrev();
+                  }
+                }
+                
+                // Сбрасываем флаг после прокрутки
+                setTimeout(() => {
+                  setIsDragging(false);
+                  isDraggingRef.current = false;
+                }, 300);
+              }
+            }}
+          >
+            <Slider 
+              ref={sliderRef}
+              {...settings} 
+              className={styles.slider}
+              aria-label="Карусель товаров"
+            >
+              {filteredProducts.map((product, index) => (
+                <div 
+                  key={product.id || `product-${index}`}
+                  role="group"
+                  aria-label={`Товар ${index + 1} из ${filteredProducts.length}`}
+                >
+                  <BestSellerProductCard 
+                    product={product} 
+                    loading={isLoading}
+                    isDragging={isDragging}
+                    isDraggingRef={isDraggingRef}
+                  />
+                </div>
+              ))}
+            </Slider>
+          </div>
         )}
         
-        {!(loading || loadingAllProducts) && sourceProducts.length === 0 && (
-          <p>Товары не найдены</p>
+        {!hasError && !isLoading && !hasProducts && sourceProducts.length > 0 && (
+          <div role="status" aria-live="polite">
+            <p>Товары не найдены для выбранного этапа</p>
+          </div>
+        )}
+        
+        {!hasError && !isLoading && sourceProducts.length === 0 && (
+          <div role="status" aria-live="polite">
+            <p>Товары не найдены</p>
+          </div>
         )}
       </Layout>
     </section>

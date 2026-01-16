@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './TopBlock.module.scss';
-import drop from '@/assets/images/drop.svg';
+import drop from '@/assets/images/drop.png';
 
 const DesktopTextImages: React.FC = () => (
   <div className={styles.imageWrapper}>

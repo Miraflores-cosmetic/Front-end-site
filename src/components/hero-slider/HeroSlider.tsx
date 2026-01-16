@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import Slider from 'react-slick';
 import styles from './HeroSlider.module.scss';
 import topBlockStyles from '@/components/TopBlock/TopBlock.module.scss';
@@ -25,6 +25,8 @@ interface SlideData {
 export const HeroSlider: React.FC = () => {
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
+  const sectionRef = React.useRef<HTMLElement>(null);
   const isTablet = useScreenMatch(800);
   const isMobile = useScreenMatch(450);
 
@@ -114,19 +116,24 @@ export const HeroSlider: React.FC = () => {
         setSlides([{ largeImage: '', smallImage: '' }]);
       } finally {
         setLoading(false);
+        // Запускаем анимацию после загрузки данных
+        setTimeout(() => {
+          setIsSectionLoaded(true);
+        }, 100);
       }
     };
 
     fetchSlider();
   }, []);
 
-  const settings = {
+
+  const settings = useMemo(() => ({
     dots: false,
-    infinite: true,
+    infinite: slides.length > 1, // infinite работает только если больше 1 слайда
     speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    autoplay: true,
+    autoplay: slides.length > 1, // autoplay работает только если больше 1 слайда
     autoplaySpeed: 3000,
     arrows: false,
     fade: true,
@@ -135,15 +142,21 @@ export const HeroSlider: React.FC = () => {
     swipe: true,
     draggable: true,
     touchThreshold: 5,
-    adaptiveHeight: true
-  };
+    adaptiveHeight: true,
+    pauseOnHover: false,
+    pauseOnFocus: false
+  }), [slides.length]);
 
   if (loading) {
     return <SpinnerLoader />;
   }
 
   return (
-    <section className={styles.heroSlider} style={{ position: 'relative', zIndex: 10 }}>
+    <section 
+      ref={sectionRef}
+      className={`${styles.heroSlider} ${isSectionLoaded ? styles.heroSliderAnimated : ''}`} 
+      style={{ position: 'relative', zIndex: 10 }}
+    >
       <Slider {...settings} className={styles.slider}>
         {slides.map((slide, index) => {
           // Используем картинки из админки или дефолтные

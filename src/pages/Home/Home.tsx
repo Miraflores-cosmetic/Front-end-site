@@ -20,6 +20,7 @@ import { getPreHeader, PageNode } from '@/graphql/queries/pages.service';
 const Home: React.FC = () => {
   const isMobile = useScreenMatch(450);
   const [preHeader, setPreHeader] = useState<PageNode | null>(null);
+  const [showPreHeader, setShowPreHeader] = useState(false);
 
   useEffect(() => {
     const fetchPreHeader = async () => {
@@ -27,6 +28,15 @@ const Home: React.FC = () => {
       setPreHeader(data);
     };
     fetchPreHeader();
+  }, []);
+
+  // Показываем PreHeader с задержкой после загрузки страницы
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowPreHeader(true);
+    }, 1200); // Задержка 1.2s после загрузки страницы
+
+    return () => clearTimeout(timer);
   }, []);
 
   // Парсим текст из content (EditorJS)
@@ -68,9 +78,10 @@ const Home: React.FC = () => {
 
   return (
     <>
-      {!isMobile && preHeaderText && (
+      {/* PreHeader скрыт */}
+      {/* {!isMobile && preHeaderText && showPreHeader && (
         <p className={styles.preHeaderTxt}>{preHeaderText}</p>
-      )}
+      )} */}
       <Header />
       <main className={styles.homeContainer}>
         <HeroSlider />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import styles from './BestSellerCard.module.scss';
 import { Link } from 'react-router-dom';
 import { BestSellersProduct } from '@/types/products';
@@ -9,11 +9,55 @@ import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFal
 export const BestSellerProductCard: React.FC<{ 
   product: BestSellersProduct; 
   loading: boolean;
+  isDragging?: boolean;
+  isDraggingRef?: React.MutableRefObject<boolean>;
 }> = ({
   product,
-  loading
+  loading,
+  isDragging = false,
+  isDraggingRef
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [shouldBlockClick, setShouldBlockClick] = useState(false);
+
+  // Блокируем клик, если был драг
+  React.useEffect(() => {
+    if (isDragging) {
+      setShouldBlockClick(true);
+      // Разрешаем клик через задержку после окончания драга
+      const timer = setTimeout(() => {
+        setShouldBlockClick(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    } else {
+      // Также проверяем через ref для большей надежности
+      const checkTimer = setInterval(() => {
+        if (isDraggingRef?.current) {
+          setShouldBlockClick(true);
+        } else if (!isDragging) {
+          setShouldBlockClick(false);
+        }
+      }, 50);
+      return () => clearInterval(checkTimer);
+    }
+  }, [isDragging, isDraggingRef]);
+
+  // Функция для проверки, нужно ли блокировать клик
+  const shouldBlockNavigation = useCallback((e: React.MouseEvent) => {
+    // Проверяем через ref (более надежно)
+    if (isDraggingRef?.current) {
+      e.preventDefault();
+      e.stopPropagation();
+      return true;
+    }
+    // Проверяем через state
+    if (isDragging || shouldBlockClick) {
+      e.preventDefault();
+      e.stopPropagation();
+      return true;
+    }
+    return false;
+  }, [isDragging, shouldBlockClick, isDraggingRef]);
   const mainImage =
     (Array.isArray(product.images) && product.images.length > 0 && product.images[0]) || product.thumbnail;
   
@@ -98,7 +142,21 @@ export const BestSellerProductCard: React.FC<{
             {product.discount && <span className={styles.discount}>-{product.discount}%</span>}
 
             {mainImage && (
-              <Link to={'/product/' + product.slug} className={styles.imageLink}>
+              <Link 
+                to={'/product/' + product.slug} 
+                className={styles.imageLink}
+                onClick={(e) => {
+                  // Блокируем переход, если был драг
+                  shouldBlockNavigation(e);
+                }}
+                onMouseDown={(e) => {
+                  // Блокируем на mousedown тоже для большей надежности
+                  if (isDraggingRef?.current || isDragging || shouldBlockClick) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
+                }}
+              >
                 <ImageWithFallback
                   src={mainImage}
                   alt={product.title}
@@ -153,7 +211,21 @@ export const BestSellerProductCard: React.FC<{
 
           <div className={styles.info}>
             <div className={styles.titleRow}>
-              <Link to={'/product/' + product.slug} className={styles.titleLink}>
+              <Link 
+                to={'/product/' + product.slug} 
+                className={styles.titleLink}
+                onClick={(e) => {
+                  // Блокируем переход, если был драг
+                  shouldBlockNavigation(e);
+                }}
+                onMouseDown={(e) => {
+                  // Блокируем на mousedown тоже для большей надежности
+                  if (isDraggingRef?.current || isDragging || shouldBlockClick) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }
+                }}
+              >
                 <p className={styles.title}>
                   {product.title}
                 </p>

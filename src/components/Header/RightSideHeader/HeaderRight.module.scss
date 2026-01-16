@@ -164,7 +164,36 @@
   display: none;
 }
 .searchButton {
+  position: relative;
   text-transform: uppercase;
+  color: $black;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+
+  // underline animation
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background-color: $green-297;
+    transition: width 0.3s ease;
+  }
+
+  &:hover {
+    color: $green-297;
+    transform: translateY(-2px);
+  }
+
+  &:hover::after {
+    width: 100%;
+  }
 }
 .basketMobile {
   display: flex;

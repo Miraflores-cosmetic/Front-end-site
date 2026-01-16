@@ -219,6 +219,29 @@ const LazyComponent: React.FC = () => {
     const oldPrice = undiscountedPrice && undiscountedPrice > currentPrice ? undiscountedPrice : null;
     const discount = oldPrice && currentPrice > 0 ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100) : null;
 
+    // Получаем media активного варианта, если есть, иначе используем media товара
+    const getSliderMedia = () => {
+      // Проверяем, есть ли у активного варианта изображения
+      if (activeVariant?.node?.media && Array.isArray(activeVariant.node.media) && activeVariant.node.media.length > 0) {
+        return activeVariant.node.media.map((img: any) => ({
+          url: img.url,
+          alt: img.alt || item.name,
+          id: img.id || ''
+        }));
+      }
+      
+      // Если у варианта нет изображений, используем изображения товара
+      if (Array.isArray(item.media) && item.media.length > 0) {
+        return item.media;
+      }
+      
+      // Fallback
+      return [{
+        url: slide3,
+        alt: item.name || 'Fallback'
+      }];
+    };
+
     return (
       <>
         <section className={styles.bestSellerInfo}>
@@ -231,16 +254,8 @@ const LazyComponent: React.FC = () => {
                 <span className={styles.discount}>-{discount}%</span>
               )}
               <HeroSlider
-                media={
-                  Array.isArray(item.media)
-                    ? item.media
-                    : [
-                        item.media || {
-                          url: slide3,
-                          alt: 'Fallback'
-                        }
-                      ]
-                }
+                key={activeVariantId || 'default'} // Key для пересоздания компонента при смене варианта
+                media={getSliderMedia()}
               />
             </div>
           </article>

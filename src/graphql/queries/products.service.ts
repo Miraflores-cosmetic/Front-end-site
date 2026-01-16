@@ -105,6 +105,11 @@ export async function getSingleProduct(slug: string): Promise<ProductDetailNode 
                   plainText
                 }
               }
+              media {
+                id
+                url
+                alt
+              }
               pricing {
                 price {
                   gross {

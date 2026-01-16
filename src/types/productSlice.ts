@@ -77,6 +77,11 @@ export interface ProductVariant {
   sku: string;
   name: string;
   attributes?: Attribute[]; // Атрибуты варианта (для получения объёма)
+  media?: {
+    id: string;
+    url: string;
+    alt: string;
+  }[]; // Изображения варианта
   pricing: {
     price: {
       currency?: string;

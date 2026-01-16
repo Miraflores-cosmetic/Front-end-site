@@ -53,11 +53,24 @@
   }
 
   .slide {
+    animation: imageFadeIn 0.5s ease-out;
+    
     img {
       width: 100%;
       height: auto;
       display: block;
       object-fit: cover;
+    }
+  }
+  
+  @keyframes imageFadeIn {
+    0% {
+      opacity: 0;
+      transform: scale(1.05);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
     }
   }
 }

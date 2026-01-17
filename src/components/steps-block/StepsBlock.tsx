@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import styles from './StepsBlock.module.scss';
 import shablon1 from '@/assets/images/shablon1.webp';
 import shablon2 from '@/assets/images/shablon2.webp';
@@ -46,9 +46,11 @@ const defaultSteps = [
 ];
 
 export default function StepsBlock() {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(0); // Первый шаг активен по умолчанию на десктопе
   const [steps, setSteps] = useState<StepData[]>(defaultSteps);
   const [loading, setLoading] = useState(true);
+  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const fetchSteps = async () => {
@@ -98,12 +100,87 @@ export default function StepsBlock() {
     fetchSteps();
   }, []);
 
+  // Intersection Observer для запуска анимации при скролле к секции
+  useEffect(() => {
+    // Ждем пока загрузка завершится и DOM готов
+    if (loading || isSectionLoaded) return;
+
+    // Небольшая задержка для обеспечения готовности DOM
+    const setupObserver = () => {
+      if (!sectionRef.current || isSectionLoaded) return;
+
+      // Проверяем, видна ли секция сразу при загрузке
+      const checkVisibility = () => {
+        if (sectionRef.current) {
+          const rect = sectionRef.current.getBoundingClientRect();
+          const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+          return isVisible;
+        }
+        return false;
+      };
+
+      // Проверяем сразу
+      if (checkVisibility()) {
+        setIsSectionLoaded(true);
+        return;
+      }
+
+      // Небольшая задержка для повторной проверки (на случай если DOM еще не готов)
+      const timer = setTimeout(() => {
+        if (checkVisibility()) {
+          setIsSectionLoaded(true);
+          return;
+        }
+      }, 100);
+
+      // Создаем Intersection Observer
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            // Если секция видна в viewport, запускаем анимацию
+            if (entry.isIntersecting && !isSectionLoaded) {
+              setIsSectionLoaded(true);
+            }
+          });
+        },
+        {
+          // Запускаем анимацию когда секция видна на 20%
+          threshold: 0.2,
+          // Небольшой отступ сверху для более раннего запуска
+          rootMargin: '0px 0px -100px 0px'
+        }
+      );
+
+      if (sectionRef.current) {
+        observer.observe(sectionRef.current);
+      }
+
+      return () => {
+        clearTimeout(timer);
+        if (sectionRef.current) {
+          observer.unobserve(sectionRef.current);
+        }
+      };
+    };
+
+    // Небольшая задержка для обеспечения готовности DOM после загрузки
+    const timer = setTimeout(setupObserver, 50);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [loading, isSectionLoaded]);
+
   if (loading) {
     return <SpinnerLoader />;
   }
 
   return (
-    <section className={styles.stepsContainer} id="steps-block">
+    <section 
+      ref={sectionRef}
+      className={`${styles.stepsContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`} 
+      id="steps-block"
+    >
       <div className={styles.headerWrrapper}>
         <p className={styles.title}>каждый шаг усиливает предыдущий</p>
         <div className={styles.descriptionWrapper}>
@@ -113,7 +190,10 @@ export default function StepsBlock() {
           </p>
         </div>
       </div>
-      <div className={styles.stepsWrapper}>
+      <div 
+        className={styles.stepsWrapper}
+        onMouseLeave={() => setActiveIndex(0)}
+      >
         {steps.map((product, index) => (
           <div
             key={product.id || index}
@@ -121,7 +201,6 @@ export default function StepsBlock() {
               activeIndex === index ? styles.active : activeIndex !== null ? styles.inactive : ''
             }`}
             onMouseEnter={() => setActiveIndex(index)}
-            onMouseLeave={() => setActiveIndex(null)}
             onTouchStart={() => {
               if (activeIndex === index) {
                 setActiveIndex(null);

@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './AboutBlock.module.scss';
 import AvoutCenter from '@/assets/images/AvoutCenter.webp';
 import AboutRight from '@/assets/images/AboutRight.webp';
-import AboutLeft from '@/assets/images/AboutLeft.webp';
+import AboutLeft from '@/assets/images/AboutLeft.png';
 import arrowToRoght from '@/assets/icons/ArrowToRight.svg';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { Link } from 'react-router-dom';
@@ -35,9 +35,73 @@ const AboutMore: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => (
 const AboutBlock: React.FC = () => {
   const isTablet = useScreenMatch(1024);
   const isMobile = useScreenMatch(950);
+  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
+  const sectionRef = React.useRef<HTMLElement>(null);
+
+  // Intersection Observer для запуска анимации при скролле к секции
+  useEffect(() => {
+    if (!sectionRef.current || isSectionLoaded) return;
+
+    // Проверяем, видна ли секция сразу при загрузке
+    const checkVisibility = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+        return isVisible;
+      }
+      return false;
+    };
+
+    // Проверяем сразу
+    if (checkVisibility()) {
+      setIsSectionLoaded(true);
+      return;
+    }
+
+    // Небольшая задержка для повторной проверки (на случай если DOM еще не готов)
+    const timer = setTimeout(() => {
+      if (checkVisibility()) {
+        setIsSectionLoaded(true);
+        return;
+      }
+    }, 100);
+
+    // Создаем Intersection Observer
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Если секция видна в viewport, запускаем анимацию
+          if (entry.isIntersecting && !isSectionLoaded) {
+            setIsSectionLoaded(true);
+          }
+        });
+      },
+      {
+        // Запускаем анимацию когда секция видна на 20%
+        threshold: 0.2,
+        // Небольшой отступ сверху для более раннего запуска
+        rootMargin: '0px 0px -100px 0px'
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      clearTimeout(timer);
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, [isSectionLoaded]);
 
   return (
-    <section className={styles.about}>
+    <section 
+      ref={sectionRef}
+      className={`${styles.about} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
+      aria-label="О нас"
+    >
       <h2 className={styles.title}>
         ДОКАЗАНО. ЗАПАТЕНТОВАНО. <br /> СОЗДАНО С ЗАБОТОЙ.
       </h2>

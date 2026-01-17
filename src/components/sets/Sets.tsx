@@ -93,6 +93,8 @@ export const Sets: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [setImagesMap, setSetImagesMap] = useState<{ bySlug: Map<string, string>; byName: Map<string, string> }>({ bySlug: new Map(), byName: new Map() });
   const [defaultSetImage, setDefaultSetImage] = useState<string | null>(null);
+  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
+  const sectionRef = React.useRef<HTMLElement>(null);
 
   useEffect(() => {
     const fetchSets = async () => {
@@ -279,6 +281,64 @@ export const Sets: React.FC = () => {
     fetchSets();
   }, []);
 
+  // Intersection Observer для запуска анимации при скролле к секции
+  useEffect(() => {
+    if (loading || !sectionRef.current || isSectionLoaded) return;
+
+    // Проверяем, видна ли секция сразу при загрузке
+    const checkVisibility = () => {
+      if (sectionRef.current) {
+        const rect = sectionRef.current.getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+        return isVisible;
+      }
+      return false;
+    };
+
+    // Проверяем сразу
+    if (checkVisibility()) {
+      setIsSectionLoaded(true);
+      return;
+    }
+
+    // Небольшая задержка для повторной проверки (на случай если DOM еще не готов)
+    const timer = setTimeout(() => {
+      if (checkVisibility()) {
+        setIsSectionLoaded(true);
+        return;
+      }
+    }, 100);
+
+    // Создаем Intersection Observer
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          // Если секция видна в viewport, запускаем анимацию
+          if (entry.isIntersecting && !isSectionLoaded) {
+            setIsSectionLoaded(true);
+          }
+        });
+      },
+      {
+        // Запускаем анимацию когда секция видна на 20%
+        threshold: 0.2,
+        // Небольшой отступ сверху для более раннего запуска
+        rootMargin: '0px 0px -100px 0px'
+      }
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => {
+      clearTimeout(timer);
+      if (sectionRef.current) {
+        observer.unobserve(sectionRef.current);
+      }
+    };
+  }, [isSectionLoaded, loading]);
+
   if (loading) {
     return <SpinnerLoader />;
   }
@@ -294,7 +354,10 @@ export const Sets: React.FC = () => {
   const displaySetImage = firstSet?.setImage || defaultSetImage;
 
   return (
-    <section className={styles.setsContainer}>
+    <section 
+      ref={sectionRef}
+      className={`${styles.setsContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
+    >
       <h2 className={styles.title}>Наборы</h2>
       <div className={styles.setsWrapper}>
         <LeftBlock isMobile={isMobile} />

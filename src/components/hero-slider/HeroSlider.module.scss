@@ -52,6 +52,18 @@
         opacity: 1 !important;
         transform: translateY(0) !important;
       }
+
+      // Информационная иконка
+      img[class*="info"] {
+        opacity: 1 !important;
+        transform: translate3d(0, 0, 0) !important;
+      }
+
+      // Текст "С меристемными экстрактами"
+      p[class*="meristemText"] {
+        opacity: 1 !important;
+        transform: translate3d(0, 0, 0) !important;
+      }
     }
   }
 }

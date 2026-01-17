@@ -2,7 +2,7 @@
 
 .reviewsContainer {
   width: 100%;
-  padding-top: 250px;
+  padding-top: 240px;
   padding-right: 32px;
   max-width: 1536px;
   margin: 0 auto;
@@ -31,10 +31,18 @@
     }
   }
 
+  .reviewsWrapper {
+    > div {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+  }
+
   .titleWrapper {
     width: 100%;
     display: flex;
-    margin-bottom: 16px;
+    margin-bottom: 56px;
 
     justify-content: space-between;
     align-items: center;

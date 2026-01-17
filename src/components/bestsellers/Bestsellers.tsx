@@ -750,20 +750,20 @@ export default function Bestsellers({
                     isDraggingRef={isDraggingRef}
                   />
                 </div>
-              ))}
-            </Slider>
+            ))}
+          </Slider>
           </div>
         )}
         
         {!hasError && !isLoading && !hasProducts && sourceProducts.length > 0 && (
           <div role="status" aria-live="polite">
-            <p>Товары не найдены для выбранного этапа</p>
+          <p>Товары не найдены для выбранного этапа</p>
           </div>
         )}
         
         {!hasError && !isLoading && sourceProducts.length === 0 && (
           <div role="status" aria-live="polite">
-            <p>Товары не найдены</p>
+          <p>Товары не найдены</p>
           </div>
         )}
       </Layout>

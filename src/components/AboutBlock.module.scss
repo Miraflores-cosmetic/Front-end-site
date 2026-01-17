@@ -1,10 +1,38 @@
 @use '@/style/variables.scss' as *;
 
 .about {
-  padding-top: 200px;
+  padding-top: 240px;
   padding-right: 32px;
   max-width: 1536px;
   margin: 0 auto;
+
+  // Начальное состояние - скрыто для анимации
+  .title {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  .container,
+  .containerMobile {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  // Анимация применяется когда класс добавлен - все элементы появляются одновременно
+  &.sectionAnimated {
+    .title {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .container,
+    .containerMobile {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 
   @media (max-width: 768px) {
     padding-top: 0;
@@ -152,12 +180,15 @@
 
   .leftBottom {
     display: flex;
+    align-items: flex-end;
     p {
       color: #6e6d67;
       max-width: 261px;
       margin-left: auto;
     }
     img {
+      width: 105px;
+      height: 164px;
       object-fit: contain;
     }
   }
@@ -174,6 +205,11 @@
 }
 
 .arrowToRoght {
+  width: 42px;
+  height: 42px;
+}
+
+.mobileArrowToRoght {
   width: 42px;
   height: 42px;
 }
@@ -199,6 +235,10 @@
       margin: 0;
       font-weight: $button-font-weight;
       font-size: 16px;
+    }
+    .arrowToRoght {
+      width: 42px;
+      height: 42px;
     }
     img {
       width: 24px;
@@ -230,6 +270,10 @@
       margin: 0;
       font-weight: $button-font-weight;
       font-size: 16px;
+    }
+    .mobileArrowToRoght {
+      width: 42px;
+      height: 42px;
     }
     img {
       width: 24px;

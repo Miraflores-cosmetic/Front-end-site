@@ -1,6 +1,6 @@
 .infoTest {
   width: 100%;
-  padding-top: 200px;
+  padding-top: 240px;
   display: flex;
   justify-content: center;
   flex-direction: column;
@@ -8,6 +8,32 @@
   padding-right: 32px;
   max-width: 1536px;
   margin: 0 auto;
+
+  // Начальное состояние - скрыто для анимации
+  .textWrapper {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  .btnWrapper {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  // Анимация применяется когда класс добавлен - все элементы появляются одновременно
+  &.sectionAnimated {
+    .textWrapper {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .btnWrapper {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
   @media (max-width: 768px) {
     padding-top: 0;
     padding-bottom: 100px;
@@ -27,37 +53,39 @@
     justify-content: center;
     flex-direction: column;
     align-items: center;
-  }
-  p {
-    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-    text-transform: uppercase;
+    
+    p {
+      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+      text-transform: uppercase;
+      font-size: 64px;
+      font-weight: 300;
 
-    font-size: 64px;
-    font-weight: 300;
-
-    @media (max-width: 700px) {
-      font-size: 32px;
+      @media (max-width: 700px) {
+        font-size: 32px;
+      }
+      @media (max-width: 576px) {
+        font-size: 24px;
+      }
     }
-    @media (max-width: 576px) {
-      font-size: 24px;
-    }
-  }
-  .romashka {
-    width: 50px;
-    position: absolute;
-    top: 14px;
-    right: 58px;
+    
+    .romashka {
+      width: 54px;
+      height: 54px;
+      position: absolute;
+      top: 10px;
+      left: 509px;
 
-    @media (max-width: 700px) {
-      width: 28px;
-      top: 5px;
-      right: 25px;
-    }
+      @media (max-width: 700px) {
+        width: 28px;
+        top: 5px;
+        right: 25px;
+      }
 
-    @media (max-width: 576px) {
-      width: 20px;
-      top: 5px;
-      right: 20px;
+      @media (max-width: 576px) {
+        width: 20px;
+        top: 5px;
+        right: 20px;
+      }
     }
   }
 

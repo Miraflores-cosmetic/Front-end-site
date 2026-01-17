@@ -42,14 +42,21 @@
 
     .stepEtap {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      background-color: #297230;
-      color: #fff;
-      font-size: 14px;
+      top: 0;
+      left: 0;
+      height: 43px;
+      background: #297230;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding-left: 10px;
+      padding-right: 10px;
+      font-family: 'Avenir Next', sans-serif;
+      font-style: normal;
       font-weight: 500;
-      padding: 5px 10px;
-      border-radius: 3px;
+      font-size: 14px;
+      line-height: 19px;
+      color: #FFFFFF;
       z-index: 2;
     }
 
@@ -108,26 +115,29 @@
   }
 
   &.active {
+    width: 500px; /* карточка становится шире */
+    height: 640px; /* карточка выше */
+    z-index: 10;
+
+    .stepWrapper {
+      height: 480px;
+
+      .stepImage {
+        width: 480px;
+        height: 480px;
+        transform: scale(1.03);
+        margin: 0 auto;
+      }
+    }
+
+    .textContent {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
     @media (max-width: 768px) {
       width: 500px;
       height: 640px;
-      z-index: 10;
-
-      .stepWrapper {
-        height: 480px;
-
-        .stepImage {
-          width: 480px;
-          height: 480px;
-          transform: scale(1.03);
-          margin: 0 auto;
-        }
-      }
-
-      .textContent {
-        opacity: 1;
-        transform: translateY(0);
-      }
     }
   }
 }

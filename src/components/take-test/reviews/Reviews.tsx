@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import styles from './Reviews.module.scss';
 import img1 from '@/assets/images/etap3.webp';
 import img2 from '@/assets/images/etap2.webp';
@@ -25,6 +25,8 @@ export const Reviews: React.FC = () => {
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const navigate = useNavigate();
   const { isAuth } = useSelector((state: RootState) => state.authSlice);
+  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     async function loadReviews() {
@@ -53,6 +55,39 @@ export const Reviews: React.FC = () => {
     loadReviews();
   }, []);
 
+  // Intersection Observer для запуска анимации при скролле к секции
+  useEffect(() => {
+    if (isSectionLoaded) return;
+
+    const setup = () => {
+      if (!sectionRef.current) return null;
+
+      const checkVisibility = () => {
+        const rect = sectionRef.current!.getBoundingClientRect();
+        return rect.top < window.innerHeight && rect.bottom > 0;
+      };
+
+      if (checkVisibility()) {
+        setIsSectionLoaded(true);
+        return null;
+      }
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) if (e.isIntersecting) setIsSectionLoaded(true);
+        },
+        { threshold: 0.2, rootMargin: '0px 0px -100px 0px' }
+      );
+      observer.observe(sectionRef.current);
+      return () => { sectionRef.current && observer.unobserve(sectionRef.current); };
+    };
+
+    let off = setup();
+    if (off) return off;
+    const id = setTimeout(() => { off = setup(); }, 120);
+    return () => { clearTimeout(id); off?.(); };
+  }, [isSectionLoaded]);
+
   const handleLeaveReviewClick = (e: React.MouseEvent) => {
     e.preventDefault();
     
@@ -70,7 +105,10 @@ export const Reviews: React.FC = () => {
   };
 
   return (
-    <section className={styles.reviewsContainer}>
+    <section
+      ref={sectionRef}
+      className={`${styles.reviewsContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
+    >
       <div className={styles.titleWrapper}>
         <p className={styles.title}>Отзывы</p>
         <Link 

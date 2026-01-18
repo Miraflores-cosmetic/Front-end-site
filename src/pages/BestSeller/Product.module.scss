@@ -17,20 +17,20 @@
     width: 100%;
     max-width: 1536px;
     margin: 0 auto;
-    padding: 0 16px;
+    padding: 24px 16px 0 16px;
     display: flex;
     gap: 32px;
     box-sizing: border-box;
     position: relative;
     
     @media (max-width: 450px) {
-      padding: 0 12px;
+      padding: 24px 12px 0 12px;
       gap: 0;
     }
     
     @media (max-width: 768px) {
       flex-direction: column;
-      padding: 0 12px;
+      padding: 24px 12px 0 12px;
       gap: 20px;
     }
 
@@ -41,7 +41,7 @@
       @media (max-width: 768px) {
         display: block;
         color: #000;
-        font-family: "TRIAL Oceanic";
+        font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
         font-size: 24px;
         font-style: normal;
         font-weight: 300;
@@ -179,7 +179,7 @@
         
         .title {
           color: #000;
-          font-family: "TRIAL Oceanic";
+          font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
           font-size: 48px;
           font-style: normal;
           font-weight: 300;

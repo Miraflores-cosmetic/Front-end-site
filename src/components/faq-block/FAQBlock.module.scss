@@ -1,10 +1,25 @@
 .faqContainer {
   width: 100%;
-  padding-top: 80px;
+  padding-top: 240px;
   padding-right: 32px;
-  padding-left: 32px;
+  padding-left: 0;
   max-width: 1536px;
-  margin: 0 auto 40px auto;
+  margin: 0 auto;
+
+  // Начальное состояние — скрыто для анимации
+  .faqContent {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  // Анимация при появлении секции
+  &.sectionAnimated {
+    .faqContent {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+  }
 
   @media (max-width: 768px) {
     padding-top: 0;
@@ -54,13 +69,7 @@
 .imageWrapper {
   position: relative;
   width: 100%;
-  border-radius: 22px;
   overflow: hidden;
-  transition: transform 0.5s ease;
-  
-  &:hover {
-    transform: translateY(-2px);
-  }
 
   // Первое изображение - верх-лево (369x336) - shablon1 - image_faq_1
   &:nth-child(1) {
@@ -72,7 +81,6 @@
     }
     @media (max-width: 1024px) {
       height: 220px;
-      border-radius: 16px;
     }
   }
 
@@ -114,7 +122,6 @@
     }
     @media (max-width: 1024px) {
       height: 220px;
-      border-radius: 16px;
     }
   }
 }
@@ -183,15 +190,15 @@
 }
 
 .questionText {
-  font-size: 18px;
-  font-weight: 500;
-  color: #1a1a1a;
+  font-family: 'Avenir Next', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 22px;
+  text-transform: uppercase;
+  color: #000000;
   flex: 1;
   padding-right: 16px;
-
-  @media (max-width: 768px) {
-    font-size: 16px;
-  }
 }
 
 .arrow {

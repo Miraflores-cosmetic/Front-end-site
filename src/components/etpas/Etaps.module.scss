@@ -5,6 +5,12 @@
   .etaps {
     display: flex;
     justify-content: space-between;
+
+    &.etapsLeft {
+      justify-content: flex-start;
+      gap: 40px;
+    }
+
     .etap {
       display: flex;
       align-items: start;

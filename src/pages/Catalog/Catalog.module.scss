@@ -1,11 +1,10 @@
 @use '@/style/variables.scss' as *;
 
 .catalogContainer {
-  padding: 0 32px;
+  padding: 0;
   min-height: 100vh;
   background-color: $white;
   overflow-x: hidden;
-  padding-bottom: 32px;
 
   scrollbar-width: none;
   -ms-overflow-style: none;
@@ -13,6 +12,7 @@
     font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
     font-weight: 300;
     font-size: 64px;
+    margin-top: 24px;
     margin-bottom: 64px;
     text-transform: uppercase;
     @media (max-width: 450px) {
@@ -57,5 +57,6 @@
 @media (max-width: 450px) {
   .catalogContainer {
     padding: 0 12px;
+    padding-bottom: 32px;
   }
 }

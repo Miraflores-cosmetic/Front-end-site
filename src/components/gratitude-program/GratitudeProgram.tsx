@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import styles from './GratitudeProgram.module.scss';
 import gratitudeLine from '@/assets/icons/gratitudeLine.svg';
 import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
@@ -8,6 +8,8 @@ import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFal
 export const GratitudeProgram: React.FC = () => {
   const [page, setPage] = useState<PageNode | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const fetchPage = async () => {
@@ -26,6 +28,36 @@ export const GratitudeProgram: React.FC = () => {
 
     fetchPage();
   }, []);
+
+  // Intersection Observer для анимации при скролле к секции
+  useEffect(() => {
+    if (isSectionLoaded) return;
+
+    const setup = () => {
+      if (!sectionRef.current) return null;
+      const checkVisibility = () => {
+        const rect = sectionRef.current!.getBoundingClientRect();
+        return rect.top < window.innerHeight && rect.bottom > 0;
+      };
+      if (checkVisibility()) {
+        setIsSectionLoaded(true);
+        return null;
+      }
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) if (e.isIntersecting) setIsSectionLoaded(true);
+        },
+        { threshold: 0.2, rootMargin: '0px 0px -100px 0px' }
+      );
+      observer.observe(sectionRef.current);
+      return () => { sectionRef.current && observer.unobserve(sectionRef.current); };
+    };
+
+    let off = setup();
+    if (off) return off;
+    const id = setTimeout(() => { off = setup(); }, 120);
+    return () => { clearTimeout(id); off?.(); };
+  }, [isSectionLoaded]);
 
   // Извлекаем данные из атрибутов
   const getGiftInfo = (index: number): { text: string; image: string | null } => {
@@ -89,7 +121,11 @@ export const GratitudeProgram: React.FC = () => {
   const content = page?.content;
 
   return (
-    <section className={styles.gratitudeContainer} id="gratitude-program">
+    <section
+      ref={sectionRef}
+      className={`${styles.gratitudeContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
+      id="gratitude-program"
+    >
       <div className={styles.titleWrapper}>
         <p className={styles.title} id="title">{title}</p>
         {content && (

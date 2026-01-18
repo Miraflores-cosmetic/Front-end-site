@@ -19,7 +19,7 @@
 
 .tabs {
   display: flex;
-  gap: 24px;
+  gap: 40px;
   margin-bottom: 8px;
   border-bottom: 1px solid #6e6d67b3;
 }
@@ -32,6 +32,12 @@
   padding-bottom: 15px;
   cursor: pointer;
   position: relative;
+  transition: color 0.25s ease;
+
+  &:hover:not(.active) {
+    color: #297230;
+  }
+
   @media (max-width: 900px) {
     font-size: 14px;
   }

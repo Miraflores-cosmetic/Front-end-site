@@ -10,7 +10,6 @@ import {Link, useParams} from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
 import { BestSellerProductCard } from '@/components/bestsellers/bestSellerCard';
-import Slider from 'react-slick';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import {
   getCategoryProducts,
@@ -67,16 +66,6 @@ const LazyComponent: React.FC = () => {
       })
     );
   }, [activeSubTabSlug, activeTabSlug, subTabs.length, dispatch]);
-
-  const settings = {
-    dots: false,
-    arrows: true,
-    infinite: false,
-    speed: 500,
-    slidesToShow: 3.5,
-    slidesToScroll: 1
-  };
-
 
   const canLoadMore = useMemo(() => {
     return !!activeTabSlug && !!pageInfo?.hasNextPage && !loading;
@@ -195,8 +184,8 @@ const LazyComponent: React.FC = () => {
         <section className={styles.categoryWrapper}>
           <p className={styles.title}>КАТЕГОРИИ</p>
           <article>
-            <Slider {...settings} className={styles.imageSlider}>
-              {items.map(product => (
+            <div className={styles.imageSlider}>
+              {items.slice(0, 4).map(product => (
                 <article className={styles.imagesWrapper} key={product.id}>
                   <img alt="" src={product.category.backgroundImage.url} className={styles.slideImage}/>
                   <div className={styles.discountWrapper}>
@@ -206,7 +195,7 @@ const LazyComponent: React.FC = () => {
                   </div>
                 </article>
               ))}
-            </Slider>
+            </div>
           </article>
         </section>
       )}

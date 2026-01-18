@@ -8,15 +8,17 @@ const LazyComponent = lazy(() => import('./LazyComponent'));
 
 const BestSeller: React.FC = () => {
   return (
-    <article className={styles.bestSellerContainer}>
+    <>
       <Header />
-      <main>
-        <Suspense fallback={<SpinnerLoader />}>
-          <LazyComponent />
-        </Suspense>
-      </main>
-      <Footer footerImage={footerImage} />
-    </article>
+      <article className={styles.bestSellerContainer}>
+        <main>
+          <Suspense fallback={<SpinnerLoader />}>
+            <LazyComponent />
+          </Suspense>
+        </main>
+        <Footer footerImage={footerImage} />
+      </article>
+    </>
   );
 };
 

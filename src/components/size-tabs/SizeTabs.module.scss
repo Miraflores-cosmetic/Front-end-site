@@ -36,6 +36,11 @@
   cursor: pointer;
   position: relative;
   user-select: none;
+  transition: color 0.25s ease;
+
+  &:hover:not(.active) {
+    color: #297230;
+  }
 
   &.active {
     color: black;

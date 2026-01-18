@@ -20,6 +20,41 @@
     margin-bottom: 0;
   }
 
+  // Начальное состояние — скрыто для анимации
+  .titleWrapper {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  .reviewsWrapper {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  .allWrapper {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  }
+
+  // Анимация при появлении секции
+  &.sectionAnimated {
+    .titleWrapper {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+    .reviewsWrapper {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+    .allWrapper {
+      opacity: 1 !important;
+      transform: translateY(0) !important;
+    }
+  }
+
   .allWrapper {
     display: flex;
     justify-content: center;

@@ -129,9 +129,18 @@ const LazyComponent: React.FC = () => {
   const allEtaps: BestSellerEtap[] = [
     { id: 1, title: 'Этап 1', name: 'Очищение', slug: 'etap-1' },
     { id: 2, title: 'Этап 2', name: 'Тонизация', slug: 'etap-2' },
-    { id: 3, title: 'Этап 3', name: 'Питание и увлажнение', slug: 'etap-3' },
+    { id: 3, title: 'Этап 3', name: 'SOS - уход', slug: 'etap-3' },
     { id: 4, title: 'Этап 3.1', name: 'Питание и увлажнение', slug: 'etap-3-1' }
   ];
+
+  // Следующий этап после этапа товара (для открытия по умолчанию: Этап товара + 1)
+  const getNextEtap = (current: string | null): string => {
+    if (!current) return 'etap-2';
+    if (current === 'etap-1') return 'etap-2';
+    if (current === 'etap-2') return 'etap-3';
+    if (current === 'etap-3') return 'etap-3-1';
+    return 'etap-3-1'; // etap-3-1: следующего нет, остаёмся на 3.1
+  };
 
   // Вычисляем этап текущего товара
   const currentProductEtap = React.useMemo(() => {
@@ -168,31 +177,24 @@ const LazyComponent: React.FC = () => {
     ...(productTypeValue ? [{ id: 3, title: 'Тип продукта', name: productTypeValue, icon: check }] : [])
   ];
 
-  // Инициализируем activeEtap из currentProductEtap сразу при первом рендере
+  // По умолчанию открываем следующий этап (Этап товара + 1)
   const [activeEtap, setActiveEtap] = React.useState<string | null>(() => {
-    // При первом рендере пытаемся определить этап из item, если он уже загружен
-    if (item?.attributes) {
-      const etap = getCurrentProductEtap();
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[LazyComponent] Инициализация activeEtap при первом рендере:', etap);
-      }
-      return etap;
+    const curr = getCurrentProductEtap();
+    const next = getNextEtap(curr);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[LazyComponent] Инициализация activeEtap (след. после этапа товара):', curr, '->', next);
     }
-    return null;
+    return next;
   });
 
-  // Обновляем activeEtap при загрузке/изменении товара
+  // Обновляем activeEtap при загрузке/изменении товара: всегда следующий (Этап товара + 1)
   useEffect(() => {
-    if (item && item.id && currentProductEtap) {
+    if (item && item.id) {
+      const next = getNextEtap(currentProductEtap || null);
       if (process.env.NODE_ENV === 'development') {
-        console.log('[LazyComponent] Обновляем activeEtap:', currentProductEtap, 'текущий:', activeEtap);
+        console.log('[LazyComponent] activeEtap (след. после этапа товара):', currentProductEtap, '->', next);
       }
-      // Всегда обновляем, если товар загружен и есть этап
-      setActiveEtap(currentProductEtap);
-    } else if (item && item.id && !currentProductEtap) {
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[LazyComponent] Товар загружен, но этап не найден');
-      }
+      setActiveEtap(next);
     }
   }, [item?.id, currentProductEtap]);
 

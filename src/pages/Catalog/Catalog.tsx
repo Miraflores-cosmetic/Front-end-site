@@ -38,23 +38,25 @@ const Catalog: React.FC = () => {
 
 
   return (
-    <main className={styles.catalogContainer}>
+    <>
       <Header />
-      <Layout>
-        <p className={styles.title}>Каталог</p>
-        {isMobile && (
-          <div className={styles.elipseWrapper}>
-            <img src={Ellipse} alt='Ellipse' className={styles.elipsImage} />
-            <img src={kremgroup} alt='kremgroup' className={styles.kremgroup} />
-            <p className={styles.name}>Наборы</p>
-          </div>
-        )}
+      <main className={styles.catalogContainer}>
+        <Layout>
+          <p className={styles.title}>Каталог</p>
+          {isMobile && (
+            <div className={styles.elipseWrapper}>
+              <img src={Ellipse} alt='Ellipse' className={styles.elipsImage} />
+              <img src={kremgroup} alt='kremgroup' className={styles.kremgroup} />
+              <p className={styles.name}>Наборы</p>
+            </div>
+          )}
 
-        <CatalogList />
-        <Bestsellers />
-      </Layout>
-      <Footer footerImage={footerImageCatalog} />
-    </main>
+          <CatalogList />
+          <Bestsellers isCatalogPage />
+        </Layout>
+        <Footer footerImage={footerImageCatalog} />
+      </main>
+    </>
   );
 };
 

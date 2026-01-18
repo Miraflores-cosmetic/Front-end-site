@@ -15,6 +15,7 @@ interface BestsellersProps {
   isTitleHidden?: boolean;
   slidesToShow?: number;
   isProductPage?: boolean; // Флаг для страницы товара
+  isCatalogPage?: boolean; // Флаг для страницы каталога
   filterByEtap?: string | null; // Фильтр по этапу ухода
   excludeProductId?: string; // ID товара для исключения из списка
   excludeProductSlug?: string; // Slug товара для исключения из списка (более надежно чем ID)
@@ -24,6 +25,7 @@ export default function Bestsellers({
   isTitleHidden,
   slidesToShow = 3.3,
   isProductPage = false,
+  isCatalogPage = false,
   filterByEtap = null,
   excludeProductId,
   excludeProductSlug
@@ -624,7 +626,7 @@ export default function Bestsellers({
   return (
     <section 
       ref={sectionRef}
-      className={`${styles.bestsellers} ${isProductPage ? styles.productPage : ''} ${isSectionLoaded ? styles.sectionAnimated : ''}`} 
+      className={`${styles.bestsellers} ${isProductPage ? styles.productPage : ''} ${isCatalogPage ? styles.catalogPage : ''} ${isSectionLoaded ? styles.sectionAnimated : ''}`} 
       style={isOversize ? undefined : {}}
       aria-label="Секция бестселлеров"
     >

@@ -27,6 +27,8 @@
 
   // Анимация применяется когда класс добавлен - все элементы появляются одновременно
   &.sectionAnimated {
+    padding-bottom: 0;
+
     .title {
       opacity: 1;
       transform: translateY(0);
@@ -44,7 +46,14 @@
     }
   }
 
-  
+  // Стили для страницы каталога
+  &.catalogPage {
+    padding-top: 0;
+    padding-bottom: 0;
+    margin-top: 0;
+    margin-bottom: 240px;
+  }
+
   @media (max-width: 768px) {
     margin-top: 0;
     padding-top: 0;
@@ -61,7 +70,7 @@
     padding: 0;
     margin-top: 40px;
     overflow-x: visible;
-    margin-bottom: 100px;
+    margin-bottom: 240px;
     
     :global {
       .layout {

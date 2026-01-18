@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import styles from './Awards.module.scss';
 
 import awardImage from '@/assets/images/awardImage.webp';
@@ -19,9 +19,44 @@ const AWARD_TEXTS = [
 
 export const Awards: React.FC = () => {
   const isMobile = useScreenMatch(800);
+  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // Intersection Observer для анимации при скролле к секции
+  useEffect(() => {
+    if (isSectionLoaded) return;
+
+    const setup = () => {
+      if (!sectionRef.current) return null;
+      const checkVisibility = () => {
+        const rect = sectionRef.current!.getBoundingClientRect();
+        return rect.top < window.innerHeight && rect.bottom > 0;
+      };
+      if (checkVisibility()) {
+        setIsSectionLoaded(true);
+        return null;
+      }
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) if (e.isIntersecting) setIsSectionLoaded(true);
+        },
+        { threshold: 0.2, rootMargin: '0px 0px -100px 0px' }
+      );
+      observer.observe(sectionRef.current);
+      return () => { sectionRef.current && observer.unobserve(sectionRef.current); };
+    };
+
+    let off = setup();
+    if (off) return off;
+    const id = setTimeout(() => { off = setup(); }, 120);
+    return () => { clearTimeout(id); off?.(); };
+  }, [isSectionLoaded]);
 
   return (
-    <section className={styles.awardsContainer}>
+    <section
+      ref={sectionRef}
+      className={`${styles.awardsContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
+    >
       {/* Заголовок */}
       <div className={styles.titleWrapper}>
         <p className={styles.title}>Награды за натуральность, эффективность и заботу о коже</p>
@@ -33,11 +68,11 @@ export const Awards: React.FC = () => {
         {/* Левая колонка */}
         <div className={styles.leftWrapper}>
           <div className={styles.textWrapper}>
-            {AWARD_TEXTS.map((text, index) => (
-              <p key={index} className={styles.txt}>
-                {text}
-              </p>
-            ))}
+            <ul className={styles.list}>
+              {AWARD_TEXTS.map((text, index) => (
+                <li key={index}>{text}</li>
+              ))}
+            </ul>
             <img src={medal} alt='Медаль за качество' className={styles.medal} />
           </div>
         </div>

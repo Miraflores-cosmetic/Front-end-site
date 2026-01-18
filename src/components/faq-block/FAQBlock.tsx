@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import styles from './FAQBlock.module.scss';
 import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
 import { editorJsToHtml } from '@/utils/editorJsParser';
@@ -21,6 +21,8 @@ export const FAQBlock: React.FC = () => {
   const [images, setImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const fetchFAQ = async () => {
@@ -165,13 +167,44 @@ export const FAQBlock: React.FC = () => {
     fetchFAQ();
   }, []);
 
+  // Intersection Observer для анимации при скролле к секции
+  useEffect(() => {
+    if (isSectionLoaded) return;
+    if (loading) return; // контент с .faqContent появляется только после загрузки
+
+    const setup = () => {
+      if (!sectionRef.current) return null;
+      const checkVisibility = () => {
+        const rect = sectionRef.current!.getBoundingClientRect();
+        return rect.top < window.innerHeight && rect.bottom > 0;
+      };
+      if (checkVisibility()) {
+        setIsSectionLoaded(true);
+        return null;
+      }
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) if (e.isIntersecting) setIsSectionLoaded(true);
+        },
+        { threshold: 0.2, rootMargin: '0px 0px -100px 0px' }
+      );
+      observer.observe(sectionRef.current);
+      return () => { sectionRef.current && observer.unobserve(sectionRef.current); };
+    };
+
+    let off = setup();
+    if (off) return off;
+    const id = setTimeout(() => { off = setup(); }, 120);
+    return () => { clearTimeout(id); off?.(); };
+  }, [isSectionLoaded, loading]);
+
   const toggleQuestion = (index: number) => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
   if (loading) {
     return (
-      <section className={styles.faqContainer}>
+      <section ref={sectionRef} className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}>
         <SpinnerLoader />
       </section>
     );
@@ -180,7 +213,7 @@ export const FAQBlock: React.FC = () => {
   // Показываем FAQ даже если нет данных, но с сообщением
   if (faqItems.length === 0) {
     return (
-      <section className={styles.faqContainer}>
+      <section ref={sectionRef} className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}>
         <div className={styles.faqContent}>
           <p>FAQ данные загружаются...</p>
         </div>
@@ -189,7 +222,11 @@ export const FAQBlock: React.FC = () => {
   }
 
   return (
-    <section className={styles.faqContainer} id="faq">
+    <section
+      ref={sectionRef}
+      className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
+      id="faq"
+    >
       <div className={styles.faqContent}>
         <div className={styles.leftColumn}>
           {/* Порядок как в vspomni: 1, 3, 2, 4 для правильного grid layout */}

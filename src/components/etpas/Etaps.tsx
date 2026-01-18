@@ -15,7 +15,7 @@ interface EtapsProps {
 const Etaps: React.FC<EtapsProps> = ({ items }) => {
   return (
     <div className={styles.etapsWrapper}>
-      <div className={styles.etaps}>
+      <div className={`${styles.etaps} ${items.length < 3 ? styles.etapsLeft : ''}`}>
         {items.map(item => (
           <div key={item.id} className={styles.etap}>
             <img src={item.icon} alt='check icon' className={styles.check} />

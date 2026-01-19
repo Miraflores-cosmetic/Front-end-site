@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styles from './GratitudeProgram.module.scss';
 import gratitudeLine from '@/assets/icons/gratitudeLine.svg';
+import ArrowToRight from '@/assets/icons/ArrowToRight.svg';
+import { Link } from 'react-router-dom';
 import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
 import { editorJsToHtml } from '@/utils/editorJsParser';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
@@ -190,6 +192,13 @@ export const GratitudeProgram: React.FC = () => {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className={styles.moreWrapper}>
+        <Link to="/gratitude">
+          <p>Подробнее о программе</p>
+          <img src={ArrowToRight} alt="" />
+        </Link>
       </div>
     </section>
   );

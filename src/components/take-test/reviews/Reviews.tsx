@@ -20,13 +20,14 @@ interface ReviewData {
   date: string;
 }
 
-export const Reviews: React.FC = () => {
+export const Reviews: React.FC<{ variant?: 'preview' | 'page' }> = ({ variant = 'preview' }) => {
   const isMobile = useScreenMatch(500);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const navigate = useNavigate();
   const { isAuth } = useSelector((state: RootState) => state.authSlice);
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  const showAll = variant === 'page';
 
   useEffect(() => {
     async function loadReviews() {
@@ -46,14 +47,13 @@ export const Reviews: React.FC = () => {
           })
         }));
 
-        // На главной показываем только первые 3 отзыва
-        setReviews(mapped.slice(0, 3));
+        setReviews(showAll ? mapped : mapped.slice(0, 3));
       } catch (error) {
         console.error('Error loading reviews:', error);
       }
     }
     loadReviews();
-  }, []);
+  }, [showAll]);
 
   // Intersection Observer для запуска анимации при скролле к секции
   useEffect(() => {
@@ -107,7 +107,7 @@ export const Reviews: React.FC = () => {
   return (
     <section
       ref={sectionRef}
-      className={`${styles.reviewsContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
+      className={`${styles.reviewsContainer} ${isSectionLoaded ? styles.sectionAnimated : ''} ${showAll ? styles.reviewsContainerPage : ''}`}
     >
       <div className={styles.titleWrapper}>
         <p className={styles.title}>Отзывы</p>
@@ -131,13 +131,11 @@ export const Reviews: React.FC = () => {
         </div>
       </div>
 
-      {!isMobile && (
-        <div className={styles.allWrapper}>
-          <Link to='/reviews/' className={styles.setReview}>
-            <p>ВСЕ ОТЗЫВЫ</p>
-          </Link>
+      {!isMobile && !showAll && (
+        <Link to='/reviews/' className={styles.allWrapper}>
+          <p>ВСЕ ОТЗЫВЫ</p>
           <img src={ArrowToRight} alt='' />
-        </div>
+        </Link>
       )}
     </section>
   );

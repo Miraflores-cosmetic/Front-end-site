@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styles from './Awards.module.scss';
 
-import awardImage from '@/assets/images/awardImage.webp';
+import awardsVideo from '@/assets/videos/awards.mp4';
 import leaf from '@/assets/images/leaf.webp';
 import romashkaBig from '@/assets/icons/romashkaBig.svg';
 import medal from '@/assets/icons/medal.webp';
@@ -88,11 +88,25 @@ export const Awards: React.FC = () => {
         <div className={styles.rightWrapper}>
           {isMobile ? (
             <div className={styles.bottomImageWrapper}>
-              <img src={awardImage} className={styles.awardImageMobile} alt='Награда' />
+              <video
+                src={awardsVideo}
+                className={styles.awardImageMobile}
+                autoPlay
+                muted
+                loop
+                playsInline
+              />
               <img src={leaf} className={styles.leaf} alt='Листок' />
             </div>
           ) : (
-            <img src={awardImage} alt='Награда' />
+            <video
+              src={awardsVideo}
+              className={styles.awardVideo}
+              autoPlay
+              muted
+              loop
+              playsInline
+            />
           )}
         </div>
       </div>

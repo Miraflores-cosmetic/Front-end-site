@@ -92,7 +92,8 @@ const categorySlice = createSlice({
       })
       .addCase(getCategoryTabs.fulfilled, (state, action) => {
         state.tabs = action.payload;
-        state.activeTabSlug = action.payload[0]?.slug ?? null;
+        // По умолчанию «ВСЕ» — показываем все продукты категории
+        state.activeTabSlug = 'ALL';
         state.loading = false;
       })
       .addCase(getCategoryTabs.rejected, (state, action) => {

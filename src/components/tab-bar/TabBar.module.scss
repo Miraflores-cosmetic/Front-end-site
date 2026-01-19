@@ -32,6 +32,11 @@
   &.active {
     background-color: #297230;
     color: #fff;
+
+    &:hover {
+      background-color: #297230;
+      color: #fff;
+    }
   }
 
   @media (max-width: 600px) {
@@ -57,6 +62,11 @@
     background: #e6e6e6;
     font-size: 14px;
     font-weight: 500;
+  }
+
+  &.active:hover {
+    background: #297230;
+    color: white;
   }
 }
 

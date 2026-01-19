@@ -78,6 +78,11 @@
   align-items: center;
   gap: 10px;
   overflow: visible !important;
+  line-height: 26px;
+
+  .activeContent {
+    line-height: 26px;
+  }
 }
 
 .price {

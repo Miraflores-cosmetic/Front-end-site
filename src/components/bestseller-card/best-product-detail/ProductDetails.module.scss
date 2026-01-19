@@ -24,7 +24,7 @@
 
 .item {
   display: flex;
-  align-items: end;
+  align-items: flex-start;
   font-size: 16px;
   margin-bottom: 8px;
   width: 100%;
@@ -42,10 +42,12 @@
 }
 
 .value {
-  flex-shrink: 0;
+  min-width: 0;
+  flex-shrink: 1;
   font-size: 16px;
   color: black;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: break-word;
   @media (max-width: 450px) {
     font-size: 13px;
   }
@@ -54,9 +56,9 @@
 /* «точки» между label и value */
 .dots {
   flex: 1;
-  min-width: 0;
+  min-width: 24px;
   border-bottom: 1px dotted #6e6d67;
   margin: 0;
-  align-self: flex-end;
   height: 1px;
+  align-self: center;
 }

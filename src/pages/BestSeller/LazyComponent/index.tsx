@@ -129,7 +129,7 @@ const LazyComponent: React.FC = () => {
   const allEtaps: BestSellerEtap[] = [
     { id: 1, title: 'Этап 1', name: 'Очищение', slug: 'etap-1' },
     { id: 2, title: 'Этап 2', name: 'Тонизация', slug: 'etap-2' },
-    { id: 3, title: 'Этап 3', name: 'SOS - уход', slug: 'etap-3' },
+    { id: 3, title: 'Этап 3.0', name: 'SOS - уход', slug: 'etap-3' },
     { id: 4, title: 'Этап 3.1', name: 'Питание и увлажнение', slug: 'etap-3-1' }
   ];
 

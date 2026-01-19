@@ -99,7 +99,7 @@ const generateProductDetails = (product: ProductSliceItem | null): DetailItem[] 
   const detailsMap = [
     { slug: 'product_type', label: 'тип продукта' },
     { slug: 'care_stage', label: 'этап' },
-    { slug: 'fragrance', label: 'группа ароматов' },
+    { slug: 'fragrance', label: 'аромат' },
     { slug: 'purpose', label: 'для чего' },
     { slug: 'shelf_life', label: 'срок годности' },
     { slug: 'storage', label: 'хранение' }

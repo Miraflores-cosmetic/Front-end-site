@@ -41,21 +41,23 @@ const LazyComponent: React.FC = () => {
   }, [slug, dispatch]);
 
 
-  // Когда выбран таб 1-го уровня — загружаем его детей (2-й уровень)
+  // Когда выбран таб 1-го уровня (не «ВСЕ») — загружаем его детей (2-й уровень)
   useEffect(() => {
-    if (!activeTabSlug) return;
+    if (!activeTabSlug || activeTabSlug === 'ALL') return;
     dispatch(getSubCategoryTabs(activeTabSlug));
   }, [activeTabSlug, dispatch]);
 
-  // Когда выбран таб 2-го уровня — загружаем продукты для этой вложенной категории
-  // Если выбран "ВСЕ", загружаем продукты из активного таба первого уровня
+  // Загружаем продукты: «ВСЕ» — по корневой категории (slug из URL), иначе по выбранному табу/подтабу
   useEffect(() => {
     if (!activeTabSlug) return;
     
-    // Если activeSubTabSlug === "ALL" или null, или subTabs пуст, загружаем все продукты из activeTabSlug
-    const slugToLoad = activeSubTabSlug === 'ALL' || !activeSubTabSlug || subTabs.length === 0
-      ? activeTabSlug 
-      : activeSubTabSlug;
+    const slugToLoad = activeTabSlug === 'ALL'
+      ? (slug || '')
+      : (activeSubTabSlug === 'ALL' || !activeSubTabSlug || subTabs.length === 0
+          ? activeTabSlug
+          : activeSubTabSlug);
+
+    if (!slugToLoad) return;
 
     dispatch(
       getCategoryProducts({
@@ -65,11 +67,15 @@ const LazyComponent: React.FC = () => {
         append: false
       })
     );
-  }, [activeSubTabSlug, activeTabSlug, subTabs.length, dispatch]);
+  }, [activeSubTabSlug, activeTabSlug, subTabs.length, slug, dispatch]);
 
   const canLoadMore = useMemo(() => {
     return !!activeTabSlug && !!pageInfo?.hasNextPage && !loading;
   }, [activeTabSlug, pageInfo?.hasNextPage, loading]);
+
+  const slugToLoad = activeTabSlug === 'ALL'
+    ? slug
+    : (activeSubTabSlug === 'ALL' || !activeSubTabSlug ? activeTabSlug : activeSubTabSlug);
 
   useEffect(() => {
     const el = loadMoreRef.current;
@@ -82,12 +88,7 @@ const LazyComponent: React.FC = () => {
 
         if (!canLoadMore) return;
 
-        if (activeTabSlug) {
-          // Если выбран "ВСЕ", загружаем из activeTabSlug, иначе из activeSubTabSlug
-          const slugToLoad = activeSubTabSlug === 'ALL' || !activeSubTabSlug 
-            ? activeTabSlug 
-            : activeSubTabSlug;
-          
+        if (slugToLoad) {
           dispatch(
             getCategoryProducts({
               slug: slugToLoad,
@@ -107,10 +108,14 @@ const LazyComponent: React.FC = () => {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [dispatch, canLoadMore, activeTabSlug, pageInfo?.endCursor]);
+  }, [dispatch, canLoadMore, slugToLoad, pageInfo?.endCursor]);
 
 
   const handleTopTabChange = (name: string) => {
+    if (name === 'ВСЕ') {
+      dispatch(setActiveTabSlug('ALL'));
+      return;
+    }
     const tab = tabs.find(t => t.name === name);
     if (!tab) return;
     dispatch(setActiveTabSlug(tab.slug));
@@ -130,17 +135,17 @@ const LazyComponent: React.FC = () => {
   return (
     <>
       <p className={styles.title}>{items.find(item => item.category.slug === slug)?.name}</p>
-      {/* 1-й уровень табов */}
+      {/* 1-й уровень табов: «ВСЕ» + подкатегории */}
       <TabBar
-        tabs={tabs.map(t => t.name)}
-        active={tabs.find(t => t.slug === activeTabSlug)?.name}
+        tabs={['ВСЕ', ...tabs.map(t => t.name)]}
+        active={activeTabSlug === 'ALL' ? 'ВСЕ' : tabs.find(t => t.slug === activeTabSlug)?.name}
         onChange={handleTopTabChange}
       />
 
-      {/* 2-й уровень табов (вложенные подкатегории выбранного таба) */}
-      {subTabs.length > 0 && (
+      {/* 2-й уровень табов (вложенные подкатегории выбранного таба), только не для «ВСЕ» */}
+      {activeTabSlug !== 'ALL' && subTabs.length > 0 && (
         <TabBar
-          tabs={['ВСЕ', ...subTabs.map(t => t.name)]}
+          tabs={['ВСЕ', ...subTabs.map(t => t.name).reverse()]}
           active={activeSubTabSlug === 'ALL' || !activeSubTabSlug 
             ? 'ВСЕ' 
             : subTabs.find(t => t.slug === activeSubTabSlug)?.name}
@@ -185,16 +190,22 @@ const LazyComponent: React.FC = () => {
           <p className={styles.title}>КАТЕГОРИИ</p>
           <article>
             <div className={styles.imageSlider}>
-              {items.slice(0, 4).map(product => (
-                <article className={styles.imagesWrapper} key={product.id}>
-                  <img alt="" src={product.category.backgroundImage.url} className={styles.slideImage}/>
-                  <div className={styles.discountWrapper}>
-                    <Link to={'/category/' + product.category.slug}>
-                      <p className={styles.name}>{product.name}</p>
+              {items
+                .filter((item) => item.category.slug !== slug)
+                .slice(0, 4)
+                .map((item) => (
+                  <article className={styles.imagesWrapper} key={item.id}>
+                    <Link
+                      to={'/category/' + item.category.slug}
+                      className={styles.imagesLink}
+                    >
+                      <img alt="" src={item.category.backgroundImage.url} className={styles.slideImage} />
+                      <div className={styles.discountWrapper}>
+                        <p className={styles.name}>{item.name}</p>
+                      </div>
                     </Link>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                ))}
             </div>
           </article>
         </section>

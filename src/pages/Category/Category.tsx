@@ -1,17 +1,19 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import styles from './Category.module.scss';
 import Header from '@/components/Header/Header';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 const LazyComponent = lazy(() => import('./LazyComponent'));
 
 const Category: React.FC = () => {
+  const { slug } = useParams();
   const sectionRef = useRef<HTMLElement>(null);
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
 
-  // При монтировании открывать страницу с самого верха
+  // При монтировании и при смене категории (slug) — прокрутка в самый верх
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, []);
+  }, [slug]);
 
   useEffect(() => {
     const el = sectionRef.current;

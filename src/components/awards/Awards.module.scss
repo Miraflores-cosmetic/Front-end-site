@@ -201,6 +201,33 @@
           width: 300px;
         }
       }
+
+      .awardVideo {
+        width: 612px;
+        height: 480px;
+        object-fit: cover;
+        object-position: bottom;
+        display: block;
+        @media (max-width: 1335px) {
+          width: 520px;
+        }
+        @media (max-width: 1200px) {
+          width: 500px;
+        }
+        @media (max-width: 1100px) {
+          width: 450px;
+        }
+        @media (max-width: 1024px) {
+          width: 420px;
+          object-fit: none;
+        }
+        @media (max-width: 1000px) {
+          width: 380px;
+        }
+        @media (max-width: 910px) {
+          width: 300px;
+        }
+      }
     }
   }
 }

@@ -8,6 +8,11 @@ const Category: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
 
+  // При монтировании открывать страницу с самого верха
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;

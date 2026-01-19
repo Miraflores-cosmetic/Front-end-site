@@ -52,7 +52,7 @@ const LeftBlock: React.FC<{ isMobile: boolean }> = ({ isMobile }) => (
     )}
 
     <div className={styles.moreWrapper}>
-      <Link to='/'>
+      <Link to='/category/nabory'>
         <p>Больше наборов</p>
         <img src={arrowToRight} alt='Показать больше наборов' />
       </Link>

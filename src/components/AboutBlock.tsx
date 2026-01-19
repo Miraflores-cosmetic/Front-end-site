@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './AboutBlock.module.scss';
 import AvoutCenter from '@/assets/images/AvoutCenter.webp';
+import aboutVideo from '@/assets/videos/about-center.mp4';
 import AboutRight from '@/assets/images/AboutRight.webp';
 import AboutLeft from '@/assets/images/AboutLeft.png';
 import arrowToRoght from '@/assets/icons/ArrowToRight.svg';
@@ -128,7 +129,16 @@ const AboutBlock: React.FC = () => {
 
         {/* Center */}
         <div className={styles.center}>
-          <AboutImage src={AvoutCenter} alt='CenterFoto' />
+          <video
+            src={aboutVideo}
+            poster={AvoutCenter}
+            muted
+            autoPlay
+            loop
+            playsInline
+            className={styles.centerVideo}
+            aria-label="О компании Miraflores"
+          />
         </div>
 
         {/* Right Column */}

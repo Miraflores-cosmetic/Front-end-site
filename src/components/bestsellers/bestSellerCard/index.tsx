@@ -214,6 +214,7 @@ export const BestSellerProductCard: React.FC<{
               <Link 
                 to={'/product/' + product.slug} 
                 className={styles.titleLink}
+                title={product.title}
                 onClick={(e) => {
                   // Блокируем переход, если был драг
                   shouldBlockNavigation(e);

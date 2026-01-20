@@ -80,16 +80,14 @@ const AddressDrawer: React.FC = () => {
         <div className={styles.drawer}>
             <div className={styles.contentWrapper}>
                 <header className={styles.headerWrapper}>
-                    <p className={styles.aboutUs}>Новый адрес</p>
-                    <p className={styles.close} onClick={handleClose}>
+                    <p className={styles.title}>Адрес доставки</p>
+                    <button type="button" onClick={handleClose} className={styles.closeTxt}>
                         Закрыть
-                    </p>
+                    </button>
                 </header>
 
                 {/* Address Information Group */}
                 <article className={styles.dadteOfBirdthWrapper}>
-                    <p className={styles.title}>Адрес доставки</p>
-
                     {formData.country === 'RU' && (
                         <div style={{ 
                             display: 'flex', 
@@ -98,8 +96,7 @@ const AddressDrawer: React.FC = () => {
                             padding: '16px', 
                             border: '1px solid rgba(0,0,0,0.1)', 
                             borderRadius: '12px', 
-                            background: 'rgba(0,0,0,0.02)',
-                            marginBottom: '16px'
+                            background: 'rgba(0,0,0,0.02)'
                         }}>
                             <div>
                                 <h3 style={{ fontSize: '16px', fontWeight: 600, marginBottom: '4px' }}>

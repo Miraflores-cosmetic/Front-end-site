@@ -22,6 +22,7 @@ import {
   sendSignInData
 } from '@/store/slices/authSlice';
 import { useToast } from '@/components/toast/toast';
+import { translateAuthError } from '@/utils/translateAuthError';
 
 const LazyComponent: React.FC = () => {
   const [isPasswordShowed, setIsPasswordShowed] = useState<boolean>(false);
@@ -63,7 +64,7 @@ const LazyComponent: React.FC = () => {
 
   useEffect(() => {
     if (signUp.error) {
-      toast.error(signUp.error.message ?? 'Произошла ошибка');
+      toast.error(translateAuthError(signUp.error.message));
     }
   }, [signUp.error]);
 

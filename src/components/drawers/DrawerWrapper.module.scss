@@ -16,6 +16,10 @@
   z-index: 1001 !important;
 }
 
+:global(.address-drawer) {
+  z-index: 1001 !important;
+}
+
 // Когда drawer открыт, добавляем класс к body чтобы header мог реагировать
 :global(body.drawer-open) {
   overflow: hidden;

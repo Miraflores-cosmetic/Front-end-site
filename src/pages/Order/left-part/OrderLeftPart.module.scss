@@ -1,9 +1,19 @@
 @use '@/style/variables.scss' as *;
+@use '@/style/mixins.scss' as mixins;
+
 .left {
   position: relative;
   width: 50%;
-  height: 100vh;
-  padding: 100px $spacing-xl 146px $spacing-xl;
+  padding: 100px $spacing-xl 146px 16px;
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  @include mixins.hide-scrollbar;
+
+  @media (min-width: 957px) {
+    height: 100%;
+    min-height: 0;
+  }
 
   @media (max-width: 1024px) {
     padding: 100px $spacing-lg 146px $spacing-lg;
@@ -38,6 +48,12 @@
     position: absolute;
     top: 38px;
     left: 0;
+    cursor: pointer;
+    transition: opacity 0.2s;
+
+    &:hover {
+      opacity: 0.7;
+    }
   }
 
   .inputWrapper {

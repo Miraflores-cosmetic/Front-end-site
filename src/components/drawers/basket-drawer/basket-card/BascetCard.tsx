@@ -40,7 +40,7 @@ const BasketCard: React.FC<BasketCardProps> = ({
 
         <div className={styles.basketInfo}>
           <div className={styles.topInfo}>
-            <div>
+            <div className={styles.productNameSizeBlock}>
               <p className={styles.productName}>{title}</p>
               <p className={styles.productSize}>{size}</p>
 

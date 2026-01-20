@@ -56,11 +56,10 @@ const CardList: React.FC<OrderCartListProps> = ({ cartData }) => {
                 )}
               </div>
 
-              {/* Discount - render only if exists */}
-              {item.discount && (
+              {/* Discount - render only if exists, в формате как в ProductCard: -X% */}
+              {item.discount != null && item.discount !== '' && (
                 <div className={styles.discount}>
-                    {/* Add % sign if it's just a number */}
-                    {typeof item.discount === 'number' ? `-${item.discount}%` : item.discount}
+                  -{String(item.discount).replace(/^-\s*/, '').replace(/%\s*$/, '')}%
                 </div>
               )}
             </div>

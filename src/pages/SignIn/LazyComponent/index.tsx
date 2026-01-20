@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useToast } from '@/components/toast/toast';
 import { RootState, AppDispatch } from '@/store/store';
+import { translateAuthError } from '@/utils/translateAuthError';
 
 const LazyComponent: React.FC = () => {
   const [isPasswordShowed, setIsPasswordShowed] = useState<boolean>(false);
@@ -32,7 +33,7 @@ const LazyComponent: React.FC = () => {
   }, [isAuth]);
   useEffect(() => {
     if (signIn.success) {
-      toast.success('Вход в аккакунт выполнен!');
+      toast.success('Вход в аккаунт выполнен!');
       setTimeout(() => {
         handleNavigatetoHome();
       }, 1500);
@@ -44,7 +45,7 @@ const LazyComponent: React.FC = () => {
 
   useEffect(() => {
     if (signIn.error) {
-      toast.error(signIn.error.message ?? 'Произошла ошибка');
+      toast.error(translateAuthError(signIn.error.message));
     }
   }, [signIn.error]);
 

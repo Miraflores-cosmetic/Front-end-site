@@ -22,13 +22,13 @@ const Order: React.FC = () => {
   }, [dispatch, me]);
 
   return (
-    <>
+    <div className={styles.orderPage}>
       <Header />
       <main className={styles.orderContainer}>
         <OrderLeftPart />
         <OrderRightPart />
       </main>
-    </>
+    </div>
   );
 };
 

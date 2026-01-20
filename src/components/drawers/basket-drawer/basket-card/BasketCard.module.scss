@@ -2,7 +2,7 @@
   width: 100%;
   box-sizing: border-box;
   display: flex;
-  padding: 0 30px 0 0;
+  padding: 0;
   flex-direction: column;
 
   @media (max-width: 550px) {
@@ -214,6 +214,15 @@
         gap: 2px;
       }
 
+      .productNameSizeBlock {
+        display: flex;
+        flex-direction: column;
+
+        @media (min-width: 551px) {
+          gap: 4px;
+        }
+      }
+
       .productName {
         font-size: 16px;
         font-weight: 600;
@@ -241,6 +250,10 @@
         font-weight: 600;
         color: #6e6d67;
         line-height: 1.2;
+
+        @media (min-width: 551px) {
+          font-weight: 400;
+        }
 
         @media (max-width: 550px) {
           font-family: 'Avenir Next', sans-serif;

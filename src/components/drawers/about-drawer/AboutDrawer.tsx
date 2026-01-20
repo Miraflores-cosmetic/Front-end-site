@@ -81,7 +81,7 @@ const AboutDrawer: React.FC = () => {
             type='password'
             value={password}
             buttonText='Сменить пароль'
-            onButtonClick={() => alert('Change password')}
+            onButtonClick={() => toast.warning('Смена пароля будет доступна в ближайшее время')}
             onChange={e => setPassword(e.target.value)}
           />
         </article>

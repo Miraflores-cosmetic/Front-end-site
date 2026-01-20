@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from './BasketDrawer.module.scss';
 import { AppDispatch, RootState } from '@/store/store';
 import blackBasketTrash from '@/assets/icons/blackBasketTrash.svg';
@@ -12,16 +12,30 @@ import { formatCurrency } from '@/helpers/helpers';
 import { createCheckoutApi, clearCart } from '@/store/slices/checkoutSlice';
 import { CHANNEL } from '@/graphql/client';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
+import { getProgressBarCartModel } from '@/graphql/queries/pages.service';
 
 const BasketDrawer: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const [totalFromPrice, setTotalFromPrice] = React.useState(0);
   const [totalToPrice, setTotalToPrice] = React.useState(0);
+  const [progressBar, setProgressBar] = useState({
+    contentText: 'до бесплатной доставки',
+    threshold: 15780,
+    successText: 'Бесплатная доставка!'
+  });
   const isMobile = useScreenMatch(664);
+
+  const remainder = Math.max(0, progressBar.threshold - totalToPrice);
+  const progressPercent =
+    progressBar.threshold > 0 ? Math.min(100, (totalToPrice / progressBar.threshold) * 100) : 0;
 
   const { lines } = useSelector((state: RootState) => state.checkout);
   const { isAuth, email } = useSelector((state: RootState) => state.authSlice);
+
+  useEffect(() => {
+    getProgressBarCartModel().then(setProgressBar).catch(() => {});
+  }, []);
 
   useEffect(() => {
     let totalFrom = 0;
@@ -80,9 +94,13 @@ const BasketDrawer: React.FC = () => {
           </button>
         </div>
         <div className={styles.progresContainer}>
-          <div className={styles.progresContent}>
-            <p className={styles.txt1}>{formatCurrency(Math.max(0, 15780 - totalToPrice))}₽ до</p>
-            <p className={styles.txt2}> бесплатной доставки</p>
+          <p className={styles.progresText}>
+            {remainder <= 0
+              ? progressBar.successText
+              : `${formatCurrency(remainder)}₽ ${progressBar.contentText}`}
+          </p>
+          <div className={styles.progresTrack}>
+            <div className={styles.progresFill} style={{ width: `${progressPercent}%` }} />
           </div>
         </div>
 

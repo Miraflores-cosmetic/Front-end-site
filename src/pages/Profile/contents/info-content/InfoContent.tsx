@@ -10,6 +10,7 @@ import girlwithsmile from '@/assets/images/girlsmile.webp';
 import { RootState, AppDispatch } from '@/store/store';
 import { updateAccountAction, getMe } from '@/store/slices/authSlice';
 import { useToast } from '@/components/toast/toast';
+import { translateAuthError } from '@/utils/translateAuthError';
 
 const InfoContent: React.FC = () => {
   const { me } = useSelector((state: RootState) => state.authSlice);
@@ -100,9 +101,9 @@ const InfoContent: React.FC = () => {
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('userId');
       } else if (error?.payload) {
-        toast.error(error.payload || 'Ошибка при обновлении профиля');
+        toast.error(translateAuthError(String(error.payload)) || 'Ошибка при обновлении профиля');
       } else {
-        toast.error(error?.message || 'Ошибка при обновлении профиля');
+        toast.error(translateAuthError(error?.message) || 'Ошибка при обновлении профиля');
       }
     }
   };

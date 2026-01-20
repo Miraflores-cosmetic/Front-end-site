@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 import styles from './OrderRightPart.module.scss';
-import Miraflores_logo from '@/assets/icons/Miraflores_logo.svg';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import CardList, { OrderProduct } from '../order-components/CardList'; // Import the Type
 import Sertificate from '../order-components/Sertificate';
@@ -50,8 +49,6 @@ const OrderRightPart: React.FC = () => {
       {!isTablet && (
         <section className={styles.right}>
           <article className={styles.listWrapper}>
-            <img src={Miraflores_logo} alt={'Miraflores_logo'} className={styles.Miraflores_logo} />
-
             {/* 2. Pass the WHOLE array to CardList once, do not map here */}
             <CardList cartData={formattedCartData} />
 

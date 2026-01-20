@@ -25,7 +25,6 @@ const DrawerWrapper: React.FC = () => {
   const isOpenAbout = activeDrawer === 'about' ? true : false;
   const isAddComment = activeDrawer === 'add-comment' ? true : false;
   const isMobileBasket = useScreenMatch(664);
-  const isMobile = useScreenMatch(450);
 
   // Добавляем/удаляем класс на body когда drawer открыт
   React.useEffect(() => {
@@ -54,7 +53,7 @@ const DrawerWrapper: React.FC = () => {
         className={`${styles.drawerContainer} menu-drawer`}
         open={isOpenMenu}
         onClose={() => dispatch(closeDrawer())}
-        size={'100%'}
+        size="100%"
         duration={400}
         direction='right'
       >
@@ -64,7 +63,7 @@ const DrawerWrapper: React.FC = () => {
         className={styles.drawerContainer}
         open={isOpenAbout}
         onClose={() => dispatch(closeDrawer())}
-        size={isMobile ? '100%' : 450}
+        size={isMobileBasket ? '100%' : 664}
         duration={400}
         direction='right'
       >
@@ -74,17 +73,17 @@ const DrawerWrapper: React.FC = () => {
         className={styles.drawerContainer}
         open={isAddComment}
         onClose={() => dispatch(closeDrawer())}
-        size={isMobile ? '100%' : 552}
+        size={isMobileBasket ? '100%' : 664}
         duration={400}
         direction='right'
       >
         <AddCommentDrawer />
       </Drawer>
-            <Drawer
-        className={styles.drawerContainer}
+      <Drawer
+        className={`${styles.drawerContainer} address-drawer`}
         open={isAdress}
         onClose={() => dispatch(closeDrawer())}
-        size={isMobile ? '100%' : 450}
+        size={isMobileBasket ? '100%' : 664}
         duration={400}
         direction='right'
       >

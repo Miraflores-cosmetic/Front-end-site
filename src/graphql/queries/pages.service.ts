@@ -1,4 +1,4 @@
-import { graphqlRequest } from '../client';
+import { graphqlRequest, CHANNEL } from '../client';
 import { normalizeMediaUrl } from '@/utils/mediaUrl';
 
 /**
@@ -200,6 +200,108 @@ export async function getPageBySlug(slug: string): Promise<PageNode | null> {
   return data.page ?? null;
 }
 
+export interface ProgressBarCartModel {
+  contentText: string;
+  threshold: number;
+  /** Текст при достижении порога (атрибут uspeh-progress-bar-korziny) */
+  successText: string;
+}
+
+const PROGRESS_BAR_SLUG = 'progress-bar-korziny';
+const DEFAULT_THRESHOLD = 15780;
+const DEFAULT_CONTENT = 'до бесплатной доставки';
+const DEFAULT_SUCCESS_TEXT = 'Бесплатная доставка!';
+const ATTR_SUCCESS_SLUG = 'uspeh-progress-bar-korziny';
+
+const progressBarPageFields = `
+  id
+  content
+  assignedAttributes {
+    attribute { id slug name }
+    ... on AssignedFileAttribute { fileValue: value { url } }
+    ... on AssignedPlainTextAttribute { textValue: value }
+    ... on AssignedNumericAttribute { value }
+  }
+`;
+
+const progressBarQueryNoChannel = `
+  query GetProgressBarCartPage($slug: String!) {
+    page(slug: $slug) { ${progressBarPageFields} }
+  }
+`;
+
+const progressBarQueryWithChannel = `
+  query GetProgressBarCartPageChannel($slug: String!, $channel: String!) {
+    page(slug: $slug, channel: $channel) { ${progressBarPageFields} }
+  }
+`;
+
+type ProgressBarPage = { id: string; content?: string | null; assignedAttributes?: Array<Record<string, unknown>> } | null;
+
+/**
+ * Модель «Прогресс-бар корзины» (slug: progress-bar-korziny).
+ * Заголовок, Содержимое (до бесплатной доставки), атрибут-число (порог в ₽).
+ */
+export async function getProgressBarCartModel(): Promise<ProgressBarCartModel> {
+  type R = { page: ProgressBarPage };
+  let data: R = await graphqlRequest<R>(progressBarQueryNoChannel, { slug: PROGRESS_BAR_SLUG });
+  if (!data.page) {
+    data = await graphqlRequest<R>(progressBarQueryWithChannel, { slug: PROGRESS_BAR_SLUG, channel: 'default-channel' });
+  }
+  if (!data.page) {
+    data = await graphqlRequest<R>(progressBarQueryWithChannel, { slug: PROGRESS_BAR_SLUG, channel: CHANNEL });
+  }
+
+  const page = data.page;
+  if (!page) {
+    return { contentText: DEFAULT_CONTENT, threshold: DEFAULT_THRESHOLD, successText: DEFAULT_SUCCESS_TEXT };
+  }
+
+  let contentText = DEFAULT_CONTENT;
+  if (page.content) {
+    try {
+      const parsed = typeof page.content === 'string' ? JSON.parse(page.content) : page.content;
+      if (parsed?.blocks && Array.isArray(parsed.blocks)) {
+        const t = parsed.blocks
+          .map((b: { type?: string; data?: { text?: string } }) => (b.type === 'paragraph' && b.data?.text ? b.data.text : ''))
+          .filter(Boolean)
+          .join(' ');
+        if (t) contentText = t;
+      } else {
+        contentText = typeof page.content === 'string' ? page.content : String(page.content);
+      }
+    } catch {
+      contentText = typeof page.content === 'string' ? page.content : DEFAULT_CONTENT;
+    }
+  }
+
+  let threshold = DEFAULT_THRESHOLD;
+  let successText = DEFAULT_SUCCESS_TEXT;
+
+  for (const a of page.assignedAttributes || []) {
+    const attr = a as { attribute?: { slug?: string }; value?: unknown; textValue?: unknown };
+    const slug = attr.attribute?.slug ?? '';
+
+    if (slug === ATTR_SUCCESS_SLUG) {
+      if (typeof attr.textValue === 'string' && attr.textValue) successText = attr.textValue;
+      continue;
+    }
+
+    if (threshold !== DEFAULT_THRESHOLD) continue;
+
+    const num = attr.value;
+    if (typeof num === 'number' && !Number.isNaN(num) && num > 0) {
+      threshold = Math.round(num);
+    } else if (typeof attr.textValue === 'string') {
+      const n = parseInt(attr.textValue, 10);
+      if (!Number.isNaN(n) && n > 0) threshold = n;
+    }
+  }
+
+  const cleanNbsp = (s: string) => s.replace(/&nbsp;?/gi, ' ').replace(/\s{2,}/g, ' ').trim();
+  return { contentText: cleanNbsp(contentText), threshold, successText: cleanNbsp(successText) };
+}
+
 export interface StepsPagesConnection {
   pages: {
     edges: {
@@ -262,7 +364,7 @@ export async function getAllSteps(): Promise<StepData[]> {
       return [];
     }
 
-    // 2. Получить все страницы этого типа
+    // 2. Получить все страницы этого типа (в т.ч. metadata для sortOrder)
     const pagesQuery = `
       query GetAllSteps($first: Int!, $pageTypeId: ID!) {
         pages(first: $first, where: { pageType: { eq: $pageTypeId } }) {
@@ -273,6 +375,10 @@ export async function getAllSteps(): Promise<StepData[]> {
               title
               content
               isPublished
+              metadata {
+                key
+                value
+              }
               assignedAttributes {
                 attribute {
                   id
@@ -347,18 +453,34 @@ export async function getAllSteps(): Promise<StepData[]> {
           }
         }
 
+        // Порядок из metadata: ключ "sortOrder" или "order" (число). Для сортировки.
+        const metaSort = node.metadata?.find(
+          (m) => m.key === 'sortOrder' || m.key === 'order'
+        )?.value;
+        const metadataSortOrder =
+          metaSort != null && metaSort !== ''
+            ? parseInt(metaSort, 10)
+            : NaN;
+
         return {
           id: index + 1,
           title: node.title || '',
           description: description,
           image: image,
           hoverImage: hoverImage,
-          slug: node.slug, // Сохраняем slug для сортировки
+          slug: node.slug,
+          metadataSortOrder: Number.isNaN(metadataSortOrder) ? undefined : metadataSortOrder,
         };
       })
       .filter((step) => step.image) // Только шаги с изображениями
       .sort((a, b) => {
-        // Сортируем по slug (извлекаем числа из slug для правильной сортировки)
+        // 1) Сортировка по metadata (sortOrder / order), если задано
+        const orderA = a.metadataSortOrder ?? null;
+        const orderB = b.metadataSortOrder ?? null;
+        if (orderA != null && orderB != null) return orderA - orderB;
+        if (orderA != null) return -1;
+        if (orderB != null) return 1;
+        // 2) Fallback: по числу в slug
         const getSortKey = (slug: string) => {
           const match = slug.match(/\d+/);
           return match ? parseInt(match[0], 10) : 999;
@@ -366,9 +488,9 @@ export async function getAllSteps(): Promise<StepData[]> {
         return getSortKey(a.slug || '') - getSortKey(b.slug || '');
       })
       .map((step, index) => {
-        const { slug, ...stepWithoutSlug } = step;
+        const { slug, metadataSortOrder, ...stepWithoutExtra } = step;
         return {
-          ...stepWithoutSlug,
+          ...stepWithoutExtra,
           id: index + 1, // Перенумеровываем после сортировки
         };
       });

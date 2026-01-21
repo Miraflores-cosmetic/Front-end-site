@@ -9,10 +9,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { closeDrawer } from '@/store/slices/drawerSlice';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@/helpers/helpers';
-import { createCheckoutApi, clearCart } from '@/store/slices/checkoutSlice';
+import { createCheckoutApi, clearCart, applyVoucherCode, removeVoucherCode } from '@/store/slices/checkoutSlice';
 import { CHANNEL } from '@/graphql/client';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { getProgressBarCartModel } from '@/graphql/queries/pages.service';
+import { useToast } from '@/components/toast/toast';
 
 const BasketDrawer: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -30,11 +31,19 @@ const BasketDrawer: React.FC = () => {
   const progressPercent =
     progressBar.threshold > 0 ? Math.min(100, (totalToPrice / progressBar.threshold) * 100) : 0;
 
-  const { lines } = useSelector((state: RootState) => state.checkout);
+  const { lines, voucherCode, voucherDiscount } = useSelector((state: RootState) => state.checkout);
   const { isAuth, email } = useSelector((state: RootState) => state.authSlice);
 
+  // Итоговая цена с учётом скидки от промокода
+  const finalPrice = Math.max(0, totalToPrice - (voucherDiscount || 0));
+
+  const [isPromoInputOpen, setIsPromoInputOpen] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [isApplying, setIsApplying] = useState(false);
+  const toast = useToast();
+
   useEffect(() => {
-    getProgressBarCartModel().then(setProgressBar).catch(() => {});
+    getProgressBarCartModel().then(setProgressBar).catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -84,6 +93,42 @@ const BasketDrawer: React.FC = () => {
     }
   };
 
+  const handleTogglePromoInput = () => {
+    if (voucherCode) {
+      dispatch(removeVoucherCode());
+      toast.success('Промокод удален');
+    } else {
+      setIsPromoInputOpen(!isPromoInputOpen);
+    }
+  };
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) {
+      toast.error('Введите промокод');
+      return;
+    }
+
+    if (isApplying) return;
+
+    setIsApplying(true);
+    try {
+      await dispatch(applyVoucherCode(promoCode.trim())).unwrap();
+      setIsPromoInputOpen(false);
+      setPromoCode('');
+      toast.success('Промокод применен');
+    } catch (error: any) {
+      toast.error(error?.message || 'Ошибка при применении промокода');
+    } finally {
+      setIsApplying(false);
+    }
+  };
+
+  const handlePromoKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleApplyPromo();
+    }
+  };
+
   return (
     <div className={`${styles.drawer}`}>
       <div className={styles.contentWrapper}>
@@ -114,22 +159,52 @@ const BasketDrawer: React.FC = () => {
 
         {/* Promo Code Section */}
         <div className={styles.promoSection}>
-          <div className={styles.promoRow}>
+          <div className={styles.promoRow} onClick={handleTogglePromoInput}>
             <img src={promocodeIcon} alt='promocode' className={styles.promoIcon} />
-            <span className={styles.promoText}>Добавить промокод или сертификат</span>
-            <span className={styles.promoPlus}>+</span>
+            <span className={styles.promoText}>
+              {voucherCode ? 'Промокод применен' : 'Добавить промокод или сертификат'}
+            </span>
+            <span className={styles.promoPlus}>{voucherCode ? '−' : (isPromoInputOpen ? '−' : '+')}</span>
           </div>
+
+          {isPromoInputOpen && !voucherCode && (
+            <div className={styles.promoInputWrapper}>
+              <input
+                type="text"
+                value={promoCode}
+                onChange={(e) => setPromoCode(e.target.value)}
+                onKeyPress={handlePromoKeyPress}
+                placeholder="Введите промокод"
+                className={styles.promoInput}
+                disabled={isApplying}
+              />
+              <button
+                onClick={handleApplyPromo}
+                disabled={isApplying || !promoCode.trim()}
+                className={styles.promoApplyBtn}
+              >
+                {isApplying ? '...' : 'Применить'}
+              </button>
+            </div>
+          )}
+
+          {voucherCode && (
+            <p className={styles.appliedPromo}>{voucherCode}</p>
+          )}
         </div>
       </div>
       <div className={styles.orderButtonContainer}>
         <div className={styles.footerContent}>
           <div className={styles.totalInfo}>
             <div className={styles.priceRow}>
-              <span className={styles.mainPrice}>{formatCurrency(totalToPrice)}₽</span>
-              {totalFromPrice > totalToPrice && (
-                <span className={styles.oldPrice}>{formatCurrency(totalFromPrice)}₽</span>
+              <span className={styles.mainPrice}>{formatCurrency(finalPrice)}₽</span>
+              {(totalFromPrice > finalPrice || voucherDiscount > 0) && (
+                <span className={styles.oldPrice}>{formatCurrency(totalToPrice)}₽</span>
               )}
             </div>
+            {voucherDiscount > 0 && (
+              <p className={styles.discountInfo}>Скидка по промокоду: -{formatCurrency(voucherDiscount)}₽</p>
+            )}
             <p className={styles.itemCount}>
               <span className={styles.desktopSumLabel}>Сумма • </span>
               {lines.length}{' '}

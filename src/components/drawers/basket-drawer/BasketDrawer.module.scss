@@ -12,8 +12,10 @@
 
   .contentWrapper {
     width: 100%;
-    flex: 1; /* Grow to fill available space */
-    min-height: 0; /* Essential for nested flex scrolling */
+    flex: 1;
+    /* Grow to fill available space */
+    min-height: 0;
+    /* Essential for nested flex scrolling */
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -186,16 +188,143 @@
       }
     }
 
-  .promoSection {
-    padding: 16px 24px;
-    border-top: 1px solid #f0f0f0;
-    
-    @media (max-width: 550px) {
+    .promoSection {
+      padding: 16px 24px;
+      border-top: 1px solid #f0f0f0;
+
+      @media (max-width: 550px) {
         padding: 0;
         border: none;
         margin-top: 24px;
-        margin-bottom: 12px; /* Reduced to 12px as requested */
-        padding: 0 16px; 
+        margin-bottom: 12px;
+        /* Reduced to 12px as requested */
+        padding: 0 16px;
+      }
+
+      .promoRow {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        cursor: pointer;
+        gap: 12px;
+        padding: 12px 16px;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+
+        @media (max-width: 550px) {
+          height: 50px;
+          background: #fff;
+          border: 0.5px solid rgba(0, 0, 0, 0.08);
+          border-radius: 0;
+          padding: 0 12px;
+          gap: 20px;
+        }
+
+        .promoIcon {
+          width: 20px;
+          height: 20px;
+
+          @media (max-width: 550px) {
+            width: 18px;
+            height: 18px;
+          }
+        }
+
+        .promoText {
+          flex: 1;
+          font-size: 14px;
+          font-weight: 500;
+          color: #000;
+
+          @media (max-width: 550px) {
+            font-family: 'Avenir Next', sans-serif;
+            font-size: 13px;
+            line-height: 18px;
+            font-weight: 500;
+            color: #000000;
+            margin-left: 8px;
+          }
+        }
+
+        .promoPlus {
+          font-size: 20px;
+          font-weight: 400;
+
+          @media (max-width: 550px) {
+            font-size: 16px;
+          }
+        }
+      }
+
+      .promoInputWrapper {
+        margin-top: 12px;
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+
+      .promoInput {
+        flex: 1;
+        padding: 10px 14px;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        font-size: 14px;
+        font-family: inherit;
+
+        &:focus {
+          outline: none;
+          border-color: #000;
+        }
+
+        @media (max-width: 550px) {
+          border-radius: 0;
+          background: #fff;
+          border: 0.5px solid rgba(0, 0, 0, 0.08);
+        }
+      }
+
+      .promoApplyBtn {
+        padding: 10px 20px;
+        background: #000;
+        color: #fff;
+        border: none;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background 0.2s;
+
+        &:hover:not(:disabled) {
+          background: #333;
+        }
+
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
+
+        @media (max-width: 550px) {
+          border-radius: 0;
+        }
+      }
+
+      .appliedPromo {
+        margin-top: 8px;
+        font-size: 14px;
+        color: #297230;
+        font-weight: 500;
+      }
+    }
+
+    padding: 16px 24px;
+    border-top: 1px solid #f0f0f0;
+
+    @media (max-width: 550px) {
+      padding: 0;
+      border: none;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      padding: 0 16px;
     }
 
     .promoRow {
@@ -212,18 +341,21 @@
         height: 50px;
         background: #fff;
         border: 0.5px solid rgba(0, 0, 0, 0.08);
+        /* Frame 1948759714 border */
         border-radius: 0;
-        padding: 0 12px; 
+        padding: 0 12px;
         gap: 20px;
       }
-      
+
+      /* ... existing inner styles ... */
       .promoIcon {
         width: 20px;
         height: 20px;
-        
+
         @media (max-width: 550px) {
-            width: 18px;
-            height: 18px;
+          width: 18px;
+          height: 18px;
+          /* Tag-2 size */
         }
       }
 
@@ -232,252 +364,209 @@
         font-size: 14px;
         font-weight: 500;
         color: #000;
-        
+
         @media (max-width: 550px) {
-             font-family: 'Avenir Next', sans-serif;
-             font-size: 13px;
-             line-height: 18px;
-             font-weight: 500;
-             color: #000000;
-             margin-left: 8px;
+          font-family: 'Avenir Next', sans-serif;
+          font-size: 13px;
+          line-height: 18px;
+          font-weight: 500;
+          color: #000000;
+          margin-left: 8px;
+          /* Gap 8px between icon and text */
         }
       }
 
       .promoPlus {
         font-size: 20px;
         font-weight: 400;
-        
+
         @media (max-width: 550px) {
-            font-size: 16px;
-        }
-      }
-    }
-  }
-      padding: 16px 24px;
-      border-top: 1px solid #f0f0f0;
-
-      @media (max-width: 550px) {
-          padding: 0;
-          border: none;
-          margin-top: 24px;
-          margin-bottom: 12px;
-          padding: 0 16px; 
-      }
-
-      .promoRow {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      cursor: pointer;
-      gap: 12px;
-      padding: 12px 16px;
-      border: 1px solid #e5e5e5;
-      border-radius: 8px;
-
-      @media (max-width: 550px) {
-        height: 50px;
-        background: #fff;
-        border: 0.5px solid rgba(0, 0, 0, 0.08); /* Frame 1948759714 border */
-        border-radius: 0;
-        padding: 0 12px; 
-        gap: 20px;
-      }
-/* ... existing inner styles ... */
-      .promoIcon {
-        width: 20px;
-        height: 20px;
-        
-        @media (max-width: 550px) {
-            width: 18px;
-            height: 18px; /* Tag-2 size */
-        }
-      }
-
-      .promoText {
-        flex: 1;
-        font-size: 14px;
-        font-weight: 500;
-        color: #000;
-        
-        @media (max-width: 550px) {
-             font-family: 'Avenir Next', sans-serif;
-             font-size: 13px;
-             line-height: 18px;
-             font-weight: 500;
-             color: #000000;
-             margin-left: 8px; /* Gap 8px between icon and text */
-        }
-      }
-
-      .promoPlus {
-        font-size: 20px;
-        font-weight: 400;
-        
-        @media (max-width: 550px) {
-            font-size: 16px; /* Add icon size */
+          font-size: 16px;
+          /* Add icon size */
         }
       }
     }
   }
 }
 
-  .orderButtonContainer {
-    height: 127px;
-    min-height: 127px;
-    background-color: white;
-    padding: 16px 24px;
-    flex-shrink: 0;
-    border-top: 1px solid #f0f0f0;
+.orderButtonContainer {
+  height: 127px;
+  min-height: 127px;
+  background-color: white;
+  padding: 16px 24px;
+  flex-shrink: 0;
+  border-top: 1px solid #f0f0f0;
+
+  @media (max-width: 550px) {
+    height: auto;
+    min-height: auto;
+    padding: 16px;
+  }
+
+  .footerContent {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    justify-content: space-between;
 
     @media (max-width: 550px) {
-      height: auto;
-      min-height: auto;
-      padding: 16px;
+      flex-direction: row;
+      align-items: center;
+      gap: 12px;
+    }
+  }
+
+  .totalInfo {
+    display: flex;
+    flex-direction: row-reverse;
+    /* Count on Left, Price on Right for Desktop */
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+
+    @media (max-width: 550px) {
+      flex-direction: column;
+      align-items: flex-start;
+      width: auto;
+      gap: 2px;
     }
 
-    .footerContent {
-        display: flex;
-        flex-direction: column;
-        height: 100%;
-        justify-content: space-between;
+    .itemCount {
+      font-size: 16px;
+      color: black;
+      font-weight: 500;
+
+      /* "Summa" label styling */
+      .desktopSumLabel {
+        font-weight: 600;
+        margin-right: 4px;
 
         @media (max-width: 550px) {
-            flex-direction: row;
-            align-items: center;
-            gap: 12px;
+          display: none;
         }
+      }
+
+      @media (max-width: 550px) {
+        font-size: 12px;
+        color: #a3a3a3;
+        /* Gray for item count on mobile */
+        order: 2;
+        /* Price first, Count second */
+      }
     }
 
-    .totalInfo {
-        display: flex;
-        flex-direction: row-reverse; /* Count on Left, Price on Right for Desktop */
-        justify-content: space-between;
-        align-items: center;
-        width: 100%;
+    .discountInfo {
+      font-size: 13px;
+      color: #297230;
+      font-weight: 500;
+      margin-top: 4px;
 
-        @media (max-width: 550px) {
-            flex-direction: column;
-            align-items: flex-start;
-            width: auto;
-            gap: 2px;
-        }
-
-        .itemCount {
-            font-size: 16px;
-            color: black;
-            font-weight: 500;
-             /* "Summa" label styling */
-            .desktopSumLabel {
-                font-weight: 600;
-                margin-right: 4px;
-                @media (max-width: 550px) {
-                    display: none;
-                }
-            }
-
-            @media (max-width: 550px) {
-                font-size: 12px;
-                color: #a3a3a3; /* Gray for item count on mobile */
-                order: 2; /* Price first, Count second */
-            }
-        }
-
-        .priceRow {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-
-            @media (max-width: 550px) {
-                gap: 4px; /* Fix gap between them as per context (was 8px) */
-                order: 1;
-            }
-
-            .mainPrice {
-                font-size: 20px;
-                font-weight: 600;
-                color: black;
-
-                @media (max-width: 550px) {
-                    font-size: 16px;
-                    /* Use style from Onest 14px bold if needed, but keeping 16px/14px logic? */
-                    /* User image shows main price 13590 and old price 24800. size looks similar. */
-                    /* But user provided CSS ONLY for .fromMobile (oldPrice). */
-                }
-            }
-
-            .oldPrice {
-                font-size: 16px;
-                color: #a3a3a3;
-                text-decoration: line-through;
-                
-                @media (max-width: 550px) {
-                  /* User provided exact CSS */
-                  font-family: 'Onest', sans-serif;
-                  font-size: 13px;
-                  font-weight: 600;
-                  line-height: 17px;
-                  color: #6E6D67;
-                  text-transform: uppercase;
-                  text-decoration: none; /* remove default strike */
-                  position: relative;
-                  
-                   &::after {
-                    content: '';
-                    position: absolute;
-                    left: 0;
-                    top: 50%;
-                    width: 100%;
-                    height: 1px;
-                    background: #FF0808;
-                    transform: rotate(-8.84deg); /* Exact rotation */
-                  }
-                }
-            }
-        }
+      @media (max-width: 550px) {
+        font-size: 11px;
+      }
     }
 
-    .actions {
-        display: flex;
-        align-items: center;
-        width: 100%;
-        margin-top: auto; /* Push to bottom on desktop */
+    .priceRow {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      @media (max-width: 550px) {
+        gap: 4px;
+        /* Fix gap between them as per context (was 8px) */
+        order: 1;
+      }
+
+      .mainPrice {
+        font-size: 20px;
+        font-weight: 600;
+        color: black;
 
         @media (max-width: 550px) {
+          font-size: 16px;
+          /* Use style from Onest 14px bold if needed, but keeping 16px/14px logic? */
+          /* User image shows main price 13590 and old price 24800. size looks similar. */
+          /* But user provided CSS ONLY for .fromMobile (oldPrice). */
+        }
+      }
+
+      .oldPrice {
+        font-size: 16px;
+        color: #a3a3a3;
+        text-decoration: line-through;
+
+        @media (max-width: 550px) {
+          /* User provided exact CSS */
+          font-family: 'Onest', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          line-height: 17px;
+          color: #6E6D67;
+          text-transform: uppercase;
+          text-decoration: none;
+          /* remove default strike */
+          position: relative;
+
+          &::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
             width: 100%;
-            margin-top: 0;
+            height: 1px;
+            background: #FF0808;
+            transform: rotate(-8.84deg);
+            /* Exact rotation */
+          }
         }
+      }
+    }
+  }
 
-        .orderButtonLeft {
-            width: 100%;
-            height: 48px;
-            background-color: black;
-            color: white;
-            border-radius: 50px;
-            border: none;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: opacity 0.2s;
+  .actions {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    margin-top: auto;
+    /* Push to bottom on desktop */
 
-            &:hover {
-                opacity: 0.8;
-            }
+    @media (max-width: 550px) {
+      width: 100%;
+      margin-top: 0;
+    }
 
-            @media (max-width: 550px) {
-                height: 40px;
-                font-size: 14px;
-                width: 100%;
-            }
-        }
+    .orderButtonLeft {
+      width: 100%;
+      height: 48px;
+      background-color: black;
+      color: white;
+      border-radius: 50px;
+      border: none;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.2s;
 
-        .clearButton {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background-color: transparent; /* Transparent on desktop? Old was transparent with img */
-            /* Mobile design shows BLACK CIRCLE with white icon. Desktop? */
-            /* Old desktop design: transparent background, black/white icon image */
-            /* New JSX uses clearButton with whiteBasketTrash icon for mobile? 
+      &:hover {
+        opacity: 0.8;
+      }
+
+      @media (max-width: 550px) {
+        height: 40px;
+        font-size: 14px;
+        width: 100%;
+      }
+    }
+
+    .clearButton {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: transparent;
+      /* Transparent on desktop? Old was transparent with img */
+      /* Mobile design shows BLACK CIRCLE with white icon. Desktop? */
+      /* Old desktop design: transparent background, black/white icon image */
+      /* New JSX uses clearButton with whiteBasketTrash icon for mobile? 
                Wait, I used whiteBasketTrash in JSX.
                If I want desktop to look like before (maybe black trash icon?), I should have kept blackBasketTrash for desktop.
                I can use CSS to invert filter or just background color.
@@ -485,31 +574,31 @@
                Let's assume Desktop should keep clear button simple.
                Mobile: Black circle.
             */
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            padding: 0;
-            
-            img {
-                 width: 24px;
-                 height: 24px;
-            }
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
 
-            @media (max-width: 550px) {
-                 background-color: black;
-                 width: 40px;
-                 height: 40px;
-                 
-                 img {
-                     width: 16px;
-                     height: 16px;
-                     /* Icon is whiteBasketTrash, so it's white. fits on black bg. */
-                 }
-            }
-            
-             /* Desktop adjustment: If JSX uses white icon, it will be invisible on white background!
+      img {
+        width: 24px;
+        height: 24px;
+      }
+
+      @media (max-width: 550px) {
+        background-color: black;
+        width: 40px;
+        height: 40px;
+
+        img {
+          width: 16px;
+          height: 16px;
+          /* Icon is whiteBasketTrash, so it's white. fits on black bg. */
+        }
+      }
+
+      /* Desktop adjustment: If JSX uses white icon, it will be invisible on white background!
                 I need to handle this.
                 The old code imported 'blackBasketTrash'.
                 My new code imports 'whiteBasketTrash'.
@@ -522,11 +611,11 @@
                 Better: Use CSS Mask or Filter.
                 If icon is white, `filter: invert(1)` makes it black.
             */
-            @media (min-width: 551px) {
-                 filter: invert(1);
-            }
-        }
+      @media (min-width: 551px) {
+        filter: invert(1);
+      }
     }
+  }
 }
 
 .drawer-transition {
@@ -540,4 +629,3 @@
 .drawer-closed {
   transform: translateX(100%);
 }
-

@@ -79,7 +79,7 @@ export async function getToken(email: string, password: string) {
 
   const variables = { email, password };
 
- const result = await graphqlRequest<TokenCreateResponse>(mutation, variables);
+  const result = await graphqlRequest<TokenCreateResponse>(mutation, variables);
 
   const payload: tokenCreate = result.tokenCreate;
 
@@ -100,7 +100,7 @@ export async function refreshToken(refreshToken: string) {
   }
 
   isRefreshingToken = true;
-  
+
   try {
     // Используем прямой fetch, чтобы избежать рекурсии через graphqlRequest
     const endpoint = String(import.meta.env.VITE_GRAPHQL_URL || '');
@@ -206,8 +206,13 @@ export async function getMeInfo() {
           lastName
           isActive
           isConfirmed
+          metadata {
+            key
+            value
+          }
           addresses {
             cityArea
+            city
             companyName
             countryArea
             firstName
@@ -250,7 +255,7 @@ export async function confirmEmailRequest(email?: string, firstName?: string) {
   const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:8000/graphql/';
   const baseUrl = graphqlUrl.replace('/graphql/', '').replace('/graphql', '');
   const endpoint = `${baseUrl}/auth/request-email-code/`;
-  
+
   // Получаем email из параметра, localStorage или из состояния
   const userEmail = email || localStorage.getItem('email') || '';
   const userFirstName = firstName || localStorage.getItem('firstName') || '';
@@ -455,4 +460,124 @@ export async function updateAccount(firstName?: string, lastName?: string) {
   }
 
   return result.accountUpdate.user;
+}
+
+/**
+ * Update account with metadata (phone, birthday, receiveGreetings)
+ */
+export async function updateAccountWithMetadata(data: {
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  birthday?: string; // format: YYYY-MM-DD or DD.MM.YYYY
+  receiveGreetings?: boolean;
+}) {
+  const mutation = `
+    mutation AccountUpdate($input: AccountInput!) {
+      accountUpdate(input: $input) {
+        errors {
+          field
+          message
+          code
+        }
+        user {
+          id
+          email
+          firstName
+          lastName
+          metadata {
+            key
+            value
+          }
+        }
+      }
+    }
+  `;
+
+  const input: any = {};
+
+  if (data.firstName !== undefined) input.firstName = data.firstName;
+  if (data.lastName !== undefined) input.lastName = data.lastName;
+
+  // Build metadata array
+  const metadata: { key: string; value: string }[] = [];
+
+  if (data.phone !== undefined) {
+    metadata.push({ key: 'phone', value: data.phone });
+  }
+  if (data.birthday !== undefined) {
+    metadata.push({ key: 'birthday', value: data.birthday });
+  }
+  if (data.receiveGreetings !== undefined) {
+    metadata.push({ key: 'receiveGreetings', value: String(data.receiveGreetings) });
+  }
+
+  if (metadata.length > 0) {
+    input.metadata = metadata;
+  }
+
+  const variables = { input };
+
+  const result = await graphqlRequest<{
+    accountUpdate: {
+      errors: Array<{ field: string; message: string; code: string }>;
+      user: {
+        id: string;
+        email: string;
+        firstName: string | null;
+        lastName: string | null;
+        metadata: { key: string; value: string }[];
+      } | null;
+    };
+  }>(mutation, variables);
+
+  if (result.accountUpdate.errors?.length > 0) {
+    throw new Error(
+      result.accountUpdate.errors.map((e) => e.message).join(', ')
+    );
+  }
+
+  if (!result.accountUpdate.user) {
+    throw new Error('Failed to update account: No user data returned');
+  }
+
+  return result.accountUpdate.user;
+}
+
+/**
+ * Change password for authenticated user
+ */
+export async function changePassword(oldPassword: string, newPassword: string) {
+  const mutation = `
+    mutation PasswordChange($oldPassword: String!, $newPassword: String!) {
+      passwordChange(oldPassword: $oldPassword, newPassword: $newPassword) {
+        errors {
+          field
+          message
+          code
+        }
+        user {
+          id
+          email
+        }
+      }
+    }
+  `;
+
+  const variables = { oldPassword, newPassword };
+
+  const result = await graphqlRequest<{
+    passwordChange: {
+      errors: Array<{ field: string; message: string; code: string }>;
+      user: { id: string; email: string } | null;
+    };
+  }>(mutation, variables);
+
+  if (result.passwordChange.errors?.length > 0) {
+    throw new Error(
+      result.passwordChange.errors.map((e) => e.message).join(', ')
+    );
+  }
+
+  return result.passwordChange.user;
 }

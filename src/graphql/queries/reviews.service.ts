@@ -49,7 +49,7 @@ export async function createProductReview(input: ProductReviewCreateInput): Prom
   // Если есть файлы, нужно использовать FormData
   if (input.image1 || input.image2) {
     const formData = new FormData();
-    
+
     // Создаем operations для GraphQL multipart request
     const operations = JSON.stringify({
       query: mutation,
@@ -61,40 +61,52 @@ export async function createProductReview(input: ProductReviewCreateInput): Prom
         }
       }
     });
-    
+
     formData.append('operations', operations);
-    
+
     // Маппинг файлов
     const map: Record<string, string[]> = {};
     let fileIndex = 0;
-    
+
     if (input.image1) {
       formData.append(`${fileIndex}`, input.image1);
       map[`${fileIndex}`] = ['variables.input.image1'];
       fileIndex++;
     }
-    
+
     if (input.image2) {
       formData.append(`${fileIndex}`, input.image2);
       map[`${fileIndex}`] = ['variables.input.image2'];
     }
-    
+
     formData.append('map', JSON.stringify(map));
-    
+
     const endpoint = import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:8000/graphql/';
     const token = localStorage.getItem('token');
-    
+
+    if (!token) {
+      throw new Error('Необходимо авторизоваться для отправки отзыва');
+    }
+
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        'Authorization': `Bearer ${token}`,
         // НЕ добавляем Content-Type для FormData - браузер сам установит с boundary
       },
       body: formData,
-      credentials: 'include', // Для CORS
     });
-    
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const result = await response.json();
+
+    if (result.errors && result.errors.length > 0) {
+      throw new Error(result.errors[0].message);
+    }
+
     return result.data;
   } else {
     // Без файлов используем обычный запрос
@@ -105,7 +117,7 @@ export async function createProductReview(input: ProductReviewCreateInput): Prom
         text: input.text
       }
     };
-    
+
     const data = await graphqlRequest<ProductReviewCreateResponse>(mutation, variables);
     return data;
   }

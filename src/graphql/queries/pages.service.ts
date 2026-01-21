@@ -13,11 +13,11 @@ async function graphqlRequestWithEnvToken<T>(
 
   // Получаем токен из .env (для доступа к моделям нужен токен с правами staff)
   const envToken = import.meta.env.VITE_SALEOR_TOKEN || import.meta.env.VITE_STAFF_TOKEN || import.meta.env.VITE_ADMIN_TOKEN || null;
-  
+
   // Пробуем получить токен из localStorage (токен пользователя)
   let rawToken = localStorage.getItem('token');
   let token = rawToken && rawToken !== 'null' && rawToken !== 'undefined' ? rawToken : null;
-  
+
   // Приоритет: токен из .env (если есть), иначе токен пользователя
   const authToken = envToken || token;
 
@@ -28,9 +28,9 @@ async function graphqlRequestWithEnvToken<T>(
   if (authToken) {
     headers['Authorization'] = `Bearer ${authToken}`;
     if (envToken) {
-      const tokenSource = import.meta.env.VITE_SALEOR_TOKEN ? 'VITE_SALEOR_TOKEN' : 
-                         import.meta.env.VITE_STAFF_TOKEN ? 'VITE_STAFF_TOKEN' : 
-                         'VITE_ADMIN_TOKEN';
+      const tokenSource = import.meta.env.VITE_SALEOR_TOKEN ? 'VITE_SALEOR_TOKEN' :
+        import.meta.env.VITE_STAFF_TOKEN ? 'VITE_STAFF_TOKEN' :
+          'VITE_ADMIN_TOKEN';
       console.log(`[getAllSteps] Using token from .env (${tokenSource}) for GraphQL request`);
     } else {
       console.log('[getAllSteps] Using user token from localStorage for GraphQL request');
@@ -139,9 +139,9 @@ export async function getPageBySlug(slug: string): Promise<PageNode | null> {
   `;
 
   let variables: any = { slug };
-      let data = await graphqlRequest<SinglePageResponse>(query, variables);
+  let data = await graphqlRequest<SinglePageResponse>(query, variables);
   console.log('[getPageBySlug] Query result for slug "' + slug + '" (no channel):', data.page ? 'FOUND' : 'NOT FOUND');
-  
+
   // Если не нашли, пробуем с channel
   if (!data.page) {
     console.log('[getPageBySlug] Trying with channel "default-channel"...');
@@ -181,12 +181,12 @@ export async function getPageBySlug(slug: string): Promise<PageNode | null> {
         }
       }
     `;
-    
+
     variables = { slug, channel: 'default-channel' };
     data = await graphqlRequest<SinglePageResponse>(query, variables);
     console.log('[getPageBySlug] Query result for slug "' + slug + '" (with channel):', data.page ? 'FOUND' : 'NOT FOUND');
   }
-  
+
   if (data.page) {
     console.log('[getPageBySlug] Page details:', {
       title: data.page.title,
@@ -196,7 +196,7 @@ export async function getPageBySlug(slug: string): Promise<PageNode | null> {
       attributesCount: data.page.assignedAttributes?.length || 0
     });
   }
-  
+
   return data.page ?? null;
 }
 
@@ -407,7 +407,7 @@ export async function getAllSteps(): Promise<StepData[]> {
       .filter((e) => e.node.isPublished === true)
       .map((e, index) => {
         const node = e.node;
-        
+
         // Ищем изображения в атрибутах
         let image = '';
         let hoverImage: string | undefined = undefined;
@@ -416,8 +416,8 @@ export async function getAllSteps(): Promise<StepData[]> {
           if (attr.fileValue?.url) {
             const attrName = attr.attribute.name?.toLowerCase() || '';
             const attrSlug = attr.attribute.slug?.toLowerCase() || '';
-            const isHover = 
-              attrName.includes('hover') || 
+            const isHover =
+              attrName.includes('hover') ||
               attrSlug.includes('hover') ||
               attrName.includes('при наведении') ||
               attrSlug.includes('pri-navedenii');
@@ -536,9 +536,10 @@ export async function getSetImageFromModel(pageId: string): Promise<string | nul
 
     let data: SetModelResponse;
     try {
-      data = await graphqlRequestWithEnvToken<SetModelResponse>(query, { id: pageId });
-    } catch (err) {
       data = await graphqlRequest<SetModelResponse>(query, { id: pageId });
+    } catch (err) {
+      console.error('[getSetImageFromModel] Error:', err);
+      return null;
     }
 
     if (!data.page || !data.page.assignedAttributes) {
@@ -550,7 +551,7 @@ export async function getSetImageFromModel(pageId: string): Promise<string | nul
       if (attr.fileValue?.url) {
         const attrName = attr.attribute.name?.toLowerCase() || '';
         const attrSlug = attr.attribute.slug?.toLowerCase() || '';
-        
+
         if (
           attrName.includes('картинка набора') ||
           attrSlug.includes('kartinka-nabora') ||
@@ -600,7 +601,7 @@ export async function getAllSets(): Promise<{ bySlug: Map<string, string>; byNam
       };
     }
 
-    const pageTypesData = await graphqlRequestWithEnvToken<PageTypesConnection>(pageTypeQuery);
+    const pageTypesData = await graphqlRequest<PageTypesConnection>(pageTypeQuery);
     const setsPageType = pageTypesData.pageTypes.edges.find(
       (e) =>
         e.node.name.toLowerCase() === 'наборы' ||
@@ -648,7 +649,7 @@ export async function getAllSets(): Promise<{ bySlug: Map<string, string>; byNam
       };
     }
 
-    const pagesData = await graphqlRequestWithEnvToken<SetsPagesConnection>(pagesQuery, {
+    const pagesData = await graphqlRequest<SetsPagesConnection>(pagesQuery, {
       first: 100,
       pageTypeId: setsPageType.node.id,
     });
@@ -662,14 +663,14 @@ export async function getAllSets(): Promise<{ bySlug: Map<string, string>; byNam
       .filter((e) => e.node.isPublished === true)
       .forEach((e) => {
         const node = e.node;
-        
+
         // Ищем картинку набора в атрибутах
         let setImage = '';
         for (const attr of node.assignedAttributes || []) {
           if (attr.fileValue?.url) {
             const attrName = attr.attribute.name?.toLowerCase() || '';
             const attrSlug = attr.attribute.slug?.toLowerCase() || '';
-            
+
             if (
               attrName.includes('картинка набора') ||
               attrSlug.includes('kartinka-nabora') ||
@@ -686,13 +687,13 @@ export async function getAllSets(): Promise<{ bySlug: Map<string, string>; byNam
         if (setImage && node.slug) {
           setsMap.set(node.slug, setImage);
         }
-        
+
         // Также сохраняем по названию для резервного сопоставления
         if (setImage && node.title) {
           setsMapByName.set(node.title.toLowerCase().trim(), setImage);
         }
       });
-    
+
     // Возвращаем оба Map в объекте
     return { bySlug: setsMap, byName: setsMapByName };
 
@@ -739,9 +740,10 @@ export async function getPreHeader(): Promise<PageNode | null> {
     // Пробуем сначала с токеном из .env, потом обычный запрос
     let pageTypesData: PageTypesConnection;
     try {
-      pageTypesData = await graphqlRequestWithEnvToken<PageTypesConnection>(pageTypeQuery);
-    } catch (err) {
       pageTypesData = await graphqlRequest<PageTypesConnection>(pageTypeQuery);
+    } catch (err) {
+      console.error('[getPreHeader] Error fetching page types:', err);
+      return null;
     }
 
     const preHeaderPageType = pageTypesData.pageTypes.edges.find(
@@ -794,15 +796,13 @@ export async function getPreHeader(): Promise<PageNode | null> {
 
     let pagesData: PreHeaderPagesConnection;
     try {
-      pagesData = await graphqlRequestWithEnvToken<PreHeaderPagesConnection>(pagesQuery, {
-        first: 10,
-        pageTypeId: preHeaderPageType.node.id,
-      });
-    } catch (err) {
       pagesData = await graphqlRequest<PreHeaderPagesConnection>(pagesQuery, {
         first: 10,
         pageTypeId: preHeaderPageType.node.id,
       });
+    } catch (err) {
+      console.error('[getPreHeader] Error fetching pages:', err);
+      return null;
     }
 
     const preHeaderPage = pagesData.pages.edges

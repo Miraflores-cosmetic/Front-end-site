@@ -10,8 +10,10 @@
       font-size: 36px;
       font-weight: 300;
     }
+
     margin-bottom: 11px;
   }
+
   .infoAboutWrapper {
     position: relative;
     display: flex;
@@ -19,6 +21,7 @@
     gap: 24px;
     padding-top: 40px;
     border-top: 1px solid #6e6d6799;
+
     .about {
       .aboutTitle {
         font-size: 16px;
@@ -26,20 +29,44 @@
         text-transform: uppercase;
       }
     }
+
     .aboutWrapper {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 24px 118px;
       margin-top: 16px;
 
-      @media (max-width: 1200px) {
-        grid-template-columns: repeat(2, 1fr);
+      .infoGrid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
         gap: 24px 60px;
+
+        @media (max-width: 1200px) {
+          grid-template-columns: repeat(2, 1fr);
+          gap: 24px 40px;
+        }
+
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
       }
 
-      @media (max-width: 768px) {
-        grid-template-columns: 1fr;
-        gap: 24px;
+      .formGrid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px 40px;
+
+        @media (max-width: 768px) {
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+      }
+
+      .nameInputs {
+        display: flex;
+        gap: 12px;
+
+        @media (max-width: 480px) {
+          flex-direction: column;
+        }
       }
 
       .name {
@@ -48,37 +75,76 @@
         margin-bottom: 4px;
         display: block;
       }
+
       .value {
         font-size: 15px;
         font-weight: 500;
         display: block;
       }
+
       .wrapper {
         display: flex;
         flex-direction: column;
         min-width: 0;
       }
+
       .input {
         width: 100%;
-        padding: 8px 12px;
-        border: 1px solid #6e6d6799;
+        padding: 10px 14px;
+        border: 1px solid #e0e0e0;
         border-radius: 4px;
         font-size: 15px;
-        font-weight: 500;
+        font-weight: 400;
         background: white;
         box-sizing: border-box;
         margin-top: 4px;
         transition: border-color 0.2s;
+
         &:focus {
           outline: none;
           border-color: #000;
         }
+
         &:disabled {
-          background: #f5f5f5;
+          background: #f8f8f8;
+          color: #999;
           cursor: not-allowed;
         }
       }
+
+      .checkboxLabel {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        font-size: 15px;
+        margin-top: 8px;
+
+        input[type="checkbox"] {
+          width: 18px;
+          height: 18px;
+          cursor: pointer;
+        }
+      }
+
+      .passwordBtn {
+        margin-top: 24px;
+        padding: 10px 20px;
+        background: transparent;
+        border: 1px solid #000;
+        border-radius: 50px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          background: #000;
+          color: #fff;
+        }
+      }
     }
+
     .changeBtn {
       cursor: pointer;
       position: relative;
@@ -97,17 +163,154 @@
         margin: 0;
         white-space: nowrap;
       }
-      
+
       &:hover p {
+        color: #000;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+
+  // Password Modal
+  .modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .modal {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 420px;
+    margin: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e0e0e0;
+
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    button {
+      background: none;
+      border: none;
+      font-size: 28px;
+      cursor: pointer;
+      color: #666;
+      padding: 0;
+      line-height: 1;
+
+      &:hover {
         color: #000;
       }
     }
   }
+
+  .modalBody {
+    padding: 24px;
+
+    .modalField {
+      margin-bottom: 16px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+
+      label {
+        display: block;
+        font-size: 14px;
+        color: #666;
+        margin-bottom: 6px;
+      }
+
+      input {
+        width: 100%;
+        padding: 12px 14px;
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        font-size: 15px;
+        box-sizing: border-box;
+        transition: border-color 0.2s;
+
+        &:focus {
+          outline: none;
+          border-color: #000;
+        }
+      }
+    }
+  }
+
+  .modalFooter {
+    display: flex;
+    gap: 12px;
+    padding: 16px 24px 24px;
+
+    .saveBtn {
+      flex: 1;
+      padding: 12px;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 50px;
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+
+      &:hover:not(:disabled) {
+        background: #333;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+
+    .cancelBtn {
+      flex: 1;
+      padding: 12px;
+      background: transparent;
+      color: #000;
+      border: 1px solid #e0e0e0;
+      border-radius: 50px;
+      font-size: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: #000;
+      }
+    }
+  }
+
   .infoAddressWrapper {
     padding-top: 40px;
     border-top: 1px solid #6e6d6799;
+
     .address {
       margin-bottom: 24px;
+
       .addressTitle {
         font-size: 16px;
         font-weight: 500;
@@ -115,9 +318,11 @@
       }
     }
   }
+
   .infoBotWrapper {
     padding-top: 40px;
     border-top: 1px solid #6e6d6799;
+
     .telegramBot {
       display: flex;
       align-items: center;
@@ -126,21 +331,23 @@
       color: inherit;
       cursor: pointer;
       transition: opacity 0.2s;
-      
+
       &:hover {
         opacity: 0.7;
       }
-      
+
       .telegramIcon {
         width: 20px;
         height: 20px;
       }
+
       .telegramBotText {
         font-size: 16px;
         font-weight: 500;
         text-transform: uppercase;
       }
     }
+
     .telegramBotTextSuccess {
       color: #297230;
       font-size: 15px;
@@ -148,9 +355,11 @@
       margin-top: 24px;
     }
   }
+
   .infoSliderWrapper {
     display: flex;
     flex-direction: column;
+
     .title {
       font-size: 32px;
       font-weight: 500;

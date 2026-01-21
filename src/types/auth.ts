@@ -7,9 +7,10 @@ export interface MeInfo {
   isActive: boolean;
   isConfirmed: boolean;
   lastName: string;
-  addresses : AddressInfo[]
+  addresses: AddressInfo[]
   giftCards: { totalCount: number };
   avatar: ProfileAvatar | null;
+  metadata?: { key: string; value: string }[];
 }
 
 export interface ProfileAvatar {

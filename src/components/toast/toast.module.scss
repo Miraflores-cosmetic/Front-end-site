@@ -1,8 +1,8 @@
-.toast-container {
+.toastContainer {
   position: fixed;
-  top: 1.5rem ;
+  top: 1.5rem;
   right: 1.5rem;
-  z-index: 1999;
+  z-index: 10000;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -15,10 +15,7 @@
 .toast {
   pointer-events: auto;
   z-index: 9999;
-
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
+  position: relative;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -90,7 +87,7 @@
   flex-shrink: 0;
   background: transparent;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: #000000;
   cursor: pointer;
   padding: 0.25rem;
   border-radius: 0.375rem;
@@ -101,13 +98,12 @@
 }
 
 .toast__close:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: rgba(0, 0, 0, 0.05);
+  color: #000000;
 }
 
-.toast__close-icon {
+.toast__close_icon {
   width: 1rem;
   height: 1rem;
-  color: rgba(11, 146, 60, 0.614);;
-
+  color: #000000;
 }

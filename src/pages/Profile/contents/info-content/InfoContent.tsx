@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import styles from './InfoContent.module.scss';
 import DeliveryProfile from '@/components/delivary-profile/DeliveryProfile';
 import { closeDrawer } from '@/store/slices/drawerSlice';
-import telegram from '@/assets/icons/telegram.svg';
 import { useDispatch, useSelector } from 'react-redux';
 import Bestsellers from '@/components/bestsellers/Bestsellers';
 import { RootState, AppDispatch } from '@/store/store';
@@ -327,19 +326,7 @@ const InfoContent: React.FC = () => {
         </section>
       </section>
 
-      <section className={styles.infoBotWrapper}>
-        <a
-          href='#'
-          className={styles.telegramBot}
-          onClick={e => {
-            e.preventDefault();
-          }}
-        >
-          <img src={telegram} alt={telegram} className={styles.telegramIcon} />
-          <p className={styles.telegramBotText}>Наш бот в Телеграме</p>
-        </a>
-        <p className={styles.telegramBotTextSuccess}>Вы успешно авторизованы!</p>
-      </section>
+
 
       <section className={styles.infoSliderWrapper}>
         <p className={styles.title}>КОЕ-ЧТО НОВОЕ ДЛЯ ВАС</p>

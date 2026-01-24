@@ -32,13 +32,10 @@
   }
 
   &.active {
-    background: rgba(255, 255, 255, 1);
-    
+    background: black;
+
     img {
-      filter: drop-shadow(0 0 2px rgba(255, 0, 0, 0.3));
+      filter: none;
     }
   }
 }
-
-
-

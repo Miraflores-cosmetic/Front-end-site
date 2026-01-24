@@ -5,8 +5,8 @@ import styles from '../Category.module.scss';
 import Footer from '@/components/Footer/Footer';
 import footerImage from '@/assets/images/footerImage.webp';
 import TabBar from '@/components/tab-bar/TabBar';
-import {AnimatePresence} from 'framer-motion';
-import {Link, useParams} from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
+import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
 import { BestSellerProductCard } from '@/components/bestsellers/bestSellerCard';
@@ -50,12 +50,12 @@ const LazyComponent: React.FC = () => {
   // Загружаем продукты: «ВСЕ» — по корневой категории (slug из URL), иначе по выбранному табу/подтабу
   useEffect(() => {
     if (!activeTabSlug) return;
-    
+
     const slugToLoad = activeTabSlug === 'ALL'
       ? (slug || '')
       : (activeSubTabSlug === 'ALL' || !activeSubTabSlug || subTabs.length === 0
-          ? activeTabSlug
-          : activeSubTabSlug);
+        ? activeTabSlug
+        : activeSubTabSlug);
 
     if (!slugToLoad) return;
 
@@ -127,7 +127,7 @@ const LazyComponent: React.FC = () => {
       dispatch(setActiveSubTabSlug('ALL'));
       return;
     }
-    
+
     const tab = subTabs.find(t => t.name === name);
     if (!tab) return;
     dispatch(setActiveSubTabSlug(tab.slug));
@@ -146,8 +146,8 @@ const LazyComponent: React.FC = () => {
       {activeTabSlug !== 'ALL' && subTabs.length > 0 && (
         <TabBar
           tabs={['ВСЕ', ...subTabs.map(t => t.name).reverse()]}
-          active={activeSubTabSlug === 'ALL' || !activeSubTabSlug 
-            ? 'ВСЕ' 
+          active={activeSubTabSlug === 'ALL' || !activeSubTabSlug
+            ? 'ВСЕ'
             : subTabs.find(t => t.slug === activeSubTabSlug)?.name}
           onChange={handleSubTabChange}
         />
@@ -158,7 +158,13 @@ const LazyComponent: React.FC = () => {
         <p className={styles.description}>{description}</p>
       </div>)}
 
-      {products.length > 0 ? (
+      {loading && products.length === 0 ? (
+        <section className={styles.noProductsWrapper}>
+          <div className={styles.spinnerWrapper}>
+            <div className={styles.spinner}></div>
+          </div>
+        </section>
+      ) : products.length > 0 ? (
         <>
           <section className={styles.wrapper}>
             <AnimatePresence mode="sync">
@@ -210,7 +216,7 @@ const LazyComponent: React.FC = () => {
           </article>
         </section>
       )}
-      <Footer footerImage={footerImage}/>
+      <Footer footerImage={footerImage} />
     </>
   );
 };

@@ -7,19 +7,21 @@
   overflow-x: hidden;
 
   /* Скрываем скроллбар */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE 10+ */
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE 10+ */
   max-width: 1536px;
   margin: 0 auto;
 
   // Начальное состояние — скрыто для анимации
-  > * {
+  >* {
     opacity: 0;
     transform: translateY(30px);
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
   }
 
-  &.sectionAnimated > * {
+  &.sectionAnimated>* {
     opacity: 1;
     transform: translateY(0);
   }
@@ -53,6 +55,7 @@
   .categoryWrapper {
     padding-bottom: 240px;
   }
+
   .title {
     font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
     font-weight: 300;
@@ -65,15 +68,17 @@
       margin-bottom: 16px;
     }
   }
+
   .subtitle {
     font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
     font-weight: 300;
-    font-size:40px;
+    font-size: 40px;
     margin-top: 43px;
     margin-bottom: 1px;
     text-transform: uppercase;
   }
-  .description{
+
+  .description {
     font-family: "Avenir Next", sans-serif;
     font-weight: 400;
     font-size: 14px;
@@ -107,6 +112,7 @@
       .slideImage {
         transform: scale(1.04);
       }
+
       .name {
         color: #297230;
       }
@@ -119,17 +125,21 @@
       object-fit: cover;
       transition: transform 0.35s ease;
     }
+
     .discountWrapper {
       display: flex;
       justify-content: space-between;
+
       .name {
         font-size: 16px;
         font-weight: 600;
         transition: color 0.25s ease;
       }
+
       .name:hover {
         cursor: pointer;
       }
+
       .discount {
         font-size: 14px;
         font-weight: 500;
@@ -165,6 +175,7 @@
     transition:
       transform 0.3s ease,
       box-shadow 0.3s ease;
+
     &:hover {
       transform: translateY(-6px);
       box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
@@ -172,16 +183,43 @@
   }
 }
 
-.noProductsWrapper{
+.noProductsWrapper {
   width: 100%;
   min-height: 300px;
 }
 
-.noProducts{
+.noProducts {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
   height: 100%;
-min-height: 300px;
+  min-height: 300px;
+}
+
+.spinnerWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  min-height: 300px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid black;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }

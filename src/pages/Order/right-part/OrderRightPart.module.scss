@@ -61,6 +61,7 @@
               text-transform: uppercase;
               color: #000000;
             }
+
             .size {
               font-family: 'Avenir Next', sans-serif;
               font-style: normal;
@@ -356,6 +357,19 @@
 
         span {
           color: #297230;
+        }
+      }
+
+      .dynamicContent {
+        p {
+          @include mixins.font(14px, 400);
+          margin-bottom: 12px;
+          margin-top: 0;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
         }
       }
     }

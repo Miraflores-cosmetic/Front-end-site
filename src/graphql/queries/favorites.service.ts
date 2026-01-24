@@ -11,71 +11,145 @@ export interface FavoriteProduct {
   variantId?: string;
 }
 
-// Получить избранные товары из metadata пользователя
-export async function getFavorites(): Promise<FavoriteProduct[]> {
-  const query = `
-    query GetFavorites {
-      me {
-        id
-        metadata {
-          key
-          value
-        }
-      }
-    }
-  `;
+const getUserId = () => localStorage.getItem('userId') || 'guest';
+const getStorageKey = () => `favorites_${getUserId()}`;
 
-  const data = await graphqlRequest<any>(query);
-  
-  // Ищем metadata с ключом "favorites"
-  const favoritesMeta = data.me?.metadata?.find((m: any) => m.key === 'favorites');
-  
-  if (!favoritesMeta || !favoritesMeta.value) {
+const getLocalFavoriteIds = (): string[] => {
+  if (typeof window === 'undefined') return [];
+  const key = getStorageKey();
+  const stored = localStorage.getItem(key);
+  try {
+    return stored ? JSON.parse(stored) : [];
+  } catch {
     return [];
   }
+};
 
+async function saveFavoriteIds(ids: string[]) {
+  // 1. Save to LocalStorage
+  const key = getStorageKey();
+  localStorage.setItem(key, JSON.stringify(ids));
+
+  // 2. Sync with Server REST API
+  if (getUserId() !== 'guest') {
+    try {
+      // В development используем относительный путь для прокси Vite
+      // В production используем полный URL
+      const isDev = import.meta.env.DEV;
+      let endpoint = '';
+      
+      if (isDev) {
+        // В development используем относительный путь - Vite прокси обработает
+        endpoint = '/api/favorites'; // Прокси добавит trailing slash
+      } else {
+        // В production используем полный URL
+        const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL || '';
+        endpoint = graphqlUrl.replace('/graphql/', '/api/favorites/');
+      }
+      
+      const token = localStorage.getItem('token');
+
+      if (!token) return;
+
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          action: 'set',
+          favorites: ids
+        })
+      });
+    } catch (error) {
+      console.warn('Failed to sync favorites to server REST API:', error);
+    }
+  }
+}
+
+// Получить избранные товары
+export async function getFavorites(): Promise<FavoriteProduct[]> {
   try {
-    const favoriteIds = JSON.parse(favoritesMeta.value);
-    
-    // Получаем товары по ID
-    const productsQuery = `
-      query GetFavoriteProducts($ids: [ID!]!, $channel: String!) {
-        products(first: 100, channel: $channel, filter: { ids: $ids }) {
+    let favoriteIds = getLocalFavoriteIds();
+    const token = localStorage.getItem('token');
+
+    // Sync with REST API if user is logged in
+    if (getUserId() !== 'guest' && token) {
+      try {
+        // В development используем относительный путь для прокси Vite
+        // В production используем полный URL
+        const isDev = import.meta.env.DEV;
+        let endpoint = '';
+        
+        if (isDev) {
+          // В development используем относительный путь - Vite прокси обработает
+          endpoint = '/api/favorites'; // Прокси добавит trailing slash
+        } else {
+          // В production используем полный URL
+          const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL || '';
+          endpoint = graphqlUrl.replace('/graphql/', '/api/favorites/');
+        }
+        
+        const res = await fetch(endpoint, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (res.ok) {
+          const json = await res.json();
+          const serverIds = json.favorites || [];
+
+          if (Array.isArray(serverIds)) {
+            // Объединяем локальные и серверные (уникальные)
+            const merged = Array.from(new Set([...favoriteIds, ...serverIds]));
+
+            const localMissing = merged.some(id => !favoriteIds.includes(id));
+            const serverMissing = merged.some(id => !serverIds.includes(id));
+
+            if (localMissing) {
+              // Если локально чего-то не хватало - обновляем LS
+              favoriteIds = merged;
+              localStorage.setItem(getStorageKey(), JSON.stringify(favoriteIds));
+            }
+
+            if (serverMissing) {
+              // Если на сервере чего-то не хватало - обновляем сервер
+              saveFavoriteIds(merged);
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch favorites from REST API', e);
+      }
+    }
+
+    if (!favoriteIds || favoriteIds.length === 0) {
+      return [];
+    }
+
+    // 2. Получаем варианты товаров по ID, затем получаем товары через варианты
+    // В избранном хранятся ID вариантов (ProductVariant), а не товаров (Product)
+    const variantsQuery = `
+      query GetFavoriteVariants($ids: [ID!]!, $channel: String!) {
+        productVariants(first: 100, channel: $channel, ids: $ids) {
           edges {
             node {
               id
               name
-              slug
-              thumbnail {
-                url
+              pricing {
+                price { gross { amount } }
+                priceUndiscounted { gross { amount } }
+                discount { gross { amount } }
               }
-              defaultVariant {
+              product {
                 id
                 name
-                pricing {
-                  price {
-                    gross {
-                      amount
-                    }
-                  }
-                  priceUndiscounted {
-                    gross {
-                      amount
-                    }
-                  }
-                  discount {
-                    gross {
-                      amount
-                    }
-                  }
-                }
-              }
-              productVariants(first: 1) {
-                edges {
-                  node {
-                    id
-                  }
-                }
+                slug
+                thumbnail { url }
               }
             }
           }
@@ -83,76 +157,51 @@ export async function getFavorites(): Promise<FavoriteProduct[]> {
       }
     `;
 
-    const productsData = await graphqlRequest<any>(productsQuery, {
+    const variantsData = await graphqlRequest<any>(variantsQuery, {
       ids: favoriteIds,
       channel: 'miraflores-site'
     });
 
-    return productsData.products.edges.map((edge: any) => {
-      const node = edge.node;
-      const variant = node.defaultVariant || node.productVariants?.edges?.[0]?.node;
-      const price = variant?.pricing?.price?.gross?.amount || 0;
-      const oldPrice = variant?.pricing?.priceUndiscounted?.gross?.amount;
-      const discountAmount = variant?.pricing?.discount?.gross?.amount;
-      
+    if (!variantsData || !variantsData.productVariants || !variantsData.productVariants.edges) {
+      return [];
+    }
+
+    return variantsData.productVariants.edges.map((edge: any) => {
+      const variant = edge.node;
+      const product = variant.product;
+      const price = variant.pricing?.price?.gross?.amount || 0;
+      const oldPrice = variant.pricing?.priceUndiscounted?.gross?.amount;
+
       let discount: number | undefined;
       if (oldPrice && oldPrice > price) {
         discount = Math.round(((oldPrice - price) / oldPrice) * 100);
       }
 
       return {
-        id: node.id,
-        name: node.name,
-        slug: node.slug,
-        thumbnail: node.thumbnail?.url,
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        thumbnail: product.thumbnail?.url,
         price,
         oldPrice: oldPrice && oldPrice > price ? oldPrice : undefined,
         discount,
-        variantId: variant?.id || node.productVariants?.edges?.[0]?.node?.id || node.id
+        variantId: variant.id
       };
     });
   } catch (error) {
-    console.error('Error parsing favorites:', error);
+    console.error('Error getting favorites:', error);
     return [];
   }
 }
 
 // Добавить товар в избранное
 export async function addToFavorites(productId: string): Promise<boolean> {
-  const favorites = await getFavorites();
-  const favoriteIds = favorites.map(f => f.id);
-  
-  if (favoriteIds.includes(productId)) {
-    return true; // Уже в избранном
-  }
-
-  favoriteIds.push(productId);
-
-  const mutation = `
-    mutation UpdateFavorites($input: AccountInput!) {
-      accountUpdate(input: $input) {
-        user {
-          id
-        }
-        errors {
-          field
-          message
-        }
-      }
-    }
-  `;
-
   try {
-    await graphqlRequest<any>(mutation, {
-      input: {
-        metadata: [
-          {
-            key: 'favorites',
-            value: JSON.stringify(favoriteIds)
-          }
-        ]
-      }
-    });
+    const favoriteIds = getLocalFavoriteIds();
+    if (!favoriteIds.includes(productId)) {
+      const newIds = [...favoriteIds, productId];
+      await saveFavoriteIds(newIds);
+    }
     return true;
   } catch (error) {
     console.error('Error adding to favorites:', error);
@@ -162,34 +211,10 @@ export async function addToFavorites(productId: string): Promise<boolean> {
 
 // Удалить товар из избранного
 export async function removeFromFavorites(productId: string): Promise<boolean> {
-  const favorites = await getFavorites();
-  const favoriteIds = favorites.map(f => f.id).filter(id => id !== productId);
-
-  const mutation = `
-    mutation UpdateFavorites($input: AccountInput!) {
-      accountUpdate(input: $input) {
-        user {
-          id
-        }
-        errors {
-          field
-          message
-        }
-      }
-    }
-  `;
-
   try {
-    await graphqlRequest<any>(mutation, {
-      input: {
-        metadata: [
-          {
-            key: 'favorites',
-            value: JSON.stringify(favoriteIds)
-          }
-        ]
-      }
-    });
+    const favoriteIds = getLocalFavoriteIds();
+    const newIds = favoriteIds.filter(id => id !== productId);
+    await saveFavoriteIds(newIds);
     return true;
   } catch (error) {
     console.error('Error removing from favorites:', error);
@@ -199,37 +224,14 @@ export async function removeFromFavorites(productId: string): Promise<boolean> {
 
 // Проверить, находится ли товар в избранном
 export async function isFavorite(productId: string): Promise<boolean> {
-  const favorites = await getFavorites();
-  return favorites.some(f => f.id === productId);
+  const favoriteIds = getLocalFavoriteIds();
+  return favoriteIds.includes(productId);
 }
 
 // Очистить все избранное
 export async function clearAllFavorites(): Promise<boolean> {
-  const mutation = `
-    mutation ClearFavorites($input: AccountInput!) {
-      accountUpdate(input: $input) {
-        user {
-          id
-        }
-        errors {
-          field
-          message
-        }
-      }
-    }
-  `;
-
   try {
-    await graphqlRequest<any>(mutation, {
-      input: {
-        metadata: [
-          {
-            key: 'favorites',
-            value: JSON.stringify([])
-          }
-        ]
-      }
-    });
+    await saveFavoriteIds([]);
     return true;
   } catch (error) {
     console.error('Error clearing favorites:', error);

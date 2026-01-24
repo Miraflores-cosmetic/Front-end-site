@@ -45,6 +45,12 @@ const OrderLeftPart: React.FC = () => {
   const [confirmationToken, setConfirmationToken] = useState<string | null>(null);
   const [showYooKassaWidget, setShowYooKassaWidget] = useState(false);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    name?: boolean;
+    email?: boolean;
+    phone?: boolean;
+    general?: string;
+  }>({});
   const { lines } = useSelector((state: RootState) => state.checkout);
   const { voucherDiscount } = useSelector((state: RootState) => state.checkout);
 
@@ -53,19 +59,19 @@ const OrderLeftPart: React.FC = () => {
     if (me) {
       const fullName = `${me.firstName || ''} ${me.lastName || ''}`.trim();
       const userEmail = me.email || '';
-      
+
       // Всегда обновляем имя и email из данных пользователя
       setFormData((prev) => ({
         ...prev,
         name: fullName || '',
         email: userEmail || '',
       }));
-      
+
       // Автозаполнение телефона из адреса по умолчанию
       if (me.addresses && me.addresses.length > 0) {
-        const defaultAddress = me.addresses.find(a => a.isDefaultShippingAddress) || 
-                              me.addresses.find(a => a.isDefaultBillingAddress) || 
-                              me.addresses[0];
+        const defaultAddress = me.addresses.find(a => a.isDefaultShippingAddress) ||
+          me.addresses.find(a => a.isDefaultBillingAddress) ||
+          me.addresses[0];
         if (defaultAddress?.phone) {
           setFormData((prev) => ({
             ...prev,
@@ -84,7 +90,7 @@ const OrderLeftPart: React.FC = () => {
   // 5. Intelligent Address Selection
   const handleAddressSelect = (address: AddressInfo) => {
     setSelectedAddress(address);
-    
+
     // Auto-fill phone from address
     if (address?.phone) {
       setFormData((prev) => ({
@@ -100,10 +106,20 @@ const OrderLeftPart: React.FC = () => {
       return;
     }
 
-    if (!formData.name.trim() || !formData.email.trim() || !formData.phone.trim()) {
-      alert('Пожалуйста, заполните все обязательные поля');
+    const errors: any = {};
+    if (!formData.name.trim()) errors.name = true;
+    if (!formData.email.trim()) errors.email = true;
+    if (!formData.phone.trim()) errors.phone = true;
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors({
+        ...errors,
+        general: 'Заполните все поля'
+      });
       return;
     }
+
+    setValidationErrors({});
 
     if (lines.length === 0) {
       alert('Корзина пуста');
@@ -213,14 +229,14 @@ const OrderLeftPart: React.FC = () => {
     <section className={styles.left}>
       {/* Navigation & Header Logic */}
       {!isMobile && (
-        <img 
-          src={goBack} 
-          alt='goBack' 
-          onClick={() => history.back()} 
-          className={styles.goBack} 
+        <img
+          src={goBack}
+          alt='goBack'
+          onClick={() => history.back()}
+          className={styles.goBack}
         />
       )}
-      
+
       {isMobile && (
         <section className={styles.mobileHeaderContainer}>
           <div className={styles.mobileHeader}>
@@ -248,15 +264,27 @@ const OrderLeftPart: React.FC = () => {
       <section className={styles.inputWrapper}>
         <Input
           value={formData.name}
-          onChange={(e) => handleInputChange('name', e.target.value)}
+          label="Имя Фамилия"
+          required
+          onChange={(e) => {
+            handleInputChange('name', e.target.value);
+            if (validationErrors.name) setValidationErrors(prev => ({ ...prev, name: false }));
+          }}
           type='text'
           placeholder='Имя Фамилия'
+          error={validationErrors.name}
         />
         <Input
           value={formData.email}
-          onChange={(e) => handleInputChange('email', e.target.value)}
+          label="Email"
+          required
+          onChange={(e) => {
+            handleInputChange('email', e.target.value);
+            if (validationErrors.email) setValidationErrors(prev => ({ ...prev, email: false }));
+          }}
           type='email'
           placeholder='Email'
+          error={validationErrors.email}
         />
       </section>
 
@@ -267,7 +295,11 @@ const OrderLeftPart: React.FC = () => {
       <section className={styles.phoneWrapper}>
         <Input
           value={formData.phone}
+          required
+          label="Телефон"
+          error={validationErrors.phone}
           onChange={(e) => {
+            if (validationErrors.phone) setValidationErrors(prev => ({ ...prev, phone: false }));
             let value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
             if (value.startsWith('8')) {
               value = value.substring(1); // Убираем первую 8
@@ -276,7 +308,7 @@ const OrderLeftPart: React.FC = () => {
             if (value.length > 10) {
               value = value.substring(0, 10);
             }
-            
+
             if (value.length > 0) {
               if (value.length <= 3) {
                 value = `+8 (${value}`;
@@ -299,9 +331,9 @@ const OrderLeftPart: React.FC = () => {
 
       {!isMobile && (
         <section className={styles.checkWrapper}>
-          <CustomCheckbox 
-            checked={formData.isSubscribed} 
-            onChange={(val) => handleInputChange('isSubscribed', val)} 
+          <CustomCheckbox
+            checked={formData.isSubscribed}
+            onChange={(val) => handleInputChange('isSubscribed', val)}
           />
           <label>Пишите мне о распродажах, скидках и новых поступлениях</label>
         </section>
@@ -335,8 +367,11 @@ const OrderLeftPart: React.FC = () => {
 
       <section className={styles.orderButtonWrapper}>
         <figure className={styles.orderButton}>
-          <CustomButton 
-            label={isCreatingPayment ? 'Создание платежа...' : 'Оплатить'} 
+          {validationErrors.general && (
+            <p className={styles.validationError}>{validationErrors.general}</p>
+          )}
+          <CustomButton
+            label={isCreatingPayment ? 'Создание платежа...' : 'Оплатить'}
             onClick={handlePayment}
             disabled={isCreatingPayment || showYooKassaWidget}
           />

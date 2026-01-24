@@ -79,9 +79,9 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ productId, class
       disabled={loading}
       aria-label={favorite ? 'Удалить из избранного' : 'Добавить в избранное'}
     >
-      <img 
-        src={favorite ? heartFilledIcon : heartIcon} 
-        alt={favorite ? 'В избранном' : 'Добавить в избранное'} 
+      <img
+        src={favorite ? heartFilledIcon : heartIcon}
+        alt={favorite ? 'В избранном' : 'Добавить в избранное'}
       />
     </button>
   );

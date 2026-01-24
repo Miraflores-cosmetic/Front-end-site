@@ -13,6 +13,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
 import { getMe, logout } from '@/store/slices/authSlice';
+import { LogoutConfirmationModal } from '@/components/logout-confirmation-modal/LogoutConfirmationModal';
 
 const ProfilePage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -24,9 +25,16 @@ const ProfilePage: React.FC = () => {
 
   const isMobile = useScreenMatch(756);
 
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+
   const handleLogout = () => {
     dispatch(logout());
     navigate('/sign-in');
+  };
+
+  const confirmLogout = () => {
+    setIsLogoutModalOpen(false);
+    handleLogout();
   };
 
   const menuMobileItems = [
@@ -60,7 +68,9 @@ const ProfilePage: React.FC = () => {
   // Обработка выхода при клике на "Выйти"
   useEffect(() => {
     if (activeTab === 'logout') {
-      handleLogout();
+      setIsLogoutModalOpen(true);
+      // Reset active tab to previous one so it doesn't get stuck on 'logout' if user cancels
+      setActiveTab('info');
     }
   }, [activeTab]);
 
@@ -165,6 +175,11 @@ const ProfilePage: React.FC = () => {
           {!isMobile && <ProfileContent activeTab={activeTab} renderContent={renderContent} />}
         </div>
       </section>
+      <LogoutConfirmationModal
+        isOpen={isLogoutModalOpen}
+        onClose={() => setIsLogoutModalOpen(false)}
+        onConfirm={confirmLogout}
+      />
     </main>
   );
 };

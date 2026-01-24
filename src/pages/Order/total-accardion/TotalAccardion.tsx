@@ -4,9 +4,27 @@ import { TotalAccordionProps } from '../types';
 import promoImage from '@/assets/icons/promocode.svg';
 import addImage from '@/assets/icons/add.svg';
 import userImage from '@/assets/images/userImage.webp';
+import { getCartTextPage } from '@/graphql/queries/pages.service';
+import { editorJsToHtml } from '@/utils/editorJsParser';
+import { useEffect } from 'react';
 
 const TotalAccordion: React.FC<TotalAccordionProps> = ({ total, totalOld, products }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [content, setContent] = useState<string | null>(null);
+
+  useEffect(() => {
+    getCartTextPage().then(page => {
+      if (page && page.content) {
+        try {
+          const parsed = typeof page.content === 'string' ? JSON.parse(page.content) : page.content;
+          const html = editorJsToHtml(parsed);
+          setContent(html);
+        } catch (e) {
+          setContent(typeof page.content === 'string' ? page.content : '');
+        }
+      }
+    });
+  }, []);
 
   return (
     <section className={styles.accordion}>
@@ -98,15 +116,24 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({ total, totalOld, produc
               </div>
             </div>
             <div className={styles.textsWrapper}>
-              <p className={styles.text}>
-                Многие наши товары изготавливаются непосредственно после заказа, поэтому срок от
-                приёма заказа до его отправки такого заказа составляет <span>3-5 рабочих дня</span>{' '}
-                после 100% оплаты.
-              </p>
-              <p className={styles.text}>
-                После обработки заказа нашими операторами, информация о заказе будет отправлена на
-                e-mail, указанный при оформлении заказа
-              </p>
+              {content ? (
+                <div
+                  className={styles.dynamicContent}
+                  dangerouslySetInnerHTML={{ __html: content }}
+                />
+              ) : (
+                <>
+                  <p className={styles.text}>
+                    Многие наши товары изготавливаются непосредственно после заказа, поэтому срок от
+                    приёма заказа до его отправки такого заказа составляет <span>3-5 рабочих дня</span>{' '}
+                    после 100% оплаты.
+                  </p>
+                  <p className={styles.text}>
+                    После обработки заказа нашими операторами, информация о заказе будет отправлена на
+                    e-mail, указанный при оформлении заказа
+                  </p>
+                </>
+              )}
             </div>
           </section>
         </article>

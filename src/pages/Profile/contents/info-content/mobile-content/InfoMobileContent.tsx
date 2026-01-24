@@ -2,7 +2,6 @@ import React from 'react';
 import styles from './InfoMobileContent.module.scss';
 import DeliveryProfile from '@/components/delivary-profile/DeliveryProfile';
 import { openDrawer } from '@/store/slices/drawerSlice';
-import telegram from '@/assets/icons/telegram.svg';
 import ArrowToRight from '@/assets/icons/ArrowToRight.svg';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
@@ -78,19 +77,7 @@ const InfoMobileContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion 
       </article>
 
       <DeliveryProfile onSelectAddress={handleAddressSelect} />
-      {/* ✅ Close button */}
-      <article className={styles.telegramContainer}>
-        <div className={styles.telegramwrapper}>
-          <div className={styles.top}>
-            <img src={telegram} alt='telegram icon' className={styles.check} />
-            <p>Авторизуйтесь через Телеграм</p>
-          </div>
-          <img src={ArrowToRight} alt='ArrowToRight' className={styles.ArrowToRight} />
-        </div>
-        <p className={styles.desc}>
-          Чтобы получать уведомления о доставке и специальные предложения
-        </p>
-      </article>
+
       {isMobile && (
         <p className={styles.closeBtn} onClick={handleCloseAccordion}>
           Закрыть

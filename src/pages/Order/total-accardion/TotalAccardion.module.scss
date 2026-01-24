@@ -74,6 +74,7 @@
             height: 66px;
             object-fit: contain;
           }
+
           .countWrapper {
             position: absolute;
             right: 0;
@@ -212,6 +213,7 @@
           .userName {
             @include mixins.font(13px, 500);
           }
+
           .userRole {
             @include mixins.font(12px, 400, #6e6d67);
           }
@@ -229,6 +231,19 @@
             color: #297230;
           }
         }
+
+        .dynamicContent {
+          p {
+            @include mixins.font(13px, 400);
+            margin-bottom: 12px;
+            margin-top: 0;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+
+          }
+        }
       }
     }
   }
@@ -239,6 +254,7 @@
     opacity: 0;
     transform: translateY(-5px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);

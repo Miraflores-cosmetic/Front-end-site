@@ -106,6 +106,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: true
       },
+      '/api/favorites': { // Proxy for favorites endpoint
+        target: 'https://miraflores-shop.com',
+        changeOrigin: true,
+        secure: true,
+        rewrite: (path) => path.replace(/^\/api\/favorites$/, '/api/favorites/') // Добавляем trailing slash для сервера
+      },
       '/checkout': { // Proxy for checkout endpoints (alternative path)
         target: 'http://localhost:8000',
         changeOrigin: true,

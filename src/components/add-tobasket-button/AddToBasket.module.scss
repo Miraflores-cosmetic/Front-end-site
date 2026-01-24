@@ -7,9 +7,6 @@
   width: 100%;
 }
 
-.homeWrapper {
-  // На главной странице без ограничений
-}
 
 .productPageWrapper {
   // На странице товара кнопка на всю ширину, без gap
@@ -84,7 +81,8 @@
   border: 1px solid black;
   height: 54px;
   color: black;
-  border-radius: 0; /* Убираем скругление */
+  border-radius: 0;
+  /* Убираем скругление */
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -99,12 +97,13 @@
   width: 54px;
   height: 54px;
   background: #FFFFFF;
-  border: none; /* Убрали бордер */
+  border: none;
+  /* Убрали бордер */
   flex-shrink: 0;
   position: relative;
-  
+
   // Черный фон для обёртки, когда избранное активно
-  &:has(:global(.favoriteButton.active)) {
+  &:has([class*="active"]) {
     background: #000000;
   }
 }
@@ -127,24 +126,26 @@
   left: auto !important;
   bottom: auto !important;
   z-index: 1 !important;
-  
+
   &:hover {
     transform: none !important;
     background: rgba(0, 0, 0, 0.05) !important;
   }
-  
-  &.active {
+
+  &.active,
+  &[class*="active"] {
     background: #000000 !important;
-    
+
     &:hover {
       background: #000000 !important;
+      opacity: 0.8 !important;
     }
-    
+
     img {
       filter: brightness(0) invert(1) !important;
     }
   }
-  
+
   img {
     width: 20px !important;
     height: 20px !important;
@@ -154,4 +155,3 @@
     object-fit: contain !important;
   }
 }
-

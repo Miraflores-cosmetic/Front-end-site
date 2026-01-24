@@ -706,6 +706,15 @@ export async function getAllSets(): Promise<{ bySlug: Map<string, string>; byNam
 }
 
 /**
+ * Получить страницу с текстом для корзины (slug: tekst-v-korzine)
+ */
+export async function getCartTextPage(): Promise<PageNode | null> {
+  // Пробуем основной slug
+  const slug = 'tekst-v-korzine';
+  return await getPageBySlug(slug);
+}
+
+/**
  * Получить PreHeader (страницу типа PreHeader)
  */
 export async function getPreHeader(): Promise<PageNode | null> {

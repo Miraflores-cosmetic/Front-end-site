@@ -63,7 +63,19 @@ export async function graphqlRequest<T>(
   query: string,
   variables: Record<string, unknown> = {}
 ): Promise<T> {
-  const endpoint = String(import.meta.env.VITE_GRAPHQL_URL || '');
+  // В development используем относительный путь для прокси Vite
+  // В production используем полный URL из .env
+  const isDev = import.meta.env.DEV;
+  let endpoint = '';
+  
+  if (isDev) {
+    // В development используем относительный путь - Vite прокси обработает
+    endpoint = '/graphql/';
+  } else {
+    // В production используем полный URL из .env
+    endpoint = String(import.meta.env.VITE_GRAPHQL_URL || '');
+  }
+  
   if (!endpoint) throw new Error('VITE_GRAPHQL_URL is not defined');
 
   let rawToken = localStorage.getItem('token');

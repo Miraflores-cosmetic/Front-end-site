@@ -1,6 +1,6 @@
 .mainBtn {
-  flex: 1;
   height: 40px;
+  min-height: 40px;
   width: 100%;
   background-color: black;
   color: white;
@@ -10,9 +10,11 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+
   @media (max-width: 500px) {
     font-size: 13px;
   }
+
   &:hover {
     background-color: white;
     border: 1px solid black;

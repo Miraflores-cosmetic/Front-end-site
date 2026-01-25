@@ -167,4 +167,81 @@ $transition-fast: 0.2s ease;
     color: $color-border;
     cursor: pointer;
   }
+
+  .progressBar {
+    display: flex;
+    gap: 16px;
+    margin-top: 24px;
+    margin-bottom: 8px;
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: $color-text;
+      font-size: 14px;
+
+      &.active {
+        color: $color-primary;
+        font-weight: 600;
+      }
+
+      .stepNumber {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background-color: $color-border;
+        color: white;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      &.active .stepNumber {
+        background-color: $color-primary;
+      }
+
+      .stepText {
+        @media (max-width: 450px) {
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  .passwordRequirements {
+    margin-top: 8px;
+    padding: 12px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .requirement {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      margin: 0;
+      line-height: 1.4;
+
+      &.met {
+        color: #27ae60;
+      }
+
+      &.unmet {
+        color: $color-text;
+      }
+
+      .checkmark {
+        font-size: 14px;
+        width: 16px;
+        display: inline-block;
+        text-align: center;
+      }
+    }
+  }
 }

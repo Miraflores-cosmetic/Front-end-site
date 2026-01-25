@@ -10,47 +10,87 @@ import {
 
 import { MeInfoRequest } from '@/types/auth';
 
-export async function signUpService(email: string, password: string) {
-  const mutation = `
-    mutation signUp($email: String!, $password: String!) {
-      accountRegister(
-        input: { email: $email, password: $password }
-      ) {
-        requiresConfirmation
-        errors {
-          code
-          message
-        }
-        accountErrors {
-          message
-          code
-        }
-        user {
-          id
-          email
-          firstName
-          lastName
-          dateJoined
-          isActive
-          isConfirmed
-          isStaff
-          externalReference
-        }
+/**
+ * Retry utility for network requests
+ * Retries only on network errors, not validation errors
+ */
+const retryRequest = async <T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  delay = 1000
+): Promise<T> => {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      const isNetworkError = 
+        error?.message?.includes('fetch') || 
+        error?.message?.includes('network') ||
+        error?.message?.includes('Failed to fetch') ||
+        error?.message?.includes('Network request failed') ||
+        error?.message?.includes('Проблема с подключением');
+      
+      // Don't retry on validation errors or if it's the last attempt
+      if (!isNetworkError || i === retries - 1) {
+        throw error;
+      }
+      
+      // Exponential backoff: 1s, 2s, 4s
+      await new Promise(resolve => setTimeout(resolve, delay * Math.pow(2, i)));
+      
+      // Log retry attempt in dev mode
+      if (import.meta.env.DEV) {
+        console.log(`[Retry] Attempt ${i + 2}/${retries} after network error`);
       }
     }
-  `;
-
-  const variables = { email, password };
-
-  const result = await graphqlRequest<SignUpMutationResponse>(mutation, variables);
-
-  const errors = result.accountRegister.errors || [];
-
-  if (errors.length > 0) {
-    throw new Error(`SignUp failed: ${errors.map((e: any) => e.message).join(', ')}`);
   }
+  throw new Error('Max retries exceeded');
+};
 
-  return result.accountRegister.user;
+export async function signUpService(email: string, password: string) {
+  return retryRequest(async () => {
+    const mutation = `
+      mutation signUp($email: String!, $password: String!) {
+        accountRegister(
+          input: { email: $email, password: $password }
+        ) {
+          requiresConfirmation
+          errors {
+            code
+            message
+          }
+          accountErrors {
+            message
+            code
+          }
+          user {
+            id
+            email
+            firstName
+            lastName
+            dateJoined
+            isActive
+            isConfirmed
+            isStaff
+            externalReference
+          }
+        }
+      }
+    `;
+
+    const variables = { email, password };
+
+    const result = await graphqlRequest<SignUpMutationResponse>(mutation, variables);
+
+    // graphqlRequest already handles GraphQL errors, so we only need to check mutation-specific errors
+    const errors = result.accountRegister.errors || [];
+
+    if (errors.length > 0) {
+      throw new Error(`SignUp failed: ${errors.map((e: any) => e.message).join(', ')}`);
+    }
+
+    return result.accountRegister.user;
+  });
 }
 
 export async function getToken(email: string, password: string) {
@@ -58,36 +98,39 @@ export async function getToken(email: string, password: string) {
     throw new Error('Email and password are required');
   }
 
-  const mutation = `
-    mutation TokenCreate($email: String!, $password: String!) {
-      tokenCreate(
-        email: $email,
-        password: $password
-      ) {
-        csrfToken
-        refreshToken
-        token
-        errors {
-          field
-          message
-          code
-          addressType
+  return retryRequest(async () => {
+    const mutation = `
+      mutation TokenCreate($email: String!, $password: String!) {
+        tokenCreate(
+          email: $email,
+          password: $password
+        ) {
+          csrfToken
+          refreshToken
+          token
+          errors {
+            field
+            message
+            code
+            addressType
+          }
         }
       }
+    `;
+
+    const variables = { email, password };
+
+    const result = await graphqlRequest<TokenCreateResponse>(mutation, variables);
+
+    // graphqlRequest already handles GraphQL errors, so we only need to check mutation-specific errors
+    const payload: tokenCreate = result.tokenCreate;
+
+    if (payload.errors?.length > 0) {
+      throw new Error(payload.errors.map(e => e.message).join(', '));
     }
-  `;
 
-  const variables = { email, password };
-
-  const result = await graphqlRequest<TokenCreateResponse>(mutation, variables);
-
-  const payload: tokenCreate = result.tokenCreate;
-
-  if (payload.errors?.length > 0) {
-    throw new Error(payload.errors.map(e => e.message).join(', '));
-  }
-
-  return payload;
+    return payload;
+  });
 }
 
 // Флаг для предотвращения рекурсивных вызовов refreshToken
@@ -250,21 +293,21 @@ export async function getMeInfo() {
   return data.me;
 }
 export async function confirmEmailRequest(email?: string, firstName?: string) {
-  // Используем REST API endpoint вместо GraphQL, так как он не требует авторизации
-  // Берем базовый URL из GraphQL URL (убираем /graphql/)
-  const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:8000/graphql/';
-  const baseUrl = graphqlUrl.replace('/graphql/', '').replace('/graphql', '');
-  const endpoint = `${baseUrl}/auth/request-email-code/`;
+  return retryRequest(async () => {
+    // Используем REST API endpoint вместо GraphQL, так как он не требует авторизации
+    // Берем базовый URL из GraphQL URL (убираем /graphql/)
+    const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:8000/graphql/';
+    const baseUrl = graphqlUrl.replace('/graphql/', '').replace('/graphql', '');
+    const endpoint = `${baseUrl}/auth/request-email-code/`;
 
-  // Получаем email из параметра, localStorage или из состояния
-  const userEmail = email || localStorage.getItem('email') || '';
-  const userFirstName = firstName || localStorage.getItem('firstName') || '';
+    // Получаем email из параметра, localStorage или из состояния
+    const userEmail = email || localStorage.getItem('email') || '';
+    const userFirstName = firstName || localStorage.getItem('firstName') || '';
 
-  if (!userEmail) {
-    throw new Error('Email не найден. Пожалуйста, войдите в аккаунт или укажите email.');
-  }
+    if (!userEmail) {
+      throw new Error('Email не найден. Пожалуйста, войдите в аккаунт или укажите email.');
+    }
 
-  try {
     const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -283,9 +326,7 @@ export async function confirmEmailRequest(email?: string, firstName?: string) {
     }
 
     return result;
-  } catch (error: any) {
-    throw new Error(error.message || 'Ошибка при отправке письма подтверждения');
-  }
+  });
 }
 
 export async function requestPasswordReset(email: string, redirectUrl?: string) {

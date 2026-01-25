@@ -100,6 +100,16 @@ const authSlice = createSlice({
     setFalseSignIiStatus(state) {
       state.signIn.success = false;
     },
+    resetSignUp(state) {
+      // Сбрасываем данные регистрации для возможности начать заново
+      state.email = '';
+      state.pass = '';
+      state.signUp.success = false;
+      state.signUp.error = null;
+      state.signUp.agreeChecked = false;
+      // Очищаем email из localStorage
+      localStorage.removeItem('email');
+    },
     logout(state) {
       // Очищаем состояние
       state.isAuth = false;
@@ -125,9 +135,11 @@ const authSlice = createSlice({
         state.signUp.success = true;
         state.signUp.loadingStatus = false;
         state.signUp.error = null;
-        // Сохраняем email в localStorage для отправки письма подтверждения
+        // Сохраняем email в Redux state и localStorage для отправки письма подтверждения
+        // Email уже должен быть в state.email, но убеждаемся что он сохранен
         if (state.email) {
           localStorage.setItem('email', state.email);
+          // Email уже в state.email, так что просто сохраняем в localStorage
         }
       })
       .addCase(sendSignUpData.rejected, (state, action) => {
@@ -216,6 +228,7 @@ export const {
   switchSignUpAgreement,
   setFalseSignUpAgreement,
   setFalseSignIiStatus,
+  resetSignUp,
   logout
 } = authSlice.actions;
 

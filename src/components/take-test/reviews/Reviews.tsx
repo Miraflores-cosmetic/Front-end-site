@@ -37,7 +37,7 @@ export const Reviews: React.FC<{ variant?: 'preview' | 'page' }> = ({ variant = 
         const mapped = data.map(r => ({
           images: [r.image1, r.image2].filter(Boolean) as string[],
           title: r.product.name,
-          subtitle: r.product.thumbnail || '',
+          subtitle: '',
           text: r.text,
           rating: r.rating,
           date: new Date(r.createdAt).toLocaleDateString('ru-RU', {

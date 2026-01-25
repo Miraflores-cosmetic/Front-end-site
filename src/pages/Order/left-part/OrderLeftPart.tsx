@@ -311,13 +311,13 @@ const OrderLeftPart: React.FC = () => {
 
             if (value.length > 0) {
               if (value.length <= 3) {
-                value = `+8 (${value}`;
+                value = `+7 (${value}`;
               } else if (value.length <= 6) {
-                value = `+8 (${value.substring(0, 3)}) ${value.substring(3)}`;
+                value = `+7 (${value.substring(0, 3)}) ${value.substring(3)}`;
               } else if (value.length <= 8) {
-                value = `+8 (${value.substring(0, 3)}) ${value.substring(3, 6)}-${value.substring(6)}`;
+                value = `+7 (${value.substring(0, 3)}) ${value.substring(3, 6)}-${value.substring(6)}`;
               } else {
-                value = `+8 (${value.substring(0, 3)}) ${value.substring(3, 6)}-${value.substring(6, 8)}-${value.substring(8, 10)}`;
+                value = `+7 (${value.substring(0, 3)}) ${value.substring(3, 6)}-${value.substring(6, 8)}-${value.substring(8, 10)}`;
               }
             } else {
               value = '';
@@ -325,7 +325,7 @@ const OrderLeftPart: React.FC = () => {
             handleInputChange('phone', value);
           }}
           type='text'
-          placeholder='+8 (999) 999-99-99'
+          placeholder='+7 (999) 999-99-99'
         />
       </section>
 

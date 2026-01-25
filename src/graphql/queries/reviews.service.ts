@@ -70,13 +70,13 @@ export async function createProductReview(input: ProductReviewCreateInput): Prom
 
     if (input.image1) {
       formData.append(`${fileIndex}`, input.image1);
-      map[`${fileIndex}`] = ['variables.input.image1'];
+      map[`${fileIndex}`] = ['variables.input.image_1'];
       fileIndex++;
     }
 
     if (input.image2) {
       formData.append(`${fileIndex}`, input.image2);
-      map[`${fileIndex}`] = ['variables.input.image2'];
+      map[`${fileIndex}`] = ['variables.input.image_2'];
     }
 
     formData.append('map', JSON.stringify(map));

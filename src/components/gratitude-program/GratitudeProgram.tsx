@@ -154,7 +154,7 @@ export const GratitudeProgram: React.FC = () => {
           <div className={styles.descWrapper}>
             <p className={styles.desc}>
             У нас каждый получает подарки!
-            Не нужно ничего копить ,  дополнительно регистрироваться, переживать,
+            Не нужно ничего копить, дополнительно регистрироваться, переживать,
             что бонусы сгорят.
             </p>
             {/* <p className={styles.desc}>

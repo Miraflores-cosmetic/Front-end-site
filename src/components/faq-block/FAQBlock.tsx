@@ -3,12 +3,7 @@ import styles from './FAQBlock.module.scss';
 import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
 import { editorJsToHtml } from '@/utils/editorJsParser';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
-import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
-import miraImage from '@/assets/images/mira-2.jpg';
-import shablon1 from '@/assets/images/shablon1.webp';
-import shablon2 from '@/assets/images/shablon2.webp';
-import shablon3 from '@/assets/images/shablon3.webp';
-import shablon4 from '@/assets/images/shablon4.webp';
+import faqVideo from '@/assets/videos/faq-video.mp4';
 
 interface FAQItem {
   question: string;
@@ -23,6 +18,8 @@ export const FAQBlock: React.FC = () => {
   const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  const leftColumnRef = useRef<HTMLDivElement>(null);
+  const rightColumnRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchFAQ = async () => {
@@ -202,6 +199,62 @@ export const FAQBlock: React.FC = () => {
     setExpandedIndex(expandedIndex === index ? null : index);
   };
 
+  // Синхронизация высоты leftColumn с rightColumn (но не менее 860px)
+  useEffect(() => {
+    if (!leftColumnRef.current || !rightColumnRef.current || loading) return;
+
+    const syncHeights = () => {
+      if (!leftColumnRef.current || !rightColumnRef.current) return;
+      
+      // Получаем реальную высоту rightColumn
+      const rightHeight = rightColumnRef.current.getBoundingClientRect().height;
+      const minHeight = 860;
+      const targetHeight = Math.max(rightHeight, minHeight);
+      
+      // Устанавливаем фиксированную высоту для leftColumn
+      leftColumnRef.current.style.height = `${targetHeight}px`;
+      leftColumnRef.current.style.maxHeight = `${targetHeight}px`;
+      leftColumnRef.current.style.minHeight = `${targetHeight}px`;
+      
+      // Также устанавливаем высоту для imageWrapper внутри
+      const imageWrapper = leftColumnRef.current.querySelector(`.${styles.imageWrapper}`) as HTMLElement;
+      if (imageWrapper) {
+        imageWrapper.style.height = `${targetHeight}px`;
+        imageWrapper.style.maxHeight = `${targetHeight}px`;
+      }
+    };
+
+    // Небольшая задержка для того, чтобы DOM успел обновиться
+    const timeoutId1 = setTimeout(syncHeights, 50);
+    const timeoutId2 = setTimeout(syncHeights, 200);
+    const timeoutId3 = setTimeout(syncHeights, 500);
+    
+    // Синхронизация при изменении размера окна
+    window.addEventListener('resize', syncHeights);
+    
+    // Используем MutationObserver для отслеживания изменений в rightColumn
+    const observer = new MutationObserver(() => {
+      setTimeout(syncHeights, 50);
+    });
+    if (rightColumnRef.current) {
+      observer.observe(rightColumnRef.current, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ['style', 'class'],
+        characterData: true
+      });
+    }
+
+    return () => {
+      clearTimeout(timeoutId1);
+      clearTimeout(timeoutId2);
+      clearTimeout(timeoutId3);
+      window.removeEventListener('resize', syncHeights);
+      observer.disconnect();
+    };
+  }, [expandedIndex, faqItems.length, loading, isSectionLoaded]);
+
   if (loading) {
     return (
       <section ref={sectionRef} className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}>
@@ -228,39 +281,20 @@ export const FAQBlock: React.FC = () => {
       id="faq"
     >
       <div className={styles.faqContent}>
-        <div className={styles.leftColumn}>
-          {/* Порядок как в vspomni: 1, 3, 2, 4 для правильного grid layout */}
+        <div ref={leftColumnRef} className={styles.leftColumn}>
           <div className={styles.imageWrapper}>
-            <ImageWithFallback 
-              src={images[0] || shablon1} 
-              alt="FAQ image 1" 
-              className={styles.image}
-            />
-          </div>
-          <div className={styles.imageWrapper}>
-            <ImageWithFallback 
-              src={images[2] || shablon3} 
-              alt="FAQ image 3" 
-              className={styles.image}
-            />
-          </div>
-          <div className={styles.imageWrapper}>
-            <ImageWithFallback 
-              src={images[1] || shablon2} 
-              alt="FAQ image 2" 
-              className={styles.image}
-            />
-          </div>
-          <div className={styles.imageWrapper}>
-            <ImageWithFallback 
-              src={images[3] || shablon4} 
-              alt="FAQ image 4" 
-              className={styles.image}
+            <video 
+              src={faqVideo} 
+              className={styles.video}
+              autoPlay
+              loop
+              muted
+              playsInline
             />
           </div>
         </div>
 
-        <div className={styles.rightColumn}>
+        <div ref={rightColumnRef} className={styles.rightColumn}>
           <h2 className={styles.title}>FAQ</h2>
           <div className={styles.faqList}>
             {faqItems.map((item, index) => (

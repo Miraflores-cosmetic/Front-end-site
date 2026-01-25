@@ -27,7 +27,9 @@
 
   // Анимация применяется когда класс добавлен - все элементы появляются одновременно
   &.sectionAnimated {
-    padding-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 32px;
+    margin-top: 24px;
 
     .title {
       opacity: 1;

@@ -55,168 +55,39 @@
   .container {
     border-top: 1px solid #6e6d6799;
     padding-top: 24px;
-    display: flex;
-    gap: 24px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scrollbar-width: thin;
-    scrollbar-color: #6e6d67 #f6f5ef;
-    -ms-overflow-style: auto;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 32px 20px;
 
-    &::-webkit-scrollbar {
-      height: 8px;
+    @media (min-width: 1200px) {
+      grid-template-columns: repeat(2, 1fr);
     }
 
-    &::-webkit-scrollbar-track {
-      background: #f6f5ef;
+    @media (max-width: 800px) {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px 12px;
     }
 
-    &::-webkit-scrollbar-thumb {
-      background: #6e6d67;
-      border-radius: 4px;
-    }
-
-    &::-webkit-scrollbar-thumb:hover {
-      background: #4a4945;
+    @media (max-width: 450px) {
+      grid-template-columns: repeat(1, 1fr);
+      gap: 24px;
     }
   }
 
-  .wrapper {
-    .cart {
-      position: relative;
-      min-width: 432px;
-      height: 432px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      transition: background-image 0.5s ease-in-out;
-      background-color: #f6f5ef;
-
-      @media (max-width: 450px) {
-        min-width: 280px;
-        height: 280px;
-      }
-
-      .addToCardWrapper {
-        position: absolute;
-        bottom: 10px;
-        width: 100%;
-        display: flex;
-        align-items: center;
-        padding: 5px;
-        gap: 5px;
-
-        .addToCart {
-          cursor: pointer;
-          height: 54px;
-          border: none;
-          width: 90%;
-          background-color: white;
-          font-weight: 600;
-          font-size: 16px;
-          transition:
-            background-color 0.3s ease,
-            color 0.3s ease;
-
-          &:hover {
-            background-color: #000;
-            color: #fff;
-          }
-        }
-
-        .gift {
-          height: 54px;
-          width: 54px;
-          border: none;
-          background-color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-
-          &:hover {
-            background-color: #000;
-          }
-
-          img {
-            width: 23px;
-            height: 23px;
-          }
-        }
-      }
-    }
-
-    .info {
-      margin-top: 18px;
-      display: flex;
-      max-width: 432px;
-      flex-direction: column;
-
-      .name {
-        font-size: 16px;
-        font-weight: 500;
-        margin-bottom: 6px;
-        text-transform: uppercase;
-        text-align: start;
-      }
-
-      .desc {
-        font-size: 14px;
-        color: #6e6d67;
-        margin-bottom: 10px;
-        text-align: start;
-      }
-
-      .priceWrapper {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-start;
-        align-items: baseline;
-
-        .oldPrice {
-          position: relative;
-          color: #999;
-          font-size: 16px;
-
-          &::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 0;
-            left: 0;
-            top: 50%;
-            border-bottom: 1px solid #FF0808;
-            transform: rotate(-11.31deg);
-          }
-        }
-
-        .price {
-          font-size: 18px;
-          font-weight: bold;
-          color: #000;
-        }
-      }
-    }
+  .loading,
+  .emptyState {
+    text-align: center;
+    padding: 60px 0;
+    color: #6e6d67;
+    font-size: 18px;
   }
 
-  .discountBadge {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 54px;
-    height: 43px;
-    background: #297230;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-family: 'Avenir Next', sans-serif;
-    font-style: normal;
+  .closeBtn {
+    margin-top: 40px;
+    text-align: center;
+    text-transform: uppercase;
     font-weight: 500;
-    font-size: 14px;
-    line-height: 19px;
-    color: #FFFFFF;
-    z-index: 2;
+    cursor: pointer;
+    text-decoration: underline;
   }
 }

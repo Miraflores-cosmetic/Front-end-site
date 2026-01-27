@@ -3,7 +3,8 @@ import styles from './FavoritesContent.module.scss';
 import { TabId } from '@/pages/Profile/side-bar/SideBar';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { getFavorites, clearAllFavorites } from '@/graphql/queries/favorites.service';
-import FavoriteCard from './FavoriteCart';
+import { BestSellerProductCard } from '@/components/bestsellers/bestSellerCard';
+
 import { useToast } from '@/components/toast/toast';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/store/store';
@@ -54,7 +55,7 @@ const FavoritesContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion }
 
     // Слушаем события изменения избранного (можно добавить кастомное событие)
     window.addEventListener('favoritesUpdated', handleStorageChange);
-    
+
     return () => {
       window.removeEventListener('favoritesUpdated', handleStorageChange);
     };
@@ -89,7 +90,7 @@ const FavoritesContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion }
       <div className={styles.titleWrapper}>
         <p className={styles.title}>Избранное</p>
         {products.length > 0 && (
-          <button 
+          <button
             className={styles.clearButton}
             onClick={handleClearAll}
             disabled={clearing}
@@ -104,18 +105,10 @@ const FavoritesContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion }
       ) : products.length > 0 ? (
         <article className={styles.container}>
           {products.map(product => (
-            <FavoriteCard
+            <BestSellerProductCard
               key={product.id}
-              id={product.id}
-              title={product.name}
-              description=""
-              price={product.price}
-              oldPrice={product.oldPrice}
-              discount={product.discount}
-              image={product.thumbnail || ''}
-              hoverImage={product.thumbnail || ''}
-              slug={product.slug}
-              variantId={product.variantId || product.id}
+              product={product}
+              loading={false}
             />
           ))}
         </article>

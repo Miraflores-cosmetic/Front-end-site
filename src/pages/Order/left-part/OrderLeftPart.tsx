@@ -19,6 +19,8 @@ import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { AddressInfo } from '@/types/auth';
+import { formatPhoneNumber } from '@/utils/phoneFormatter';
+
 
 // 1. Define the shape of your form data
 interface OrderFormData {
@@ -67,20 +69,35 @@ const OrderLeftPart: React.FC = () => {
         email: userEmail || '',
       }));
 
-      // Автозаполнение телефона из адреса по умолчанию
+      // Автозаполнение телефона из адреса по умолчанию или из метаданных
+      let phone = '';
       if (me.addresses && me.addresses.length > 0) {
         const defaultAddress = me.addresses.find(a => a.isDefaultShippingAddress) ||
           me.addresses.find(a => a.isDefaultBillingAddress) ||
           me.addresses[0];
+
         if (defaultAddress?.phone) {
-          setFormData((prev) => ({
-            ...prev,
-            phone: defaultAddress.phone || prev.phone
-          }));
+          phone = defaultAddress.phone;
         }
+      }
+
+      // Если в адресе нет телефона, ищем в metadata
+      if (!phone && me.metadata) {
+        const phoneMeta = me.metadata.find(m => m.key === 'phone');
+        if (phoneMeta?.value) {
+          phone = phoneMeta.value;
+        }
+      }
+
+      if (phone) {
+        setFormData((prev) => ({
+          ...prev,
+          phone: formatPhoneNumber(phone) || prev.phone
+        }));
       }
     }
   }, [me]);
+
 
   // 4. Generic Change Handler
   const handleInputChange = (field: keyof OrderFormData, value: string | boolean) => {
@@ -95,9 +112,10 @@ const OrderLeftPart: React.FC = () => {
     if (address?.phone) {
       setFormData((prev) => ({
         ...prev,
-        phone: address.phone || prev.phone
+        phone: formatPhoneNumber(address.phone) || prev.phone
       }));
     }
+
   };
 
   const handlePayment = async () => {
@@ -300,30 +318,10 @@ const OrderLeftPart: React.FC = () => {
           error={validationErrors.phone}
           onChange={(e) => {
             if (validationErrors.phone) setValidationErrors(prev => ({ ...prev, phone: false }));
-            let value = e.target.value.replace(/\D/g, ''); // Удаляем все нецифровые символы
-            if (value.startsWith('8')) {
-              value = value.substring(1); // Убираем первую 8
-            }
-            // Ограничиваем до 10 цифр (код страны + 10 цифр)
-            if (value.length > 10) {
-              value = value.substring(0, 10);
-            }
-
-            if (value.length > 0) {
-              if (value.length <= 3) {
-                value = `+7 (${value}`;
-              } else if (value.length <= 6) {
-                value = `+7 (${value.substring(0, 3)}) ${value.substring(3)}`;
-              } else if (value.length <= 8) {
-                value = `+7 (${value.substring(0, 3)}) ${value.substring(3, 6)}-${value.substring(6)}`;
-              } else {
-                value = `+7 (${value.substring(0, 3)}) ${value.substring(3, 6)}-${value.substring(6, 8)}-${value.substring(8, 10)}`;
-              }
-            } else {
-              value = '';
-            }
-            handleInputChange('phone', value);
+            const formatted = formatPhoneNumber(e.target.value);
+            handleInputChange('phone', formatted);
           }}
+
           type='text'
           placeholder='+7 (999) 999-99-99'
         />

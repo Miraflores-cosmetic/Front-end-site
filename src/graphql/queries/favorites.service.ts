@@ -2,14 +2,22 @@ import { graphqlRequest } from '@/graphql/client';
 
 export interface FavoriteProduct {
   id: string;
+  productId: string;
   name: string;
+  title: string;
   slug: string;
+  description: string;
   thumbnail?: string;
+  images: string[];
   price: number;
   oldPrice?: number;
   discount?: number;
-  variantId?: string;
+  variantId: string;
+  productVariants: any[];
+  collections: any;
+  attributes: any[];
 }
+
 
 const getUserId = () => localStorage.getItem('userId') || 'guest';
 const getStorageKey = () => `favorites_${getUserId()}`;
@@ -37,7 +45,7 @@ async function saveFavoriteIds(ids: string[]) {
       // В production используем полный URL
       const isDev = import.meta.env.DEV;
       let endpoint = '';
-      
+
       if (isDev) {
         // В development используем относительный путь - Vite прокси обработает
         endpoint = '/api/favorites'; // Прокси добавит trailing slash
@@ -46,7 +54,7 @@ async function saveFavoriteIds(ids: string[]) {
         const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL || '';
         endpoint = graphqlUrl.replace('/graphql/', '/api/favorites/');
       }
-      
+
       const token = localStorage.getItem('token');
 
       if (!token) return;
@@ -81,7 +89,7 @@ export async function getFavorites(): Promise<FavoriteProduct[]> {
         // В production используем полный URL
         const isDev = import.meta.env.DEV;
         let endpoint = '';
-        
+
         if (isDev) {
           // В development используем относительный путь - Vite прокси обработает
           endpoint = '/api/favorites'; // Прокси добавит trailing slash
@@ -90,7 +98,7 @@ export async function getFavorites(): Promise<FavoriteProduct[]> {
           const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL || '';
           endpoint = graphqlUrl.replace('/graphql/', '/api/favorites/');
         }
-        
+
         const res = await fetch(endpoint, {
           method: 'GET',
           headers: {
@@ -140,6 +148,18 @@ export async function getFavorites(): Promise<FavoriteProduct[]> {
             node {
               id
               name
+              attributes {
+                attribute {
+                  id
+                  name
+                  slug
+                }
+                values {
+                  name
+                  slug
+                  plainText
+                }
+              }
               pricing {
                 price { gross { amount } }
                 priceUndiscounted { gross { amount } }
@@ -149,13 +169,36 @@ export async function getFavorites(): Promise<FavoriteProduct[]> {
                 id
                 name
                 slug
+                description
                 thumbnail { url }
+                media { url, alt }
+                category { id, name }
+                collections { id, name, slug }
+                productVariants(first: 10) {
+                  edges {
+                    node {
+                      id
+                      name
+                      sku
+                      attributes {
+                        attribute { id, name, slug }
+                        values { name, slug, plainText }
+                      }
+                      pricing {
+                        price { gross { amount } }
+                        priceUndiscounted { gross { amount } }
+                        discount { net { amount, currency } }
+                      }
+                    }
+                  }
+                }
               }
             }
           }
         }
       }
     `;
+
 
     const variantsData = await graphqlRequest<any>(variantsQuery, {
       ids: favoriteIds,
@@ -178,15 +221,23 @@ export async function getFavorites(): Promise<FavoriteProduct[]> {
       }
 
       return {
-        id: product.id,
+        id: variant.id, // Используем ID варианта как основной ID для карточки
+        productId: product.id,
+        title: product.name,
         name: product.name,
         slug: product.slug,
+        description: JSON.parse(product.description || '{}')?.blocks?.[0]?.data?.text || '',
         thumbnail: product.thumbnail?.url,
+        images: product.media?.map((m: any) => m.url) || [],
         price,
         oldPrice: oldPrice && oldPrice > price ? oldPrice : undefined,
         discount,
-        variantId: variant.id
+        variantId: variant.id,
+        productVariants: product.productVariants?.edges || product.productVariants || [],
+        collections: product.collections?.[0] || product.collections || null,
+        attributes: variant.attributes || []
       };
+
     });
   } catch (error) {
     console.error('Error getting favorites:', error);

@@ -25,6 +25,15 @@ export async function getSingleProduct(slug: string): Promise<ProductDetailNode 
         productType {
           name
         }
+        rating
+        reviews {
+          id
+          rating
+          text
+          createdAt
+          image1
+          image2
+        }
         thumbnail {
           url
           alt
@@ -244,7 +253,7 @@ export async function updateProductName(productId: string, newName: string): Pro
   };
 
   const result = await graphqlRequest<ProductUpdateMutationResponse>(mutation, variables);
-  
+
   if (result.productUpdate.errors && result.productUpdate.errors.length > 0) {
     const error = result.productUpdate.errors[0];
     throw new Error(error.message || 'Failed to update product name');
@@ -387,12 +396,12 @@ export async function getBestsellerProducts(): Promise<{ edges: ProductEdge[] }>
 
   try {
     const data = await graphqlRequest<BestSellersResponse>(query, variables);
-    
+
     if (!data.collection || !data.collection.products) {
       console.warn('[Bestsellers] Collection not found or has no products');
       return { edges: [] };
     }
-    
+
     return data.collection.products;
   } catch (error) {
     console.error('[Bestsellers] Error fetching bestseller products:', error);
@@ -544,39 +553,39 @@ export async function getAllProducts(maxLimit: number = 100): Promise<{ edges: P
         channel: CHANNEL
       };
 
-      const data: { 
-        products: { 
+      const data: {
+        products: {
           edges: ProductEdge[];
           pageInfo: {
             hasNextPage: boolean;
             endCursor: string | null;
           };
-        } 
-      } = await graphqlRequest<{ 
-        products: { 
+        }
+      } = await graphqlRequest<{
+        products: {
           edges: ProductEdge[];
           pageInfo: {
             hasNextPage: boolean;
             endCursor: string | null;
           };
-        } 
+        }
       }>(query, variables);
-      
+
       if (!data.products || !data.products.edges) {
         console.warn('[AllProducts] No products found');
         break;
       }
-      
+
       allEdges.push(...data.products.edges);
       hasNextPage = data.products.pageInfo.hasNextPage;
       after = data.products.pageInfo.endCursor;
-      
+
       // Если получили меньше запрошенного, значит это последняя страница
       if (data.products.edges.length < pageSize) {
         hasNextPage = false;
       }
     }
-    
+
     return { edges: allEdges };
   } catch (error) {
     console.error('[AllProducts] Error fetching all products:', error);
@@ -600,7 +609,7 @@ export async function getProductsByCareStageRest(
   // В production используем полный URL
   const isDev = import.meta.env.DEV;
   let baseUrl = '';
-  
+
   if (isDev) {
     // В development используем относительный путь - Vite прокси обработает
     baseUrl = '';
@@ -609,9 +618,9 @@ export async function getProductsByCareStageRest(
     const API_BASE_URL = import.meta.env.VITE_API_URL || '';
     baseUrl = API_BASE_URL || (import.meta.env.VITE_GRAPHQL_URL || '').replace('/graphql/', '');
   }
-  
+
   // Убеждаемся, что URL начинается с / если baseUrl пустой
-  let url = baseUrl 
+  let url = baseUrl
     ? `${baseUrl}/api/products/by-care-stage/?limit=${limit}`
     : `/api/products/by-care-stage/?limit=${limit}`;
   if (careStageSlug) {
@@ -623,7 +632,7 @@ export async function getProductsByCareStageRest(
   if (excludeId) {
     url += `&exclude_id=${encodeURIComponent(excludeId)}`;
   }
-  
+
   try {
     const response = await fetch(url, {
       method: 'GET',
@@ -631,18 +640,18 @@ export async function getProductsByCareStageRest(
         'Content-Type': 'application/json',
       },
     });
-    
+
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    
+
     const data = await response.json();
-    
+
     if (!data.success) {
       console.error('[ProductsByCareStageRest] API error:', data.error);
       return { edges: [] };
     }
-    
+
     if (process.env.NODE_ENV === 'development') {
       console.log('[ProductsByCareStageRest] Response data:', {
         hasProducts: !!data.products,
@@ -652,7 +661,7 @@ export async function getProductsByCareStageRest(
         careStageSlug
       });
     }
-    
+
     // Если careStageSlug указан, возвращаем товары этого этапа
     let products: any[] = [];
     if (careStageSlug && data.products) {
@@ -671,12 +680,12 @@ export async function getProductsByCareStageRest(
         console.warn('[ProductsByCareStageRest] No products or stages in response');
       }
     }
-    
+
     // Преобразуем данные из REST API в формат GraphQL
     const edges: ProductEdge[] = products.map((product: any) => {
       const defaultVariant = product.variants?.[0] || {};
       const allVariants = product.variants || [];
-      
+
       const defaultVariantData = defaultVariant && defaultVariant.id ? {
         id: defaultVariant.id,
         name: defaultVariant.name || '',
@@ -702,7 +711,7 @@ export async function getProductsByCareStageRest(
           }
         }
       };
-      
+
       return {
         node: {
           id: product.id,
@@ -714,14 +723,14 @@ export async function getProductsByCareStageRest(
             id: '',
             name: ''
           },
-          thumbnail: product.thumbnail ? { 
+          thumbnail: product.thumbnail ? {
             url: product.thumbnail,
             alt: product.name || ''
           } : {
             url: '',
             alt: ''
           },
-          media: (product.images || []).map((url: string) => ({ 
+          media: (product.images || []).map((url: string) => ({
             url,
             alt: product.name || '',
             id: ''
@@ -729,41 +738,41 @@ export async function getProductsByCareStageRest(
           defaultVariant: defaultVariantData,
           collections: product.collections || [],
           productVariants: allVariants.map((v: any) => ({
-              node: {
-                id: v.id,
-                name: v.name || '',
-                sku: v.sku || '',
-                attributes: v.attributes || [],
-                pricing: {
-                  price: {
-                    gross: {
-                      amount: v.price || 0,
-                      currency: v.currency || 'RUB'
-                    }
-                  },
-                  priceUndiscounted: v.oldPrice ? {
-                    gross: {
-                      amount: v.oldPrice,
-                      currency: v.currency || 'RUB'
-                    }
-                  } : null,
-                  discount: v.discount ? {
-                    gross: {
-                      amount: v.discount,
-                      currency: v.currency || 'RUB'
-                    }
-                  } : null
-                }
+            node: {
+              id: v.id,
+              name: v.name || '',
+              sku: v.sku || '',
+              attributes: v.attributes || [],
+              pricing: {
+                price: {
+                  gross: {
+                    amount: v.price || 0,
+                    currency: v.currency || 'RUB'
+                  }
+                },
+                priceUndiscounted: v.oldPrice ? {
+                  gross: {
+                    amount: v.oldPrice,
+                    currency: v.currency || 'RUB'
+                  }
+                } : null,
+                discount: v.discount ? {
+                  gross: {
+                    amount: v.discount,
+                    currency: v.currency || 'RUB'
+                  }
+                } : null
               }
-            }))
+            }
+          }))
         }
       };
     });
-    
+
     if (process.env.NODE_ENV === 'development') {
       console.log(`[ProductsByCareStageRest] Found ${edges.length} products for care_stage: ${careStageSlug}`);
     }
-    
+
     return { edges };
   } catch (error) {
     console.error(`[ProductsByCareStageRest] Error fetching products for care_stage ${careStageSlug}:`, error);
@@ -925,16 +934,16 @@ export async function getProductsByCareStage(
 
   try {
     const data = await graphqlRequest<{ products: { edges: ProductEdge[]; pageInfo: any } }>(query, variables);
-    
+
     if (!data.products) {
       console.warn(`[ProductsByCareStage] No products found for care_stage: ${careStageSlug}`);
       return { edges: [] };
     }
-    
+
     if (process.env.NODE_ENV === 'development') {
       console.log(`[ProductsByCareStage] Found ${data.products.edges.length} products for care_stage: ${careStageSlug}`);
     }
-    
+
     return data.products;
   } catch (error) {
     console.error(`[ProductsByCareStage] Error fetching products for care_stage ${careStageSlug}:`, error);

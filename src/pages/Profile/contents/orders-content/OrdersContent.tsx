@@ -21,7 +21,7 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
-  const [selectedProductForReview, setSelectedProductForReview] = useState<{ id: string; name: string } | null>(null);
+  const [selectedProductForReview, setSelectedProductForReview] = useState<{ id: string; name: string; orderId: string } | null>(null);
   const isMobile = useScreenMatch(450);
   const toast = useToast();
 
@@ -32,9 +32,9 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
         const ordersData = await getOrders(50);
         const ordersList = ordersData.edges.map((edge: any) => edge.node);
         setOrders(ordersList);
-        
+
         // Устанавливаем первый активный заказ по умолчанию
-        const firstActive = ordersList.find((o: any) => 
+        const firstActive = ordersList.find((o: any) =>
           o.status === 'UNFULFILLED' || o.status === 'PARTIALLY_FULFILLED'
         );
         if (firstActive) {
@@ -67,10 +67,10 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
 
   // Фильтруем заказы по статусу
   // Активные заказы - только невыполненные (не FULFILLED и не CANCELED)
-  const activeOrders = orders.filter((o: any) => 
+  const activeOrders = orders.filter((o: any) =>
     o.status === 'UNFULFILLED' || o.status === 'PARTIALLY_FULFILLED'
   );
-  
+
   // Все заказы - показываем все, включая выполненные
   // (используем все заказы напрямую, без фильтрации)
 
@@ -90,12 +90,12 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
         return sum + linesSum;
       }
     }
-    
+
     // Если нет lines или сумма равна 0, используем total.gross.amount
     const orderTotal = parseFloat(o.total?.gross?.amount || 0);
     return sum + orderTotal;
   }, 0);
-  
+
   const allOrdersStats: AllOrdersStats = {
     totalOrders: orders.length,
     totalAmount: `${Math.round(totalAmount).toLocaleString('ru-RU')} ₽`
@@ -113,35 +113,9 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
     status: displayOrder.statusDisplay || displayOrder.status
   } : null;
 
-  // Преобразуем товары заказа в формат для CardList
-  const cartData: ProfileCardItem[] = displayOrder?.lines?.map((line: any, index: number) => ({
-    id: index + 1,
-    image: line.thumbnail?.url || line.variant?.product?.thumbnail?.url || '',
-    alt: line.productName || '',
-    name: line.productName || '',
-    size: line.variantName || '',
-    count: `${line.quantity} шт.`,
-    isGift: false
-  })) || [];
-
-  const handleAddComment = () => {
-    // Открываем модалку отзыва для первого товара из заказа
-    if (displayOrder && displayOrder.lines && displayOrder.lines.length > 0) {
-      const firstLine = displayOrder.lines[0];
-      // Получаем product ID из variant
-      const productId = firstLine.variant?.product?.id;
-      const productName = firstLine.productName || 'Товар';
-      
-      if (productId) {
-        setSelectedProductForReview({ id: productId, name: productName });
-        setReviewModalOpen(true);
-      } else {
-        console.error('Product ID not found in line:', firstLine);
-        toast.error('Не удалось определить товар для отзыва. Попробуйте позже.');
-      }
-    } else {
-      toast.error('Нет товаров в заказе для отзыва');
-    }
+  const handleReviewClick = (productId: string, productName: string, orderId: string) => {
+    setSelectedProductForReview({ id: productId, name: productName, orderId });
+    setReviewModalOpen(true);
   };
 
   const handleCloseAccordion = () => {
@@ -183,7 +157,19 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
                   <p className={styles.activeText}>
                     {displayOrder.lines?.length || 0} {displayOrder.lines?.length === 1 ? 'товар' : 'товаров'}
                   </p>
-                  <CardList cartData={cartData} />
+                  <CardList
+                    cartData={displayOrder.lines?.map((line: any, index: number) => ({
+                      id: index + 1,
+                      image: line.thumbnail?.url || line.variant?.product?.thumbnail?.url || '',
+                      alt: line.productName || '',
+                      name: line.productName || '',
+                      size: line.variantName || '',
+                      count: `${line.quantity} шт.`,
+                      isGift: false,
+                      productId: line.variant?.product?.id
+                    })) || []}
+                    onReview={(pid, pname) => handleReviewClick(pid, pname, displayOrder.id)}
+                  />
                 </>
               ) : (
                 <div className={styles.emptyState}>Нет товаров в заказе</div>
@@ -201,15 +187,19 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
                           day: 'numeric'
                         })}</p>
                       </div>
-                      <CardList cartData={order.lines?.map((line: any, idx: number) => ({
-                        id: idx + 1,
-                        image: line.thumbnail?.url || line.variant?.product?.thumbnail?.url || '',
-                        alt: line.productName || '',
-                        name: line.productName || '',
-                        size: line.variantName || '',
-                        count: `${line.quantity} шт.`,
-                        isGift: false
-                      })) || []} />
+                      <CardList
+                        cartData={order.lines?.map((line: any, idx: number) => ({
+                          id: idx + 1,
+                          image: line.thumbnail?.url || line.variant?.product?.thumbnail?.url || '',
+                          alt: line.productName || '',
+                          name: line.productName || '',
+                          size: line.variantName || '',
+                          count: `${line.quantity} шт.`,
+                          isGift: false,
+                          productId: line.variant?.product?.id
+                        })) || []}
+                        onReview={(pid, pname) => handleReviewClick(pid, pname, order.id)}
+                      />
                     </div>
                   ))
                 ) : (
@@ -220,9 +210,6 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
           </article>
         </>
       )}
-      <div className={styles.addWrapper} onClick={handleAddComment}>
-        <button className={styles.addComment}>Оставить отзыв</button>
-      </div>
 
       {/* ✅ Close button */}
       {isMobile && (
@@ -240,6 +227,7 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
           }}
           productId={selectedProductForReview.id}
           productName={selectedProductForReview.name}
+          orderId={selectedProductForReview.orderId}
         />
       )}
     </article>

@@ -52,23 +52,26 @@ export interface ProductDetailNode extends ProductNode {
     id: string;
   };
   rating?: number;
-  attributes:  Attribute[];
-    media: {
+  attributes: Attribute[];
+  media: {
     url: string
     alt: string
-  }[]; 
-  productVariants:{
-      edges: ProductVariant[]
-    }
-  reviews:[
-    {
-      text:string
-    }
-  ]
-   thumbnail: {
-          alt: string
-          url: string
-        }
+  }[];
+  productVariants: {
+    edges: ProductVariant[]
+  }
+  reviews: Array<{
+    id: string;
+    rating: number;
+    text: string;
+    createdAt: string;
+    image1?: string | null;
+    image2?: string | null;
+  }>;
+  thumbnail: {
+    alt: string
+    url: string
+  }
   // Complex nested field example
   pricing: {
     priceRange: {
@@ -202,7 +205,7 @@ interface Attribute {
 }
 
 
- interface AttributeValue {
+interface AttributeValue {
   boolean: boolean | null;
   date: string | null;
   dateTime: string | null;

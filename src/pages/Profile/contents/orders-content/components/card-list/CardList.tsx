@@ -10,21 +10,23 @@ export interface CartItem {
   size: string;
   count: string;
   isGift?: boolean;
+  productId?: string;
 }
 
 interface OrderCartListProps {
   cartData: CartItem[];
+  onReview?: (productId: string, productName: string) => void;
 }
 
-const CardList: React.FC<OrderCartListProps> = ({ cartData }) => {
+const CardList: React.FC<OrderCartListProps> = ({ cartData, onReview }) => {
   return (
     <>
       {cartData.map(item => (
         <div className={styles.orderCart} key={item.id}>
           <figure className={styles.cartImageWrapper}>
-            <ImageWithFallback 
-              src={item.image} 
-              alt={item.alt} 
+            <ImageWithFallback
+              src={item.image}
+              alt={item.alt}
               className={styles.kremImage}
             />
           </figure>
@@ -46,6 +48,15 @@ const CardList: React.FC<OrderCartListProps> = ({ cartData }) => {
                 <div className={styles.price}>9050₽</div>
               )}
             </div>
+
+            {onReview && item.productId && !item.isGift && (
+              <button
+                className={styles.reviewButton}
+                onClick={() => onReview(item.productId!, item.name)}
+              >
+                Оставить отзыв
+              </button>
+            )}
           </div>
         </div>
       ))}

@@ -2,6 +2,7 @@ import { graphqlRequest, CHANNEL } from '@/graphql/client';
 
 export interface ProductReviewCreateInput {
   product: string; // Global ID продукта
+  order?: string; // Global ID заказа
   rating: number; // 1-5
   text: string;
   image1?: File | null;
@@ -56,6 +57,7 @@ export async function createProductReview(input: ProductReviewCreateInput): Prom
       variables: {
         input: {
           product: input.product,
+          order: input.order,
           rating: input.rating,
           text: input.text
         }
@@ -116,6 +118,7 @@ export async function createProductReview(input: ProductReviewCreateInput): Prom
     const variables = {
       input: {
         product: input.product,
+        order: input.order,
         rating: input.rating,
         text: input.text
       }

@@ -330,7 +330,7 @@ const InfoContent: React.FC = () => {
 
       <section className={styles.infoSliderWrapper}>
         <p className={styles.title}>КОЕ-ЧТО НОВОЕ ДЛЯ ВАС</p>
-        <Bestsellers isTitleHidden slidesToShow={2} />
+        <Bestsellers isTitleHidden slidesToShow={2} isProfilePage />
       </section>
 
       {/* Password Change Modal */}

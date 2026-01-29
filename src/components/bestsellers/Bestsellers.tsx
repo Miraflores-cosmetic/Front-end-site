@@ -16,6 +16,7 @@ interface BestsellersProps {
   slidesToShow?: number;
   isProductPage?: boolean; // Флаг для страницы товара
   isCatalogPage?: boolean; // Флаг для страницы каталога
+  isProfilePage?: boolean; // Флаг для страницы профиля
   filterByEtap?: string | null; // Фильтр по этапу ухода
   excludeProductId?: string; // ID товара для исключения из списка
   excludeProductSlug?: string; // Slug товара для исключения из списка (более надежно чем ID)
@@ -26,6 +27,7 @@ export default function Bestsellers({
   slidesToShow = 3.3,
   isProductPage = false,
   isCatalogPage = false,
+  isProfilePage = false,
   filterByEtap = null,
   excludeProductId,
   excludeProductSlug
@@ -76,7 +78,7 @@ export default function Bestsellers({
 
   // Мемоизированная функция для кастомных точек с accessibility
   const customPaging = useCallback((i: number) => (
-    <div 
+    <div
       className={`${styles.customDot} ${i === activeIndex ? styles.activeDot : ''}`}
       role="button"
       tabIndex={0}
@@ -146,8 +148,8 @@ export default function Bestsellers({
     onSwipeEnd: handleDragEnd,
     customPaging,
     appendDots: (dots: React.ReactNode) => (
-      <ul 
-        className="slick-dots" 
+      <ul
+        className="slick-dots"
         style={{ display: 'block' }}
       >
         {dots}
@@ -258,7 +260,7 @@ export default function Bestsellers({
       }
     ]
   }), [slidesToShow, handleAfterChange, customPaging, handleBeforeChange, handleSwipe, handleDragStart, handleDragEnd]);
-  
+
   const width = useWindowWidth();
 
   const isOversize = useScreenMatch(1536);
@@ -266,7 +268,7 @@ export default function Bestsellers({
 
   const { bestSellers, loading, error, hasAttemptedLoad } = useSelector((state: RootState) => state.bestsellerSlice);
   const dispatch = useDispatch<AppDispatch>();
-  
+
   // Состояние для всех товаров, загруженных через GraphQL
   const [allProducts, setAllProducts] = useState<BestSellersProduct[]>([]);
   const [loadingAllProducts, setLoadingAllProducts] = useState(false);
@@ -287,13 +289,13 @@ export default function Bestsellers({
           if (process.env.NODE_ENV === 'development') {
             console.log('[Bestsellers] Загружаем все товары для фильтрации по этапу:', filterByEtap);
           }
-          
+
           const result = await getAllProducts(100);
-          
+
           if (process.env.NODE_ENV === 'development') {
             console.log('[Bestsellers] Получено товаров:', result.edges.length);
           }
-          
+
           // Преобразуем данные из GraphQL формата в формат BestSellersProduct
           const formattedProducts: BestSellersProduct[] = result.edges.map((edge: any) => {
             const productNode = edge.node;
@@ -306,13 +308,13 @@ export default function Bestsellers({
                 variant = productNode.productVariants.edges[0]?.node;
               }
             }
-            
+
             const variantId = variant?.id || productNode.id;
-            
+
             let variantName = variant?.name || '';
             if (variant?.attributes && Array.isArray(variant.attributes)) {
-              const volumeAttr = variant.attributes.find((attr: any) => 
-                attr.attribute?.slug === 'obem' || 
+              const volumeAttr = variant.attributes.find((attr: any) =>
+                attr.attribute?.slug === 'obem' ||
                 attr.attribute?.slug === 'volume' ||
                 attr.attribute?.name?.toLowerCase().includes('объем') ||
                 attr.attribute?.name?.toLowerCase().includes('volume')
@@ -323,15 +325,15 @@ export default function Bestsellers({
                 variantName = volumeAttr.values[0].plainText;
               }
             }
-            
+
             const variantPrice = variant?.pricing?.price?.gross?.amount || 0;
             const variantUndiscountedPrice = variant?.pricing?.priceUndiscounted?.gross?.amount;
-            
+
             let oldPrice: number | undefined = undefined;
             if (variantUndiscountedPrice && variantUndiscountedPrice > variantPrice && variantPrice > 0) {
               oldPrice = variantUndiscountedPrice;
             }
-            
+
             let discountPercent: number | undefined = undefined;
             if (oldPrice && oldPrice > 0 && variantPrice > 0) {
               discountPercent = Math.round(((oldPrice - variantPrice) / oldPrice) * 100);
@@ -340,11 +342,11 @@ export default function Bestsellers({
                 oldPrice = undefined;
               }
             }
-            
+
             let description = '';
             if (productNode.attributes && Array.isArray(productNode.attributes)) {
-              const descAttr = productNode.attributes.find((attr: any) => 
-                attr.attribute?.slug === 'opisanie-v-kartochke-tovara' || 
+              const descAttr = productNode.attributes.find((attr: any) =>
+                attr.attribute?.slug === 'opisanie-v-kartochke-tovara' ||
                 attr.attribute?.name?.toLowerCase().includes('описание') ||
                 attr.attribute?.name?.toLowerCase().includes('description')
               );
@@ -354,18 +356,18 @@ export default function Bestsellers({
                 description = descAttr.values[0].name;
               }
             }
-            
+
             if (!description && productNode.description) {
               try {
-                const parsed = typeof productNode.description === 'string' 
-                  ? JSON.parse(productNode.description) 
+                const parsed = typeof productNode.description === 'string'
+                  ? JSON.parse(productNode.description)
                   : productNode.description;
                 description = parsed?.blocks?.[0]?.data?.text || '';
               } catch (e) {
                 description = '';
               }
             }
-            
+
             return {
               id: variantId,
               productId: productNode.id,
@@ -386,14 +388,14 @@ export default function Bestsellers({
                 } else if (productNode.productVariants?.edges) {
                   variants = productNode.productVariants.edges;
                 }
-                
+
                 return variants.map((v: any) => {
                   const variantNode = v.node || v;
                   let variantName = variantNode?.name || '';
-                  
+
                   if (variantNode?.attributes && Array.isArray(variantNode.attributes)) {
-                    const volumeAttr = variantNode.attributes.find((attr: any) => 
-                      attr.attribute?.slug === 'obem' || 
+                    const volumeAttr = variantNode.attributes.find((attr: any) =>
+                      attr.attribute?.slug === 'obem' ||
                       attr.attribute?.slug === 'volume' ||
                       attr.attribute?.name?.toLowerCase().includes('объем') ||
                       attr.attribute?.name?.toLowerCase().includes('volume')
@@ -404,7 +406,7 @@ export default function Bestsellers({
                       variantName = volumeAttr.values[0].plainText;
                     }
                   }
-                  
+
                   return {
                     node: {
                       ...variantNode,
@@ -416,7 +418,7 @@ export default function Bestsellers({
               collections: productNode.collections || []
             };
           });
-          
+
           // Фильтруем товары по этапу на клиенте
           const filteredByEtap = formattedProducts.filter(product => {
             // Находим этап товара из атрибутов
@@ -431,26 +433,26 @@ export default function Bestsellers({
                     const slug = (value.slug || '').toLowerCase();
                     const name = (value.name || '').toLowerCase();
                     const plainText = (value.plainText || '').toLowerCase();
-                    
+
                     if (slug) {
                       if (slug.includes('etap-1') || slug.includes('ochishchenie')) return 'etap-1';
                       if (slug.includes('etap-2') || slug.includes('tonizatsiia')) return 'etap-2';
                       if (slug.includes('etap-31') || slug.includes('etap-3-1') || slug.includes('etap-3.1')) return 'etap-3-1';
                       if (slug.includes('etap-3') || slug.includes('etap-30') || slug.includes('pitanie') || slug.includes('uvlazhnenie')) return 'etap-3';
                     }
-                    
+
                     if (name) {
                       if (name.includes('3.1') || name.includes('3-1') || name.includes('etap-3-1') || name.includes('etap-31')) return 'etap-3-1';
-                      if ((name.includes('питание') || name.includes('увлажнение') || name.includes('этап 3') || name.includes('etap-3')) && 
-                          !name.includes('3.1') && !name.includes('3-1')) return 'etap-3';
+                      if ((name.includes('питание') || name.includes('увлажнение') || name.includes('этап 3') || name.includes('etap-3')) &&
+                        !name.includes('3.1') && !name.includes('3-1')) return 'etap-3';
                       if (name.includes('очищение') || name.includes('этап 1') || name.includes('etap-1')) return 'etap-1';
                       if (name.includes('тонизация') || name.includes('этап 2') || name.includes('etap-2')) return 'etap-2';
                     }
-                    
+
                     if (plainText) {
                       if (plainText.includes('3.1') || plainText.includes('3-1') || plainText.includes('etap-3-1') || plainText.includes('etap-31')) return 'etap-3-1';
-                      if ((plainText.includes('питание') || plainText.includes('увлажнение') || plainText.includes('этап 3') || plainText.includes('etap-3')) && 
-                          !plainText.includes('3.1') && !plainText.includes('3-1')) return 'etap-3';
+                      if ((plainText.includes('питание') || plainText.includes('увлажнение') || plainText.includes('этап 3') || plainText.includes('etap-3')) &&
+                        !plainText.includes('3.1') && !plainText.includes('3-1')) return 'etap-3';
                       if (plainText.includes('очищение') || plainText.includes('этап 1') || plainText.includes('etap-1')) return 'etap-1';
                       if (plainText.includes('тонизация') || plainText.includes('этап 2') || plainText.includes('etap-2')) return 'etap-2';
                     }
@@ -461,19 +463,19 @@ export default function Bestsellers({
             })();
             return productEtap === filterByEtap;
           });
-          
+
           // Исключаем товар по slug или id
           const finalProducts = filteredByEtap.filter(product => {
             if (excludeProductSlug && product.slug === excludeProductSlug) return false;
             if (excludeProductId && (product.productId === excludeProductId || product.id === excludeProductId)) return false;
             return true;
           });
-          
+
           if (process.env.NODE_ENV === 'development') {
             console.log('[Bestsellers] Отформатировано товаров:', formattedProducts.length);
             console.log('[Bestsellers] Отфильтровано по этапу', filterByEtap, ':', finalProducts.length);
           }
-          
+
           setAllProducts(finalProducts);
         } catch (err) {
           console.error('[Bestsellers] Ошибка загрузки всех товаров через GraphQL:', err);
@@ -482,7 +484,7 @@ export default function Bestsellers({
           setLoadingAllProducts(false);
         }
       };
-      
+
       loadAllProducts();
     } else {
       setAllProducts([]);
@@ -596,7 +598,7 @@ export default function Bestsellers({
   React.useEffect(() => {
     if (isSectionLoaded && hasProducts) {
       let retryTimer: NodeJS.Timeout | null = null;
-      
+
       // Небольшая задержка, чтобы слайдер успел инициализироваться
       const timer = setTimeout(() => {
         // Находим элемент с точками и добавляем класс
@@ -613,7 +615,7 @@ export default function Bestsellers({
           }, 200);
         }
       }, 100);
-      
+
       return () => {
         clearTimeout(timer);
         if (retryTimer) {
@@ -624,9 +626,9 @@ export default function Bestsellers({
   }, [isSectionLoaded, hasProducts]);
 
   return (
-    <section 
+    <section
       ref={sectionRef}
-      className={`${styles.bestsellers} ${isProductPage ? styles.productPage : ''} ${isCatalogPage ? styles.catalogPage : ''} ${isSectionLoaded ? styles.sectionAnimated : ''}`} 
+      className={`${styles.bestsellers} ${isProductPage ? styles.productPage : ''} ${isCatalogPage ? styles.catalogPage : ''} ${isProfilePage ? styles.profilePage : ''} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
       style={isOversize ? undefined : {}}
       aria-label="Секция бестселлеров"
     >
@@ -636,7 +638,7 @@ export default function Bestsellers({
             Бестселлеры
           </h2>
         )}
-        
+
         {isLoading && !hasProducts && (
           <div role="status" aria-live="polite">
             <h4>Загрузка</h4>
@@ -646,7 +648,7 @@ export default function Bestsellers({
         {hasError && (
           <div role="alert" className={styles.errorMessage}>
             <p>{sliderError}</p>
-            <button 
+            <button
               onClick={() => {
                 setSliderError(null);
                 window.location.reload();
@@ -659,7 +661,7 @@ export default function Bestsellers({
         )}
 
         {!hasError && hasProducts && (
-          <div 
+          <div
             ref={sliderWrapperRef}
             className={`${styles.sliderWrapper} ${isDragging ? styles.isDragging : ''}`}
             onMouseDown={(e) => {
@@ -676,7 +678,7 @@ export default function Bestsellers({
                 const deltaX = Math.abs(e.clientX - dragStartRef.current.x);
                 const deltaY = Math.abs(e.clientY - dragStartRef.current.y);
                 const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-                
+
                 // Если смещение больше 5px, считаем это драгом
                 if (distance > 5) {
                   setIsDragging(true);
@@ -710,12 +712,12 @@ export default function Bestsellers({
               // Проверяем горизонтальную прокрутку (deltaX) или Shift + вертикальная прокрутка
               const isHorizontalScroll = Math.abs(e.deltaX) > Math.abs(e.deltaY);
               const isShiftScroll = e.shiftKey && Math.abs(e.deltaY) > 0;
-              
+
               if (isHorizontalScroll || isShiftScroll) {
                 e.preventDefault();
                 e.stopPropagation();
                 setIsDragging(true);
-                
+
                 if (sliderRef.current) {
                   const delta = isHorizontalScroll ? e.deltaX : e.deltaY;
                   if (delta > 0) {
@@ -724,7 +726,7 @@ export default function Bestsellers({
                     sliderRef.current.slickPrev();
                   }
                 }
-                
+
                 // Сбрасываем флаг после прокрутки
                 setTimeout(() => {
                   setIsDragging(false);
@@ -733,39 +735,39 @@ export default function Bestsellers({
               }
             }}
           >
-            <Slider 
+            <Slider
               ref={sliderRef}
-              {...settings} 
+              {...settings}
               className={styles.slider}
               aria-label="Карусель товаров"
             >
               {filteredProducts.map((product, index) => (
-                <div 
+                <div
                   key={product.id || `product-${index}`}
                   role="group"
                   aria-label={`Товар ${index + 1} из ${filteredProducts.length}`}
                 >
-                  <BestSellerProductCard 
-                    product={product} 
+                  <BestSellerProductCard
+                    product={product}
                     loading={isLoading}
                     isDragging={isDragging}
                     isDraggingRef={isDraggingRef}
                   />
                 </div>
-            ))}
-          </Slider>
+              ))}
+            </Slider>
           </div>
         )}
-        
+
         {!hasError && !isLoading && !hasProducts && sourceProducts.length > 0 && (
           <div role="status" aria-live="polite">
-          <p>Товары не найдены для выбранного этапа</p>
+            <p>Товары не найдены для выбранного этапа</p>
           </div>
         )}
-        
+
         {!hasError && !isLoading && sourceProducts.length === 0 && (
           <div role="status" aria-live="polite">
-          <p>Товары не найдены</p>
+            <p>Товары не найдены</p>
           </div>
         )}
       </Layout>

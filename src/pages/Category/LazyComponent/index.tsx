@@ -137,7 +137,7 @@ const LazyComponent: React.FC = () => {
       <p className={styles.title}>{items.find(item => item.category.slug === slug)?.name}</p>
       {/* 1-й уровень табов: «ВСЕ» + подкатегории */}
       <TabBar
-        tabs={['ВСЕ', ...tabs.map(t => t.name)]}
+        tabs={['ВСЕ', ...tabs.map(t => t.name).reverse()]}
         active={activeTabSlug === 'ALL' ? 'ВСЕ' : tabs.find(t => t.slug === activeTabSlug)?.name}
         onChange={handleTopTabChange}
       />

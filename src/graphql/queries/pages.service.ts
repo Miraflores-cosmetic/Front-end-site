@@ -84,6 +84,8 @@ export interface PageNode {
     values?: Array<{
       name?: string;
       plainText?: string;
+      value?: string;
+      richText?: string;
     }>;
     fileValue?: {
       url: string;
@@ -124,6 +126,13 @@ export async function getPageBySlug(slug: string): Promise<PageNode | null> {
             id
             slug
             name
+          }
+          values {
+            id
+            name
+            value
+            richText
+            plainText
           }
           ... on AssignedFileAttribute {
             fileValue: value {
@@ -198,6 +207,186 @@ export async function getPageBySlug(slug: string): Promise<PageNode | null> {
   }
 
   return data.page ?? null;
+}
+
+export interface FAQData {
+  id: number;
+  question: string;
+  answer: string;
+  image?: string;
+  slug?: string;
+  sortOrder?: number;
+}
+
+/**
+ * Получить все страницы типа "FAQ" (вопросы и ответы)
+ */
+export async function getAllFAQs(): Promise<FAQData[]> {
+  try {
+    // 1. Найти тип страницы "FAQ"
+    const pageTypeQuery = `
+      query GetFAQPageType {
+        pageTypes(first: 100) {
+          edges {
+            node {
+              id
+              name
+              slug
+            }
+          }
+        }
+      }
+    `;
+
+    interface PageTypesConnection {
+      pageTypes: {
+        edges: {
+          node: {
+            id: string;
+            name: string;
+            slug: string;
+          };
+        }[];
+      };
+    }
+
+    const pageTypesData = await graphqlRequest<PageTypesConnection>(pageTypeQuery);
+    const faqPageType = pageTypesData.pageTypes.edges.find(
+      (e) =>
+        e.node.name.toLowerCase() === 'faq' ||
+        e.node.slug.toLowerCase() === 'faq'
+    );
+
+    if (!faqPageType) {
+      console.warn('[getAllFAQs] ⚠️ Page type "FAQ" not found');
+      return [];
+    }
+
+    // 2. Получить все страницы этого типа
+    const pagesQuery = `
+      query GetAllFAQs($first: Int!, $pageTypeId: ID!) {
+        pages(first: $first, where: { pageType: { eq: $pageTypeId } }) {
+          edges {
+            node {
+              id
+              slug
+              title
+              content
+              isPublished
+              metadata {
+                key
+                value
+              }
+              assignedAttributes {
+                attribute {
+                  id
+                  slug
+                  name
+                }
+                ... on AssignedFileAttribute {
+                  fileValue: value {
+                    url
+                  }
+                }
+                ... on AssignedPlainTextAttribute {
+                  textValue: value
+                }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const pagesData = await graphqlRequest<StepsPagesConnection>(pagesQuery, {
+      first: 100,
+      pageTypeId: faqPageType.node.id,
+    });
+
+    // 3. Преобразовать данные
+    const items = pagesData.pages.edges
+      .filter((e) => e.node.isPublished === true)
+      .map((e, index) => {
+        const node = e.node;
+
+        let question = '';
+        let answer = '';
+        let image = '';
+
+        // Parsing attributes
+        for (const attr of node.assignedAttributes || []) {
+          const attrSlug = attr.attribute?.slug || '';
+          const attrName = attr.attribute?.name?.toLowerCase() || '';
+          const val = attr.textValue || '';
+
+          // Question
+          if (attrSlug.includes('question') || attrSlug.includes('vopros') || attrName.includes('вопрос')) {
+            if (val) question = val;
+          }
+          // Answer
+          if (attrSlug.includes('answer') || attrSlug.includes('otvet') || attrName.includes('ответ')) {
+            if (val) answer = val;
+          }
+          // Image
+          if (attr.fileValue?.url) {
+            image = normalizeMediaUrl(attr.fileValue.url);
+          }
+        }
+
+        // Fallback checks
+        if (!question && node.title && !node.title.toLowerCase().startsWith('вопрос')) {
+          // Only use title if it not generic "Question 2"
+          question = node.title;
+        }
+
+        // Parse content field for answer if no attribute found
+        if (!answer && node.content) {
+          try {
+            const parsed = typeof node.content === 'string' ? JSON.parse(node.content) : node.content;
+            if (parsed?.blocks) {
+              answer = parsed.blocks.map((b: any) => b.data?.text).join(' ');
+            } else if (typeof node.content === 'string') {
+              answer = node.content;
+            }
+          } catch (e) {
+            answer = typeof node.content === 'string' ? node.content : '';
+          }
+        }
+
+        // Sort order from metadata
+        const metaSort = node.metadata?.find(m => m.key === 'sortOrder' || m.key === 'order')?.value;
+        const sortOrder = metaSort ? parseInt(metaSort, 10) : undefined;
+
+        return {
+          id: index,
+          question,
+          answer,
+          image,
+          slug: node.slug,
+          sortOrder
+        };
+      })
+      .filter(item => item.question && item.answer) // Filter out incomplete items
+      .sort((a, b) => {
+        // Sort by explicit order, then by slug number
+        if (a.sortOrder !== undefined && b.sortOrder !== undefined) return a.sortOrder - b.sortOrder;
+        if (a.sortOrder !== undefined) return -1;
+        if (b.sortOrder !== undefined) return 1;
+
+        // Try to extract number from slug "vopros-2"
+        const getNum = (s?: string) => {
+          const m = s?.match(/(\d+)/);
+          return m ? parseInt(m[1], 10) : 999;
+        };
+        return getNum(a.slug) - getNum(b.slug);
+      });
+
+    return items;
+
+  } catch (error) {
+    console.error('[getAllFAQs] ❌ GraphQL error:', error);
+    return [];
+  }
 }
 
 export interface ProgressBarCartModel {

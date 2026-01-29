@@ -70,18 +70,21 @@ export async function createProductReview(input: ProductReviewCreateInput): Prom
 
     if (input.image1) {
       formData.append(`${fileIndex}`, input.image1);
-      map[`${fileIndex}`] = ['variables.input.image_1'];
+      map[`${fileIndex}`] = ['variables.input.image1'];
       fileIndex++;
     }
 
     if (input.image2) {
       formData.append(`${fileIndex}`, input.image2);
-      map[`${fileIndex}`] = ['variables.input.image_2'];
+      map[`${fileIndex}`] = ['variables.input.image2'];
     }
 
     formData.append('map', JSON.stringify(map));
 
-    const endpoint = import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:8000/graphql/';
+    // Та же логика, что в client.ts: в dev — относительный путь через прокси (без CORS), в production — полный URL
+    const isDev = import.meta.env.DEV;
+    const endpoint = isDev ? '/graphql/' : String(import.meta.env.VITE_GRAPHQL_URL || '');
+    if (!endpoint) throw new Error('VITE_GRAPHQL_URL is not defined');
     const token = localStorage.getItem('token');
 
     if (!token) {

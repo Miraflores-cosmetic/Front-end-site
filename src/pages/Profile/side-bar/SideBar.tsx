@@ -1,7 +1,7 @@
 import React from 'react';
 import styles from './SideBar.module.scss';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
-import krem from '@/assets/images/krem.webp';
+import krem from '@/assets/images/Cream.png';
 import girlwithsmile from '@/assets/images/girlsmile.webp';
 import Bestsellers from '@/components/bestsellers/Bestsellers';
 

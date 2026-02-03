@@ -6,7 +6,7 @@ import Karta from '@/assets/icons/Karta.svg';
 import SberPay from '@/assets/icons/SberPay.svg';
 import SBP from '@/assets/icons/SBP.svg';
 import Miraflores_logo from '@/assets/icons/Miraflores_logo.svg';
-import krem from '@/assets/images/krem.webp';
+import krem from '@/assets/images/Cream.png';
 
 import CustomCheckbox from '@/components/custom-checkBox/CustomCheckbox';
 import CustomButton from '@/components/custom-button/CustomButton';

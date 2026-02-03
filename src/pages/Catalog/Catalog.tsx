@@ -6,7 +6,7 @@ import styles from './Catalog.module.scss';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
-import krem from '@/assets/images/krem.webp';
+import krem from '@/assets/images/Cream.png';
 import krem2 from '@/assets/images/krem2.webp';
 import Ellipse from '@/assets/images/Ellipse.webp';
 import footerImageCatalog from '@/assets/images/footerImageCatalog.webp';

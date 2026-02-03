@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import styles from './AddComment.module.scss';
-import krem from '@/assets/images/krem.webp';
+import creamImage from '@/assets/images/Cream.png';
 
 import star from '@/assets/icons/star.svg';
 import emptyStar from '@/assets/icons/emptyStar.svg';
@@ -22,7 +22,7 @@ const CommentCart: React.FC = () => {
     <article className={styles.commentCart}>
       <div className={styles.imgNameWrapper}>
         <div className={styles.imageWrapper}>
-          <img src={krem} alt='krem' className={styles.image} />
+          <img src={creamImage} alt='Крем' className={styles.image} />
         </div>
         <div className={styles.nameWrapper}>
           <p className={styles.title}>Цветочный мист с экстрактами розы</p>

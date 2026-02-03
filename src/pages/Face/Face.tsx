@@ -6,7 +6,7 @@ import footerImage from '@/assets/images/footerImage.webp';
 import TabBar from '@/components/tab-bar/TabBar';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import krem from '@/assets/images/krem.webp';
+import krem from '@/assets/images/Cream.png';
 import kosmetika from '@/assets/images/kosmetika.webp';
 
 import girlwithsmile from '@/assets/images/girlsmile.webp';

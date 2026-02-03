@@ -159,6 +159,7 @@
           width: 196px;
           height: 196px;
           object-fit: cover;
+          object-position: center;
           z-index: 2;
         }
         .leaf {
@@ -206,7 +207,7 @@
         width: 612px;
         height: 480px;
         object-fit: cover;
-        object-position: bottom;
+        object-position: center;
         display: block;
         @media (max-width: 1335px) {
           width: 520px;

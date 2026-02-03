@@ -1,7 +1,7 @@
 import React, { JSX, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import styles from './CatalogList.module.scss';
-import kremgroup from '@/assets/images/kremgroup.webp';
+import kremgroup from '@/assets/images/kremGroupElipse.webp';
 import hear from '@/assets/images/hear.webp';
 import etap3 from '@/assets/images/etap3.webp';
 import etap2 from '@/assets/images/etap2.webp';

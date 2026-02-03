@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import styles from './Sets.module.scss';
 import arrowToRight from '@/assets/icons/ArrowToRight.svg';
-import krem from '@/assets/images/krem.webp';
+import creamImage from '@/assets/images/Cream.png';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { Link } from 'react-router-dom';
 import { getCollectionById, CollectionProduct } from '@/graphql/queries/collection.service';
@@ -47,7 +47,7 @@ const LeftBlock: React.FC<{ isMobile: boolean }> = ({ isMobile }) => (
 
     {isMobile && (
       <div className={styles.rightWrapper}>
-        <img src={krem} alt='Крем' />
+        <img src={creamImage} alt='Крем' />
       </div>
     )}
 
@@ -81,7 +81,7 @@ const RightBlock: React.FC<{ setImage?: string; isMobile: boolean }> = ({ setIma
             className={styles.setImage}
           />
         ) : (
-          <img src={krem} alt='Крем' />
+          <img src={creamImage} alt='Крем' />
         )}
       </div>
     </div>

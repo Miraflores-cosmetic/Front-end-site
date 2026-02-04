@@ -13,6 +13,8 @@ export interface CheckoutLine {
   oldPrice?: number | null;
   discount?: number | null;
   size?: string;
+  /** Подарок по программе благодарности — не удаляется из корзины */
+  isGift?: boolean;
 }
 // ------------------------------------
 // Checkout State Storage

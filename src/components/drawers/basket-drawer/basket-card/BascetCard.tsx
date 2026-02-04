@@ -22,7 +22,8 @@ const BasketCard: React.FC<BasketCardProps> = ({
   quantity,
   discount,
   oldPrice,
-  price
+  price,
+  isGift = false,
 }) => {
   const isMobile = useScreenMatch(550); // Using 550 as requested
   const dispatch = useDispatch();
@@ -42,9 +43,10 @@ const BasketCard: React.FC<BasketCardProps> = ({
           <div className={styles.topInfo}>
             <div className={styles.productNameSizeBlock}>
               <p className={styles.productName}>{title}</p>
-              <p className={styles.productSize}>{size}</p>
+              {isGift && <p className={styles.productSize}>Подарок</p>}
+              {!isGift && <p className={styles.productSize}>{size}</p>}
 
-              {isMobile && (
+              {isMobile && !isGift && (
                 <div className={styles.mobilePriceRow}>
                   <p className={styles.toMobile}>
                     {Math.round(price).toLocaleString('ru-RU') + '₽'}
@@ -59,54 +61,72 @@ const BasketCard: React.FC<BasketCardProps> = ({
                   )}
                 </div>
               )}
+              {isMobile && isGift && (
+                <div className={styles.mobilePriceRow}>
+                  <p className={styles.toMobile}>Подарок</p>
+                </div>
+              )}
             </div>
           </div>
 
-          <div className={styles.bottomInfo}>
-            {Boolean(quantity > 1) && (
+          {!isGift && (
+            <div className={styles.bottomInfo}>
+              {Boolean(quantity > 1) && (
+                <img
+                  src={minus}
+                  alt='minus'
+                  className={styles.trashImage}
+                  onClick={() => dispatch(decreaseQuantity(variantId))}
+                />
+              )}
+              {Boolean(quantity < 2) && (
+                <img
+                  src={trash}
+                  alt='trash'
+                  className={styles.trashImage}
+                  onClick={() => dispatch(removeItemFromCart(variantId))}
+                />
+              )}
+              <p className={styles.trashCount}>{quantity}</p>
               <img
-                src={minus}
-                alt='minus'
-                className={styles.trashImage}
-                onClick={() => dispatch(decreaseQuantity(variantId))}
+                src={add}
+                alt='add'
+                className={styles.addImage}
+                onClick={() => dispatch(increaseQuantity(variantId))}
               />
-            )}
-            {Boolean(quantity < 2) && (
-              <img
-                src={trash}
-                alt='trash'
-                className={styles.trashImage}
-                onClick={() => dispatch(removeItemFromCart(variantId))}
-              />
-            )}
-            <p className={styles.trashCount}>{quantity}</p>
-            <img
-              src={add}
-              alt='add'
-              className={styles.addImage}
-              onClick={() => dispatch(increaseQuantity(variantId))}
-            />
-          </div>
+            </div>
+          )}
+          {isGift && (
+            <div className={styles.bottomInfo}>
+              <p className={styles.trashCount}>{quantity}</p>
+            </div>
+          )}
         </div>
 
         <div className={styles.baskePrice}>
-          <p
-            className={
-              Boolean(discount == null || discount === 0) ? styles.discountEmpty : styles.discount
-            }
-          >
-            {Boolean(discount == null || discount === 0) ? ' ' : '-' + discount + '%'}
-          </p>
-          <div className={styles.fromTo}>
-            {oldPrice && typeof oldPrice === 'number' && oldPrice > 0 && oldPrice > price && (
-              <p className={styles.from}>{Math.round(oldPrice).toLocaleString('ru-RU') + '₽'}</p>
-            )}
-            <p className={styles.to}>{Math.round(price).toLocaleString('ru-RU') + '₽'}</p>
-          </div>
+          {isGift ? (
+            <p className={styles.to}>Подарок</p>
+          ) : (
+            <>
+              <p
+                className={
+                  Boolean(discount == null || discount === 0) ? styles.discountEmpty : styles.discount
+                }
+              >
+                {Boolean(discount == null || discount === 0) ? ' ' : '-' + discount + '%'}
+              </p>
+              <div className={styles.fromTo}>
+                {oldPrice && typeof oldPrice === 'number' && oldPrice > 0 && oldPrice > price && (
+                  <p className={styles.from}>{Math.round(oldPrice).toLocaleString('ru-RU') + '₽'}</p>
+                )}
+                <p className={styles.to}>{Math.round(price).toLocaleString('ru-RU') + '₽'}</p>
+              </div>
+            </>
+          )}
         </div>
       </div>
 
-      {isMobile && (
+      {isMobile && !isGift && (
         <div className={styles.mobileControlsRow}>
           {Boolean(quantity === 1) ? (
             <button
@@ -132,6 +152,11 @@ const BasketCard: React.FC<BasketCardProps> = ({
           >
             <img src={add} alt='increase' />
           </button>
+        </div>
+      )}
+      {isMobile && isGift && (
+        <div className={styles.mobileControlsRow}>
+          <span className={styles.quantityDisplay}>Подарок</span>
         </div>
       )}
     </div>

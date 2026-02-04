@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './BasketDrawer.module.scss';
 import { AppDispatch, RootState } from '@/store/store';
-import blackBasketTrash from '@/assets/icons/blackBasketTrash.svg';
-import whiteBasketTrash from '@/assets/icons/whiteBasketTrash.svg';
 import promocodeIcon from '@/assets/icons/promocode.svg';
 import BasketCard from './basket-card/BascetCard';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,6 +12,8 @@ import { CHANNEL } from '@/graphql/client';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { getProgressBarCartModel } from '@/graphql/queries/pages.service';
 import { useToast } from '@/components/toast/toast';
+import { getApplicableGift } from '@/services/applicableGift.service';
+import { normalizeMediaUrl } from '@/utils/mediaUrl';
 
 const BasketDrawer: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -40,6 +40,14 @@ const BasketDrawer: React.FC = () => {
   const [isPromoInputOpen, setIsPromoInputOpen] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [isApplying, setIsApplying] = useState(false);
+  const [giftLine, setGiftLine] = useState<{
+    variantId: string;
+    title: string;
+    thumbnail: string;
+    quantity: number;
+    price: number;
+    isGift: true;
+  } | null>(null);
   const toast = useToast();
 
   useEffect(() => {
@@ -51,7 +59,6 @@ const BasketDrawer: React.FC = () => {
     let totalTo = 0;
 
     lines.forEach(item => {
-      // Используем oldPrice только если он существует и больше текущей цены
       const itemOldPrice = item.oldPrice && item.oldPrice > item.price ? item.oldPrice : item.price;
       totalFrom += itemOldPrice * item.quantity;
       totalTo += (item.price ?? 0) * item.quantity;
@@ -59,6 +66,31 @@ const BasketDrawer: React.FC = () => {
 
     setTotalFromPrice(totalFrom);
     setTotalToPrice(totalTo);
+  }, [lines]);
+
+  useEffect(() => {
+    let totalTo = 0;
+    lines.forEach(item => { totalTo += (item.price ?? 0) * item.quantity; });
+    if (totalTo < 5000) {
+      setGiftLine(null);
+      return;
+    }
+    getApplicableGift(totalTo, CHANNEL).then((res) => {
+      if (res.applicable && res.variantId && res.productName) {
+        setGiftLine({
+          variantId: res.variantId,
+          title: res.productName,
+          thumbnail: normalizeMediaUrl(res.thumbnailUrl || ''),
+          quantity: res.quantity ?? 1,
+          price: 0,
+          isGift: true,
+        });
+      } else {
+        setGiftLine(null);
+      }
+    }).catch(() => {
+      setGiftLine(null);
+    });
   }, [lines]);
 
   const handleOrder = () => {
@@ -151,7 +183,20 @@ const BasketDrawer: React.FC = () => {
 
         <div className={styles.basketList}>
           {lines.length > 0 ? (
-            lines.map((item, idx) => <BasketCard key={idx} {...item} />)
+            <>
+              {lines.map((item, idx) => <BasketCard key={item.variantId} {...item} />)}
+              {giftLine && (
+                <BasketCard
+                  key={giftLine.variantId}
+                  variantId={giftLine.variantId}
+                  title={giftLine.title}
+                  thumbnail={giftLine.thumbnail}
+                  quantity={giftLine.quantity}
+                  price={giftLine.price}
+                  isGift={true}
+                />
+              )}
+            </>
           ) : (
             <p className={styles.sum}>Корзина пуста</p>
           )}
@@ -207,10 +252,10 @@ const BasketDrawer: React.FC = () => {
             )}
             <p className={styles.itemCount}>
               <span className={styles.desktopSumLabel}>Сумма • </span>
-              {lines.length}{' '}
-              {lines.length === 1
+              {lines.length + (giftLine ? 1 : 0)}{' '}
+              {lines.length + (giftLine ? 1 : 0) === 1
                 ? 'товар'
-                : lines.length > 1 && lines.length < 5
+                : (lines.length + (giftLine ? 1 : 0)) > 1 && (lines.length + (giftLine ? 1 : 0)) < 5
                   ? 'товара'
                   : 'товаров'}
             </p>

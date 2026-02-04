@@ -70,6 +70,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: true
       },
+      '/api/checkout': {
+        target: 'https://miraflores-shop.com',
+        changeOrigin: true,
+        secure: true,
+      },
       '/api/cdek': {
         target: 'http://localhost:3001',
         changeOrigin: true,
@@ -87,11 +92,6 @@ export default defineConfig({
         secure: false
       },
       '/auth': { // Proxy for auth endpoints
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false
-      },
-      '/api/checkout': { // Proxy for checkout endpoints
         target: 'http://localhost:8000',
         changeOrigin: true,
         secure: false

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import styles from './Face.module.scss';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footerImage.webp';
+import footerImage from '@/assets/images/footer-img.png';
 import TabBar from '@/components/tab-bar/TabBar';
 import { motion, AnimatePresence } from 'framer-motion';
 

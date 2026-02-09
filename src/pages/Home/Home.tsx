@@ -10,7 +10,7 @@ import { GratitudeProgram } from '@/components/gratitude-program/GratitudeProgra
 import { Awards } from '@/components/awards/Awards';
 import { HeroSlider } from '@/components/hero-slider/HeroSlider';
 import { FAQBlock } from '@/components/faq-block/FAQBlock';
-import footerImage from '@/assets/images/footerImage.webp';
+import footerImage from '@/assets/images/footer-img.png';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
 import { useScreenMatch } from '@/hooks/useScreenMatch';

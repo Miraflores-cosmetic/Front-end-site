@@ -2,7 +2,7 @@ import React from 'react';
 import styles from './Promocodes.module.scss';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footerImage.webp';
+import footerImage from '@/assets/images/footer-img.png';
 
 const Promocodes: React.FC = () => {
   return (

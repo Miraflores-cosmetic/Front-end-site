@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import styles from './OrderSuccess.module.scss';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footerImage.webp';
+import footerImage from '@/assets/images/footer-img.png';
 import { completeCheckout } from '@/services/checkout.service';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/store/store';

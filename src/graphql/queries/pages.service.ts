@@ -81,15 +81,12 @@ export interface PageNode {
       slug: string;
       name: string;
     };
-    values?: Array<{
-      name?: string;
-      plainText?: string;
-      value?: string;
-      richText?: string;
-    }>;
+    /** Для rich text (Editor.js) — фрагмент AssignedTextAttribute */
+    richTextValue?: unknown;
     fileValue?: {
       url: string;
     };
+    value?: { url: string };
     textValue?: string;
   }>;
 }
@@ -127,13 +124,6 @@ export async function getPageBySlug(slug: string): Promise<PageNode | null> {
             slug
             name
           }
-          values {
-            id
-            name
-            value
-            richText
-            plainText
-          }
           ... on AssignedFileAttribute {
             fileValue: value {
               url
@@ -141,6 +131,9 @@ export async function getPageBySlug(slug: string): Promise<PageNode | null> {
           }
           ... on AssignedPlainTextAttribute {
             textValue: value
+          }
+          ... on AssignedTextAttribute {
+            richTextValue: value
           }
         }
       }
@@ -185,6 +178,9 @@ export async function getPageBySlug(slug: string): Promise<PageNode | null> {
             }
             ... on AssignedPlainTextAttribute {
               textValue: value
+            }
+            ... on AssignedTextAttribute {
+              richTextValue: value
             }
           }
         }

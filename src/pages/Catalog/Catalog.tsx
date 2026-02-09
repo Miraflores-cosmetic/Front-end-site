@@ -9,7 +9,7 @@ import Footer from '@/components/Footer/Footer';
 import krem from '@/assets/images/Cream.png';
 import krem2 from '@/assets/images/krem2.webp';
 import Ellipse from '@/assets/images/Ellipse.webp';
-import footerImageCatalog from '@/assets/images/footerImageCatalog.webp';
+import footerImage from '@/assets/images/footer-img.png';
 import kremgroup from '@/assets/images/kremGroupElipse.webp';
 import girlwithsmile from '@/assets/images/girlsmile.webp';
 import Bestsellers from '@/components/bestsellers/Bestsellers';
@@ -54,7 +54,7 @@ const Catalog: React.FC = () => {
           <CatalogList />
           <Bestsellers isCatalogPage />
         </Layout>
-        <Footer footerImage={footerImageCatalog} />
+        <Footer footerImage={footerImage} />
       </main>
     </>
   );

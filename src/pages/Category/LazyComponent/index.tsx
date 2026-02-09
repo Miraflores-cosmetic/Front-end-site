@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import styles from '../Category.module.scss';
 import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footerImage.webp';
+import footerImage from '@/assets/images/footer-img.png';
 import TabBar from '@/components/tab-bar/TabBar';
 import { AnimatePresence } from 'framer-motion';
 import { Link, useParams } from 'react-router-dom';

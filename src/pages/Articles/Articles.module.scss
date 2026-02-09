@@ -1,29 +1,25 @@
 @use '@/style/variables.scss' as *;
 
 .articlesContainer {
-  padding: 0 32px;
   min-height: 100vh;
   background-color: $white;
   overflow-x: hidden;
-
-  /* Скрываем скроллбар */
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE 10+ */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   max-width: 1536px;
   margin: 0 auto;
-  @media (max-width: 450px) {
-    padding: 0 12px;
-  }
 
   .titleContainer {
     display: flex;
     flex-direction: column;
     gap: 24px;
+    margin-top: 24px;
     margin-bottom: 64px;
 
     @media (max-width: 450px) {
       margin-bottom: 16px;
     }
+
     .title {
       font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
       font-weight: 300;
@@ -34,27 +30,19 @@
         font-size: 24px;
       }
     }
+
     .desc {
       color: #297230;
       font-size: 20px;
       font-weight: 600;
+      text-transform: uppercase;
+
       @media (max-width: 450px) {
         font-size: 15px;
       }
     }
   }
-  .socialWrapper {
-    display: flex;
-    gap: 24px;
-    .socialImage {
-      width: 20px;
-      height: 20px;
-      @media (max-width: 700px) {
-        width: 16px;
-        height: 16px;
-      }
-    }
-  }
+
   .articlesWrapper {
     margin-bottom: 249px;
     margin-top: 100px;

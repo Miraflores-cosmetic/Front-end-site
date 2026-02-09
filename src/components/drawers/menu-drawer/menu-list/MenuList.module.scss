@@ -11,6 +11,15 @@
     display: flex;
     gap: 24px;
 
+    &.titleWrapperClickable {
+      cursor: pointer;
+      transition: opacity 0s;
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+
     .menuTitle {
       font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
       font-weight: 300;
@@ -103,6 +112,9 @@
       text-transform: uppercase;
 
       a {
+        font-family: 'Onest', 'Avenir Next', sans-serif;
+        font-weight: 300;
+        text-transform: uppercase;
         color: black;
         text-decoration: none;
         font-size: 14px;

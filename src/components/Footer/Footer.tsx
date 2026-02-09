@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import styles from './Footer.module.scss';
 import footerLogo from '@/assets/icons/footerLogo.svg';
 import lineTo from '@/assets/icons/lineTofooter.svg';
@@ -20,20 +19,17 @@ const menuData = {
       { label: 'Каталог', href: '/catalog/', isExternal: false },
       { label: 'Наша история', href: '/about', isExternal: false },
       { label: 'Полезные статьи', href: '/about/articles', isExternal: false },
-      { label: 'Программа благодарности', href: '/gratitude-program', isExternal: false },
-      { label: 'Подарочные сертификаты', href: '/gift-certificates', isExternal: false },
-      { label: 'Промокоды', href: '/promocodes', isExternal: false }
+      { label: 'Программа благодарности', href: '/gratitude-program', isExternal: false }
     ]
   },
   info: {
     title: 'Информация',
     items: [
-      { label: 'Условия пользования', href: '/terms', isExternal: false },
+      { label: 'Оферта и условия пользования', href: '/terms', isExternal: false },
       { label: 'Политика конфиденциальности', href: '/privacy', isExternal: false },
       { label: 'Оплата и доставка', href: '/payment-delivery', isExternal: false },
       { label: 'FAQ', href: '/faq', isExternal: false },
-      { label: 'Контакты', href: '/contacts', isExternal: false },
-      { label: 'Реквизиты', href: '/requisites', isExternal: false }
+      { label: 'Контакты', href: '/contacts', isExternal: false }
     ]
   },
   support: {
@@ -41,13 +37,18 @@ const menuData = {
     items: [
       { label: 'Статус заказа', href: '/profile', isExternal: false },
       { label: 'info@miraflores.ru', href: 'mailto:info@miraflores.ru', isExternal: true },
-      { label: '+7 (800) 890 78 99', href: 'tel:+78008907899', isExternal: true },
+      {
+        label: '+7 (800) 890 78 99',
+        href: 'tel:+78008907899',
+        isExternal: true,
+        title: 'Нажимая на соответствующую кнопку и/или переходя по ссылке, я выражаю своё согласие на обработку моих персональных данных в соответствии с Политикой конфиденциальности.'
+      },
       { label: 'Телеграм →', href: 'https://t.me/Miraflores_Cosmetics_Bot', isExternal: true }
     ]
   }
 };
 
-const socialLinks = ['Телеграмм канал', 'Pinterest', '© Miraflores 2025'];
+const socialLinks = ['Телеграмм канал', 'Pinterest', '© Miraflores 2026'];
 
 const Footer: React.FC<FooterProps> = ({ footerImage }) => {
   const isTablet = useScreenMatch(1024);
@@ -58,7 +59,7 @@ const Footer: React.FC<FooterProps> = ({ footerImage }) => {
     <footer className={styles.footer} style={getHeaderStyle(location.pathname, isSmallMobile)}>
       {!isTablet && (
         <div className={styles.footerLeft}>
-          <img src={footerImage} alt='footer' />
+          <img src={footerImage} alt="footer" className={styles.footerBgImage} />
           <img src={footerLogo} alt='logo' />
         </div>
       )}
@@ -77,7 +78,7 @@ const Footer: React.FC<FooterProps> = ({ footerImage }) => {
                 {text}
               </p>
             ))}
-            <Link to="/promocodes" className={styles.bimoTxt}>Промокоды</Link>
+            <span className={styles.bimoTxt}>тут промокоды</span>
             <img src={lineTo} className={styles.lineTo} alt='line' />
           </div>
         </div>
@@ -86,7 +87,7 @@ const Footer: React.FC<FooterProps> = ({ footerImage }) => {
           <div className={styles.mobileContainer}>
             <div className={styles.mobileLeft}>
               <FooterMenu {...menuData.navigation} />
-              <Link to="/promocodes" className={styles.bimoTxtMobile}>Промокоды</Link>
+              <span className={styles.bimoTxtMobile}>тут промокоды</span>
               <img src={lineToMobile} className={styles.lineToMobile} alt='line' />
             </div>
 

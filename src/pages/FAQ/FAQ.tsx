@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import styles from './FAQ.module.scss';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footerImage.webp';
+import footerImage from '@/assets/images/footer-img.png';
 import { FAQBlock } from '@/components/faq-block/FAQBlock';
 
 const FAQ: React.FC = () => {

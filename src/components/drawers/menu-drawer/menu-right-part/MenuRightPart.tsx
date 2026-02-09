@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import styles from './MenuRightPart.module.scss';
-import centerImageMenu from '@/assets/images/centerImageMenu.webp';
+import centerImageMenu from '@/assets/images/centerImageMenu.png';
 import lineTo from '@/assets/icons/linToMenu.svg';
 import { BestSellerProductCard } from '@/components/bestsellers/bestSellerCard';
 import { BestSellersProduct, ProductVariant } from '@/types/products';
@@ -244,7 +244,7 @@ const MenuRightPart: React.FC = () => {
         )}
       </div>
       <div className={styles.centerImageContainer}>
-        <img src={centerImageMenu} alt='centerImageMenu' />
+        <img src={centerImageMenu} alt='centerImageMenu' width={188} height={216} />
         <button 
           onClick={() => {
             window.open('https://t.me/Miraflores_Cosmetics_Bot', '_blank', 'noopener,noreferrer');

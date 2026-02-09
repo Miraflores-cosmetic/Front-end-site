@@ -43,11 +43,19 @@ const MenuList: React.FC<MenuListProps> = ({ title, items, withColor, link }) =>
     }
   };
 
+  const isTitleClickable = Boolean(link);
+
   return (
     <div className={styles.menu}>
-      <div className={styles.titleWrapper}>
+      <div
+        className={`${styles.titleWrapper} ${isTitleClickable ? styles.titleWrapperClickable : ''}`}
+        role={isTitleClickable ? 'button' : undefined}
+        tabIndex={isTitleClickable ? 0 : undefined}
+        onClick={isTitleClickable ? handletoCatalog : undefined}
+        onKeyDown={isTitleClickable ? (e) => e.key === 'Enter' && handletoCatalog() : undefined}
+      >
         <p className={`${styles.menuTitle} ${withColor ? styles.withColor : ''}`}>{title}</p>
-        <img src={arrow} alt='' className={styles.arraw} onClick={handletoCatalog} />
+        {isTitleClickable && <img src={arrow} alt='' className={styles.arraw} />}
       </div>
       {isMobile && title === 'Аккаунт' && (
         <div className={styles.mobileWrapper}>

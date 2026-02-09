@@ -5,6 +5,7 @@ import ArrowToRight from '@/assets/icons/ArrowToRight.svg';
 import { Link } from 'react-router-dom';
 import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
 import { editorJsToHtml } from '@/utils/editorJsParser';
+import { normalizeMediaUrl } from '@/utils/mediaUrl';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
 
 export const GratitudeProgram: React.FC = () => {
@@ -73,37 +74,48 @@ export const GratitudeProgram: React.FC = () => {
                 attr.attribute?.name?.toLowerCase() === `информация о подарке - ${index}`.toLowerCase()
     );
     
-    // Ищем атрибут "Фото подарка - N" (file)
-    const giftPhotoAttr = page.assignedAttributes.find(
-      (attr) => attr.attribute?.slug === `foto-podarka-${index}` ||
-                attr.attribute?.name?.toLowerCase() === `фото подарка - ${index}`.toLowerCase()
-    );
+    // Ищем атрибут "Фото подарка" (file): foto-podarka, foto-podarka-2, …
+    const slugMatch = (slug: string) => {
+      const s = (slug || '').trim();
+      if (index === 1) return s === 'foto-podarka' || s === 'foto-podarka-1';
+      return s === `foto-podarka-${index}`;
+    };
+    const nameMatch = (name: string) => {
+      const n = (name || '').toLowerCase();
+      if (index === 1) return n === 'фото подарка' || n === 'фото подарка - 1';
+      return n === `фото подарка - ${index}`;
+    };
+    const giftPhotoAttr = page.assignedAttributes.find((attr) => {
+      const url = attr.fileValue?.url ?? attr.value?.url;
+      if (!url) return false;
+      return slugMatch(attr.attribute?.slug ?? '') || nameMatch(attr.attribute?.name ?? '');
+    });
 
-    // Для rich-text атрибутов нужно обработать Editor.js формат
+    // Текст: textValue, richTextValue (Editor.js) или plainText
     let text = '';
     if (giftInfoAttr) {
       if (giftInfoAttr.textValue) {
         text = giftInfoAttr.textValue;
-      } else if (giftInfoAttr.values && giftInfoAttr.values.length > 0) {
-        const value = giftInfoAttr.values[0];
-        if (value.plainText) {
-          text = value.plainText;
-        } else if (value.name) {
-          try {
-            const parsed = JSON.parse(value.name);
-            if (parsed && parsed.blocks) {
-              text = editorJsToHtml(parsed);
-            } else {
-              text = value.name;
-            }
-          } catch (e) {
-            text = value.name;
+      } else if (giftInfoAttr.richTextValue != null) {
+        try {
+          const parsed = typeof giftInfoAttr.richTextValue === 'string'
+            ? JSON.parse(giftInfoAttr.richTextValue)
+            : giftInfoAttr.richTextValue;
+          if (parsed && parsed.blocks) {
+            text = editorJsToHtml(parsed);
+          } else {
+            text = String(giftInfoAttr.richTextValue);
           }
+        } catch {
+          text = String(giftInfoAttr.richTextValue);
         }
       }
     }
-    
-    const image = giftPhotoAttr?.fileValue?.url || null;
+
+    const rawUrl = giftPhotoAttr
+      ? (giftPhotoAttr.fileValue?.url ?? giftPhotoAttr.value?.url ?? null)
+      : null;
+    const image = rawUrl ? normalizeMediaUrl(rawUrl) : null;
 
     return { text, image };
   };

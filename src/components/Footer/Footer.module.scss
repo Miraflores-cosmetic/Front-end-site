@@ -107,6 +107,13 @@
     justify-content: space-between;
     height: 100%;
 
+    .footerBgImage {
+      width: 540px;
+      height: 260px;
+      object-fit: cover;
+      object-position: center;
+    }
+
     @media (max-width: 1290px) {
       width: 420px;
     }
@@ -137,12 +144,10 @@
     .footerBottom {
       position: relative;
       display: flex;
-      gap: 130px;
+      justify-content: space-between;
       align-items: center;
-
-      @media (min-width:1030px) {
-        gap: 220px;
-      }
+      width: 100%;
+      padding-bottom: 24px;
 
       @media (max-width:1024px) {
         justify-content: space-between;
@@ -156,28 +161,22 @@
       .bimoTxt {
         position: absolute;
         left: -90px;
-        bottom: 180px;
+        top: -150px;
         transform: rotate(-10deg);
         font-family: 'Bimbo', 'Avenir Next', sans-serif;
         font-size: 22px;
         color: #9747ff;
         font-weight: 400;
-        text-decoration: none;
-        
-        &:hover {
-          text-decoration: underline;
-        }
 
         @media (max-width:1024px) and (min-width: 657px) {
           transform: rotate(10deg);
           left: 40px;
-          bottom: 170px;
-
+          top: -150px;
         }
 
         @media (max-width:656px) {
           left: -90px;
-          bottom: 180px;
+          top: -150px;
           transform: rotate(-10deg);
         }
       }
@@ -185,9 +184,9 @@
       .lineTo {
         position: absolute;
         left: -10px;
-        bottom: 20px;
-        height: 140px;
-
+        top: -100px;
+        width: 80px;
+        height: 100px;
 
         @media (max-width:1024px) and (min-width: 657px) {
           -webkit-transform: scaleX(-1);
@@ -199,10 +198,8 @@
           -webkit-transform: scaleX(1);
           transform: scaleX(1);
           left: -10px;
-          bottom: 20px;
+          top: -100px;
         }
-
-
       }
     }
   }

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import styles from './About.module.scss';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footerImage.webp';
+import footerImage from '@/assets/images/footer-img.png';
 import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { editorJsToHtml } from '@/utils/editorJsParser';

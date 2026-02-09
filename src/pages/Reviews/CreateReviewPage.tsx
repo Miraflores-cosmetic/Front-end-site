@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ReviewModal } from '@/components/review-modal/ReviewModal';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footerImage.webp';
+import footerImage from '@/assets/images/footer-img.png';
 import styles from './CreateReviewPage.module.scss';
 
 const CreateReviewPage: React.FC = () => {

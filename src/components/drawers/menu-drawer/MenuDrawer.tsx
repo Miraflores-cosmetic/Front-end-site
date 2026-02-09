@@ -32,11 +32,15 @@ const MenuDrawer: React.FC = () => {
     href: '/category/' + item.category.slug
   }));
 
+  const catalogItems = menuItemsFromApi.length
+    ? [...menuItemsFromApi, { label: 'Подарочные сертификаты', href: '/gift-certificates' }]
+    : [{ label: 'Загрузка...', href: '#' }];
+
   const menuData: Record<string, MenuSection> = {
     navigation: {
       title: 'Каталог',
       link: 'category',
-      items: menuItemsFromApi.length ? menuItemsFromApi : [{ label: 'Загрузка...', href: '#' }]
+      items: catalogItems
     },
     about: {
       title: 'О Компании',
@@ -45,26 +49,21 @@ const MenuDrawer: React.FC = () => {
       items: [
         { label: 'Наша история', href: '/about' },
         { label: 'Полезные статьи', href: '/about/articles' },
-        { label: 'Программа благодарности', href: '/#gratitude-program' },
-        { label: 'Подарочные сертификаты', href: '/gift-certificates' },
-        { label: 'Промокоды', href: '/promocodes' }
+        { label: 'Программа благодарности', href: '/#gratitude-program' }
       ]
     },
     info: {
       title: 'Информация',
-      link: 'info',
+      link: '', // без ссылки и стрелки — только заголовок
       items: [
         { label: 'Условия пользования', href: '/terms' },
         { label: 'Политика конфиденциальности', href: '/privacy' },
-        { label: 'Оплата и доставка', href: '/payment-delivery' },
-        { label: 'FAQ', href: '/faq' },
-        { label: 'Контакты', href: '/contacts' },
-        { label: 'Реквизиты', href: '/requisites' }
+        { label: 'Оплата и доставка', href: '/payment-delivery' }
       ]
     },
     support: {
       title: 'Поддержка',
-      link: 'support',
+      link: '', // без ссылки и стрелки — только заголовок
       items: [
         { label: 'Статус заказа', href: '/profile' },
         { label: 'info@miraflores.ru', href: 'mailto:info@miraflores.ru' },

@@ -7,6 +7,7 @@ type MenuItem = {
   label: string;
   href: string;
   isExternal?: boolean;
+  title?: string;
 };
 
 type FooterMenuProps = {
@@ -24,11 +25,16 @@ const FooterMenu: React.FC<FooterMenuProps> = ({ title, items }) => {
         {items.map((item, index) => (
           <li key={index} className={styles.menuItem}>
             {item.isExternal ? (
-              <a href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined} rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}>
+              <a
+                href={item.href}
+                target={item.href.startsWith('http') ? '_blank' : undefined}
+                rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                title={item.title}
+              >
                 {item.label}
               </a>
             ) : (
-              <Link to={item.href}>{item.label}</Link>
+              <Link to={item.href} title={item.title}>{item.label}</Link>
             )}
           </li>
         ))}

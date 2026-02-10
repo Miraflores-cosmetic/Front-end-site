@@ -207,7 +207,7 @@ export const GratitudeProgram: React.FC = () => {
       </div>
 
       <div className={styles.moreWrapper}>
-        <Link to="/gratitude">
+        <Link to="/about/articles/programma-blagodarnosti-2">
           <p>Подробнее о программе</p>
           <img src={ArrowToRight} alt="" />
         </Link>

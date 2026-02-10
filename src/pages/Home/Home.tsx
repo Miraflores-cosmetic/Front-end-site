@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import styles from './Home.module.scss';
 import Bestsellers from '@/components/bestsellers/Bestsellers';
 import AboutBlock from '@/components/AboutBlock';
@@ -19,8 +20,18 @@ import { getPreHeader, PageNode } from '@/graphql/queries/pages.service';
 
 const Home: React.FC = () => {
   const isMobile = useScreenMatch(450);
+  const location = useLocation();
   const [preHeader, setPreHeader] = useState<PageNode | null>(null);
   const [showPreHeader, setShowPreHeader] = useState(false);
+
+  useEffect(() => {
+    if (location.hash === '#faq') {
+      const timer = setTimeout(() => {
+        document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 400);
+      return () => clearTimeout(timer);
+    }
+  }, [location.hash]);
 
   useEffect(() => {
     const fetchPreHeader = async () => {

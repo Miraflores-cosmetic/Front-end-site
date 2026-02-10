@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import styles from './MaskedImage.module.scss';
 
 interface MaskedImageProps {
@@ -16,7 +16,7 @@ const MaskedImage: React.FC<MaskedImageProps> = ({ src}) => {
     >
       <defs>
         <pattern id='articleMaskPattern' patternUnits='objectBoundingBox' width='1' height='1'>
-          <image href={src} width='640' height='640' preserveAspectRatio='none' />
+          <image href={src} width='640' height='640' preserveAspectRatio='xMidYMid slice' />
         </pattern>
       </defs>
 

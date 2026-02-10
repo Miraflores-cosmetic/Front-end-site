@@ -56,9 +56,9 @@ const MenuDrawer: React.FC = () => {
       title: 'Информация',
       link: '', // без ссылки и стрелки — только заголовок
       items: [
-        { label: 'Условия пользования', href: '/terms' },
-        { label: 'Политика конфиденциальности', href: '/privacy' },
-        { label: 'Оплата и доставка', href: '/payment-delivery' }
+        { label: 'Оферта и условия пользования', href: '/info/oferta-i-usloviia-polzovaniia' },
+        { label: 'Политика конфиденциальности', href: '/info/politika-konfidentsialnosti' },
+        { label: 'Оплата и доставка', href: '/info/oplata-i-dostavka' }
       ]
     },
     support: {

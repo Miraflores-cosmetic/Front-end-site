@@ -30,6 +30,32 @@
     padding: 0;
   }
 
+  .supportColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+
+    .supportLegal {
+      font-family: 'Onest', 'Avenir Next', sans-serif;
+      font-size: 12px;
+      color: #6e6d67;
+      margin: 0;
+      line-height: 1.4;
+    }
+  }
+
+  .footerBottomLink {
+    font-size: 14px;
+    color: #6e6d67;
+    text-decoration: none;
+    transition: color 0.2s ease, text-decoration 0.2s ease;
+
+    &:hover {
+      color: #297230;
+      text-decoration: underline;
+    }
+  }
+
   .footerMobile {
     position: relative;
     display: flex;
@@ -138,7 +164,7 @@
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      gap: 80px; // 👈 увеличиваем отступ между колонками
+      gap: 80px;
     }
 
     .footerBottom {

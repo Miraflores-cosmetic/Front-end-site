@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styles from './FooterMenu.module.scss';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 
@@ -8,6 +8,7 @@ type MenuItem = {
   href: string;
   isExternal?: boolean;
   title?: string;
+  scrollToId?: string;
 };
 
 type FooterMenuProps = {
@@ -17,6 +18,17 @@ type FooterMenuProps = {
 
 const FooterMenu: React.FC<FooterMenuProps> = ({ title, items }) => {
   const isMobile = useScreenMatch(450);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const handleScrollToId = (e: React.MouseEvent, href: string, scrollToId: string) => {
+    e.preventDefault();
+    if (location.pathname === '/' || location.pathname === '') {
+      document.getElementById(scrollToId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      navigate(href);
+    }
+  };
 
   return (
     <div className={styles.footerMenu}>
@@ -33,6 +45,14 @@ const FooterMenu: React.FC<FooterMenuProps> = ({ title, items }) => {
               >
                 {item.label}
               </a>
+            ) : item.scrollToId ? (
+              <Link
+                to={item.href}
+                title={item.title}
+                onClick={(e) => handleScrollToId(e, item.href, item.scrollToId!)}
+              >
+                {item.label}
+              </Link>
             ) : (
               <Link to={item.href} title={item.title}>{item.label}</Link>
             )}

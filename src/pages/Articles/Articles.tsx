@@ -14,6 +14,10 @@ const Articles: React.FC = () => {
   const { items: articles, loading, error } = useSelector((s: RootState) => s.articlesSlice);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  useEffect(() => {
     if (articles.length === 0) {
       dispatch(fetchArticles(20) as any);
     }

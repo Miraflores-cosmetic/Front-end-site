@@ -25,10 +25,10 @@ const menuData = {
   info: {
     title: 'Информация',
     items: [
-      { label: 'Оферта и условия пользования', href: '/terms', isExternal: false },
-      { label: 'Политика конфиденциальности', href: '/privacy', isExternal: false },
-      { label: 'Оплата и доставка', href: '/payment-delivery', isExternal: false },
-      { label: 'FAQ', href: '/faq', isExternal: false },
+      { label: 'Оферта и условия пользования', href: '/info/oferta-i-usloviia-polzovaniia', isExternal: false },
+      { label: 'Политика конфиденциальности', href: '/info/politika-konfidentsialnosti', isExternal: false },
+      { label: 'Оплата и доставка', href: '/info/oplata-i-dostavka', isExternal: false },
+      { label: 'FAQ', href: '/#faq', isExternal: false, scrollToId: 'faq' },
       { label: 'Контакты', href: '/contacts', isExternal: false }
     ]
   },
@@ -69,15 +69,34 @@ const Footer: React.FC<FooterProps> = ({ footerImage }) => {
           <div className={styles.footerRight}>
             <FooterMenu {...menuData.navigation} />
             <FooterMenu {...menuData.info} />
-            <FooterMenu {...menuData.support} />
+            <div className={styles.supportColumn}>
+              <FooterMenu {...menuData.support} />
+              <p className={styles.supportLegal}>
+                ИП Патрацкий Д.А.
+                <br />
+                ИНН 504010991802 ОГРНИП 319774600587304
+              </p>
+            </div>
           </div>
 
           <div className={styles.footerBottom}>
-            {socialLinks.map(text => (
-              <p key={text} className={styles.fotterBottmotxt}>
-                {text}
-              </p>
-            ))}
+            {socialLinks.map(text =>
+              text === 'Телеграмм канал' ? (
+                <a
+                  key={text}
+                  href="https://t.me/Miraflores_Cosmetics_Bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.footerBottomLink}
+                >
+                  {text}
+                </a>
+              ) : (
+                <p key={text} className={styles.fotterBottmotxt}>
+                  {text}
+                </p>
+              )
+            )}
             <span className={styles.bimoTxt}>тут промокоды</span>
             <img src={lineTo} className={styles.lineTo} alt='line' />
           </div>
@@ -93,16 +112,35 @@ const Footer: React.FC<FooterProps> = ({ footerImage }) => {
 
             <div className={styles.mobileRight}>
               <FooterMenu {...menuData.info} />
-              <FooterMenu {...menuData.support} />
+              <div className={styles.supportColumn}>
+                <FooterMenu {...menuData.support} />
+                <p className={styles.supportLegal}>
+                  ИП Патрацкий Д.А.
+                  <br />
+                  ИНН 504010991802 ОГРНИП 319774600587304
+                </p>
+              </div>
             </div>
           </div>
 
           <div className={styles.footerBottomMobile}>
-            {socialLinks.map(text => (
-              <p key={text} className={styles.fotterBottmotxt}>
-                {text}
-              </p>
-            ))}
+            {socialLinks.map(text =>
+              text === 'Телеграмм канал' ? (
+                <a
+                  key={text}
+                  href="https://t.me/Miraflores_Cosmetics_Bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={styles.footerBottomLink}
+                >
+                  {text}
+                </a>
+              ) : (
+                <p key={text} className={styles.fotterBottmotxt}>
+                  {text}
+                </p>
+              )
+            )}
           </div>
         </div>
       )}

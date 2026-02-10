@@ -1,4 +1,4 @@
-import React, {lazy, Suspense} from 'react';
+import React, {lazy, Suspense, useEffect} from 'react';
 import styles from './ArticleDetail.module.scss';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
@@ -9,17 +9,23 @@ import {SpinnerLoader} from "@/components/spinner/SpinnerLoader";
 const LazyComponent = lazy(() => import('./LazyComponent'));
 
 const ArticleDetail: React.FC = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
-    <article className={styles.articlesDetails}>
-      <Header/>
-      <Suspense fallback={<SpinnerLoader/>}>
-        <LazyComponent/>
-      </Suspense>
-      <section className={styles.bottomPart}>
-        <Bestsellers />
-        <Footer footerImage={footerImage} />
-      </section>
-    </article>
+    <>
+      <Header />
+      <article className={styles.articlesDetails}>
+        <Suspense fallback={<SpinnerLoader/>}>
+          <LazyComponent/>
+        </Suspense>
+        <section className={styles.bottomPart}>
+          <Bestsellers />
+          <Footer footerImage={footerImage} />
+        </section>
+      </article>
+    </>
   );
 };
 

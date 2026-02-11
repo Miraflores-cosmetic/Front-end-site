@@ -25,8 +25,6 @@ interface SlideData {
 export const HeroSlider: React.FC = () => {
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
-  const sectionRef = React.useRef<HTMLElement>(null);
   const isTablet = useScreenMatch(800);
   const isMobile = useScreenMatch(450);
 
@@ -116,10 +114,6 @@ export const HeroSlider: React.FC = () => {
         setSlides([{ largeImage: '', smallImage: '' }]);
       } finally {
         setLoading(false);
-        // Запускаем анимацию после загрузки данных
-        setTimeout(() => {
-          setIsSectionLoaded(true);
-        }, 100);
       }
     };
 
@@ -153,8 +147,7 @@ export const HeroSlider: React.FC = () => {
 
   return (
     <section 
-      ref={sectionRef}
-      className={`${styles.heroSlider} ${isSectionLoaded ? styles.heroSliderAnimated : ''}`} 
+      className={styles.heroSlider}
       style={{ position: 'relative', zIndex: 10 }}
     >
       <Slider {...settings} className={styles.slider}>

@@ -81,7 +81,11 @@ const Home: React.FC = () => {
   };
 
   const preHeaderText = getPreHeaderText(preHeader);
-  const preHeaderHeight = !isMobile && preHeaderText ? '27px' : '0px';
+  // Высота 27px только когда PreHeader реально рендерится в DOM — иначе после загрузки данных
+  // переменная менялась с 0 на 27px и страница «подпрыгивала» внизу.
+  const preHeaderInDOM = false; // true — когда раскомментирован блок PreHeader ниже
+  const preHeaderVisible = preHeaderInDOM && !isMobile && !!preHeaderText && showPreHeader;
+  const preHeaderHeight = preHeaderVisible ? '27px' : '0px';
 
   useEffect(() => {
     document.documentElement.style.setProperty('--preheader-height', preHeaderHeight);

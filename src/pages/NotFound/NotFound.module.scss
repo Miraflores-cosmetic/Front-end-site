@@ -5,15 +5,33 @@
   justify-content: center;
   min-height: 60vh;
   padding: 2rem;
-  
-  h1 {
-    font-size: 4rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
+  gap: 24px;
+}
+
+.backLink {
+  font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #297230;
+  text-decoration: none;
+  margin-bottom: 8px;
+
+  &:hover {
+    text-decoration: underline;
   }
-  
-  p {
-    font-size: 1.5rem;
-    color: #6e6d67;
-  }
+}
+
+.notFoundImg {
+  width: 260px;
+  height: 154px;
+  object-fit: contain;
+  display: block;
+}
+
+.notFoundText {
+  font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  text-transform: uppercase;
+  color: #333;
+  margin: 0;
 }

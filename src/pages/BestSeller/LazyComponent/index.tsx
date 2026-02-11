@@ -28,6 +28,7 @@ import { generateBestsellerTabsOptions } from '@/utils/tabsGenerator';
 import { editorJsToHtml } from '@/utils/editorJsParser';
 
 import { getProductBySlug } from '@/store/slices/productSlice';
+import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 
 const LazyComponent: React.FC = () => {
   const { item, activeVariantId, loading } = useSelector((state: RootState) => state.product);
@@ -211,7 +212,11 @@ const LazyComponent: React.FC = () => {
   // Используем импортированную функцию editorJsToHtml из utils, которая правильно обрабатывает все блоки
 
   if (loading || !item) {
-    return null;
+    return (
+      <div className={styles.productLoader}>
+        <SpinnerLoader />
+      </div>
+    );
   }
 
   if (item) {
@@ -266,7 +271,7 @@ const LazyComponent: React.FC = () => {
             <div className={styles.infoWrapper}>
               {/* Заголовок для десктопа - скрыт на мобилке */}
               <p className={styles.title}>{item.name}</p>
-              <StarRating rating={item.rating ?? 5} text={`${(item.reviews || []).length} отзывов`} />
+              <StarRating rating={item.rating ?? 5} text={`Отзывы (${(item.reviews || []).length})`} />
               {(() => {
                 const getAttributeBySlug = (attributes: any[], slug: string) => {
                   return attributes?.find((attr: any) => attr.attribute?.slug === slug);

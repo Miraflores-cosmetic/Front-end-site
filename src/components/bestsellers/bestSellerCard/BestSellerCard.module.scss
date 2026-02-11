@@ -185,13 +185,9 @@
       box-sizing: border-box;
     }
 
-    .sizePill {
-      background: rgba(0, 0, 0, 0.1);
-      min-width: 57px;
-    }
-
+    .sizePill,
     .sizePillActive {
-      background: rgba(0, 0, 0, 0.24);
+      background: rgba(0, 0, 0, 0.18);
       min-width: 57px;
     }
   }
@@ -233,9 +229,11 @@
 
       .title {
         margin: 0;
-        width: 292px;
+        width: 100%;
+        min-width: 0;
         height: auto;
         min-height: 44px;
+        flex: 1 1 auto;
         font-family: 'Avenir Next', sans-serif;
         font-style: normal;
         font-weight: 600;
@@ -249,11 +247,6 @@
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         word-wrap: break-word;
-        flex: 1;
-
-        @media (max-width: 768px) {
-          width: 100%;
-        }
       }
 
       .priceWrapper {
@@ -320,13 +313,12 @@
 
     .desc {
       width: 100%;
-      max-width: 287px;
       height: auto;
       min-height: 38px;
       font-family: 'Avenir Next', sans-serif;
       font-style: normal;
       font-weight: 400;
-      font-size: 14px;
+      font-size: 15px;
       line-height: 19px;
       color: #6E6D67;
       overflow: hidden;

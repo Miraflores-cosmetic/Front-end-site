@@ -1,3 +1,14 @@
+@keyframes heroSlideAppear {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .heroSlider {
   width: 100%;
   margin-bottom: 0;
@@ -6,6 +17,19 @@
   z-index: 10;
   isolation: isolate;
   transition: height 0.5s ease;
+
+  :global(.slick-slide) {
+    opacity: 0;
+  }
+
+  :global(.slick-slide.slick-active) {
+    opacity: 1;
+  }
+
+  /* анимация только при первой загрузке — только у первого слайда */
+  :global(.slick-slide:first-child) {
+    animation: heroSlideAppear 0.55s ease-out forwards;
+  }
 
   @media (max-width: 768px) {
     margin-bottom: 0;
@@ -19,52 +43,6 @@
     margin-top: 0;
     margin-bottom: 0;
     padding-top: 0;
-  }
-}
-
-// Анимация появления всех элементов одновременно
-.heroSliderAnimated {
-  // Используем :global для доступа к классам из TopBlock.module.scss
-  :global {
-    // Селектор для topBlockContainer (класс из TopBlock.module.scss)
-    section[class*="topBlockContainer"] {
-      // Заголовок
-      h1[class*="heroTitle"],
-      div[class*="heroTitle"] {
-        opacity: 1 !important;
-        transform: translateY(0) !important;
-      }
-
-      // Маленькая картинка
-      div[class*="content"] img:first-of-type {
-        opacity: 1 !important;
-        transform: translateY(0) !important;
-      }
-
-      // Текст
-      div[class*="contentText"] {
-        opacity: 1 !important;
-        transform: translateY(0) !important;
-      }
-
-      // Большая картинка
-      article[class*="right"] img {
-        opacity: 1 !important;
-        transform: translateY(0) !important;
-      }
-
-      // Информационная иконка
-      img[class*="info"] {
-        opacity: 1 !important;
-        transform: translate3d(0, 0, 0) !important;
-      }
-
-      // Текст "С меристемными экстрактами"
-      p[class*="meristemText"] {
-        opacity: 1 !important;
-        transform: translate3d(0, 0, 0) !important;
-      }
-    }
   }
 }
 

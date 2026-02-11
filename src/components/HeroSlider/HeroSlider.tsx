@@ -10,13 +10,13 @@ interface HeroSliderProps {
 const HeroSlider: React.FC<HeroSliderProps> = ({ media }) => {
   const settings = {
     dots: true,
-    arrows: false,
+    arrows: true,
     infinite: false,
     speed: 700,
     slidesToShow: 1,
     slidesToScroll: 1,
     fade: true,
-    adaptiveHeight: true
+    adaptiveHeight: false
   };
 
   return (

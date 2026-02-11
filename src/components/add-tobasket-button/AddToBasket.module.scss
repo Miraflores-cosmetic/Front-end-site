@@ -25,10 +25,9 @@
   gap: 10px;
   font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
   font-style: normal;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 16px;
   line-height: 22px;
-  text-transform: uppercase;
   cursor: pointer;
   transition: background-color 0.2s, color 0.2s;
 
@@ -38,7 +37,7 @@
   }
 }
 
-// Стили для главной страницы (как было)
+// Стили для главной страницы / ProductCard
 .homeBtn {
   padding: 16px 10px;
   flex: 1;
@@ -47,6 +46,7 @@
   color: #000000;
   border: none;
   border-radius: 0;
+  text-transform: uppercase;
 
   &:hover:not(:disabled) {
     background-color: #000000;
@@ -115,7 +115,7 @@
   background: transparent !important;
   border: none !important;
   border-radius: 0 !important;
-  transition: background-color 0.2s ease !important;
+  transition: background-color 0.2s ease, color 0.2s ease !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -129,7 +129,11 @@
 
   &:hover {
     transform: none !important;
-    background: rgba(0, 0, 0, 0.05) !important;
+    background: #000000 !important;
+
+    img {
+      filter: brightness(0) invert(1) !important;
+    }
   }
 
   &.active,

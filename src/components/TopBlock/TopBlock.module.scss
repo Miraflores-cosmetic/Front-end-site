@@ -1,15 +1,3 @@
-// Keyframes для Staggered анимации
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .wrapper {
   position: relative;
   height: 100%;
@@ -26,6 +14,7 @@
   display: flex;
   width: 100%;
   padding-right: 32px;
+  padding-bottom: 24px;
   max-width: 1536px;
   margin: 0 auto;
   margin-bottom: 0;
@@ -63,18 +52,6 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
-  // Начальное состояние - скрыто
-  opacity: 0;
-  transform: translate3d(0, 30px, 0);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  will-change: opacity, transform;
-  
-  // Анимация при наличии класса на родителе
-  :global(.heroSliderAnimated) & {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    will-change: auto;
-  }
 }
 
 .imageWrapper {
@@ -105,19 +82,7 @@
   flex-direction: column;
   margin: 0;
   padding: 0;
-  // Начальное состояние - скрыто
-  opacity: 0;
-  transform: translate3d(0, 30px, 0);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  will-change: opacity, transform;
-  
-  // Анимация при наличии класса на родителе
-  :global(.heroSliderAnimated) & {
-    opacity: 1;
-    transform: translate3d(0, 0, 0);
-    will-change: auto;
-  }
-  
+
   span {
     display: block;
     color: #297230;
@@ -194,11 +159,6 @@
   line-height: normal;
   text-transform: uppercase;
   margin-top: 10px;
-  // Начальное состояние - скрыто
-  opacity: 0;
-  transform: translate3d(0, 30px, 0);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  will-change: opacity, transform;
 }
 
 .textWrapper {
@@ -279,19 +239,7 @@
     bottom: 0;
     object-fit: cover;
     z-index: 1;
-    // Начальное состояние - скрыто
-    opacity: 0;
-    transform: translate3d(0, 30px, 0);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-    will-change: opacity, transform;
-    
-    // Анимация при наличии класса на родителе
-    :global(.heroSliderAnimated) & {
-      opacity: 1;
-      transform: translate3d(0, 0, 0);
-      will-change: auto;
-    }
-    
+
     @media (max-width: 1024px) {
       width: 120px;
       height: 160px;
@@ -315,18 +263,6 @@
 
   .contentText {
     margin-left: 300px;
-    // Начальное состояние - скрыто
-    opacity: 0;
-    transform: translate3d(0, 30px, 0);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-    will-change: opacity, transform;
-    
-    // Анимация при наличии класса на родителе
-    :global(.heroSliderAnimated) & {
-      opacity: 1;
-      transform: translate3d(0, 0, 0);
-      will-change: auto;
-    }
 
     @media (max-width: 1200px) {
       margin-left: 160px;
@@ -384,12 +320,7 @@
   bottom: 170px;
   left: 90px;
   z-index: 5;
-  // Начальное состояние - скрыто
-  opacity: 0;
-  transform: translate3d(0, 30px, 0);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  will-change: opacity, transform;
-  
+
   @media (max-width: 450px) {
     position: absolute;
     bottom: 140px;

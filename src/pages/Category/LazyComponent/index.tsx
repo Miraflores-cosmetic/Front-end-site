@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import styles from '../Category.module.scss';
 import Footer from '@/components/Footer/Footer';
+import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import footerImage from '@/assets/images/footer-img.png';
 import TabBar from '@/components/tab-bar/TabBar';
 import { AnimatePresence } from 'framer-motion';
@@ -132,6 +133,14 @@ const LazyComponent: React.FC = () => {
     if (!tab) return;
     dispatch(setActiveSubTabSlug(tab.slug));
   };
+  if (loading && products.length === 0) {
+    return (
+      <div className={styles.categoryLoader}>
+        <SpinnerLoader />
+      </div>
+    );
+  }
+
   return (
     <>
       <p className={styles.title}>{items.find(item => item.category.slug === slug)?.name}</p>
@@ -158,13 +167,7 @@ const LazyComponent: React.FC = () => {
         <p className={styles.description}>{description}</p>
       </div>)}
 
-      {loading && products.length === 0 ? (
-        <section className={styles.noProductsWrapper}>
-          <div className={styles.spinnerWrapper}>
-            <div className={styles.spinner}></div>
-          </div>
-        </section>
-      ) : products.length > 0 ? (
+      {products.length > 0 ? (
         <>
           <section className={styles.wrapper}>
             <AnimatePresence mode="sync">

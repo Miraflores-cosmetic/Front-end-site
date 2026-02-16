@@ -226,22 +226,31 @@ const LazyComponent: React.FC = () => {
     const oldPrice = undiscountedPrice && undiscountedPrice > currentPrice ? undiscountedPrice : null;
     const discount = oldPrice && currentPrice > 0 ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100) : null;
 
-    // Получаем media активного варианта, если есть, иначе используем media товара
+    // Сортируем медиа по sortOrder (как в дашборде), затем маппим в { url, alt, id }
+    const sortMediaByOrder = (media: Array<{ url: string; alt?: string; id?: string; sortOrder?: number | null }>) =>
+      [...media].sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
     const getSliderMedia = () => {
       // Проверяем, есть ли у активного варианта изображения
       if (activeVariant?.node?.media && Array.isArray(activeVariant.node.media) && activeVariant.node.media.length > 0) {
-        return activeVariant.node.media.map((img: any) => ({
+        const sorted = sortMediaByOrder(activeVariant.node.media as any);
+        return sorted.map((img: any) => ({
           url: img.url,
           alt: img.alt || item.name,
           id: img.id || ''
         }));
       }
-      
+
       // Если у варианта нет изображений, используем изображения товара
       if (Array.isArray(item.media) && item.media.length > 0) {
-        return item.media;
+        const sorted = sortMediaByOrder(item.media as any);
+        return sorted.map((img: any) => ({
+          url: img.url,
+          alt: img.alt || item.name,
+          id: (img as any).id || ''
+        }));
       }
-      
+
       // Fallback
       return [{
         url: slide3,

@@ -24,6 +24,7 @@ import CreateReviewPage from './pages/Reviews/CreateReviewPage';
 import OrderSuccess from './pages/OrderSuccess/OrderSuccess';
 import FAQ from './pages/FAQ/FAQ';
 import Promocodes from './pages/Promocodes/Promocodes';
+import GiftCertificates from './pages/GiftCertificates/GiftCertificates';
 import { Spinner } from '@/components/spinner/Spinner';
 import NotFound from './pages/NotFound/NotFound';
 import SearchDrawer from '@/components/drawer/SearchDrawer';
@@ -118,6 +119,7 @@ const App: React.FC = () => {
             <Route path='/reviews/create' element={<CreateReviewPage />} />
             <Route path='/faq' element={<FAQ />} />
             <Route path='/promocodes' element={<Promocodes />} />
+            <Route path='/gift-certificates' element={<GiftCertificates />} />
             <Route path='/*' element={<NotFound />} />
       </Routes>
       <DrawerWrapper />

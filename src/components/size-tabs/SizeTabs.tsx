@@ -49,6 +49,9 @@ const SizeTabs: React.FC<ProductTabsProps> = ({ options, activeVariantId }) => {
     dispatch(setActiveVariantId(id));
   };
 
+  const formatPrice = (amount: number) =>
+    Math.round(amount).toLocaleString('ru-RU');
+
   if (activeVariantId === null) return null;
   if (activeVariantId !== null)
     return (
@@ -69,10 +72,10 @@ const SizeTabs: React.FC<ProductTabsProps> = ({ options, activeVariantId }) => {
         </div>
 
         <div className={styles.info}>
-          <span className={styles.price}>{activeOption?.node.pricing.price.gross.amount}₽</span>
+          <span className={styles.price}>{formatPrice(activeOption?.node.pricing.price.gross.amount ?? 0)}₽</span>
           {activeOption?.node.pricing.discount && (
             <span className={styles.oldPrice}>
-              {activeOption.node.pricing.priceUndiscounted.gross.amount}₽
+              {formatPrice(activeOption.node.pricing.priceUndiscounted.gross.amount)}₽
             </span>
           )}
           {/* {getDiscountPercentage(activeOption) && (

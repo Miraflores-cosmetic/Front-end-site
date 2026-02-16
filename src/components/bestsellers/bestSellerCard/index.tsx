@@ -131,7 +131,16 @@ export const BestSellerProductCard: React.FC<{
     <div
       className={`${styles.productCard} ${styles.card}`}
     >
-      {loading && <div className={styles.skeleton}></div>}
+      {loading && (
+        <div className={styles.skeleton} aria-hidden="true">
+          <div className={styles.skeletonImage} />
+          <div className={styles.skeletonInfo}>
+            <div className={styles.skeletonLine} />
+            <div className={styles.skeletonLineShort} />
+            <div className={styles.skeletonPrice} />
+          </div>
+        </div>
+      )}
       {!loading && (
         <>
           <div 

@@ -33,7 +33,7 @@ const MenuDrawer: React.FC = () => {
   }));
 
   const catalogItems = menuItemsFromApi.length
-    ? [...menuItemsFromApi, { label: 'Подарочные сертификаты', href: '/gift-certificates' }]
+    ? menuItemsFromApi
     : [{ label: 'Загрузка...', href: '#' }];
 
   const menuData: Record<string, MenuSection> = {

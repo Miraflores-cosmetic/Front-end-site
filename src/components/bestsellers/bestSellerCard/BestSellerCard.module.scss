@@ -15,13 +15,94 @@
   }
 
   .skeleton {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
     width: 432px;
-    min-height: 500px;
-    background-color: lightgray;
-    border-radius: 0;
+    min-height: 540px;
 
     @media (max-width: 450px) {
       width: 360px;
+    }
+  }
+
+  .skeletonImage {
+    width: 432px;
+    height: 432px;
+    border-radius: 0;
+    background: linear-gradient(
+      110deg,
+      #e8e6e1 25%,
+      #f0eeea 37%,
+      #e8e6e1 63%
+    );
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.2s ease-in-out infinite;
+
+    @media (max-width: 450px) {
+      width: 360px;
+      height: 360px;
+    }
+  }
+
+  .skeletonInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .skeletonLine {
+    height: 18px;
+    width: 85%;
+    border-radius: 4px;
+    background: linear-gradient(
+      110deg,
+      #e8e6e1 25%,
+      #f0eeea 37%,
+      #e8e6e1 63%
+    );
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.2s ease-in-out infinite;
+    animation-delay: 0.1s;
+  }
+
+  .skeletonLineShort {
+    height: 14px;
+    width: 55%;
+    border-radius: 4px;
+    background: linear-gradient(
+      110deg,
+      #e8e6e1 25%,
+      #f0eeea 37%,
+      #e8e6e1 63%
+    );
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.2s ease-in-out infinite;
+    animation-delay: 0.2s;
+  }
+
+  .skeletonPrice {
+    height: 20px;
+    width: 25%;
+    border-radius: 4px;
+    margin-top: 4px;
+    background: linear-gradient(
+      110deg,
+      #e8e6e1 25%,
+      #f0eeea 37%,
+      #e8e6e1 63%
+    );
+    background-size: 200% 100%;
+    animation: skeletonShimmer 1.2s ease-in-out infinite;
+    animation-delay: 0.15s;
+  }
+
+  @keyframes skeletonShimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
     }
   }
 

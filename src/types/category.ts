@@ -15,6 +15,10 @@ export interface categorySliceState {
 
   slug: string | null;
   loading: boolean;
+  /** true при подгрузке следующей страницы (append), чтобы не переводить все карточки в скелетон */
+  loadingMore: boolean;
+  /** true после первого fulfilled/rejected getCategoryProducts — чтобы не показывать «нет продуктов» до загрузки */
+  productsFetched: boolean;
   error: SerializedError | null;
   products: BestSellersProduct[];
   pageInfo: CategoryPageInfo;

@@ -21,12 +21,17 @@ import {
   setActiveTabSlug
 } from '@/store/slices/categorySlice';
 
+/** На странице этой категории скрываем табы и подзаголовок (подстраница «Подарочные сертификаты»). */
+const GIFT_CERTIFICATES_CATEGORY_SLUG =
+  import.meta.env.VITE_HIDE_HEADER_CATEGORY_SLUG || 'podarochnye-sertifikaty';
+
 const LazyComponent: React.FC = () => {
   const { slug } = useParams();
   const dispatch = useDispatch<AppDispatch>();
+  const isGiftCertificatesCategory = slug === GIFT_CERTIFICATES_CATEGORY_SLUG;
 
   const items = useSelector((state: RootState) => state.nav.items);
-  const { title, description, tabs, subTabs, activeTabSlug, activeSubTabSlug, products, loading, pageInfo } =
+  const { title, description, tabs, subTabs, activeTabSlug, activeSubTabSlug, products, loading, loadingMore, productsFetched, pageInfo } =
     useSelector((state: RootState) => state.category);
 
   const isMobile = useScreenMatch(756);
@@ -71,8 +76,8 @@ const LazyComponent: React.FC = () => {
   }, [activeSubTabSlug, activeTabSlug, subTabs.length, slug, dispatch]);
 
   const canLoadMore = useMemo(() => {
-    return !!activeTabSlug && !!pageInfo?.hasNextPage && !loading;
-  }, [activeTabSlug, pageInfo?.hasNextPage, loading]);
+    return !!activeTabSlug && !!pageInfo?.hasNextPage && !loading && !loadingMore;
+  }, [activeTabSlug, pageInfo?.hasNextPage, loading, loadingMore]);
 
   const slugToLoad = activeTabSlug === 'ALL'
     ? slug
@@ -133,7 +138,8 @@ const LazyComponent: React.FC = () => {
     if (!tab) return;
     dispatch(setActiveSubTabSlug(tab.slug));
   };
-  if (loading && products.length === 0) {
+  // Показываем лоадер, пока список пуст и мы либо грузим, либо ещё не получали ответ по продуктам
+  if (products.length === 0 && (loading || loadingMore || !productsFetched)) {
     return (
       <div className={styles.categoryLoader}>
         <SpinnerLoader />
@@ -144,36 +150,47 @@ const LazyComponent: React.FC = () => {
   return (
     <>
       <p className={styles.title}>{items.find(item => item.category.slug === slug)?.name}</p>
-      {/* 1-й уровень табов: «ВСЕ» + подкатегории */}
-      <TabBar
-        tabs={['ВСЕ', ...tabs.map(t => t.name).reverse()]}
-        active={activeTabSlug === 'ALL' ? 'ВСЕ' : tabs.find(t => t.slug === activeTabSlug)?.name}
-        onChange={handleTopTabChange}
-      />
-
-      {/* 2-й уровень табов (вложенные подкатегории выбранного таба), только не для «ВСЕ» */}
-      {activeTabSlug !== 'ALL' && subTabs.length > 0 && (
-        <TabBar
-          tabs={['ВСЕ', ...subTabs.map(t => t.name).reverse()]}
-          active={activeSubTabSlug === 'ALL' || !activeSubTabSlug
-            ? 'ВСЕ'
-            : subTabs.find(t => t.slug === activeSubTabSlug)?.name}
-          onChange={handleSubTabChange}
-        />
+      {!isGiftCertificatesCategory && (
+        <>
+          <TabBar
+            tabs={['ВСЕ', ...tabs.map(t => t.name).reverse()]}
+            active={activeTabSlug === 'ALL' ? 'ВСЕ' : tabs.find(t => t.slug === activeTabSlug)?.name}
+            onChange={handleTopTabChange}
+          />
+          {activeTabSlug !== 'ALL' && subTabs.length > 0 && (
+            <TabBar
+              tabs={['ВСЕ', ...subTabs.map(t => t.name).reverse()]}
+              active={activeSubTabSlug === 'ALL' || !activeSubTabSlug
+                ? 'ВСЕ'
+                : subTabs.find(t => t.slug === activeSubTabSlug)?.name}
+              onChange={handleSubTabChange}
+            />
+          )}
+        </>
       )}
 
-      {!isMobile && (<div>
-        <h2 className={styles.subtitle}>{title}</h2>
-        <p className={styles.description}>{description}</p>
-      </div>)}
+      {!isMobile && !isGiftCertificatesCategory && (
+        <div>
+          <h2 className={styles.subtitle}>{title}</h2>
+          <p className={styles.description}>{description}</p>
+        </div>
+      )}
 
       {products.length > 0 ? (
         <>
           <section className={styles.wrapper}>
             <AnimatePresence mode="sync">
               {products.map((product) => (
-                <BestSellerProductCard key={product.id} product={product} loading={loading} />
+                <BestSellerProductCard key={product.id} product={product} loading={false} />
               ))}
+              {loadingMore &&
+                Array.from({ length: 6 }).map((_, i) => (
+                  <BestSellerProductCard
+                    key={`skeleton-${i}`}
+                    product={{} as any}
+                    loading={true}
+                  />
+                ))}
             </AnimatePresence>
           </section>
 
@@ -183,13 +200,13 @@ const LazyComponent: React.FC = () => {
           )}
 
         </>
-      ) : (
+      ) : productsFetched ? (
         <section className={styles.noProductsWrapper}>
           <div className={styles.noProducts}>
             <p>в данной категории пока нет доступных продуктов</p>
           </div>
         </section>
-      )}
+      ) : null}
 
 
 

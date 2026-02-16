@@ -42,6 +42,7 @@ export async function getSingleProduct(slug: string): Promise<ProductDetailNode 
           id
           url
           alt
+          sortOrder
         }
         attributes {
           attribute {
@@ -118,6 +119,7 @@ export async function getSingleProduct(slug: string): Promise<ProductDetailNode 
                 id
                 url
                 alt
+                sortOrder
               }
               pricing {
                 price {

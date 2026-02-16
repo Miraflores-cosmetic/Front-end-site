@@ -6,20 +6,26 @@ import styles from './HeaderLeft.module.scss';
 import menu from '@/assets/icons/menu.svg';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { RootState, AppDispatch } from '@/store/store';
-import { getMenuItems } from '@/store/slices/navSlice'
+import { getMenuItems } from '@/store/slices/navSlice';
 
+/** Slug категории, которую не показывать в хедере (например «Подарочные сертификаты»). Задать в .env: VITE_HIDE_HEADER_CATEGORY_SLUG */
+const HIDE_HEADER_CATEGORY_SLUG =
+  import.meta.env.VITE_HIDE_HEADER_CATEGORY_SLUG || 'podarochnye-sertifikaty';
 
 const HeaderLeft: React.FC = () => {
-  const  items  = useSelector((state: RootState) => state.nav.items);
+  const items = useSelector((state: RootState) => state.nav.items);
   const isMobile = useScreenMatch(850);
   const dispatch = useDispatch<AppDispatch>();
 
+  const headerItems = items.filter(
+    item => item.category.slug !== HIDE_HEADER_CATEGORY_SLUG
+  );
+
   useEffect(() => {
-    // Загружаем меню только если оно еще не загружено
     if (items.length === 0) {
       dispatch(getMenuItems());
     }
-  }, [dispatch, items.length])
+  }, [dispatch, items.length]);
 
   return (
     <div>
@@ -29,7 +35,7 @@ const HeaderLeft: React.FC = () => {
         </button>
       ) : (
         <nav className={styles.navLeft}>
-          {items.map(item=>(
+          {headerItems.map(item => (
             <Link to={'/category/' + item.category.slug} key={item.id}>{item.name}</Link>
           ))}
         </nav>

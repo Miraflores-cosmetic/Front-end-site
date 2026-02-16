@@ -12,6 +12,8 @@ const initialState: categorySliceState = {
   title: '',
   description: '',
   loading: false,
+  loadingMore: false,
+  productsFetched: false,
   error: null,
   products: [],
   pageInfo: { hasNextPage: false, endCursor: null }
@@ -60,16 +62,17 @@ const categorySlice = createSlice({
   reducers: {
     setActiveTabSlug(state, action: PayloadAction<string | null>) {
       state.activeTabSlug = action.payload;
-      // при смене таба верхнего уровня сбрасываем второй уровень и продукты
       state.subTabs = [];
-      state.activeSubTabSlug = 'ALL'; // По умолчанию выбираем "ВСЕ"
+      state.activeSubTabSlug = 'ALL';
       state.products = [];
       state.pageInfo = { hasNextPage: false, endCursor: null };
+      state.productsFetched = false;
     },
     setActiveSubTabSlug(state, action: PayloadAction<string | null>) {
       state.activeSubTabSlug = action.payload;
       state.products = [];
       state.pageInfo = { hasNextPage: false, endCursor: null };
+      state.productsFetched = false;
     },
     resetCategoryState(state) {
       state.tabs = [];
@@ -81,6 +84,8 @@ const categorySlice = createSlice({
       state.products = [];
       state.pageInfo = { hasNextPage: false, endCursor: null };
       state.loading = false;
+      state.loadingMore = false;
+      state.productsFetched = false;
     }
   },
   extraReducers: builder => {
@@ -118,8 +123,13 @@ const categorySlice = createSlice({
       })
 
       // продукты выбранной (вложенной) категории
-      .addCase(getCategoryProducts.pending, state => {
-        state.loading = true;
+      .addCase(getCategoryProducts.pending, (state, action) => {
+        const append = !!action.meta.arg.append;
+        if (append) {
+          state.loadingMore = true;
+        } else {
+          state.loading = true;
+        }
         state.error = null;
       })
       .addCase(getCategoryProducts.fulfilled, (state, action) => {
@@ -263,10 +273,14 @@ const categorySlice = createSlice({
           state.products = Array.from(map.values());
         }
         state.loading = false;
+        state.loadingMore = false;
+        state.productsFetched = true;
         state.error = null;
       })
       .addCase(getCategoryProducts.rejected, (state, action) => {
         state.loading = false;
+        state.loadingMore = false;
+        state.productsFetched = true;
         state.error = action.error;
       });
   }

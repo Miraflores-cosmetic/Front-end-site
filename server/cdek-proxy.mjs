@@ -12,6 +12,13 @@ const PORT = 3001;
 app.use(cors());
 app.use(express.json());
 
+// Logger middleware
+app.use((req, res, next) => {
+  console.log(`[CDEK Proxy] ${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
+
 const CDEK_API_URL = 'https://api.cdek.ru/v2';
 const CDEK_ACCOUNT = process.env.CDEK_ACCOUNT;
 const CDEK_SECURE = process.env.CDEK_SECURE;
@@ -59,7 +66,7 @@ async function getCdekToken() {
     cachedToken = data.access_token;
     tokenExpiry = Date.now() + (data.expires_in * 1000);
     console.log('[CDEK Proxy] ✅ Token obtained successfully, expires in', data.expires_in, 'seconds');
-    
+
     return cachedToken;
   } catch (error) {
     console.error('[CDEK Proxy] ❌ Error getting token:', error.message);
@@ -70,7 +77,7 @@ async function getCdekToken() {
 app.get('/api/cdek/service', async (req, res) => {
   const startTime = Date.now();
   const { method, action, ...params } = req.query;
-  
+
   console.log(`[CDEK Proxy] ${new Date().toISOString()} - Request: ${method || action}`, { params });
 
   try {
@@ -116,7 +123,7 @@ app.get('/api/cdek/service', async (req, res) => {
 
       let url = `${CDEK_API_URL}/deliverypoints`;
       const queryParams = new URLSearchParams();
-      
+
       if (params.city_code) queryParams.append('city_code', params.city_code);
       if (params.city_uuid) queryParams.append('city_uuid', params.city_uuid);
       if (params.latitude) queryParams.append('latitude', params.latitude);
@@ -148,7 +155,7 @@ app.get('/api/cdek/service', async (req, res) => {
       }
 
       const data = await response.json();
-      
+
       // Преобразуем формат ответа СДЭК в нужный формат
       if (data.items) {
         const offices = data.items.map((item) => ({
@@ -184,7 +191,15 @@ app.get('/api/cdek/service', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
+// Catch-all handler for 404
+app.use((req, res) => {
+  console.log(`[CDEK Proxy] 404 - Not Found: ${req.method} ${req.url}`);
+  res.status(404).json({ error: `Not Found: ${req.method} ${req.url}` });
+});
+
+
+app.listen(PORT, '0.0.0.0', () => {
+
   console.log(`CDEK proxy server running on http://localhost:${PORT}`);
   if (!CDEK_ACCOUNT || !CDEK_SECURE) {
     console.error('⚠️  WARNING: CDEK_ACCOUNT or CDEK_SECURE not set in .env file!');

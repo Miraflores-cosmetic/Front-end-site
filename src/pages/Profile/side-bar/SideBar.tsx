@@ -59,6 +59,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
         <nav className={styles.menu}>
           {menuItems
+            .filter(item => item.id !== 'bonus')
             .filter(item => !isMobile || item.id !== 'logout')
             .map(item => (
               <div key={item.id} className={styles.menuItemWrapper}>

@@ -124,7 +124,7 @@ export const GratitudeProgram: React.FC = () => {
   const getGiftAmounts = (): string[] => {
     // Можно добавить логику извлечения сумм из атрибутов, если они там есть
     // Пока используем дефолтные значения
-    return ['от 5000₽', 'от 10.000₽', 'от 15.000₽', 'от 20.000₽'];
+    return ['от 5 000₽', 'от 10 000₽', 'от 15 000₽', 'от 20 000₽'];
   };
 
   const giftAmounts = getGiftAmounts();

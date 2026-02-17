@@ -141,12 +141,24 @@ export const Sets: React.FC = () => {
               }
             }
             
-            // Извлекаем описание
+            // Извлекаем описание: сначала атрибут для карточки (как в Bestsellers), иначе — основное описание
             let description = '';
-            if (product.description) {
+            if (product.attributes && Array.isArray(product.attributes)) {
+              const descAttr = product.attributes.find((attr: any) =>
+                attr.attribute?.slug === 'opisanie-v-kartochke-tovara' ||
+                attr.attribute?.name?.toLowerCase().includes('описание') ||
+                attr.attribute?.name?.toLowerCase().includes('description')
+              );
+              if (descAttr?.values?.[0]?.plainText) {
+                description = descAttr.values[0].plainText;
+              } else if (descAttr?.values?.[0]?.name) {
+                description = descAttr.values[0].name;
+              }
+            }
+            if (!description && product.description) {
               try {
-                const parsed = typeof product.description === 'string' 
-                  ? JSON.parse(product.description) 
+                const parsed = typeof product.description === 'string'
+                  ? JSON.parse(product.description)
                   : product.description;
                 if (parsed && parsed.blocks && Array.isArray(parsed.blocks)) {
                   const firstParagraph = parsed.blocks.find((block: any) => block.type === 'paragraph');

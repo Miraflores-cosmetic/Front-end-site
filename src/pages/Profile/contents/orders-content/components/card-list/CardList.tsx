@@ -9,8 +9,13 @@ export interface CartItem {
   name: string;
   size: string;
   count: string;
+  price?: number;
   isGift?: boolean;
   productId?: string;
+}
+
+function formatPrice(amount: number): string {
+  return `${Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}₽`;
 }
 
 interface OrderCartListProps {
@@ -45,7 +50,9 @@ const CardList: React.FC<OrderCartListProps> = ({ cartData, onReview }) => {
               {item.isGift ? (
                 <div className={styles.surprise}>Подарок</div>
               ) : (
-                <div className={styles.price}>9050₽</div>
+                <div className={styles.price}>
+                  {item.price != null ? formatPrice(item.price) : '—'}
+                </div>
               )}
             </div>
 

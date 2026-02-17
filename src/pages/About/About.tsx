@@ -13,6 +13,15 @@ import { editorJsToHtml } from '@/utils/editorJsParser';
 const PARALLAX_RATE = 0.2;
 const ABOUT_PAGE_SLUG = 'stranitsa-o-nas';
 
+const TIMELINE_LABELS = [
+  'Научно-исследовательский подход',
+  '15 лет на рынке',
+  'Собственное производство',
+  'Ограниченные партии и гарантия высокого качества',
+  '80% постоянных клиентов',
+  'Собираем травы в 3 регионах России'
+];
+
 interface AboutBlockItem {
   imageUrl: string;
   text: string;
@@ -111,7 +120,9 @@ const About: React.FC = () => {
           </div>
           <div className={styles.aboutTextWrapper}>
             <p className={styles.aboutText}>
-              это ботаническая нутри-косметика, созданная не для маскировки, а для активации вашей природной красоты. Внимательно прислушиваясь к коже, свету и ритмам природы, она мягко напоминает женщине: красота уже внутри. Нужно лишь помочь ей проявиться.
+              это ботаническая нутри-косметика, созданная не для маскировки, а для активации вашей природной красоты. Внимательно прислушиваясь к коже, свету и ритмам природы, она мягко напоминает женщине:
+              <br />
+              Красота уже внутри. Нужно лишь помочь ей проявиться.
             </p>
             <img
               src={flwImg}
@@ -124,22 +135,22 @@ const About: React.FC = () => {
           <section className={styles.timelineSection} aria-label="Наши преимущества">
             <div className={styles.timelineScroll}>
               <div className={styles.timelineTrack}>
-                {[
-                  'Научно-исследовательский подход',
-                  '15 лет на рынке',
-                  'Собственное производство',
-                  'Ограниченные партии и гарантия высокого качества',
-                  '80% постоянных клиентов',
-                  'Собираем травы в 3 регионах России'
-                ].map((label, i) => (
-                  <div key={i} className={styles.timelinePoint}>
-                    <span className={styles.timelineDot} />
-                    <p className={styles.timelineLabel}>{label}</p>
-                  </div>
-                ))}
+                {[...TIMELINE_LABELS, ...TIMELINE_LABELS].map((label, i) => (
+                    <div key={i} className={styles.timelinePoint}>
+                      <span className={styles.timelineDot} />
+                      <p className={styles.timelineLabel}>{label}</p>
+                    </div>
+                  ))}
               </div>
             </div>
           </section>
+
+          <div className={styles.aboutTagline}>
+            <img src={logo} alt="Miraflores" className={styles.aboutTaglineLogo} />
+            <span className={styles.aboutTaglineText}>
+              Создано с любовью, подтверждено наукой
+            </span>
+          </div>
 
           {aboutBlocks.length > 0 && (
             <section className={styles.aboutGridSection} aria-label="О нас">
@@ -194,6 +205,26 @@ const About: React.FC = () => {
               </div>
             </section>
           )}
+
+          <div className={styles.aboutMissionWrapper}>
+            <div className={styles.aboutMissionHead}>
+              <img src={logo} alt="Miraflores" className={styles.aboutMissionLogo} />
+              <span className={styles.aboutMissionDash}>—</span>
+              <span className={styles.aboutMissionTitle}>Дело всей жизни</span>
+            </div>
+            <p className={styles.aboutMissionText}>
+              МЫ СОЗДАЛИ MIRAFLORES НЕ РАДИ ТРЕНДОВ И НЕ РАДИ ГРОМКИХ ЛОЗУНГОВ. ЭТО ИСТОРИЯ О ЛЮБВИ К НАУКЕ, К
+              ПРИРОДЕ И К ЛЮДЯМ. МЫ РАБОТАЕМ РАДИ МАКСИМАЛЬНО ЭФФЕКТИВНОЙ ФОРМУЛЫ ВНУТРИ БАНОЧКИ, А НЕ РАДИ
+              ОБЕЩАНИЙ СНАРУЖИ. И, КАК БЫ НИ БЫЛИ ВАЖНЫ КРАСИВЫЕ СЛОГАНЫ, МЫ СОСРЕДОТОЧЕНЫ НА ТОМ, ЧТО ВНУТРИ
+              ФЛАКОНА: НА КАЧЕСТВЕ, ЭФФЕКТИВНОСТИ И БЕЗОПАСНОСТИ.
+              {'\n\n'}
+              MIRAFLORES - ЭТО КОМАНДА, КОТОРАЯ ВЕРИТ В СВОЙ ПУТЬ, В ДРУГ ДРУГА И В ПРИНЦИПЫ. ЦЕНИМ КАЖДОГО, КТО
+              ВЫБИРАЕТ НАС, ВНИМАТЕЛЬНО ПРИСЛУШИВАЕМСЯ К ВАШЕЙ ОБРАТНОЙ СВЯЗИ И ПРОДОЛЖАЕМ РАЗВИВАТЬСЯ
+              ВМЕСТЕ С ВАМИ.
+              {'\n\n'}
+              MIRAFLORES - ЭТО ПРО ЛЮБОВЬ И УВАЖЕНИЕ К КОЖЕ, К ПРИРОДЕ И К СЕБЕ.
+            </p>
+          </div>
         </div>
       </main>
       <Footer footerImage={footerImage} />

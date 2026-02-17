@@ -52,14 +52,18 @@
 
         .tab {
           background: none;
-          width: 157px;
+          width: auto;
+          min-width: 157px;
           border: none;
+          font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
           font-weight: 500;
           font-size: 16px;
+          text-transform: uppercase;
           color: #6e6d67;
           cursor: pointer;
           transition: color 0.3s;
           text-align: start;
+          line-height: 1.3;
           &.active {
             color: black;
             width: fit-content;

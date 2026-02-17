@@ -158,16 +158,21 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
                     {displayOrder.lines?.length || 0} {displayOrder.lines?.length === 1 ? 'товар' : 'товаров'}
                   </p>
                   <CardList
-                    cartData={displayOrder.lines?.map((line: any, index: number) => ({
-                      id: index + 1,
-                      image: line.thumbnail?.url || line.variant?.product?.thumbnail?.url || '',
-                      alt: line.productName || '',
-                      name: line.productName || '',
-                      size: line.variantName || '',
-                      count: `${line.quantity} шт.`,
-                      isGift: false,
-                      productId: line.variant?.product?.id
-                    })) || []}
+                    cartData={displayOrder.lines?.map((line: any, index: number) => {
+                      const unitAmount = line.unitPrice?.gross?.amount ?? 0;
+                      const qty = line.quantity ?? 1;
+                      return {
+                        id: index + 1,
+                        image: line.thumbnail?.url || line.variant?.product?.thumbnail?.url || '',
+                        alt: line.productName || '',
+                        name: line.productName || '',
+                        size: line.variantName || '',
+                        count: `${qty} шт.`,
+                        price: unitAmount * qty,
+                        isGift: false,
+                        productId: line.variant?.product?.id
+                      };
+                    }) || []}
                     onReview={(pid, pname) => handleReviewClick(pid, pname, displayOrder.id)}
                   />
                 </>
@@ -188,16 +193,21 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
                         })}</p>
                       </div>
                       <CardList
-                        cartData={order.lines?.map((line: any, idx: number) => ({
-                          id: idx + 1,
-                          image: line.thumbnail?.url || line.variant?.product?.thumbnail?.url || '',
-                          alt: line.productName || '',
-                          name: line.productName || '',
-                          size: line.variantName || '',
-                          count: `${line.quantity} шт.`,
-                          isGift: false,
-                          productId: line.variant?.product?.id
-                        })) || []}
+                        cartData={order.lines?.map((line: any, idx: number) => {
+                          const unitAmount = line.unitPrice?.gross?.amount ?? 0;
+                          const qty = line.quantity ?? 1;
+                          return {
+                            id: idx + 1,
+                            image: line.thumbnail?.url || line.variant?.product?.thumbnail?.url || '',
+                            alt: line.productName || '',
+                            name: line.productName || '',
+                            size: line.variantName || '',
+                            count: `${qty} шт.`,
+                            price: unitAmount * qty,
+                            isGift: false,
+                            productId: line.variant?.product?.id
+                          };
+                        }) || []}
                         onReview={(pid, pname) => handleReviewClick(pid, pname, order.id)}
                       />
                     </div>

@@ -68,7 +68,7 @@ export async function getSingleCategory(
           value
         }
         name
-        products(channel: $channel, first: $first) {
+        products(channel: $channel, first: $first, where: { isPublished: true, isVisibleInListing: true }) {
           pageInfo {
             hasNextPage
             hasPreviousPage
@@ -136,7 +136,7 @@ export async function getCategoryBySlug(
         id
         name
         description
-        products(first: $first, after: $after, channel: $channel) {
+        products(first: $first, after: $after, channel: $channel, where: { isPublished: true, isVisibleInListing: true }) {
           pageInfo {
             hasNextPage
             endCursor

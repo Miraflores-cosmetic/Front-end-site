@@ -25,12 +25,14 @@ const LazyComponent: React.FC = () => {
   const handleSignUp = () => navigate('/sign-up');
   const handleForgotPassword = () => navigate('/forgot-password');
 
+  // Редирект + предупреждение только если открыли страницу входа уже авторизованным (не после только что выполненного входа)
   useEffect(() => {
-    if (isAuth) {
-      handleNavigatetoHome();
+    if (isAuth && !signIn.success) {
       toast.warning('Вы уже вошли в систему');
+      handleNavigatetoHome();
     }
-  }, [isAuth]);
+  }, [isAuth, signIn.success]);
+
   useEffect(() => {
     if (signIn.success) {
       toast.success('Вход в аккаунт выполнен!');

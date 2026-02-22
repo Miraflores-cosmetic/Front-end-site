@@ -1,13 +1,14 @@
 .right {
   position: relative;
-  width: 100%;
+  width: 67%;
+  flex-shrink: 0;
   height: 100vh;
   background-color: #F1EFE6;
-  padding: 26px;
+  padding: 26px 32px;
   margin: auto;
 
   @media (max-width: 940px) {
-    padding: 26px 10px;
+    padding: 26px 32px;
   }
 
   @media (max-width: 720px) {

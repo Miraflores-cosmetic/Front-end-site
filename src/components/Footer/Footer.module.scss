@@ -6,8 +6,34 @@
   justify-content: space-between;
   align-items: start;
   gap: 100px;
-  max-width: 1536px;
-  margin: 0 auto 16px;
+  margin-bottom: 16px;
+
+  &.footerPaddingX32 {
+    padding-left: 32px;
+    padding-right: 32px;
+
+    @media (max-width: 1100px) {
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+
+    @media (max-width: 420px) {
+      padding-left: 32px;
+      padding-right: 32px;
+    }
+  }
+
+  &.footerPaddingRight32 {
+    padding-right: 32px;
+
+    @media (max-width: 1100px) {
+      padding-right: 32px;
+    }
+
+    @media (max-width: 420px) {
+      padding-right: 32px;
+    }
+  }
 
   @media (max-width: 1290px) {
     gap: 50px;

@@ -18,10 +18,10 @@ const BestSeller: React.FC = () => {
     <>
       <Header />
       <article className={styles.bestSellerContainer}>
-        <main>
+        <main className={styles.productMain}>
           <LazyComponent />
         </main>
-        <Footer footerImage={footerImage} />
+        <Footer footerImage={footerImage} paddingX32 />
       </article>
     </>
   );

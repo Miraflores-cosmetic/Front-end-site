@@ -3,7 +3,7 @@
 
 .right {
   width: 50%;
-  padding: 32px 16px 32px 32px;
+  padding: 32px 32px 32px 32px;
   border-left: 1px solid #6e6d6799;
   overflow-y: auto;
 
@@ -15,7 +15,7 @@
   }
 
   @include mixins.respond(laptop) {
-    padding: 24px 16px 24px 24px;
+    padding: 24px 32px 24px 32px;
   }
 
   .listWrapper {
@@ -96,6 +96,7 @@
             width: 92px;
             height: 43px;
             @include mixins.font(14px, 500, #fff);
+            color: #ffffff;
           }
 
           .price {

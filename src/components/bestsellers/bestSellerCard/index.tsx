@@ -11,11 +11,14 @@ export const BestSellerProductCard: React.FC<{
   loading: boolean;
   isDragging?: boolean;
   isDraggingRef?: React.MutableRefObject<boolean>;
+  /** Вызывается при переходе по ссылке на товар (например, закрыть меню) */
+  onNavigate?: () => void;
 }> = ({
   product,
   loading,
   isDragging = false,
-  isDraggingRef
+  isDraggingRef,
+  onNavigate
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [shouldBlockClick, setShouldBlockClick] = useState(false);
@@ -155,8 +158,8 @@ export const BestSellerProductCard: React.FC<{
                 to={'/product/' + product.slug} 
                 className={styles.imageLink}
                 onClick={(e) => {
-                  // Блокируем переход, если был драг
-                  shouldBlockNavigation(e);
+                  if (shouldBlockNavigation(e)) return;
+                  onNavigate?.();
                 }}
                 onMouseDown={(e) => {
                   // Блокируем на mousedown тоже для большей надежности
@@ -225,8 +228,8 @@ export const BestSellerProductCard: React.FC<{
                 className={styles.titleLink}
                 title={product.title}
                 onClick={(e) => {
-                  // Блокируем переход, если был драг
-                  shouldBlockNavigation(e);
+                  if (shouldBlockNavigation(e)) return;
+                  onNavigate?.();
                 }}
                 onMouseDown={(e) => {
                   // Блокируем на mousedown тоже для большей надежности

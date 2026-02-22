@@ -10,6 +10,10 @@ import { getHeaderStyle } from '@/helpers/helpers';
 interface FooterProps {
   /** URL or imported image for the left side background */
   footerImage: string;
+  /** Left/right padding 32px (e.g. on Product page) */
+  paddingX32?: boolean;
+  /** Right padding 32px (e.g. on Home page) */
+  paddingRight32?: boolean;
 }
 
 const menuData = {
@@ -19,7 +23,8 @@ const menuData = {
       { label: 'Каталог', href: '/catalog/', isExternal: false },
       { label: 'Наша история', href: '/about', isExternal: false },
       { label: 'Полезные статьи', href: '/about/articles', isExternal: false },
-      { label: 'Программа благодарности', href: '/gratitude-program', isExternal: false }
+      { label: 'Программа благодарности', href: '/gratitude-program', isExternal: false },
+      { label: 'Косметическое Ателье', href: '/atelier', isExternal: false }
     ]
   },
   info: {
@@ -50,13 +55,16 @@ const menuData = {
 
 const socialLinks = ['Телеграмм канал', 'Pinterest', '© Miraflores 2026'];
 
-const Footer: React.FC<FooterProps> = ({ footerImage }) => {
+const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32 }) => {
   const isTablet = useScreenMatch(1024);
   const isMobile = useScreenMatch(657);
   const isSmallMobile = useScreenMatch(450);
 
   return (
-    <footer className={styles.footer} style={getHeaderStyle(location.pathname, isSmallMobile)}>
+    <footer
+      className={`${styles.footer} ${paddingX32 ? styles.footerPaddingX32 : ''} ${paddingRight32 ? styles.footerPaddingRight32 : ''}`}
+      style={getHeaderStyle(location.pathname, isSmallMobile)}
+    >
       {!isTablet && (
         <div className={styles.footerLeft}>
           <img src={footerImage} alt="footer" className={styles.footerBgImage} />

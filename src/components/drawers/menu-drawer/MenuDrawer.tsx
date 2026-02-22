@@ -44,12 +44,13 @@ const MenuDrawer: React.FC = () => {
     },
     about: {
       title: 'О Компании',
-      link: 'about',
+      link: '',
       withColor: true,
       items: [
         { label: 'Наша история', href: '/about' },
         { label: 'Полезные статьи', href: '/about/articles' },
-        { label: 'Программа благодарности', href: '/#gratitude-program' }
+        { label: 'Программа благодарности', href: '/programma-blagodarnosti-2' },
+        { label: 'Косметическое Ателье', href: '/atelier' }
       ]
     },
     info: {

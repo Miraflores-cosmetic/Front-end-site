@@ -24,14 +24,18 @@
   }
 
   .left {
-    width: 577px;
-    padding: 60px;
+    width: 33%;
+    flex-shrink: 0;
+    max-height: 100vh;
+    overflow-y: auto;
+    padding: 32px 200px 32px 32px;
     display: flex;
     flex-direction: column;
     gap: 40px;
 
     @media (max-width: 450px) {
-      padding: 20px 12px;
+      padding: 32px 32px;
+      max-width: none;
       width: 100%;
     }
   }

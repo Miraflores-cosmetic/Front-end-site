@@ -9,6 +9,7 @@ import { getBestSellers } from '@/store/slices/bestsellersSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
 import { getAllProducts } from '@/graphql/queries/products.service';
+import { getCollectionById } from '@/graphql/queries/collection.service';
 import type { BestSellersProduct } from '@/types/products';
 
 interface BestsellersProps {
@@ -20,6 +21,106 @@ interface BestsellersProps {
   filterByEtap?: string | null; // Фильтр по этапу ухода
   excludeProductId?: string; // ID товара для исключения из списка
   excludeProductSlug?: string; // Slug товара для исключения из списка (более надежно чем ID)
+  /** ID коллекции (например Наборы): товары этой коллекции показываются в слайдере */
+  collectionId?: string;
+  /** Заголовок секции при использовании collectionId (например "Наборы") */
+  collectionTitle?: string;
+  /** Встроенная секция (например на странице Ателье) — убирает верхний отступ */
+  isAtelierSection?: boolean;
+}
+
+function mapProductNodeToBestSellers(productNode: any): BestSellersProduct {
+  let variant = productNode.defaultVariant;
+  if (!variant && productNode.productVariants) {
+    if (Array.isArray(productNode.productVariants)) {
+      variant = productNode.productVariants[0]?.node || productNode.productVariants[0];
+    } else if (productNode.productVariants.edges) {
+      variant = productNode.productVariants.edges[0]?.node;
+    }
+  }
+  const variantId = variant?.id || productNode.id;
+  let variantName = variant?.name || '';
+  if (variant?.attributes && Array.isArray(variant.attributes)) {
+    const volumeAttr = variant.attributes.find((attr: any) =>
+      attr.attribute?.slug === 'obem' ||
+      attr.attribute?.slug === 'volume' ||
+      attr.attribute?.name?.toLowerCase().includes('объем') ||
+      attr.attribute?.name?.toLowerCase().includes('volume')
+    );
+    if (volumeAttr?.values?.[0]?.name) variantName = volumeAttr.values[0].name;
+    else if (volumeAttr?.values?.[0]?.plainText) variantName = volumeAttr.values[0].plainText;
+  }
+  const variantPrice = variant?.pricing?.price?.gross?.amount || 0;
+  const variantUndiscountedPrice = variant?.pricing?.priceUndiscounted?.gross?.amount;
+  let oldPrice: number | undefined;
+  if (variantUndiscountedPrice && variantUndiscountedPrice > variantPrice && variantPrice > 0) {
+    oldPrice = variantUndiscountedPrice;
+  } else {
+    oldPrice = undefined;
+  }
+  let discountPercent: number | undefined;
+  if (oldPrice && oldPrice > 0 && variantPrice > 0) {
+    discountPercent = Math.round(((oldPrice - variantPrice) / oldPrice) * 100);
+    if (discountPercent <= 0) {
+      discountPercent = undefined;
+      oldPrice = undefined;
+    }
+  } else {
+    discountPercent = undefined;
+  }
+  let description = '';
+  if (productNode.attributes && Array.isArray(productNode.attributes)) {
+    const descAttr = productNode.attributes.find((attr: any) =>
+      attr.attribute?.slug === 'opisanie-v-kartochke-tovara' ||
+      attr.attribute?.name?.toLowerCase().includes('описание') ||
+      attr.attribute?.name?.toLowerCase().includes('description')
+    );
+    if (descAttr?.values?.[0]?.plainText) description = descAttr.values[0].plainText;
+    else if (descAttr?.values?.[0]?.name) description = descAttr.values[0].name;
+  }
+  if (!description && productNode.description) {
+    try {
+      const parsed = typeof productNode.description === 'string' ? JSON.parse(productNode.description) : productNode.description;
+      description = parsed?.blocks?.[0]?.data?.text || '';
+    } catch {
+      description = '';
+    }
+  }
+  let productVariants: any[] = [];
+  if (Array.isArray(productNode.productVariants)) {
+    productVariants = productNode.productVariants;
+  } else if (productNode.productVariants?.edges) {
+    productVariants = productNode.productVariants.edges;
+  }
+  const productVariantsFormatted = productVariants.map((v: any) => {
+    const variantNode = v.node || v;
+    let vName = variantNode?.name || '';
+    if (variantNode?.attributes && Array.isArray(variantNode.attributes)) {
+      const volumeAttr = variantNode.attributes.find((attr: any) =>
+        attr.attribute?.slug === 'obem' || attr.attribute?.slug === 'volume' ||
+        attr.attribute?.name?.toLowerCase().includes('объем') || attr.attribute?.name?.toLowerCase().includes('volume')
+      );
+      if (volumeAttr?.values?.[0]?.name) vName = volumeAttr.values[0].name;
+      else if (volumeAttr?.values?.[0]?.plainText) vName = volumeAttr.values[0].plainText;
+    }
+    return { node: { ...variantNode, name: vName } };
+  });
+  return {
+    id: variantId,
+    productId: productNode.id,
+    size: variantName,
+    title: productNode.name || '',
+    description,
+    price: variantPrice,
+    oldPrice: oldPrice,
+    discount: discountPercent,
+    images: productNode.media?.map((item: any) => item.url) || [],
+    thumbnail: productNode.thumbnail?.url || '',
+    slug: productNode.slug || '',
+    attributes: productNode.attributes || [],
+    productVariants: productVariantsFormatted,
+    collections: productNode.collections || []
+  };
 }
 
 export default function Bestsellers({
@@ -30,7 +131,10 @@ export default function Bestsellers({
   isProfilePage = false,
   filterByEtap = null,
   excludeProductId,
-  excludeProductSlug
+  excludeProductSlug,
+  collectionId,
+  collectionTitle,
+  isAtelierSection = false
 }: BestsellersProps) {
   const [activeIndex, setActiveIndex] = React.useState(0);
   const [sliderError, setSliderError] = useState<string | null>(null);
@@ -46,7 +150,6 @@ export default function Bestsellers({
   React.useEffect(() => {
     const handleClick = (e: MouseEvent) => {
       if (isDraggingRef.current && sliderWrapperRef.current) {
-        // Проверяем, что клик внутри слайдера
         if (sliderWrapperRef.current.contains(e.target as Node)) {
           e.preventDefault();
           e.stopPropagation();
@@ -56,7 +159,6 @@ export default function Bestsellers({
       }
     };
 
-    // Используем capture phase для перехвата событий раньше
     document.addEventListener('click', handleClick, true);
     document.addEventListener('mousedown', handleClick, true);
 
@@ -273,12 +375,42 @@ export default function Bestsellers({
   const [allProducts, setAllProducts] = useState<BestSellersProduct[]>([]);
   const [loadingAllProducts, setLoadingAllProducts] = useState(false);
 
-  // Загружаем обычные bestSellers, если нет фильтра по этапу
+  // Товары коллекции (например Наборы)
+  const [collectionProducts, setCollectionProducts] = useState<BestSellersProduct[]>([]);
+  const [loadingCollectionProducts, setLoadingCollectionProducts] = useState(false);
+
+  // Загружаем обычные bestSellers, если нет фильтра по этапу и не коллекция
   useEffect(() => {
-    if (!filterByEtap && !hasAttemptedLoad && !loading) {
+    if (!collectionId && !filterByEtap && !hasAttemptedLoad && !loading) {
       dispatch(getBestSellers());
     }
-  }, [dispatch, hasAttemptedLoad, loading, filterByEtap]);
+  }, [dispatch, hasAttemptedLoad, loading, filterByEtap, collectionId]);
+
+  // Загружаем товары коллекции по collectionId
+  useEffect(() => {
+    if (collectionId && collectionId.trim() !== '') {
+      const loadCollection = async () => {
+        setLoadingCollectionProducts(true);
+        try {
+          const collection = await getCollectionById(collectionId, 20);
+          if (collection?.products?.edges?.length) {
+            const mapped = collection.products.edges.map((edge: any) => mapProductNodeToBestSellers(edge.node));
+            setCollectionProducts(mapped);
+          } else {
+            setCollectionProducts([]);
+          }
+        } catch (err) {
+          console.error('[Bestsellers] Ошибка загрузки коллекции:', err);
+          setCollectionProducts([]);
+        } finally {
+          setLoadingCollectionProducts(false);
+        }
+      };
+      loadCollection();
+    } else {
+      setCollectionProducts([]);
+    }
+  }, [collectionId]);
 
   // Загружаем все товары через GraphQL, если указан фильтр по этапу
   useEffect(() => {
@@ -296,128 +428,7 @@ export default function Bestsellers({
             console.log('[Bestsellers] Получено товаров:', result.edges.length);
           }
 
-          // Преобразуем данные из GraphQL формата в формат BestSellersProduct
-          const formattedProducts: BestSellersProduct[] = result.edges.map((edge: any) => {
-            const productNode = edge.node;
-            // productVariants может быть массивом ProductVariant или объектом с edges
-            let variant = productNode.defaultVariant;
-            if (!variant && productNode.productVariants) {
-              if (Array.isArray(productNode.productVariants)) {
-                variant = productNode.productVariants[0]?.node || productNode.productVariants[0];
-              } else if (productNode.productVariants.edges) {
-                variant = productNode.productVariants.edges[0]?.node;
-              }
-            }
-
-            const variantId = variant?.id || productNode.id;
-
-            let variantName = variant?.name || '';
-            if (variant?.attributes && Array.isArray(variant.attributes)) {
-              const volumeAttr = variant.attributes.find((attr: any) =>
-                attr.attribute?.slug === 'obem' ||
-                attr.attribute?.slug === 'volume' ||
-                attr.attribute?.name?.toLowerCase().includes('объем') ||
-                attr.attribute?.name?.toLowerCase().includes('volume')
-              );
-              if (volumeAttr?.values?.[0]?.name) {
-                variantName = volumeAttr.values[0].name;
-              } else if (volumeAttr?.values?.[0]?.plainText) {
-                variantName = volumeAttr.values[0].plainText;
-              }
-            }
-
-            const variantPrice = variant?.pricing?.price?.gross?.amount || 0;
-            const variantUndiscountedPrice = variant?.pricing?.priceUndiscounted?.gross?.amount;
-
-            let oldPrice: number | undefined = undefined;
-            if (variantUndiscountedPrice && variantUndiscountedPrice > variantPrice && variantPrice > 0) {
-              oldPrice = variantUndiscountedPrice;
-            }
-
-            let discountPercent: number | undefined = undefined;
-            if (oldPrice && oldPrice > 0 && variantPrice > 0) {
-              discountPercent = Math.round(((oldPrice - variantPrice) / oldPrice) * 100);
-              if (discountPercent <= 0) {
-                discountPercent = undefined;
-                oldPrice = undefined;
-              }
-            }
-
-            let description = '';
-            if (productNode.attributes && Array.isArray(productNode.attributes)) {
-              const descAttr = productNode.attributes.find((attr: any) =>
-                attr.attribute?.slug === 'opisanie-v-kartochke-tovara' ||
-                attr.attribute?.name?.toLowerCase().includes('описание') ||
-                attr.attribute?.name?.toLowerCase().includes('description')
-              );
-              if (descAttr?.values?.[0]?.plainText) {
-                description = descAttr.values[0].plainText;
-              } else if (descAttr?.values?.[0]?.name) {
-                description = descAttr.values[0].name;
-              }
-            }
-
-            if (!description && productNode.description) {
-              try {
-                const parsed = typeof productNode.description === 'string'
-                  ? JSON.parse(productNode.description)
-                  : productNode.description;
-                description = parsed?.blocks?.[0]?.data?.text || '';
-              } catch (e) {
-                description = '';
-              }
-            }
-
-            return {
-              id: variantId,
-              productId: productNode.id,
-              size: variantName,
-              title: productNode.name || '',
-              description,
-              price: variantPrice,
-              oldPrice: oldPrice,
-              discount: discountPercent,
-              images: productNode.media?.map((item: any) => item.url) || [],
-              thumbnail: productNode.thumbnail?.url || '',
-              slug: productNode.slug || '',
-              attributes: productNode.attributes || [],
-              productVariants: (() => {
-                let variants = [];
-                if (Array.isArray(productNode.productVariants)) {
-                  variants = productNode.productVariants;
-                } else if (productNode.productVariants?.edges) {
-                  variants = productNode.productVariants.edges;
-                }
-
-                return variants.map((v: any) => {
-                  const variantNode = v.node || v;
-                  let variantName = variantNode?.name || '';
-
-                  if (variantNode?.attributes && Array.isArray(variantNode.attributes)) {
-                    const volumeAttr = variantNode.attributes.find((attr: any) =>
-                      attr.attribute?.slug === 'obem' ||
-                      attr.attribute?.slug === 'volume' ||
-                      attr.attribute?.name?.toLowerCase().includes('объем') ||
-                      attr.attribute?.name?.toLowerCase().includes('volume')
-                    );
-                    if (volumeAttr?.values?.[0]?.name) {
-                      variantName = volumeAttr.values[0].name;
-                    } else if (volumeAttr?.values?.[0]?.plainText) {
-                      variantName = volumeAttr.values[0].plainText;
-                    }
-                  }
-
-                  return {
-                    node: {
-                      ...variantNode,
-                      name: variantName
-                    }
-                  };
-                });
-              })(),
-              collections: productNode.collections || []
-            };
-          });
+          const formattedProducts: BestSellersProduct[] = result.edges.map((edge: any) => mapProductNodeToBestSellers(edge.node));
 
           // Фильтруем товары по этапу на клиенте
           const filteredByEtap = formattedProducts.filter(product => {
@@ -493,13 +504,14 @@ export default function Bestsellers({
 
   // Определяем, какие товары использовать
   const sourceProducts = React.useMemo(() => {
-    // Если указан фильтр по этапу, используем товары, загруженные через GraphQL и отфильтрованные на клиенте
+    if (collectionId && collectionId.trim() !== '') {
+      return collectionProducts;
+    }
     if (filterByEtap && filterByEtap.trim() !== '') {
       return allProducts;
     }
-    // Иначе используем обычные bestSellers
     return bestSellers;
-  }, [filterByEtap, allProducts, bestSellers]);
+  }, [collectionId, collectionProducts, filterByEtap, allProducts, bestSellers]);
 
   const filteredProducts = React.useMemo(() => {
     let filtered = [...sourceProducts];
@@ -534,7 +546,7 @@ export default function Bestsellers({
   // Обработка ошибок и пустых состояний
   const hasError = sliderError !== null;
   const hasProducts = filteredProducts.length > 0;
-  const isLoading = loading || loadingAllProducts;
+  const isLoading = loading || loadingAllProducts || (collectionId ? loadingCollectionProducts : false);
 
   // Intersection Observer для запуска анимации при скролле к секции
   React.useEffect(() => {
@@ -594,6 +606,44 @@ export default function Bestsellers({
     };
   }, [isSectionLoaded]);
 
+  // Нативный wheel handler с { passive: false } для корректного preventDefault при горизонтальной прокрутке
+  React.useEffect(() => {
+    const wrapper = sliderWrapperRef.current;
+    if (!wrapper) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      const isHorizontalScroll = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+      const isShiftScroll = e.shiftKey && Math.abs(e.deltaY) > 0;
+
+      if (isHorizontalScroll || isShiftScroll) {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+        isDraggingRef.current = true;
+
+        if (sliderRef.current) {
+          const delta = isHorizontalScroll ? e.deltaX : e.deltaY;
+          if (delta > 0) {
+            sliderRef.current.slickNext();
+          } else {
+            sliderRef.current.slickPrev();
+          }
+        }
+
+        setTimeout(() => {
+          setIsDragging(false);
+          isDraggingRef.current = false;
+        }, 300);
+      }
+    };
+
+    wrapper.addEventListener('wheel', handleWheel, { passive: false });
+
+    return () => {
+      wrapper.removeEventListener('wheel', handleWheel);
+    };
+  }, [hasProducts]);
+
   // Применяем класс к точкам после инициализации слайдера и когда секция загружена
   React.useEffect(() => {
     if (isSectionLoaded && hasProducts) {
@@ -628,14 +678,14 @@ export default function Bestsellers({
   return (
     <section
       ref={sectionRef}
-      className={`${styles.bestsellers} ${isProductPage ? styles.productPage : ''} ${isCatalogPage ? styles.catalogPage : ''} ${isProfilePage ? styles.profilePage : ''} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
+      className={`${styles.bestsellers} ${isProductPage ? styles.productPage : ''} ${isCatalogPage ? styles.catalogPage : ''} ${isProfilePage ? styles.profilePage : ''} ${isAtelierSection ? styles.atelierSection : ''} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
       style={isOversize ? undefined : {}}
       aria-label="Секция бестселлеров"
     >
       <Layout>
         {!isTitleHidden && (
           <h2 className={styles.title}>
-            Бестселлеры
+            {collectionTitle ?? 'Бестселлеры'}
           </h2>
         )}
 
@@ -700,39 +750,11 @@ export default function Bestsellers({
               dragStartRef.current = null;
             }}
             onMouseLeave={() => {
-              // При выходе мыши с области слайдера сбрасываем флаг
               setTimeout(() => {
                 setIsDragging(false);
                 isDraggingRef.current = false;
               }, 300);
               dragStartRef.current = null;
-            }}
-            onWheel={(e) => {
-              // Поддержка прокрутки тачпадом (горизонтальная прокрутка)
-              // Проверяем горизонтальную прокрутку (deltaX) или Shift + вертикальная прокрутка
-              const isHorizontalScroll = Math.abs(e.deltaX) > Math.abs(e.deltaY);
-              const isShiftScroll = e.shiftKey && Math.abs(e.deltaY) > 0;
-
-              if (isHorizontalScroll || isShiftScroll) {
-                e.preventDefault();
-                e.stopPropagation();
-                setIsDragging(true);
-
-                if (sliderRef.current) {
-                  const delta = isHorizontalScroll ? e.deltaX : e.deltaY;
-                  if (delta > 0) {
-                    sliderRef.current.slickNext();
-                  } else {
-                    sliderRef.current.slickPrev();
-                  }
-                }
-
-                // Сбрасываем флаг после прокрутки
-                setTimeout(() => {
-                  setIsDragging(false);
-                  isDraggingRef.current = false;
-                }, 300);
-              }
             }}
           >
             <Slider

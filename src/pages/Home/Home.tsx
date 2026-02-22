@@ -109,7 +109,7 @@ const Home: React.FC = () => {
         <GratitudeProgram />
         <FAQBlock />
         <Awards />
-        <Footer footerImage={footerImage} />
+        <Footer footerImage={footerImage} paddingRight32 />
       </main>
     </>
   );

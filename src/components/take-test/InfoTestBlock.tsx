@@ -86,9 +86,7 @@ export const InfoTest: React.FC = () => {
           Пройти тест
         </a>
         <a 
-          href="https://t.me/Miraflores_Cosmetics_Bot" 
-          target="_blank" 
-          rel="noopener noreferrer"
+          href="mailto:info@miraflores-shop.ru"
           className={styles.btnWrite}
         >
           Написать основательнице

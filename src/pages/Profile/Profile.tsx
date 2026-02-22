@@ -158,29 +158,31 @@ const ProfilePage: React.FC = () => {
   }, []); // Пустой массив зависимостей - проверяем только при монтировании
 
   return (
-    <main className={styles.profileContainer}>
+    <>
       <Header />
-      <section className={styles.contentWrapper}>
-        <div className={styles.profile}>
-          {/* ЛЕВАЯ КОЛОНКА */}
-          <Sidebar
-            userName={me?.firstName || ''}
-            menuItems={menuMobileItems}
-            activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            openAccordion={openAccordion}
-            setOpenAccordion={setOpenAccordion}
-          />
-          {/* ПРАВАЯ ЧАСТЬ */}
-          {!isMobile && <ProfileContent activeTab={activeTab} renderContent={renderContent} />}
-        </div>
-      </section>
-      <LogoutConfirmationModal
-        isOpen={isLogoutModalOpen}
-        onClose={() => setIsLogoutModalOpen(false)}
-        onConfirm={confirmLogout}
-      />
-    </main>
+      <main className={styles.profileContainer}>
+        <section className={styles.contentWrapper}>
+          <div className={styles.profile}>
+            {/* ЛЕВАЯ КОЛОНКА */}
+            <Sidebar
+              userName={me?.firstName || ''}
+              menuItems={menuMobileItems}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              openAccordion={openAccordion}
+              setOpenAccordion={setOpenAccordion}
+            />
+            {/* ПРАВАЯ ЧАСТЬ */}
+            {!isMobile && <ProfileContent activeTab={activeTab} renderContent={renderContent} />}
+          </div>
+        </section>
+        <LogoutConfirmationModal
+          isOpen={isLogoutModalOpen}
+          onClose={() => setIsLogoutModalOpen(false)}
+          onConfirm={confirmLogout}
+        />
+      </main>
+    </>
   );
 };
 

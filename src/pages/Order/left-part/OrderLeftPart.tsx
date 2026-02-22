@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import styles from './OrderLeftPart.module.scss';
 import Input from '@/components/text-field/input/Input';
 import goBack from '@/assets/icons/go-back.svg';
-import Karta from '@/assets/icons/Karta.svg';
-import SberPay from '@/assets/icons/SberPay.svg';
-import SBP from '@/assets/icons/SBP.svg';
 import Miraflores_logo from '@/assets/icons/Miraflores_logo.svg';
 import krem from '@/assets/images/Cream.png';
 
 import CustomCheckbox from '@/components/custom-checkBox/CustomCheckbox';
 import CustomButton from '@/components/custom-button/CustomButton';
-import PaymentsList from '../order-components/PaymentsList';
 import DeliveryProfile from '@/components/delivary-profile/DeliveryProfile';
 import TotalAccordion from '../total-accardion/TotalAccardion';
 import YooKassaWidget from '@/components/yookassa/YooKassaWidget';
@@ -31,6 +28,7 @@ interface OrderFormData {
 }
 
 const OrderLeftPart: React.FC = () => {
+  const navigate = useNavigate();
   const { me } = useSelector((state: RootState) => state.authSlice);
   const isMobile = useScreenMatch(500);
 
@@ -224,12 +222,6 @@ const OrderLeftPart: React.FC = () => {
     }
   };
 
-  const paymentImages = [
-    { src: SBP, alt: 'goSBPBack' },
-    { src: Karta, alt: 'Karta' },
-    { src: SberPay, alt: 'SberPay' },
-  ];
-
   const products = [
     {
       id: 1,
@@ -250,7 +242,7 @@ const OrderLeftPart: React.FC = () => {
         <img
           src={goBack}
           alt='goBack'
-          onClick={() => history.back()}
+          onClick={() => navigate(-1)}
           className={styles.goBack}
         />
       )}
@@ -337,13 +329,6 @@ const OrderLeftPart: React.FC = () => {
         </section>
       )}
 
-      <section className={styles.paymentWrapper}>
-        <p className={styles.paymentTitle}>Оплата</p>
-        <article className={styles.payments}>
-          <PaymentsList paymentImages={paymentImages} />
-        </article>
-      </section>
-
       {/* Виджет ЮKassa - показывается когда доступен confirmation_token */}
       {showYooKassaWidget && confirmationToken && (
         <div style={{ marginBottom: '24px' }}>
@@ -375,9 +360,10 @@ const OrderLeftPart: React.FC = () => {
           />
         </figure>
         <p className={styles.agreement}>
-          Нажимая на кнопку «Оформить заказ», я соглашаюсь с условиями <span>Публичной оферты</span>{' '}
+          Нажимая на кнопку «Оформить заказ», я соглашаюсь с условиями{' '}
+          <Link to="/info/oferta-i-usloviia-polzovaniia">Публичной оферты</Link>{' '}
           и выражаю своё согласие на обработку моих персональных данных в соответствии с{' '}
-          <span>Политикой конфиденциальности</span>
+          <Link to="/info/politika-konfidentsialnosti">Политикой конфиденциальности</Link>
         </p>
       </section>
     </section>

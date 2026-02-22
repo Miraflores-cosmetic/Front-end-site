@@ -233,7 +233,11 @@ const MenuRightPart: React.FC = () => {
           <div>Загрузка...</div>
         ) : productCard ? (
           <div className={styles.imgWrapper}>
-            <BestSellerProductCard product={productCard} loading={loading} />
+            <BestSellerProductCard
+              product={productCard}
+              loading={loading}
+              onNavigate={() => dispatch(closeDrawer())}
+            />
             <img src={lineTo} alt='lineTo' className={styles.lineTo} />
             {collectionDescription && (
               <p className={styles.textTo}>{collectionDescription}</p>

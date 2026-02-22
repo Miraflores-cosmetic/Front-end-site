@@ -12,11 +12,11 @@ interface PaymentsListProps {
 
 const PaymentsList: React.FC<PaymentsListProps> = ({ paymentImages }) => {
   return (
-    <article className={styles.payments}>
+    <div className={styles.paymentImagesRow}>
       {paymentImages.map((item, index) => (
         <img key={index} src={item.src} alt={item.alt} className={styles.paymentImage} />
       ))}
-    </article>
+    </div>
   );
 };
 

@@ -66,6 +66,77 @@
     }
   }
 
+  // Встроенная секция (страница Ателье) — по аналогии со слайдером на странице Product
+  &.atelierSection {
+    padding: 0;
+    margin-top: 40px;
+    margin-bottom: 240px;
+    overflow-x: visible;
+    max-width: 100%;
+
+    :global {
+      .layout {
+        padding-left: 0;
+        padding-right: 0;
+        max-width: none;
+        width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+      }
+
+      .slick-list {
+        overflow: visible !important;
+        margin-left: 0;
+        margin-right: 0;
+        padding: 0 !important;
+      }
+
+      .slick-track {
+        margin-left: 0 !important;
+      }
+    }
+
+    .sliderWrapper {
+      touch-action: pan-y;
+    }
+
+    @media (max-width: 768px) {
+      margin-bottom: 0;
+
+      :global {
+        .slick-list {
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+          -webkit-overflow-scrolling: touch;
+          scroll-behavior: smooth;
+          scrollbar-width: none;
+          -ms-overflow-style: none;
+
+          &::-webkit-scrollbar {
+            display: none;
+          }
+        }
+      }
+    }
+
+    @media (max-width: 450px) {
+      margin-top: 0;
+      margin-bottom: 150px;
+      padding-left: 15px;
+
+      :global {
+        .layout {
+          padding-left: 15px;
+        }
+
+        .slick-list {
+          overflow-x: auto !important;
+          overflow-y: hidden !important;
+        }
+      }
+    }
+  }
+
   @media (max-width: 768px) {
     margin-top: 0;
     padding-top: 0;
@@ -86,7 +157,7 @@
 
     :global {
       .layout {
-        padding-left: 32px;
+        padding-left: 0;
         padding-right: 0;
         max-width: none;
         width: 100%;

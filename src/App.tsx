@@ -16,6 +16,7 @@ import FacePage from './pages/Face/Face';
 import Articles from './pages/Articles/Articles';
 import ArticleDetail from './pages/ArticleDetail/ArticleDetail';
 import About from './pages/About/About';
+import Atelier from './pages/Atelier/Atelier';
 import Category from '@/pages/Category/Category'
 import Order from './pages/Order/Order';
 import ProfilePage from './pages/Profile/Profile';
@@ -109,6 +110,7 @@ const App: React.FC = () => {
         <Route path='/category/:slug' element={<Category />} />
         <Route path='/face' element={<FacePage />} />
         <Route path='/about' element={<About />} />
+        <Route path='/atelier' element={<Atelier />} />
         <Route path='/about/articles' element={<Articles />} />
         <Route path='/about/articles/:slug' element={<ArticleDetail />} />
         <Route path='/info/:slug' element={<ArticleDetail />} />

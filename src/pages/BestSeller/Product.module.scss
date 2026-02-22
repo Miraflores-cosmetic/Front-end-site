@@ -18,14 +18,26 @@
   -ms-overflow-style: none; /* IE 10+ */
   max-width: 100%;
   margin: 0;
-  
-  // Flexbox структура - выровнено с header по сетке
-  // Ширина как в header (max-width: 1536px), padding 16px с обеих сторон
+}
+
+.productMain {
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 24px 32px 0;
+
+  @media (max-width: 450px) {
+    padding: 24px 12px 0;
+  }
+
+  @media (max-width: 768px) {
+    padding: 24px 12px 0;
+  }
+}
+
+.bestSellerContainer {
   .bestSellerInfo {
     width: 100%;
-    max-width: 1536px;
-    margin: 0 auto;
-    padding: 24px 16px 0 16px;
+    padding: 0;
     display: flex;
     align-items: stretch;
     gap: 32px;
@@ -33,13 +45,11 @@
     position: relative;
     
     @media (max-width: 450px) {
-      padding: 24px 12px 0 12px;
       gap: 0;
     }
     
     @media (max-width: 768px) {
       flex-direction: column;
-      padding: 24px 12px 0 12px;
       gap: 20px;
     }
 
@@ -295,19 +305,7 @@
   }
 }
 
-// Padding для других секций на странице товара (BestSellerTabs, BestSellerEtaps)
-// Выровнено с header и bestSellerInfo: padding 16px по горизонтали
+// Секции на странице товара (BestSellerTabs, BestSellerEtaps) — отступы задаёт .productMain
 .productSections {
-  padding-left: 16px;
-  padding-right: 16px;
-  max-width: 1536px;
-  margin-left: auto;
-  margin-right: auto;
   box-sizing: border-box;
-  
-  @media (max-width: 450px) {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
 }

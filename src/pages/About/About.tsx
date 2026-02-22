@@ -145,13 +145,6 @@ const About: React.FC = () => {
             </div>
           </section>
 
-          <div className={styles.aboutTagline}>
-            <img src={logo} alt="Miraflores" className={styles.aboutTaglineLogo} />
-            <span className={styles.aboutTaglineText}>
-              Создано с любовью, подтверждено наукой
-            </span>
-          </div>
-
           {aboutBlocks.length > 0 && (
             <section className={styles.aboutGridSection} aria-label="О нас">
               <img
@@ -187,19 +180,31 @@ const About: React.FC = () => {
                     </div>
                   );
                   return (
-                    <div key={index} className={styles.aboutGridRow}>
-                      {index % 2 === 0 ? (
-                        <>
-                          {imageCell}
-                          {textCell}
-                        </>
-                      ) : (
-                        <>
-                          {textCell}
-                          {imageCell}
-                        </>
+                    <React.Fragment key={index}>
+                      <div className={styles.aboutGridRow}>
+                        {index % 2 === 0 ? (
+                          <>
+                            {imageCell}
+                            {textCell}
+                          </>
+                        ) : (
+                          <>
+                            {textCell}
+                            {imageCell}
+                          </>
+                        )}
+                      </div>
+                      {index === Math.min(1, aboutBlocks.length - 1) && (
+                        <div className={styles.aboutGridTaglineBreak}>
+                          <div className={styles.aboutTagline}>
+                            <img src={logo} alt="Miraflores" className={styles.aboutTaglineLogo} />
+                            <span className={styles.aboutTaglineText}>
+                              Создано с любовью, подтверждено наукой
+                            </span>
+                          </div>
+                        </div>
                       )}
-                    </div>
+                    </React.Fragment>
                   );
                 })}
               </div>
@@ -213,21 +218,17 @@ const About: React.FC = () => {
               <span className={styles.aboutMissionTitle}>Дело всей жизни</span>
             </div>
             <p className={styles.aboutMissionText}>
-              МЫ СОЗДАЛИ MIRAFLORES НЕ РАДИ ТРЕНДОВ И НЕ РАДИ ГРОМКИХ ЛОЗУНГОВ. ЭТО ИСТОРИЯ О ЛЮБВИ К НАУКЕ, К
-              ПРИРОДЕ И К ЛЮДЯМ. МЫ РАБОТАЕМ РАДИ МАКСИМАЛЬНО ЭФФЕКТИВНОЙ ФОРМУЛЫ ВНУТРИ БАНОЧКИ, А НЕ РАДИ
-              ОБЕЩАНИЙ СНАРУЖИ. И, КАК БЫ НИ БЫЛИ ВАЖНЫ КРАСИВЫЕ СЛОГАНЫ, МЫ СОСРЕДОТОЧЕНЫ НА ТОМ, ЧТО ВНУТРИ
-              ФЛАКОНА: НА КАЧЕСТВЕ, ЭФФЕКТИВНОСТИ И БЕЗОПАСНОСТИ.
-              {'\n\n'}
-              MIRAFLORES - ЭТО КОМАНДА, КОТОРАЯ ВЕРИТ В СВОЙ ПУТЬ, В ДРУГ ДРУГА И В ПРИНЦИПЫ. ЦЕНИМ КАЖДОГО, КТО
-              ВЫБИРАЕТ НАС, ВНИМАТЕЛЬНО ПРИСЛУШИВАЕМСЯ К ВАШЕЙ ОБРАТНОЙ СВЯЗИ И ПРОДОЛЖАЕМ РАЗВИВАТЬСЯ
-              ВМЕСТЕ С ВАМИ.
-              {'\n\n'}
-              MIRAFLORES - ЭТО ПРО ЛЮБОВЬ И УВАЖЕНИЕ К КОЖЕ, К ПРИРОДЕ И К СЕБЕ.
+              Мы создали Miraflores не ради трендов и не ради громких лозунгов. Это история о любви к науке, к
+              природе и к людям. Мы работаем ради максимально эффективной формулы внутри баночки, а не ради обещаний снаружи. И,
+              как бы ни были важны красивые слоганы, мы сосредоточены на том, что внутри флакона: на качестве,
+              эффективности и безопасности. Miraflores - это команда, которая верит в свой путь, в друг друга и в принципы.
+              Ценим каждого, кто выбирает нас, внимательно прислушиваемся к вашей обратной связи и продолжаем
+              развиваться вместе с вами. Miraflores - это про любовь и уважение к коже, к природе и к себе.
             </p>
           </div>
+        <Footer footerImage={footerImage} />
         </div>
       </main>
-      <Footer footerImage={footerImage} />
     </>
   );
 };

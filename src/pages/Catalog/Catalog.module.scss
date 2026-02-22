@@ -1,7 +1,9 @@
 @use '@/style/variables.scss' as *;
 
 .catalogContainer {
-  padding: 0;
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 0 32px;
   min-height: 100vh;
   background-color: $white;
   overflow-x: hidden;

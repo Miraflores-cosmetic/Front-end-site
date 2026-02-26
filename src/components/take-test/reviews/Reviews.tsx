@@ -20,7 +20,10 @@ interface ReviewData {
   date: string;
 }
 
-export const Reviews: React.FC<{ variant?: 'preview' | 'page' }> = ({ variant = 'preview' }) => {
+export const Reviews: React.FC<{
+  variant?: 'preview' | 'page';
+  productSlug?: string;
+}> = ({ variant = 'preview', productSlug }) => {
   const isMobile = useScreenMatch(500);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const navigate = useNavigate();
@@ -33,8 +36,11 @@ export const Reviews: React.FC<{ variant?: 'preview' | 'page' }> = ({ variant = 
     async function loadReviews() {
       try {
         const data = await getAllPublishedReviews();
+        const filtered = productSlug
+          ? data.filter((r) => r.product.slug === productSlug)
+          : data;
 
-        const mapped = data.map(r => ({
+        const mapped = filtered.map((r) => ({
           images: [r.image1, r.image2].filter(Boolean) as string[],
           title: r.product.name,
           subtitle: '',
@@ -53,7 +59,7 @@ export const Reviews: React.FC<{ variant?: 'preview' | 'page' }> = ({ variant = 
       }
     }
     loadReviews();
-  }, [showAll]);
+  }, [showAll, productSlug]);
 
   // Intersection Observer для запуска анимации при скролле к секции
   useEffect(() => {
@@ -132,7 +138,12 @@ export const Reviews: React.FC<{ variant?: 'preview' | 'page' }> = ({ variant = 
       </div>
 
       {!isMobile && !showAll && (
-        <Link to='/reviews/' className={styles.allWrapper}>
+        <Link
+          to='/reviews/'
+          className={styles.allWrapper}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <p>ВСЕ ОТЗЫВЫ</p>
           <img src={ArrowToRight} alt='' />
         </Link>

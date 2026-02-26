@@ -17,8 +17,9 @@ const SearchDrawer: React.FC = () => {
         <button className={styles.closeBtn} onClick={() => dispatch(closeDrawer())}>
           ✕
         </button>
-
-        <Search />
+        <div className={styles.scrollArea}>
+          <Search />
+        </div>
       </div>
     </div>
   );

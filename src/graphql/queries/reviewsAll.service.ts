@@ -10,6 +10,7 @@ export interface PublishedReview {
   image2?: string | null;
   product: {
     name: string;
+    slug?: string;
     thumbnail?: string | null;
   };
 }
@@ -22,6 +23,7 @@ export async function getAllPublishedReviews(): Promise<PublishedReview[]> {
           node {
             id
             name
+            slug
             thumbnail {
               url
             }
@@ -62,6 +64,7 @@ export async function getAllPublishedReviews(): Promise<PublishedReview[]> {
             image2: normalizeMediaUrl(review.image2),
             product: {
               name: productName,
+              slug: product.slug ?? undefined,
               thumbnail: normalizeMediaUrl(thumbnail)
             }
           });

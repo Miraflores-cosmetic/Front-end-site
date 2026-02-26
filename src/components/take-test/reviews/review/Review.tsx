@@ -19,19 +19,15 @@ export const Review: React.FC<ReviewProps> = ({ images, title, subtitle, text, r
       <div className={styles.images}>
         {images && images.length > 0 ? (
           images.map((img, i) => (
-            <ImageWithFallback 
-              key={i} 
-              src={normalizeMediaUrl(img)} 
+            <ImageWithFallback
+              key={i}
+              src={normalizeMediaUrl(img)}
               alt={title}
               className={styles.reviewImage}
             />
           ))
         ) : (
-          <ImageWithFallback 
-            src="" 
-            alt={title}
-            className={styles.reviewImage}
-          />
+          <div className={styles.imagePlaceholder} aria-hidden />
         )}
       </div>
 

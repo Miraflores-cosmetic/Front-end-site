@@ -13,11 +13,21 @@
 .container {
   width: 100%;
   max-width: 550px;
+  max-height: calc(100vh - 100px);
   background: #fff;
   border-radius: 14px;
   padding: 20px;
   animation: slideDown 0.25s ease forwards;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.scrollArea {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .closeBtn {

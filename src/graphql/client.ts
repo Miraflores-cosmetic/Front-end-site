@@ -96,9 +96,8 @@ export async function graphqlRequest<T>(
 
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
-  } else {
-    console.warn('GraphQL Request - No token found in localStorage');
   }
+  // Без токена запросы идут анонимно (каталог, товары) — это нормально, не логируем
 
   let res = await fetch(endpoint, {
     method: 'POST',

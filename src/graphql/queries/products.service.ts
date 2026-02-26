@@ -202,6 +202,45 @@ export async function getFilteredProducts(
   return data.products;
 }
 
+/** Для поиска по контексту: товары с названием, описанием и атрибутами (состав и т.д.) */
+export async function getProductsForContextSearch(first: number = 200): Promise<
+  Array<{
+    id: string;
+    name: string;
+    slug: string;
+    description?: string | null;
+    attributes?: Array<{
+      attribute?: { slug?: string; name?: string };
+      values?: Array<{ name?: string; plainText?: string; richText?: string }>;
+    }>;
+  }>
+> {
+  const query = `
+    query ProductsForContextSearch($first: Int!, $channel: String!) {
+      products(first: $first, channel: $channel, filter: { isPublished: true }) {
+        edges {
+          node {
+            id
+            name
+            slug
+            description
+            attributes {
+              attribute { id name slug }
+              values { id name slug plainText }
+            }
+          }
+        }
+      }
+    }
+  `;
+  const safeFirst = Math.min(first, 100);
+  const data = await graphqlRequest<{ products: { edges: Array<{ node: any }> } }>(query, {
+    first: safeFirst,
+    channel: CHANNEL
+  });
+  return (data.products?.edges ?? []).map((e: any) => e.node);
+}
+
 // -----------------------------------------------------------
 // B. Inventory Queries (warehouse, warehouses)
 // -----------------------------------------------------------

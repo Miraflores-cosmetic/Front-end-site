@@ -20,7 +20,7 @@ import { useScreenMatch } from '@/hooks/useScreenMatch';
 import slide3 from '@/assets/images/item-photo.jpg';
 import HeroSlider from '@/components/HeroSlider/HeroSlider';
 import { ReviewModal } from '@/components/review-modal/ReviewModal';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { Product } from '@/types/types';
 import { getSingleProduct } from '@/graphql/queries/products.service';
@@ -280,7 +280,23 @@ const LazyComponent: React.FC = () => {
             <div className={styles.infoWrapper}>
               {/* Заголовок для десктопа - скрыт на мобилке */}
               <p className={styles.title}>{item.name}</p>
-              <StarRating rating={item.rating ?? 5} text={`Отзывы (${(item.reviews || []).length})`} />
+              <Link
+                to={`/reviews?product=${encodeURIComponent(item.slug)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.reviewsLink}
+              >
+                <StarRating
+                  rating={(() => {
+                    const reviews = (item.reviews || []) as Array<{ rating?: number }>;
+                    if (reviews.length === 0) return 0;
+                    const sum = reviews.reduce((acc, r) => acc + (Number(r?.rating) || 0), 0);
+                    const avg = sum / reviews.length;
+                    return Math.min(5, Math.max(0, Math.round(avg * 10) / 10));
+                  })()}
+                  text={`Отзывы (${(item.reviews || []).length})`}
+                />
+              </Link>
               {(() => {
                 const getAttributeBySlug = (attributes: any[], slug: string) => {
                   return attributes?.find((attr: any) => attr.attribute?.slug === slug);

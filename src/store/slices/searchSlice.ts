@@ -1,10 +1,9 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { searchProducts } from '@/services/searchProducts';
-import type { ProductNode } from '@/types/products';
+import { searchByContext, type SearchResultItem } from '@/services/searchContext';
 
 interface SearchState {
   query: string;
-  results: ProductNode[];
+  results: SearchResultItem[];
   loading: boolean;
 }
 
@@ -15,8 +14,8 @@ const initialState: SearchState = {
 };
 
 export const fetchSearch = createAsyncThunk('search/fetchSearch', async (query: string) => {
-  const data = await searchProducts(query);
-  return { query, results: data };
+  const results = await searchByContext(query);
+  return { query, results };
 });
 
 const searchSlice = createSlice({
@@ -39,6 +38,7 @@ const searchSlice = createSlice({
     });
     builder.addCase(fetchSearch.rejected, state => {
       state.loading = false;
+      state.results = [];
     });
   }
 });

@@ -11,6 +11,41 @@ import { getOrders } from '@/graphql/queries/orders.service';
 import { useToast } from '@/components/toast/toast';
 import { ReviewModal } from '@/components/review-modal/ReviewModal';
 
+const ORDER_STATUS_LABELS: Record<string, string> = {
+  draft: 'Черновик',
+  unconfirmed: 'Не подтверждён',
+  unfulfilled: 'Не отгружен',
+  'partially fulfilled': 'Частично отгружен',
+  fulfilled: 'Отгружен',
+  partially_returned: 'Частично возвращён',
+  returned: 'Возвращён',
+  canceled: 'Отменён',
+  expired: 'Истёк',
+  DRAFT: 'Черновик',
+  UNCONFIRMED: 'Не подтверждён',
+  UNFULFILLED: 'Не отгружен',
+  PARTIALLY_FULFILLED: 'Частично отгружен',
+  FULFILLED: 'Отгружен',
+  PARTIALLY_RETURNED: 'Частично возвращён',
+  RETURNED: 'Возвращён',
+  CANCELED: 'Отменён',
+  EXPIRED: 'Истёк',
+  Draft: 'Черновик',
+  Unconfirmed: 'Не подтверждён',
+  Unfulfilled: 'Не отгружен',
+  'Partially fulfilled': 'Частично отгружен',
+  Fulfilled: 'Отгружен',
+  'Partially returned': 'Частично возвращён',
+  Returned: 'Возвращён',
+  Canceled: 'Отменён',
+  Expired: 'Истёк',
+};
+
+function getOrderStatusLabel(status: string | undefined): string {
+  if (!status) return '—';
+  return ORDER_STATUS_LABELS[status] ?? status;
+}
+
 interface OrdersContentProps {
   setOpenAccordion?: React.Dispatch<React.SetStateAction<TabId | null>>;
 }
@@ -110,7 +145,7 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
     id: `№${displayOrder.number}`,
     date: new Date(displayOrder.created).toLocaleDateString('ru-RU'),
     amount: `${parseFloat(displayOrder.total?.gross?.amount || 0).toLocaleString('ru-RU')} ₽`,
-    status: displayOrder.statusDisplay || displayOrder.status
+    status: getOrderStatusLabel(displayOrder.statusDisplay || displayOrder.status)
   } : null;
 
   const handleReviewClick = (productId: string, productName: string, orderId: string) => {

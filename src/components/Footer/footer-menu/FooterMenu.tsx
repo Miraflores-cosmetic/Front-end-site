@@ -53,6 +53,10 @@ const FooterMenu: React.FC<FooterMenuProps> = ({ title, items }) => {
               >
                 {item.label}
               </Link>
+            ) : location.pathname === '/' ? (
+              <a href={item.href} target="_blank" rel="noopener noreferrer" title={item.title}>
+                {item.label}
+              </a>
             ) : (
               <Link to={item.href} title={item.title}>{item.label}</Link>
             )}

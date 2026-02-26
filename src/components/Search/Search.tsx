@@ -1,28 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { fetchSearch, clearSearch } from '@/store/slices/searchSlice';
 import type { RootState } from '@/store/store';
 
+const DEBOUNCE_MS = 300;
+
+const linkStyle = {
+  display: 'block',
+  padding: '10px 0',
+  borderBottom: '1px solid #eee',
+  textDecoration: 'none',
+  color: 'inherit',
+  cursor: 'pointer'
+};
+
 export default function Search() {
   const dispatch = useDispatch<any>();
   const [value, setValue] = useState('');
   const { results, loading } = useSelector((s: RootState) => s.search);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const v = e.target.value;
-    setValue(v);
-
-    if (v.trim().length === 0) {
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (value.trim().length === 0) {
       dispatch(clearSearch());
       return;
     }
+    debounceRef.current = setTimeout(() => {
+      dispatch(fetchSearch(value));
+      debounceRef.current = null;
+    }, DEBOUNCE_MS);
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [value, dispatch]);
 
-    dispatch(fetchSearch(v));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
   };
 
-  const handleProductClick = () => {
-    // Очищаем поиск при клике на товар
+  const handleResultClick = () => {
     setValue('');
     dispatch(clearSearch());
   };
@@ -32,7 +50,7 @@ export default function Search() {
       <input
         value={value}
         onChange={handleChange}
-        placeholder='Поиск товаров…'
+        placeholder="Поиск..."
         style={{
           width: '100%',
           padding: '10px 14px',
@@ -44,21 +62,18 @@ export default function Search() {
 
       {loading && <div style={{ marginTop: 12 }}>Поиск…</div>}
 
+      {!loading && value.trim() && results.length === 0 && (
+        <div style={{ marginTop: 16, color: '#666' }}>Ничего не найдено</div>
+      )}
+
       {!loading && results.length > 0 && (
         <div style={{ marginTop: 16 }}>
-          {results.map(p => (
+          {results.map(item => (
             <Link
-              key={p.id}
-              to={`/product/${p.slug}`}
-              onClick={handleProductClick}
-              style={{
-                display: 'block',
-                padding: '10px 0',
-                borderBottom: '1px solid #eee',
-                textDecoration: 'none',
-                color: 'inherit',
-                cursor: 'pointer'
-              }}
+              key={`${item.type}-${item.id}`}
+              to={item.url}
+              onClick={handleResultClick}
+              style={linkStyle}
               onMouseEnter={(e) => {
                 e.currentTarget.style.backgroundColor = '#f5f5f5';
               }}
@@ -66,7 +81,12 @@ export default function Search() {
                 e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
-              {p.name}
+              {item.type === 'product' && <span style={{ opacity: 0.7, marginRight: 6 }}>Товар: </span>}
+              {item.type === 'article' && <span style={{ opacity: 0.7, marginRight: 6 }}>Статья: </span>}
+              {item.type !== 'product' && item.type !== 'article' && (
+                <span style={{ opacity: 0.7, marginRight: 6 }}>{item.type}: </span>
+              )}
+              {item.title}
             </Link>
           ))}
         </div>

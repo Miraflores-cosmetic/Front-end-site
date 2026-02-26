@@ -228,6 +228,13 @@
             font-size: 24px;
           }
         }
+
+        .reviewsLink {
+          display: inline-block;
+          text-decoration: none;
+          color: inherit;
+          cursor: pointer;
+        }
         
         // Стили для описания - без ограничений по высоте
         .desc,
@@ -246,6 +253,7 @@
           text-overflow: clip !important; // Убираем ellipsis
           display: block !important; // Убираем -webkit-box если был
           -webkit-line-clamp: unset !important; // Убираем ограничение по строкам
+          line-clamp: unset !important;
           -webkit-box-orient: unset !important; // Убираем вертикальную ориентацию
           max-height: none !important; // Убираем ограничение по высоте
           height: auto !important; // Автоматическая высота

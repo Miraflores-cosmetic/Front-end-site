@@ -3,7 +3,7 @@ import styles from './MenuList.module.scss';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import arrow from '@/assets/icons/ArrowToRight.svg';
 import mobileImage from '@/assets/images/mobileImage.webp';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { closeDrawer } from '@/store/slices/drawerSlice';
 import { Link } from 'react-router-dom';
@@ -24,6 +24,8 @@ const MenuList: React.FC<MenuListProps> = ({ title, items, withColor, link }) =>
   const isMobile = useScreenMatch(450);
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
+  const isHome = location.pathname === '/';
 
   const handleCloseDrawer = () => {
     dispatch(closeDrawer());
@@ -80,11 +82,10 @@ const MenuList: React.FC<MenuListProps> = ({ title, items, withColor, link }) =>
                 {item.label}
               </a>
             ) : item.href.startsWith('/#') ? (
-              <Link 
-                to={item.href} 
+              <Link
+                to={item.href}
                 onClick={() => {
                   handleCloseDrawer();
-                  // Небольшая задержка для закрытия drawer перед скроллом
                   setTimeout(() => {
                     const hash = item.href.substring(1);
                     const element = document.querySelector(hash);
@@ -96,6 +97,10 @@ const MenuList: React.FC<MenuListProps> = ({ title, items, withColor, link }) =>
               >
                 {item.label}
               </Link>
+            ) : isHome ? (
+              <a href={item.href} target="_blank" rel="noopener noreferrer" onClick={handleCloseDrawer}>
+                {item.label}
+              </a>
             ) : (
               <Link to={item.href} onClick={handleCloseDrawer}>
                 {item.label}

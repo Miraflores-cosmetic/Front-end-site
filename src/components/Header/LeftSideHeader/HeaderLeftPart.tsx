@@ -1,5 +1,5 @@
-import React, {useEffect}from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { openDrawer } from '@/store/slices/drawerSlice';
 import { useSelector, useDispatch } from 'react-redux';
 import styles from './HeaderLeft.module.scss';
@@ -16,6 +16,8 @@ const HeaderLeft: React.FC = () => {
   const items = useSelector((state: RootState) => state.nav.items);
   const isMobile = useScreenMatch(850);
   const dispatch = useDispatch<AppDispatch>();
+  const location = useLocation();
+  const isHome = location.pathname === '/';
 
   const headerItems = items.filter(
     item => item.category.slug !== HIDE_HEADER_CATEGORY_SLUG
@@ -35,9 +37,14 @@ const HeaderLeft: React.FC = () => {
         </button>
       ) : (
         <nav className={styles.navLeft}>
-          {headerItems.map(item => (
-            <Link to={'/category/' + item.category.slug} key={item.id}>{item.name}</Link>
-          ))}
+          {headerItems.map(item => {
+            const href = '/category/' + item.category.slug;
+            return isHome ? (
+              <a href={href} key={item.id} target="_blank" rel="noopener noreferrer">{item.name}</a>
+            ) : (
+              <Link to={href} key={item.id}>{item.name}</Link>
+            );
+          })}
         </nav>
       )}
     </div>

@@ -83,9 +83,6 @@ export default function Search() {
             >
               {item.type === 'product' && <span style={{ opacity: 0.7, marginRight: 6 }}>Товар: </span>}
               {item.type === 'article' && <span style={{ opacity: 0.7, marginRight: 6 }}>Статья: </span>}
-              {item.type !== 'product' && item.type !== 'article' && (
-                <span style={{ opacity: 0.7, marginRight: 6 }}>{item.type}: </span>
-              )}
               {item.title}
             </Link>
           ))}

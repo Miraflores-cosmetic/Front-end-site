@@ -101,9 +101,11 @@ const categorySlice = createSlice({
         state.activeTabSlug = 'ALL';
         state.loading = false;
       })
-      .addCase(getCategoryTabs.rejected, (state, action) => {
+      .addCase(getCategoryTabs.rejected, (state) => {
         state.loading = false;
-        state.error = action.error;
+        state.tabs = [];
+        // Всё равно даём загрузить товары по slug (категория может быть без дочерних)
+        state.activeTabSlug = 'ALL';
       })
 
       // 2-й уровень табов
@@ -134,9 +136,18 @@ const categorySlice = createSlice({
       })
       .addCase(getCategoryProducts.fulfilled, (state, action) => {
         const append = !!action.meta.arg.append;
+        const payload = action.payload;
+        if (!payload?.products?.edges) {
+          state.products = append ? state.products : [];
+          state.loading = false;
+          state.loadingMore = false;
+          state.productsFetched = true;
+          state.pageInfo = { hasNextPage: false, endCursor: null };
+          return;
+        }
 
         const newBProducts: BestSellersProduct[] = [];
-        action.payload.products.edges.forEach((edge: any) => {
+        payload.products.edges.forEach((edge: any) => {
           const node = edge.node;
           const thumbnailUrl = node.thumbnail?.url || (node.media?.[0]?.url ?? '');
           const images = Array.isArray(node.media)
@@ -247,21 +258,21 @@ const categorySlice = createSlice({
           });
         });
 
-        state.title = action.payload.name ?? '';
+        state.title = payload.name ?? '';
         let catDesc = '';
         try {
-          if (action.payload.description) {
-            const parsed = JSON.parse(action.payload.description);
+          if (payload.description) {
+            const parsed = JSON.parse(payload.description);
             catDesc = parsed?.blocks?.[0]?.data?.text || '';
           }
         } catch {
-          catDesc = action.payload.description || '';
+          catDesc = payload.description || '';
         }
         state.description = catDesc.replace(/<[^>]+>/g, '').trim();
 
         state.pageInfo = {
-          hasNextPage: !!action.payload.products?.pageInfo?.hasNextPage,
-          endCursor: action.payload.products?.pageInfo?.endCursor ?? null
+          hasNextPage: !!payload.products?.pageInfo?.hasNextPage,
+          endCursor: payload.products?.pageInfo?.endCursor ?? null
         };
 
         if (!append) {

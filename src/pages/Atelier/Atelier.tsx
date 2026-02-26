@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import styles from './Atelier.module.scss';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
@@ -21,6 +21,10 @@ const TEXT_CONTENT = `Ателье — необычное название дл�
 А желание объединить женщин, близких по духу, вдохновило меня на новый формат — пространство, где красота становится ритуалом любви к себе.`;
 
 const Atelier: React.FC = () => {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <React.Fragment>
       <Header />

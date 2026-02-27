@@ -253,6 +253,8 @@ const categorySlice = createSlice({
             images,
             thumbnail: thumbnailUrl,
             slug: node.slug,
+            attributes: node.attributes || [],
+            productType: node.productType ? { name: node.productType.name } : undefined,
             productVariants: variants,
             collections: node.collections || []
           });

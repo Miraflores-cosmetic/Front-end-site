@@ -19,8 +19,8 @@ const ReviewsPage: React.FC = () => {
       <Header />
       <main className={styles.reviewsPage}>
         <Reviews variant="page" productSlug={productSlug} />
+        <Footer footerImage={footerImage} />
       </main>
-      <Footer footerImage={footerImage} />
     </>
   );
 };

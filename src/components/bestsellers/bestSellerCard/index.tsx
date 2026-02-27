@@ -130,6 +130,15 @@ export const BestSellerProductCard: React.FC<{
 
   const volumeRange = getVolumeRange();
 
+  // Тип "ПОДАРОЧНЫЕ СЕРТИФИКАТЫ" — не показываем sizeRow (объёмы/варианты)
+  const productTypeAttr = product.attributes?.find(
+    (a: any) => (a.attribute?.slug || '').toLowerCase() === 'product_type' || (a.attribute?.slug || '').toLowerCase() === 'tip-produkta'
+  );
+  const productTypeFromAttr = (productTypeAttr?.values?.[0]?.name || productTypeAttr?.values?.[0]?.plainText || '').trim().toUpperCase();
+  const productTypeFromProduct = (product.productType?.name || '').trim().toUpperCase();
+  const typeStr = productTypeFromAttr || productTypeFromProduct;
+  const isGiftCertificates = typeStr === 'ПОДАРОЧНЫЕ СЕРТИФИКАТЫ' || (typeStr.includes('ПОДАРОЧН') && typeStr.includes('СЕРТИФИКАТ'));
+
   return (
     <div
       className={`${styles.productCard} ${styles.card}`}
@@ -186,7 +195,7 @@ export const BestSellerProductCard: React.FC<{
               </Link>
             )}
 
-            {product.productVariants && product.productVariants.length > 0 && (
+            {product.productVariants && product.productVariants.length > 0 && !isGiftCertificates && (
               <div className={`${styles.sizeRow} ${isHovered ? styles.sizeRowHidden : ''}`}>
                 {product.productVariants.map((variant, index) => {
                   const volume = getVolumeFromVariant(variant);
@@ -250,6 +259,11 @@ export const BestSellerProductCard: React.FC<{
                 <span className={styles.price}>{formattedPrice}₽</span>
               </div>
             </div>
+            {isGiftCertificates && (activeVariant ? getVolumeFromVariant(activeVariant) : product.size) && (
+              <p className={styles.variantName}>
+                {activeVariant ? getVolumeFromVariant(activeVariant) : product.size}
+              </p>
+            )}
             <p className={styles.desc}>{product.description}</p>
           </div>
         </>

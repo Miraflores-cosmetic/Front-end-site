@@ -147,6 +147,7 @@ export async function getCategoryBySlug(
               slug
               name
               description
+              productType { name }
               attributes {
                 attribute {
                   id

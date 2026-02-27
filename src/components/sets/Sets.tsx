@@ -3,7 +3,7 @@ import styles from './Sets.module.scss';
 import arrowToRight from '@/assets/icons/ArrowToRight.svg';
 import creamImage from '@/assets/images/Cream.png';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
-import { Link } from 'react-router-dom';
+import AppLink from '@/components/AppLink/AppLink';
 import { getCollectionById, CollectionProduct } from '@/graphql/queries/collection.service';
 import { getAllSets, getSetImageFromModel } from '@/graphql/queries/pages.service';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
@@ -55,10 +55,10 @@ const LeftBlock: React.FC<{ isMobile: boolean }> = ({ isMobile }) => (
     )}
 
     <div className={styles.moreWrapper}>
-      <Link to='/category/nabory'>
+      <AppLink to='/category/nabory'>
         <p>Больше наборов</p>
         <img src={arrowToRight} alt='Показать больше наборов' />
-      </Link>
+      </AppLink>
     </div>
   </div>
 );

@@ -7,7 +7,8 @@ import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import footerImage from '@/assets/images/footer-img.png';
 import TabBar from '@/components/tab-bar/TabBar';
 import { AnimatePresence } from 'framer-motion';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import AppLink from '@/components/AppLink/AppLink';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
 import { BestSellerProductCard } from '@/components/bestsellers/bestSellerCard';
@@ -221,7 +222,7 @@ const LazyComponent: React.FC = () => {
                 .slice(0, 4)
                 .map((item) => (
                   <article className={styles.imagesWrapper} key={item.id}>
-                    <Link
+                    <AppLink
                       to={'/category/' + item.category.slug}
                       className={styles.imagesLink}
                     >
@@ -229,7 +230,7 @@ const LazyComponent: React.FC = () => {
                       <div className={styles.discountWrapper}>
                         <p className={styles.name}>{item.name}</p>
                       </div>
-                    </Link>
+                    </AppLink>
                   </article>
                 ))}
             </div>

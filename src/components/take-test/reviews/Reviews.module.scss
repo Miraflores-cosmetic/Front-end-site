@@ -3,9 +3,6 @@
 .reviewsContainer {
   width: 100%;
   padding-top: 240px;
-  padding-right: 32px;
-  max-width: 1536px;
-  margin: 0 auto;
 
   &.reviewsContainerPage {
     padding-top: 0;
@@ -24,7 +21,6 @@
   @media (max-width: 450px) {
     padding-top: 0;
     padding-bottom: 100px;
-    padding-right: 12px;
     margin-top: 40px;
     margin-bottom: 0;
   }
@@ -86,6 +82,72 @@
       display: flex;
       flex-direction: column;
       gap: 40px;
+    }
+  }
+
+  .reviewSkeleton {
+    display: flex;
+    gap: 10px;
+    @media (max-width: 950px) {
+      flex-direction: column;
+    }
+  }
+
+  .reviewSkeletonImage {
+    width: 245px;
+    height: 245px;
+    flex-shrink: 0;
+    border-radius: 0;
+    background: linear-gradient(110deg, #e8e6e1 25%, #f0eeea 37%, #e8e6e1 63%);
+    background-size: 200% 100%;
+    animation: reviewSkeletonShimmer 1.2s ease-in-out infinite;
+    @media (max-width: 500px) {
+      width: 200px;
+      height: 220px;
+    }
+  }
+
+  .reviewSkeletonContent {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .reviewSkeletonLine,
+  .reviewSkeletonLineShort,
+  .reviewSkeletonLineMid {
+    height: 16px;
+    border-radius: 4px;
+    background: linear-gradient(110deg, #e8e6e1 25%, #f0eeea 37%, #e8e6e1 63%);
+    background-size: 200% 100%;
+    animation: reviewSkeletonShimmer 1.2s ease-in-out infinite;
+  }
+
+  .reviewSkeletonLine {
+    width: 70%;
+    animation-delay: 0.1s;
+  }
+
+  .reviewSkeletonLineShort {
+    width: 45%;
+    height: 14px;
+    animation-delay: 0.2s;
+  }
+
+  .reviewSkeletonLineMid {
+    width: 90%;
+    height: 14px;
+    animation-delay: 0.15s;
+  }
+
+  @keyframes reviewSkeletonShimmer {
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
     }
   }
 

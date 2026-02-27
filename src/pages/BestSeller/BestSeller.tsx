@@ -20,8 +20,8 @@ const BestSeller: React.FC = () => {
       <article className={styles.bestSellerContainer}>
         <main className={styles.productMain}>
           <LazyComponent />
+          <Footer footerImage={footerImage} />
         </main>
-        <Footer footerImage={footerImage} paddingX32 />
       </article>
     </>
   );

@@ -470,6 +470,7 @@ export async function getAllProducts(maxLimit: number = 100): Promise<{ edges: P
             slug
             name
             description
+            productType { name }
             attributes {
               attribute {
                 id

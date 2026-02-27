@@ -1,5 +1,5 @@
 import React, { JSX, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import AppLink from '@/components/AppLink/AppLink';
 import styles from './CatalogList.module.scss';
 import kremgroup from '@/assets/images/kremGroupElipse.webp';
 import hear from '@/assets/images/hear.webp';
@@ -122,10 +122,10 @@ const CatalogList: React.FC = () => {
 
           totalRows.push(
             <div key={item.id} className={styles.item} style={gridStyle}>
-              <Link to={`/category/${item.slug}`} className={styles.itemLink}>
+              <AppLink to={`/category/${item.slug}`} className={styles.itemLink}>
                 <ImageWithFallback src={item.image} alt={item.title} className={styles.itemImage} />
                 <p className={styles.itemTitle}>{item.title}</p>
-              </Link>
+              </AppLink>
             </div>
           );
 

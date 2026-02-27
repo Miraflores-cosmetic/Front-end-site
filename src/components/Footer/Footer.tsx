@@ -23,7 +23,7 @@ const menuData = {
       { label: 'Каталог', href: '/catalog/', isExternal: false },
       { label: 'Наша история', href: '/about', isExternal: false },
       { label: 'Полезные статьи', href: '/about/articles', isExternal: false },
-      { label: 'Программа благодарности', href: '/articles/programma-blagodarnosti-2', isExternal: false },
+      { label: 'Программа благодарности', href: '/about/articles/programma-blagodarnosti-2', isExternal: false },
       { label: 'Косметическое Ателье', href: '/atelier', isExternal: false }
     ]
   },

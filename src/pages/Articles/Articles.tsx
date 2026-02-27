@@ -14,7 +14,9 @@ const Articles: React.FC = () => {
   const { items: articles, loading, error } = useSelector((s: RootState) => s.articlesSlice);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
   }, []);
 
   useEffect(() => {

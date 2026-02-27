@@ -1,7 +1,6 @@
 import React from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import AppLink from '@/components/AppLink/AppLink';
 import styles from './FooterMenu.module.scss';
-import { useScreenMatch } from '@/hooks/useScreenMatch';
 
 type MenuItem = {
   label: string;
@@ -16,21 +15,7 @@ type FooterMenuProps = {
   items: MenuItem[];
 };
 
-const FooterMenu: React.FC<FooterMenuProps> = ({ title, items }) => {
-  const isMobile = useScreenMatch(450);
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const handleScrollToId = (e: React.MouseEvent, href: string, scrollToId: string) => {
-    e.preventDefault();
-    if (location.pathname === '/' || location.pathname === '') {
-      document.getElementById(scrollToId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    } else {
-      navigate(href);
-    }
-  };
-
-  return (
+const FooterMenu: React.FC<FooterMenuProps> = ({ title, items }) => (
     <div className={styles.footerMenu}>
       <p className={styles.menuTitle}>{title}</p>
       <ul className={styles.menuList}>
@@ -46,25 +31,16 @@ const FooterMenu: React.FC<FooterMenuProps> = ({ title, items }) => {
                 {item.label}
               </a>
             ) : item.scrollToId ? (
-              <Link
-                to={item.href}
-                title={item.title}
-                onClick={(e) => handleScrollToId(e, item.href, item.scrollToId!)}
-              >
+              <AppLink to={item.href} title={item.title}>
                 {item.label}
-              </Link>
-            ) : location.pathname === '/' ? (
-              <a href={item.href} target="_blank" rel="noopener noreferrer" title={item.title}>
-                {item.label}
-              </a>
+              </AppLink>
             ) : (
-              <Link to={item.href} title={item.title}>{item.label}</Link>
+              <AppLink to={item.href} title={item.title}>{item.label}</AppLink>
             )}
           </li>
         ))}
       </ul>
     </div>
-  );
-};
+);
 
 export default FooterMenu;

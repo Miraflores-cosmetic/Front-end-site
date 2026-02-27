@@ -3,7 +3,6 @@ import styles from './Reviews.module.scss';
 import img1 from '@/assets/images/etap3.webp';
 import img2 from '@/assets/images/etap2.webp';
 import ArrowToRight from '@/assets/icons/ArrowToRight.svg';
-
 import { Review } from './review/Review';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { Link, useNavigate } from 'react-router-dom';
@@ -26,6 +25,7 @@ export const Reviews: React.FC<{
 }> = ({ variant = 'preview', productSlug }) => {
   const isMobile = useScreenMatch(500);
   const [reviews, setReviews] = useState<ReviewData[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { isAuth } = useSelector((state: RootState) => state.authSlice);
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
@@ -34,6 +34,7 @@ export const Reviews: React.FC<{
 
   useEffect(() => {
     async function loadReviews() {
+      setLoading(true);
       try {
         const data = await getAllPublishedReviews();
         const filtered = productSlug
@@ -56,6 +57,8 @@ export const Reviews: React.FC<{
         setReviews(showAll ? mapped : mapped.slice(0, 3));
       } catch (error) {
         console.error('Error loading reviews:', error);
+      } finally {
+        setLoading(false);
       }
     }
     loadReviews();
@@ -129,7 +132,20 @@ export const Reviews: React.FC<{
 
       <div className={styles.reviewsWrapper}>
         <div>
-          {reviews.length > 0 ? (
+          {loading ? (
+            <>
+              {[1, 2, 3].map((i) => (
+                <div key={i} className={styles.reviewSkeleton} aria-hidden="true">
+                  <div className={styles.reviewSkeletonImage} />
+                  <div className={styles.reviewSkeletonContent}>
+                    <div className={styles.reviewSkeletonLine} />
+                    <div className={styles.reviewSkeletonLineShort} />
+                    <div className={styles.reviewSkeletonLineMid} />
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : reviews.length > 0 ? (
             reviews.map((review, index) => <Review key={index} {...review} />)
           ) : (
             <p className={styles.noReviews}>Пока нет отзывов </p>

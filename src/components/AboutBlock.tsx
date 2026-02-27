@@ -6,7 +6,7 @@ import AboutRight from '@/assets/images/AboutRight.webp';
 import AboutLeft from '@/assets/images/AboutLeft.png';
 import arrowToRoght from '@/assets/icons/ArrowToRight.svg';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
-import { Link } from 'react-router-dom';
+import AppLink from '@/components/AppLink/AppLink';
 
 const AboutText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <p className={styles.text}>{children}</p>
@@ -22,14 +22,14 @@ const AboutImage: React.FC<{
 
 const AboutMore: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => (
   <div className={isMobile ? styles.mobileMore : styles.more}>
-    <Link to='/about'>
+    <AppLink to='/about'>
       <p>БОЛЬШЕ О НАС</p>{' '}
       <img
         src={arrowToRoght}
         alt='arrowToRoght'
         className={isMobile ? styles.mobileArrowToRoght : styles.arrowToRoght}
       />
-    </Link>
+    </AppLink>
   </div>
 );
 

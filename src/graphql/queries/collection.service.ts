@@ -123,6 +123,7 @@ export async function getCollectionById(id: string, first: number = 10): Promise
               name
               slug
               description
+              productType { name }
               attributes {
                 attribute {
                   id

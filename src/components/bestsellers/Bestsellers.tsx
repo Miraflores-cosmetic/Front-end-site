@@ -118,6 +118,7 @@ function mapProductNodeToBestSellers(productNode: any): BestSellersProduct {
     thumbnail: productNode.thumbnail?.url || '',
     slug: productNode.slug || '',
     attributes: productNode.attributes || [],
+    productType: productNode.productType ? { name: productNode.productType.name } : undefined,
     productVariants: productVariantsFormatted,
     collections: productNode.collections || []
   };

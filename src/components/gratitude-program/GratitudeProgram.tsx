@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import styles from './GratitudeProgram.module.scss';
 import gratitudeLine from '@/assets/icons/gratitudeLine.svg';
 import ArrowToRight from '@/assets/icons/ArrowToRight.svg';
-import { Link } from 'react-router-dom';
+import AppLink from '@/components/AppLink/AppLink';
 import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
 import { editorJsToHtml } from '@/utils/editorJsParser';
 import { normalizeMediaUrl } from '@/utils/mediaUrl';
@@ -207,10 +207,10 @@ export const GratitudeProgram: React.FC = () => {
       </div>
 
       <div className={styles.moreWrapper}>
-        <Link to="/about/articles/programma-blagodarnosti-2">
+        <AppLink to="/about/articles/programma-blagodarnosti-2">
           <p>Подробнее о программе</p>
           <img src={ArrowToRight} alt="" />
-        </Link>
+        </AppLink>
       </div>
     </section>
   );

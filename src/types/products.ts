@@ -37,6 +37,7 @@ export interface BestSellersProduct {
   thumbnail: string;
   productVariants: ProductVariant[];
   collections: ProductCollections;
+  productType?: { name: string };
   attributes?: Array<{
     attribute: {
       id: string;

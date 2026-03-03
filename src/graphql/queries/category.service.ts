@@ -1,6 +1,9 @@
 import { CHANNEL, graphqlRequest } from '../client';
 import { CategoryConnection, SingleCategoryConnection } from '../types/category';
 
+/** ID атрибута sortOrder для сортировки товаров в категории (dashboard/attributes) */
+const SORT_ORDER_ATTRIBUTE_ID = 'QXR0cmlidXRlOjEwMA==';
+
 export async function getAllCategory(first: number): Promise<CategoryConnection['categories']> {
   const query = `
     query Category($first: Int!) {
@@ -130,13 +133,14 @@ export async function getCategoryBySlug(
       $categorySlug: String!,
       $channel: String,
       $first: Int,
-      $after: String
+      $after: String,
+      $sortBy: ProductOrder
     ) {
       category(slug: $categorySlug) {
         id
         name
         description
-        products(first: $first, after: $after, channel: $channel, where: { isPublished: true, isVisibleInListing: true }) {
+        products(first: $first, after: $after, channel: $channel, where: { isPublished: true, isVisibleInListing: true }, sortBy: $sortBy) {
           pageInfo {
             hasNextPage
             endCursor
@@ -211,7 +215,13 @@ export async function getCategoryBySlug(
     }
   `;
 
-  const variables = { channel: CHANNEL, categorySlug, first, after: after ?? null };
+  const variables = {
+    channel: CHANNEL,
+    categorySlug,
+    first,
+    after: after ?? null,
+    sortBy: { direction: 'ASC', attributeId: SORT_ORDER_ATTRIBUTE_ID }
+  };
   const data = await graphqlRequest<SingleCategoryConnection>(query, variables);
   return data.category;
 }

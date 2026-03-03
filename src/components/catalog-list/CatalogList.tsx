@@ -1,4 +1,4 @@
-import React, { JSX, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import AppLink from '@/components/AppLink/AppLink';
 import styles from './CatalogList.module.scss';
 import kremgroup from '@/assets/images/kremGroupElipse.webp';
@@ -92,50 +92,18 @@ const CatalogList: React.FC = () => {
     fetchCategories();
   }, [isMobile]);
 
-  const layout: { index: number | null; span?: number; col?: number }[][] = [
-    [{ index: 0, span: 2 }, { index: 1 }, { index: 2 }],
-    [{ index: null }, { index: null }, { index: 3, col: 3 }, { index: null }],
-    [{ index: 4 }, { index: 5 }, { index: 6, span: 2 }, { index: null }],
-    [{ index: null }, { index: 7, col: 2 }, { index: null }, { index: null }],
-    [{ index: 8 }, { index: 9 }, { index: 10 }, { index: 11 }]
-  ];
-
-  let renderedIndex = 0;
-
-  const totalRows: JSX.Element[] = [];
-
-  while (renderedIndex < items.length) {
-    layout.forEach((row, rIdx) => {
-      row.forEach((cell, cIdx) => {
-        if (renderedIndex >= items.length) return;
-
-        if (cell.index === null) {
-          totalRows.push(
-            <div key={`ph-${renderedIndex}-${rIdx}-${cIdx}`} className={styles.placeholder} />
-          );
-        } else {
-          const item = items[renderedIndex];
-          const gridStyle: React.CSSProperties = {};
-          if (cell.span && !isMobile) gridStyle.gridColumn = `span ${cell.span}`;
-          if (cell.span && !isMobile) gridStyle.gridRow = `span ${cell.span}`;
-          if (cell.col && !isMobile) gridStyle.gridColumnStart = cell.col;
-
-          totalRows.push(
-            <div key={item.id} className={styles.item} style={gridStyle}>
-              <AppLink to={`/category/${item.slug}`} className={styles.itemLink}>
-                <ImageWithFallback src={item.image} alt={item.title} className={styles.itemImage} />
-                <p className={styles.itemTitle}>{item.title}</p>
-              </AppLink>
-            </div>
-          );
-
-          renderedIndex++;
-        }
-      });
-    });
-  }
-
-  return <div className={styles['catalog-grid']}>{totalRows}</div>;
+  return (
+    <div className={styles['catalog-grid']}>
+      {items.map((item) => (
+        <div key={item.id} className={styles.item}>
+          <AppLink to={`/category/${item.slug}`} className={styles.itemLink}>
+            <ImageWithFallback src={item.image} alt={item.title} className={styles.itemImage} />
+            <p className={styles.itemTitle}>{item.title}</p>
+          </AppLink>
+        </div>
+      ))}
+    </div>
+  );
 };
 
 export default CatalogList;

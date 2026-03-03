@@ -287,16 +287,11 @@ const LazyComponent: React.FC = () => {
                   attr?.values?.[0]?.name ?? attr?.values?.[0]?.plainText ?? attr?.values?.[0]?.slug ?? '';
                 const nazvanieAttr = getAttributeBySlug(item.attributes || [], 'nazvanie-iz-nacionalnogo-kataloga');
                 const nazvanieValue = nazvanieAttr ? getValueFromAttr(nazvanieAttr) : '';
-                const getGtinFromVariant = (variant: any): string => {
-                  if (!variant?.node?.attributes || !Array.isArray(variant.node.attributes)) return '';
-                  const gtinAttr = variant.node.attributes.find((a: any) => (a.attribute?.slug || '').toLowerCase() === 'gtin');
-                  return gtinAttr ? getValueFromAttr(gtinAttr) : '';
-                };
-                const gtinValue = activeVariant ? getGtinFromVariant(activeVariant) : '';
-                if (!gtinValue && !nazvanieValue) return null;
+                const skuValue = activeVariant?.node?.sku ?? '';
+                if (!skuValue && !nazvanieValue) return null;
                 return (
                   <div className={styles.productMetaBlock}>
-                    {gtinValue ? <p className={styles.productMetaLine}>GTIN: {gtinValue}</p> : null}
+                    {skuValue ? <p className={styles.productMetaLine}>GTIN: {skuValue}</p> : null}
                     {nazvanieValue ? <p className={styles.productMetaLine}>{nazvanieValue}</p> : null}
                   </div>
                 );

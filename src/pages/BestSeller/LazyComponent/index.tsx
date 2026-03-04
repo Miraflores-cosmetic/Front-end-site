@@ -285,14 +285,14 @@ const LazyComponent: React.FC = () => {
                   attributes?.find((attr: any) => attr.attribute?.slug === slug);
                 const getValueFromAttr = (attr: any) =>
                   attr?.values?.[0]?.name ?? attr?.values?.[0]?.plainText ?? attr?.values?.[0]?.slug ?? '';
-                const nazvanieAttr = getAttributeBySlug(item.attributes || [], 'nazvanie-iz-nacionalnogo-kataloga');
-                const nazvanieValue = nazvanieAttr ? getValueFromAttr(nazvanieAttr) : '';
                 const skuValue = activeVariant?.node?.sku ?? '';
+                const nazvanieAttr = getAttributeBySlug(activeVariant?.node?.attributes || [], 'nazvanie-iz-nacionalnogo-kataloga');
+                const nazvanieValue = nazvanieAttr ? getValueFromAttr(nazvanieAttr) : '';
                 if (!skuValue && !nazvanieValue) return null;
                 return (
                   <div className={styles.productMetaBlock}>
-                    {skuValue ? <p className={styles.productMetaLine}>GTIN: {skuValue}</p> : null}
                     {nazvanieValue ? <p className={styles.productMetaLine}>{nazvanieValue}</p> : null}
+                    {skuValue ? <p className={styles.productMetaLine}>GTIN: {skuValue}</p> : null}
                   </div>
                 );
               })()}

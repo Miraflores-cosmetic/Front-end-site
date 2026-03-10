@@ -8,7 +8,7 @@ export async function searchProducts(query: string): Promise<ProductNode[]> {
       products(
         first: 50
         channel: $channel
-        filter: { search: $query }
+        filter: { search: $query, isVisibleInListing: true }
       ) {
         edges {
           node {
@@ -50,6 +50,7 @@ export async function searchProducts(query: string): Promise<ProductNode[]> {
           products(
             first: 100
             channel: $channel
+            filter: { isVisibleInListing: true }
           ) {
             edges {
               node {

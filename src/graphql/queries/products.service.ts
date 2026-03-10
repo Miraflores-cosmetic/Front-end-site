@@ -217,7 +217,7 @@ export async function getProductsForContextSearch(first: number = 200): Promise<
 > {
   const query = `
     query ProductsForContextSearch($first: Int!, $channel: String!) {
-      products(first: $first, channel: $channel, filter: { isPublished: true }) {
+      products(first: $first, channel: $channel, filter: { isPublished: true, isVisibleInListing: true }) {
         edges {
           node {
             id
@@ -459,7 +459,7 @@ export async function getBestsellerProducts(): Promise<{ edges: ProductEdge[] }>
 export async function getAllProducts(maxLimit: number = 100): Promise<{ edges: ProductEdge[] }> {
   const query = `
     query AllProducts($first: Int!, $after: String, $channel: String!) {
-      products(first: $first, after: $after, channel: $channel, filter: { isPublished: true }) {
+      products(first: $first, after: $after, channel: $channel, filter: { isPublished: true, isVisibleInListing: true }) {
         pageInfo {
           hasNextPage
           endCursor

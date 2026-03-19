@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import Slider from 'react-slick';
 import styles from './HeroSlider.module.scss';
 import topBlockStyles from '@/components/TopBlock/TopBlock.module.scss';
-import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
+import { getPageBySlug } from '@/graphql/queries/pages.service';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import DesktopTextImages from '@/components/TopBlock/DesktopTextImages';
@@ -27,6 +27,7 @@ export const HeroSlider: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const isTablet = useScreenMatch(800);
   const isMobile = useScreenMatch(450);
+  const hasMultipleSlides = slides.length > 1;
 
   const mobileTexts = {
     title: 'Предложения',
@@ -39,9 +40,11 @@ export const HeroSlider: React.FC = () => {
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     const fetchSlider = async () => {
       try {
-        setLoading(true);
+        if (isMounted) setLoading(true);
         const pageData = await getPageBySlug('slaider');
         
         if (pageData) {
@@ -99,57 +102,62 @@ export const HeroSlider: React.FC = () => {
           
           // Если есть слайды, используем их, иначе используем дефолтные картинки
           if (slidesData.length > 0) {
-            setSlides(slidesData);
+            if (isMounted) setSlides(slidesData);
           } else {
             // Если нет данных, создаём один слайд с пустыми картинками (будут использованы дефолтные)
-            setSlides([{ largeImage: '', smallImage: '' }]);
+            if (isMounted) setSlides([{ largeImage: '', smallImage: '' }]);
           }
         } else {
           // Если страница не найдена, создаём один слайд с пустыми картинками
-          setSlides([{ largeImage: '', smallImage: '' }]);
+          if (isMounted) setSlides([{ largeImage: '', smallImage: '' }]);
         }
       } catch (err: any) {
         console.error('Error fetching slider:', err);
         // При ошибке создаём один слайд с пустыми картинками
-        setSlides([{ largeImage: '', smallImage: '' }]);
+        if (isMounted) setSlides([{ largeImage: '', smallImage: '' }]);
       } finally {
-        setLoading(false);
+        if (isMounted) setLoading(false);
       }
     };
 
     fetchSlider();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
 
   const settings = useMemo(() => ({
     dots: false,
-    infinite: slides.length > 1, // infinite работает только если больше 1 слайда
-    speed: 500,
+    infinite: hasMultipleSlides, // infinite работает только если больше 1 слайда
+    speed: isMobile ? 380 : 500,
     slidesToShow: 1,
     slidesToScroll: 1,
-    autoplay: slides.length > 1, // autoplay работает только если больше 1 слайда
+    autoplay: hasMultipleSlides, // autoplay работает только если больше 1 слайда
     autoplaySpeed: 3000,
     arrows: false,
-    fade: true,
-    cssEase: 'linear',
+    fade: !isMobile,
+    cssEase: isMobile ? 'ease-out' : 'linear',
     touchMove: true,
     swipe: true,
-    draggable: true,
-    touchThreshold: 5,
-    adaptiveHeight: true,
-    pauseOnHover: false,
-    pauseOnFocus: false
-  }), [slides.length]);
+    swipeToSlide: !isMobile,
+    draggable: !isMobile,
+    touchThreshold: isMobile ? 22 : 5,
+    verticalSwiping: false,
+    adaptiveHeight: false,
+    waitForAnimate: true,
+    pauseOnHover: !isMobile,
+    pauseOnFocus: !isMobile,
+    lazyLoad: 'ondemand' as const
+  }), [hasMultipleSlides, isMobile]);
 
   if (loading) {
     return <SpinnerLoader />;
   }
 
   return (
-    <section 
-      className={styles.heroSlider}
-      style={{ position: 'relative', zIndex: 10 }}
-    >
+    <section className={styles.heroSlider}>
       <Slider {...settings} className={styles.slider}>
         {slides.map((slide, index) => {
           // Используем картинки из админки или дефолтные

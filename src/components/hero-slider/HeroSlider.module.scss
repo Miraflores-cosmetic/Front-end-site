@@ -16,19 +16,22 @@
   position: relative;
   z-index: 10;
   isolation: isolate;
+  overscroll-behavior-x: contain;
   transition: height 0.5s ease;
 
-  :global(.slick-slide) {
-    opacity: 0;
-  }
+  @media (min-width: 451px) {
+    :global(.slick-slide) {
+      opacity: 0;
+    }
 
-  :global(.slick-slide.slick-active) {
-    opacity: 1;
-  }
+    :global(.slick-slide.slick-active) {
+      opacity: 1;
+    }
 
-  /* анимация только при первой загрузке — только у первого слайда */
-  :global(.slick-slide:first-child) {
-    animation: heroSlideAppear 0.55s ease-out forwards;
+    /* анимация только при первой загрузке — только у первого слайда */
+    :global(.slick-slide:first-child) {
+      animation: heroSlideAppear 0.55s ease-out forwards;
+    }
   }
 
   @media (max-width: 768px) {
@@ -43,6 +46,18 @@
     margin-top: 0;
     margin-bottom: 0;
     padding-top: 0;
+
+    :global(.slick-list) {
+      // Приоритет вертикальному скроллу страницы;
+      // слайд меняется только при явном горизонтальном свайпе
+      touch-action: pan-y;
+      overscroll-behavior: contain;
+      overflow: hidden;
+    }
+
+    :global(.slick-track) {
+      touch-action: pan-y;
+    }
   }
 }
 

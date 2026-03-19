@@ -17,14 +17,6 @@
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
   }
 
-  // Анимация появления точек
-  :global {
-    .slick-dots {
-      opacity: 0 !important;
-      transition: opacity 0.5s ease-out !important;
-    }
-  }
-
   // Анимация применяется когда класс добавлен - все элементы появляются одновременно
   &.sectionAnimated {
     .title {
@@ -35,12 +27,6 @@
     .sliderWrapper {
       opacity: 1;
       transform: translateY(0);
-    }
-
-    :global {
-      .slick-dots {
-        opacity: 1 !important;
-      }
     }
   }
 
@@ -235,8 +221,8 @@
       margin: 0;
       overflow: visible;
       padding: 0 !important;
-      // Вертикальный скролл страницы не блокируется, горизонтальный свайп остаётся у слайдера
-      touch-action: pan-y;
+      // Более отзывчивый горизонтальный свайп на мобилке
+      touch-action: pan-x;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -333,21 +319,47 @@
 
   .sliderWrapper {
     position: relative;
-    // На мобильных не конфликтуем с вертикальным скроллом страницы
-    touch-action: pan-y;
+    touch-action: pan-x;
     overscroll-behavior-x: contain;
-    cursor: grab;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    width: calc(100% + 32px);
+    margin-right: -32px;
 
-    &:active {
-      cursor: grabbing;
+    @media (max-width: 450px) {
+      width: calc(100% + 12px);
+      margin-right: -12px;
     }
 
-    // Блокируем pointer events для ссылок во время драга
-    &.isDragging {
-      :global(a) {
-        pointer-events: none !important;
-        cursor: grabbing !important;
-      }
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .scrollTrack {
+    display: flex;
+    align-items: flex-start;
+    gap: 40px;
+    width: max-content;
+    padding-bottom: 20px;
+
+    @media (max-width: 450px) {
+      gap: 20px;
+    }
+  }
+
+  .scrollItem {
+    flex: 0 0 432px;
+    width: 432px;
+    max-width: 432px;
+
+    @media (max-width: 450px) {
+      flex-basis: 360px;
+      width: 360px;
+      max-width: 360px;
     }
   }
 

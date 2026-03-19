@@ -144,6 +144,8 @@ export default function Bestsellers({
   const dragStartRef = React.useRef<{ x: number; y: number; time: number } | null>(null);
   const isDraggingRef = React.useRef(false);
   const sliderWrapperRef = React.useRef<HTMLDivElement>(null);
+  const wheelDeltaAccumRef = React.useRef(0);
+  const wheelReleaseTimerRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
   const sectionRef = React.useRef<HTMLElement>(null);
 
@@ -607,7 +609,8 @@ export default function Bestsellers({
     };
   }, [isSectionLoaded]);
 
-  // Нативный wheel handler с { passive: false } для корректного preventDefault при горизонтальной прокрутке
+  // Поддержка тачпада/колеса на десктопе без "ступенек":
+  // накапливаем delta и двигаем слайдер пропорционально жесту.
   React.useEffect(() => {
     const wrapper = sliderWrapperRef.current;
     if (!wrapper) return;
@@ -615,33 +618,49 @@ export default function Bestsellers({
     const handleWheel = (e: WheelEvent) => {
       const isHorizontalScroll = Math.abs(e.deltaX) > Math.abs(e.deltaY);
       const isShiftScroll = e.shiftKey && Math.abs(e.deltaY) > 0;
+      if (!isHorizontalScroll && !isShiftScroll) return;
 
-      if (isHorizontalScroll || isShiftScroll) {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(true);
-        isDraggingRef.current = true;
+      e.preventDefault();
+      if (!sliderRef.current) return;
 
-        if (sliderRef.current) {
-          const delta = isHorizontalScroll ? e.deltaX : e.deltaY;
-          if (delta > 0) {
+      const delta = isHorizontalScroll ? e.deltaX : e.deltaY;
+      wheelDeltaAccumRef.current += delta;
+
+      const threshold = 24; // ниже порог => более плавный отклик на тачпаде
+      const steps = Math.floor(Math.abs(wheelDeltaAccumRef.current) / threshold);
+
+      if (steps > 0) {
+        const goNext = wheelDeltaAccumRef.current > 0;
+        const maxStepsPerEvent = 4;
+        const stepsToApply = Math.min(steps, maxStepsPerEvent);
+
+        for (let i = 0; i < stepsToApply; i += 1) {
+          if (goNext) {
             sliderRef.current.slickNext();
           } else {
             sliderRef.current.slickPrev();
           }
         }
 
-        setTimeout(() => {
-          setIsDragging(false);
-          isDraggingRef.current = false;
-        }, 300);
+        const used = stepsToApply * threshold * (goNext ? 1 : -1);
+        wheelDeltaAccumRef.current -= used;
       }
+
+      if (wheelReleaseTimerRef.current) {
+        clearTimeout(wheelReleaseTimerRef.current);
+      }
+      wheelReleaseTimerRef.current = setTimeout(() => {
+        wheelDeltaAccumRef.current = 0;
+      }, 120);
     };
 
     wrapper.addEventListener('wheel', handleWheel, { passive: false });
-
     return () => {
       wrapper.removeEventListener('wheel', handleWheel);
+      if (wheelReleaseTimerRef.current) {
+        clearTimeout(wheelReleaseTimerRef.current);
+      }
+      wheelDeltaAccumRef.current = 0;
     };
   }, [hasProducts]);
 

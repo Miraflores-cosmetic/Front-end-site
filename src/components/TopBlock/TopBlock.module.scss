@@ -345,26 +345,48 @@
   }
 }
 
-.marqueeContent {
-  display: flex;
-  flex-direction: column;
-  margin-top: -60px;
-  animation: marquee 10s linear infinite;
+.marqueeLineRightToLeft,
+.marqueeLineLeftToRight {
   position: relative;
   z-index: 10;
-  
+  will-change: transform;
+}
+
+.marqueeLineRightToLeft {
+  animation: marqueeRightToLeft 10s linear infinite;
+  margin-top: -90px;
+
   @media (max-width: 450px) {
-    margin-top: -40px;
+    margin-top: -74px;
   }
 }
 
-@keyframes marquee {
+.marqueeLineLeftToRight {
+  animation: marqueeLeftToRight 10s linear infinite;
+  margin-top: -20px;
+
+  @media (max-width: 450px) {
+    margin-top: -6px;
+  }
+}
+
+@keyframes marqueeRightToLeft {
   from {
     transform: translateX(100%);
   }
 
   to {
     transform: translateX(-100%);
+  }
+}
+
+@keyframes marqueeLeftToRight {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(100%);
   }
 }
 

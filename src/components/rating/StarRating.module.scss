@@ -16,3 +16,15 @@
 .half {
   opacity: 0.6;
 }
+
+/* Когда отзывов нет (0): звёзды белые со stroke */
+.emptyState .star,
+.emptyState .full,
+.emptyState .half {
+  opacity: 1;
+  filter: brightness(0) invert(1)
+    drop-shadow(0 1px 0 #297230)
+    drop-shadow(1px 0 0 #297230)
+    drop-shadow(0 -1px 0 #297230)
+    drop-shadow(-1px 0 0 #297230);
+}

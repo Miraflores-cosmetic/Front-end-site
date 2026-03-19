@@ -12,8 +12,10 @@ const StarRating: React.FC<StarRatingProps> = ({ rating, max = 5, text }) => {
   const fullStars = Math.floor(rating);
   const hasHalf = rating - fullStars >= 0.5;
 
+  const isEmpty = rating === 0;
+
   return (
-    <div className={styles.wrapper}>
+    <div className={`${styles.wrapper} ${isEmpty ? styles.emptyState : ''}`}>
       <div>
         {Array.from({ length: max }).map((_, i) => {
           const isFull = i < fullStars;

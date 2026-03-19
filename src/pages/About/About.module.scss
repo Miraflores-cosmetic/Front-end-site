@@ -298,6 +298,34 @@
       margin-bottom: 0;
     }
   }
+
+  :global(h1) {
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 40px;
+    font-weight: 300;
+    line-height: 48px;
+  }
+  :global(h2) {
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 32px;
+    font-weight: 300;
+    line-height: 38px;
+  }
+  :global(h3) {
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 24px;
+    font-weight: 300;
+  }
+  :global(h4) {
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 18px;
+    font-weight: 300;
+  }
+  :global(h5) {
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+    font-size: 16px;
+    font-weight: 300;
+  }
 }
 
 /* Блок после сетки: лого + «Дело всей жизни», текст миссии */

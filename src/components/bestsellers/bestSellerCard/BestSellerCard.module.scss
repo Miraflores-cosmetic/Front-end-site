@@ -304,6 +304,8 @@
       }
 
       .titleLink {
+        flex: 1 1 0;
+        min-width: 0;
         text-decoration: none;
         color: inherit;
       }
@@ -326,6 +328,7 @@
         text-overflow: ellipsis;
         display: -webkit-box;
         -webkit-line-clamp: 2;
+        line-clamp: 2;
         -webkit-box-orient: vertical;
         word-wrap: break-word;
       }
@@ -334,17 +337,16 @@
         display: flex;
         flex-direction: row;
         align-items: center;
-        justify-content: flex-end; /* Прижимаем цены к правому краю */
+        justify-content: flex-end;
         padding: 0;
         gap: 6px;
-        min-width: 113px;
         height: 20px;
-        flex-shrink: 0;
+        flex: 0 0 auto;
+        width: fit-content;
         white-space: nowrap;
-        margin-left: auto; /* Дополнительно прижимаем к правому краю */
+        margin-left: auto;
 
         @media (max-width: 768px) {
-          min-width: auto;
           margin-left: 0;
           justify-content: flex-start;
           margin-top: 4px;
@@ -416,6 +418,7 @@
       text-overflow: ellipsis;
       display: -webkit-box;
       -webkit-line-clamp: 2;
+      line-clamp: 2;
       -webkit-box-orient: vertical;
       word-wrap: break-word;
       margin: 0;

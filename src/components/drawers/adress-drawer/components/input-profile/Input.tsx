@@ -11,6 +11,8 @@ interface CustomInputProps {
   onButtonClick?: () => void;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   width?: string | number; // 🔹 Add dynamic width prop
+  /** Текст ошибки с API — красная обводка и подпись */
+  fieldError?: string;
 }
 
 export const Input: React.FC<CustomInputProps> = ({
@@ -22,17 +24,22 @@ export const Input: React.FC<CustomInputProps> = ({
   buttonText,
   onButtonClick,
   onChange,
-  width // 🔹 Receive width prop
+  width, // 🔹 Receive width prop
+  fieldError,
 }) => {
+  const hasError = Boolean(fieldError?.trim());
+
   return (
     <div
       className={styles.wrapper}
       style={{ width }} // 🔹 Apply dynamic width
     >
       {imageSrc && <img src={imageSrc} alt='icon' className={styles.icon} />}
-      {label && <label className={styles.label}>{label}</label>}
+      {label && (
+        <label className={`${styles.label} ${hasError ? styles.labelError : ''}`}>{label}</label>
+      )}
 
-      <div className={styles.inputRow}>
+      <div className={`${styles.inputRow} ${hasError ? styles.inputRowError : ''}`}>
         {type === 'password' ? (
           <div className={styles.passwordDisplay}>
             {value.split('').map((_, i) => (
@@ -45,7 +52,8 @@ export const Input: React.FC<CustomInputProps> = ({
             value={value}
             onChange={onChange}
             placeholder={placeholder}
-            className={styles.input}
+            className={`${styles.input} ${hasError ? styles.inputError : ''}`}
+            aria-invalid={hasError}
           />
         )}
 
@@ -55,6 +63,7 @@ export const Input: React.FC<CustomInputProps> = ({
           </button>
         )}
       </div>
+      {hasError && <p className={styles.fieldErrorText}>{fieldError}</p>}
     </div>
   );
 };

@@ -8,17 +8,7 @@
   }
 }
 
-:global(.menu-drawer) {
-  z-index: 1001 !important;
-}
-
-:global(.basket-drawer) {
-  z-index: 1001 !important;
-}
-
-:global(.address-drawer) {
-  z-index: 1001 !important;
-}
+// z-index задаётся пропом zIndex у Drawer (оверлей + панель), иначе оверлей остаётся 100 и оказывается под хедером
 
 // Когда drawer открыт, добавляем класс к body чтобы header мог реагировать
 :global(body.drawer-open) {

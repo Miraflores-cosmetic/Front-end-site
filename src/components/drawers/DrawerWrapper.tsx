@@ -14,6 +14,9 @@ import AddCommentDrawer from './add-comment-drawer/AddComment';
 import AddressDrawer from './adress-drawer/AddressDrawer';
 import React from 'react';
 
+/** Оверлей и панель выше хедера (800) и выпадашек профиля (~1000), ниже тостов */
+const DRAWER_Z_INDEX = 1200;
+
 const DrawerWrapper: React.FC = () => {
   const activeDrawer = useSelector((state: RootState) => state.drawer.activeDrawer);
   const dispatch = useDispatch();
@@ -46,6 +49,7 @@ const DrawerWrapper: React.FC = () => {
         onClose={() => dispatch(closeDrawer())}
         size={isMobileBasket ? '100%' : 664}
         direction='right'
+        zIndex={DRAWER_Z_INDEX}
       >
         <BasketDrawer />
       </Drawer>
@@ -56,6 +60,7 @@ const DrawerWrapper: React.FC = () => {
         size="100%"
         duration={400}
         direction='right'
+        zIndex={DRAWER_Z_INDEX}
       >
         <MenuDrawer />
       </Drawer>
@@ -66,6 +71,7 @@ const DrawerWrapper: React.FC = () => {
         size={isMobileBasket ? '100%' : 664}
         duration={400}
         direction='right'
+        zIndex={DRAWER_Z_INDEX}
       >
         <AboutDrawer />
       </Drawer>
@@ -76,6 +82,7 @@ const DrawerWrapper: React.FC = () => {
         size={isMobileBasket ? '100%' : 664}
         duration={400}
         direction='right'
+        zIndex={DRAWER_Z_INDEX}
       >
         <AddCommentDrawer />
       </Drawer>
@@ -86,6 +93,7 @@ const DrawerWrapper: React.FC = () => {
         size={isMobileBasket ? '100%' : 664}
         duration={400}
         direction='right'
+        zIndex={DRAWER_Z_INDEX}
       >
         <AddressDrawer />
       </Drawer>

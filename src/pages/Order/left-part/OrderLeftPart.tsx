@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './OrderLeftPart.module.scss';
 import Input from '@/components/text-field/input/Input';
@@ -17,6 +17,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { AddressInfo } from '@/types/auth';
 import { formatPhoneNumber } from '@/utils/phoneFormatter';
+import { useOrderCheckout } from '../OrderCheckoutContext';
 
 
 // 1. Define the shape of your form data
@@ -40,8 +41,13 @@ const OrderLeftPart: React.FC = () => {
     isSubscribed: true,
   });
 
-  // Separate state for the complex Address object
-  const [selectedAddress, setSelectedAddress] = useState<AddressInfo | null>(null);
+  const {
+    selectedAddress,
+    setSelectedAddress,
+    cdekShippingRub,
+    cdekShippingLoading,
+    cdekShippingError,
+  } = useOrderCheckout();
   const [confirmationToken, setConfirmationToken] = useState<string | null>(null);
   const [showYooKassaWidget, setShowYooKassaWidget] = useState(false);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
@@ -102,19 +108,16 @@ const OrderLeftPart: React.FC = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // 5. Intelligent Address Selection
-  const handleAddressSelect = (address: AddressInfo) => {
+  const handleAddressSelect = useCallback((address: AddressInfo) => {
     setSelectedAddress(address);
 
-    // Auto-fill phone from address
     if (address?.phone) {
       setFormData((prev) => ({
         ...prev,
-        phone: formatPhoneNumber(address.phone) || prev.phone
+        phone: formatPhoneNumber(address.phone) || prev.phone,
       }));
     }
-
-  };
+  }, [setSelectedAddress]);
 
   const handlePayment = async () => {
     if (!selectedAddress) {
@@ -141,6 +144,23 @@ const OrderLeftPart: React.FC = () => {
       alert('Корзина пуста');
       return;
     }
+
+    const payableLines = lines.filter((line: { isGift?: boolean }) => !line.isGift);
+    if (payableLines.length > 0) {
+      if (cdekShippingLoading) {
+        alert('Подождите, рассчитывается стоимость доставки');
+        return;
+      }
+      if (cdekShippingRub == null) {
+        alert(
+          cdekShippingError ||
+            'Не удалось рассчитать доставку. Укажите корректный индекс в адресе доставки.',
+        );
+        return;
+      }
+    }
+
+    const shippingAmount = payableLines.length > 0 ? cdekShippingRub ?? 0 : 0;
 
     setIsCreatingPayment(true);
     try {
@@ -172,10 +192,10 @@ const OrderLeftPart: React.FC = () => {
       // Сохраняем checkoutId в localStorage для использования на странице success
       localStorage.setItem('pendingCheckoutId', checkoutId);
 
-      // Вычисляем общую сумму
-      const totalAmount = lines.reduce((sum: number, line: any) => {
-        return sum + (line.price * line.quantity);
-      }, 0) - (voucherDiscount || 0);
+      const totalAmount =
+        lines.reduce((sum: number, line: any) => sum + line.price * line.quantity, 0) -
+        (voucherDiscount || 0) +
+        shippingAmount;
 
       // Создаем описание заказа
       const description = `Заказ - ${lines.length} товар(ов)`;
@@ -356,7 +376,11 @@ const OrderLeftPart: React.FC = () => {
           <CustomButton
             label={isCreatingPayment ? 'Создание платежа...' : 'Оплатить'}
             onClick={handlePayment}
-            disabled={isCreatingPayment || showYooKassaWidget}
+            disabled={
+              isCreatingPayment ||
+              showYooKassaWidget ||
+              (lines.some((l: { isGift?: boolean }) => !l.isGift) && cdekShippingLoading)
+            }
           />
         </figure>
         <p className={styles.agreement}>

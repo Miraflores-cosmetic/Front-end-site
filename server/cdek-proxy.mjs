@@ -156,23 +156,43 @@ app.get('/api/cdek/service', async (req, res) => {
 
       const data = await response.json();
 
+      const postalFromCdekItem = (item) => {
+        const loc = item.location || {};
+        const pc = loc.postal_code ?? item.postal_code;
+        if (pc != null && String(pc).trim() !== '') return String(pc).trim();
+        const codes = loc.postal_codes;
+        if (Array.isArray(codes) && codes.length > 0 && codes[0] != null) {
+          return String(codes[0]).trim();
+        }
+        const full = loc.address_full || loc.address || item.address_full || '';
+        const m = String(full).trim().match(/^(\d{6})(?:[\s,]|$)/);
+        return m ? m[1] : undefined;
+      };
+
       // Преобразуем формат ответа СДЭК в нужный формат
       if (data.items) {
-        const offices = data.items.map((item) => ({
-          code: item.code,
-          name: item.name,
-          address: item.location?.address || item.address_full || '',
-          city: item.location?.city || '',
-          city_code: item.location?.city_code || 0,
-          postal_code: item.location?.postal_code,
-          work_time: item.work_time,
-          phone: item.phones?.[0]?.number || '',
-          location: item.location ? {
-            latitude: item.location.latitude,
-            longitude: item.location.longitude,
-            address: item.location.address_full || item.location.address,
-          } : undefined,
-        }));
+        const offices = data.items.map((item) => {
+          const loc = item.location || {};
+          const addressLine = loc.address || item.address_full || '';
+          const addressFull = loc.address_full || addressLine;
+          return {
+            code: item.code,
+            name: item.name,
+            address: addressLine || addressFull,
+            city: loc.city || '',
+            city_code: loc.city_code || 0,
+            postal_code: postalFromCdekItem(item),
+            work_time: item.work_time,
+            phone: item.phones?.[0]?.number || '',
+            location: item.location
+              ? {
+                  latitude: item.location.latitude,
+                  longitude: item.location.longitude,
+                  address: addressFull || addressLine,
+                }
+              : undefined,
+          };
+        });
         console.log(`[CDEK Proxy] ✅ Offices fetched: ${offices.length} offices in ${Date.now() - startTime}ms`);
         return res.json(offices);
       }
@@ -187,6 +207,50 @@ app.get('/api/cdek/service', async (req, res) => {
   } catch (error) {
     console.error('[CDEK Proxy] ❌ Error:', error.message);
     console.error('[CDEK Proxy] Stack:', error.stack);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/cdek/calculator', async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const token = await getCdekToken();
+    if (!token) {
+      return res.status(500).json({
+        error: 'Failed to authenticate with CDEK. Check CDEK_ACCOUNT and CDEK_SECURE in .env',
+      });
+    }
+
+    const response = await fetch(`${CDEK_API_URL}/calculator/tarifflist`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(req.body || {}),
+    });
+
+    const text = await response.text();
+    let data;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { error: text || 'Invalid JSON from CDEK' };
+    }
+
+    if (!response.ok) {
+      console.error('[CDEK Proxy] ❌ Calculator error:', response.status, text);
+      return res.status(response.status).json(
+        typeof data === 'object' && data !== null && !Array.isArray(data)
+          ? data
+          : { error: text || String(response.status) },
+      );
+    }
+
+    console.log(`[CDEK Proxy] ✅ Calculator OK in ${Date.now() - startTime}ms`);
+    return res.json(data);
+  } catch (error) {
+    console.error('[CDEK Proxy] ❌ Calculator exception:', error.message);
     return res.status(500).json({ error: error.message });
   }
 });

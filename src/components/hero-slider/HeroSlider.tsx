@@ -25,6 +25,7 @@ interface SlideData {
 export const HeroSlider: React.FC = () => {
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [mobileActiveIndex, setMobileActiveIndex] = useState(0);
   const isTablet = useScreenMatch(800);
   const isMobile = useScreenMatch(450);
   const hasMultipleSlides = slides.length > 1;
@@ -127,81 +128,107 @@ export const HeroSlider: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isMobile || !hasMultipleSlides) {
+      setMobileActiveIndex(0);
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setMobileActiveIndex((prev) => (prev + 1) % slides.length);
+    }, 3000);
+
+    return () => clearInterval(timer);
+  }, [isMobile, hasMultipleSlides, slides.length]);
+
 
   const settings = useMemo(() => ({
     dots: false,
     infinite: hasMultipleSlides, // infinite работает только если больше 1 слайда
-    speed: isMobile ? 380 : 500,
+    speed: 500,
     slidesToShow: 1,
     slidesToScroll: 1,
     autoplay: hasMultipleSlides, // autoplay работает только если больше 1 слайда
     autoplaySpeed: 3000,
     arrows: false,
-    fade: !isMobile,
-    cssEase: isMobile ? 'ease-out' : 'linear',
-    touchMove: true,
-    swipe: true,
-    swipeToSlide: !isMobile,
-    draggable: !isMobile,
-    touchThreshold: isMobile ? 22 : 5,
+    fade: true,
+    cssEase: 'linear',
+    touchMove: false,
+    swipe: false,
+    swipeToSlide: false,
+    draggable: false,
+    touchThreshold: 5,
     verticalSwiping: false,
     adaptiveHeight: false,
     waitForAnimate: true,
-    pauseOnHover: !isMobile,
-    pauseOnFocus: !isMobile,
+    pauseOnHover: true,
+    pauseOnFocus: true,
     lazyLoad: 'ondemand' as const
-  }), [hasMultipleSlides, isMobile]);
+  }), [hasMultipleSlides]);
 
   if (loading) {
     return <SpinnerLoader />;
   }
 
+  const renderSlideContent = (slide: SlideData, index: number) => {
+    const largeImage = slide.largeImage || flower;
+    const smallImage = slide.smallImage || flowerSmall;
+
+    return (
+      <div key={index} className={styles.slide}>
+        <section className={topBlockStyles.topBlockContainer}>
+          <article className={topBlockStyles.left}>
+            <div className={topBlockStyles.wrapper}>
+              {isMobile ? <DesktopTextImages /> : isTablet ? <MarqueeText /> : <DesktopTextImages />}
+
+              <div className={topBlockStyles.content}>
+                <ImageWithFallback src={smallImage} alt='Маленький цветок' />
+
+                <div className={topBlockStyles.contentText}>
+                  <TextWrapper
+                    title={isTablet ? mobileTexts.title : desktopTexts.title}
+                    items={isTablet ? mobileTexts.items : desktopTexts.items}
+                    titleStyle={{
+                      textTransform: 'uppercase',
+                      fontSize: isMobile ? '14px' : '16px'
+                    }}
+                    textStyle={{
+                      textTransform: 'uppercase',
+                      fontSize: isMobile ? '14px' : '16px'
+                    }}
+                  />
+                </div>
+
+                <img src={isMobile ? lineToVertical : lineTo} alt='Стрелка' className={topBlockStyles.lineTo} />
+                <img src={info} alt='Информация' className={topBlockStyles.info} />
+              </div>
+            </div>
+          </article>
+
+          <article className={topBlockStyles.right}>
+            <ImageWithFallback src={largeImage} alt='Цветок' />
+          </article>
+        </section>
+      </div>
+    );
+  };
+
+  if (isMobile) {
+    const currentSlide = slides[mobileActiveIndex] ?? slides[0];
+
+    return (
+      <section className={styles.heroSlider}>
+        <div className={styles.mobileSlideViewport} key={mobileActiveIndex}>
+          {renderSlideContent(currentSlide, mobileActiveIndex)}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className={styles.heroSlider}>
       <Slider {...settings} className={styles.slider}>
-        {slides.map((slide, index) => {
-          // Используем картинки из админки или дефолтные
-          const largeImage = slide.largeImage || flower;
-          const smallImage = slide.smallImage || flowerSmall;
-          
-          return (
-            <div key={index} className={styles.slide}>
-              <section className={topBlockStyles.topBlockContainer}>
-                <article className={topBlockStyles.left}>
-                  <div className={topBlockStyles.wrapper}>
-                    {isTablet ? <MarqueeText /> : <DesktopTextImages />}
-
-                    <div className={topBlockStyles.content}>
-                      <ImageWithFallback src={smallImage} alt='Маленький цветок' />
-
-                      <div className={topBlockStyles.contentText}>
-                        <TextWrapper
-                          title={isTablet ? mobileTexts.title : desktopTexts.title}
-                          items={isTablet ? mobileTexts.items : desktopTexts.items}
-                          titleStyle={{
-                            textTransform: 'uppercase',
-                            fontSize: isMobile ? '14px' : '16px'
-                          }}
-                          textStyle={{
-                            textTransform: 'uppercase',
-                            fontSize: isMobile ? '14px' : '16px'
-                          }}
-                        />
-                      </div>
-
-                      <img src={isMobile ? lineToVertical : lineTo} alt='Стрелка' className={topBlockStyles.lineTo} />
-                      <img src={info} alt='Информация' className={topBlockStyles.info} />
-                    </div>
-                  </div>
-                </article>
-
-                <article className={topBlockStyles.right}>
-                  <ImageWithFallback src={largeImage} alt='Цветок' />
-                </article>
-              </section>
-            </div>
-          );
-        })}
+        {slides.map((slide, index) => renderSlideContent(slide, index))}
       </Slider>
     </section>
   );

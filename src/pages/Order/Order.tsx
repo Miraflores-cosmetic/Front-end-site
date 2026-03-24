@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import styles from './Order.module.scss';
 import OrderLeftPart from './left-part/OrderLeftPart';
 import OrderRightPart from './right-part/OrderRightPart';
+import { OrderCheckoutProvider } from './OrderCheckoutContext';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe } from '@/store/slices/authSlice';
@@ -25,8 +26,10 @@ const Order: React.FC = () => {
     <div className={styles.orderPage}>
       <Header />
       <main className={styles.orderContainer}>
-        <OrderLeftPart />
-        <OrderRightPart />
+        <OrderCheckoutProvider>
+          <OrderLeftPart />
+          <OrderRightPart />
+        </OrderCheckoutProvider>
       </main>
     </div>
   );

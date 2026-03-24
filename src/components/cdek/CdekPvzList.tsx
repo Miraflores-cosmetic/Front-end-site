@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Search, MapPin, Clock, Phone, ChevronDown, Loader2, Map } from 'lucide-react';
 import YandexCdekMap from './YandexCdekMap';
+import { extractRuPostalCode } from '@/utils/extractRuPostalCode';
+import { normalizeCdekPvzFromApi } from '@/utils/normalizeCdekPvz';
 
 export interface CdekPvzInfo {
   id: string;
@@ -11,6 +13,8 @@ export interface CdekPvzInfo {
   workTime?: string;
   phone?: string;
   postalCode?: string;
+  /** Субъект РФ из справочника городов СДЭК (для поля области в Saleor) */
+  region?: string;
   type: 'office' | 'pickup';
 }
 
@@ -168,24 +172,31 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
         if (data.error) {
           throw new Error(data.error);
         }
-        
-        if (Array.isArray(data)) {
-          pvz = data;
-        }
-        
+
+        const toPvzArray = (raw: unknown): Pvz[] => {
+          let list: unknown[] = [];
+          if (Array.isArray(raw)) list = raw;
+          else if (raw && typeof raw === 'object' && Array.isArray((raw as { items?: unknown[] }).items)) {
+            list = (raw as { items: unknown[] }).items;
+          }
+          return list.map((item) => normalizeCdekPvzFromApi(item) as Pvz);
+        };
+
+        pvz = toPvzArray(data);
+
         if (pvz.length === 0 && selectedCity.latitude && selectedCity.longitude) {
           const proxyUrl = `${baseUrl}/api/cdek/service?action=offices&latitude=${selectedCity.latitude}&longitude=${selectedCity.longitude}&radius=50`;
-          
+
           const publicResponse = await fetch(proxyUrl);
-          
+
           if (publicResponse.ok) {
             const publicData = await publicResponse.json();
-            if (!publicData.error && Array.isArray(publicData)) {
-              pvz = publicData;
+            if (!publicData.error) {
+              pvz = toPvzArray(publicData);
             }
           }
         }
-        
+
         setPvzList(pvz);
         
       } catch (error: any) {
@@ -234,38 +245,57 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
     setShowWidget(false);
   }, []);
 
-  const handleMapSelect = useCallback((pvz: Pvz) => {
-    const pvzInfo: CdekPvzInfo = {
-      id: pvz.code,
-      cityName: pvz.city || selectedCity?.city || '',
-      cityCode: String(pvz.city_code || selectedCity?.code || ''),
-      address: pvz.address || pvz.location?.address || '',
-      name: pvz.name || 'ПВЗ СДЭК',
-      workTime: pvz.work_time,
-      phone: pvz.phone,
-      postalCode: pvz.postal_code,
-      type: 'office',
-    };
-    onChoose(pvzInfo);
-  }, [selectedCity, onChoose]);
+  const resolvePvzPostal = useCallback((pvz: Pvz): string => {
+    const raw = pvz.postal_code != null && String(pvz.postal_code).trim() !== ''
+      ? String(pvz.postal_code).trim()
+      : '';
+    if (raw) return raw;
+    const addr = pvz.address || pvz.location?.address || '';
+    return extractRuPostalCode(addr);
+  }, []);
 
-  const handlePvzSelect = useCallback((pvz: Pvz) => {
-    if (!pvz || !pvz.code) return;
+  const handleMapSelect = useCallback(
+    (pvz: Pvz) => {
+      const line = pvz.address || pvz.location?.address || '';
+      const pvzInfo: CdekPvzInfo = {
+        id: pvz.code,
+        cityName: pvz.city || selectedCity?.city || '',
+        cityCode: String(pvz.city_code || selectedCity?.code || ''),
+        address: line,
+        name: pvz.name || 'ПВЗ СДЭК',
+        workTime: pvz.work_time,
+        phone: pvz.phone,
+        postalCode: resolvePvzPostal(pvz),
+        region: selectedCity?.region,
+        type: 'office',
+      };
+      onChoose(pvzInfo);
+    },
+    [selectedCity, onChoose, resolvePvzPostal],
+  );
 
-    const pvzInfo: CdekPvzInfo = {
-      id: pvz.code,
-      cityName: pvz.city || selectedCity?.city || '',
-      cityCode: String(pvz.city_code || selectedCity?.code || ''),
-      address: pvz.address || pvz.location?.address || '',
-      name: pvz.name || 'ПВЗ СДЭК',
-      workTime: pvz.work_time,
-      phone: pvz.phone,
-      postalCode: pvz.postal_code,
-      type: 'office',
-    };
-    
-    onChoose(pvzInfo);
-  }, [selectedCity, onChoose]);
+  const handlePvzSelect = useCallback(
+    (pvz: Pvz) => {
+      if (!pvz || !pvz.code) return;
+
+      const line = pvz.address || pvz.location?.address || '';
+      const pvzInfo: CdekPvzInfo = {
+        id: pvz.code,
+        cityName: pvz.city || selectedCity?.city || '',
+        cityCode: String(pvz.city_code || selectedCity?.code || ''),
+        address: line,
+        name: pvz.name || 'ПВЗ СДЭК',
+        workTime: pvz.work_time,
+        phone: pvz.phone,
+        postalCode: resolvePvzPostal(pvz),
+        region: selectedCity?.region,
+        type: 'office',
+      };
+
+      onChoose(pvzInfo);
+    },
+    [selectedCity, onChoose, resolvePvzPostal],
+  );
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {

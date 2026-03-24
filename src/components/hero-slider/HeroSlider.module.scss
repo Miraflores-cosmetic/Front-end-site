@@ -48,15 +48,8 @@
     padding-top: 0;
 
     :global(.slick-list) {
-      // Приоритет вертикальному скроллу страницы;
-      // слайд меняется только при явном горизонтальном свайпе
       touch-action: pan-y;
-      overscroll-behavior: contain;
       overflow: hidden;
-    }
-
-    :global(.slick-track) {
-      touch-action: pan-y;
     }
   }
 }
@@ -83,3 +76,8 @@
     padding-top: 0;
   }
 }
+
+.mobileSlideViewport {
+  width: 100%;
+}
+

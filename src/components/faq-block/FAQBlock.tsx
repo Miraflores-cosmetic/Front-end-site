@@ -1,9 +1,11 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import styles from './FAQBlock.module.scss';
 import { getPageBySlug, PageNode, getAllFAQs } from '@/graphql/queries/pages.service';
 import { editorJsToHtml } from '@/utils/editorJsParser';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import faqVideo from '@/assets/videos/faq-video.mp4';
+
+const FAQ_VIDEO_PAUSE_AFTER_FIRST_MS = 7000;
 
 interface FAQItem {
   question: string;
@@ -20,6 +22,16 @@ export const FAQBlock: React.FC = () => {
   const sectionRef = useRef<HTMLElement>(null);
   const leftColumnRef = useRef<HTMLDivElement>(null);
   const rightColumnRef = useRef<HTMLDivElement>(null);
+  const faqVideoRef = useRef<HTMLVideoElement>(null);
+  const faqVideoFirstCycleDoneRef = useRef(false);
+  const faqVideoPauseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearFaqVideoPauseTimeout = useCallback(() => {
+    if (faqVideoPauseTimeoutRef.current != null) {
+      clearTimeout(faqVideoPauseTimeoutRef.current);
+      faqVideoPauseTimeoutRef.current = null;
+    }
+  }, []);
 
   useEffect(() => {
     const fetchFAQ = async () => {
@@ -141,6 +153,31 @@ export const FAQBlock: React.FC = () => {
     };
   }, [expandedIndex, faqItems.length, loading, isSectionLoaded]);
 
+  // После первого полного проигрыша — пауза 7 с, затем снова видео и дальше обычный loop
+  useEffect(() => {
+    if (loading || faqItems.length === 0) return;
+    const video = faqVideoRef.current;
+    if (!video) return;
+
+    const onEnded = () => {
+      if (faqVideoFirstCycleDoneRef.current) return;
+      faqVideoFirstCycleDoneRef.current = true;
+      clearFaqVideoPauseTimeout();
+      faqVideoPauseTimeoutRef.current = setTimeout(() => {
+        faqVideoPauseTimeoutRef.current = null;
+        video.currentTime = 0;
+        video.loop = true;
+        void video.play();
+      }, FAQ_VIDEO_PAUSE_AFTER_FIRST_MS);
+    };
+
+    video.addEventListener('ended', onEnded);
+    return () => {
+      video.removeEventListener('ended', onEnded);
+      clearFaqVideoPauseTimeout();
+    };
+  }, [loading, faqItems.length, clearFaqVideoPauseTimeout]);
+
   if (loading) {
     return (
       <section ref={sectionRef} className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}>
@@ -170,10 +207,10 @@ export const FAQBlock: React.FC = () => {
         <div ref={leftColumnRef} className={styles.leftColumn}>
           <div className={styles.imageWrapper}>
             <video
+              ref={faqVideoRef}
               src={faqVideo}
               className={styles.video}
               autoPlay
-              loop
               muted
               playsInline
             />

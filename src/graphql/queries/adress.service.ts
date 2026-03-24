@@ -1,4 +1,5 @@
 import { graphqlRequest } from '@/graphql/client';
+import { AddressMutationError, accountErrorsToFieldMap } from '@/graphql/addressMutationError';
 import {
   AddressInput,
   AddressTypeEnum,
@@ -20,6 +21,7 @@ export async function createAddressService(
           firstName
           lastName
           streetAddress1
+          streetAddress2
           city
           postalCode
           phone
@@ -46,8 +48,10 @@ export async function createAddressService(
   const errors = result.accountAddressCreate.errors || [];
 
   if (errors.length > 0) {
-    // We map errors to a readable string or handle specific fields if needed
-    throw new Error(`Address creation failed: ${errors.map(e => e.message).join(', ')}`);
+    throw new AddressMutationError(
+      errors.map((e) => e.message).join(', '),
+      accountErrorsToFieldMap(errors),
+    );
   }
 
   // We are guaranteed an address here if there are no errors

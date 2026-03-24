@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { AddressInfo } from '@/types/auth';
 
 type DrawerType =
   | 'basket'
@@ -10,12 +11,20 @@ type DrawerType =
   | 'search'
   | null;
 
+export interface AddressDrawerState {
+  editingAddressId: string | null;
+  seed: AddressInfo | null;
+}
+
 interface DrawerState {
   activeDrawer: DrawerType;
+  /** Контекст только для дроера адреса: редактирование или новый */
+  addressDrawer: AddressDrawerState | null;
 }
 
 const initialState: DrawerState = {
-  activeDrawer: null
+  activeDrawer: null,
+  addressDrawer: null,
 };
 
 const drawerSlice = createSlice({
@@ -24,12 +33,31 @@ const drawerSlice = createSlice({
   reducers: {
     openDrawer: (state, action: PayloadAction<DrawerType>) => {
       state.activeDrawer = action.payload;
+      if (action.payload === 'address') {
+        state.addressDrawer = { editingAddressId: null, seed: null };
+      } else {
+        state.addressDrawer = null;
+      }
     },
-    closeDrawer: state => {
+    /** Открыть дроер адреса: без payload — новый адрес, с address — правка с предзаполнением */
+    openAddressDrawer: (
+      state,
+      action: PayloadAction<{ address?: AddressInfo | null } | undefined>,
+    ) => {
+      state.activeDrawer = 'address';
+      const addr = action.payload?.address;
+      if (addr) {
+        state.addressDrawer = { editingAddressId: addr.id, seed: addr };
+      } else {
+        state.addressDrawer = { editingAddressId: null, seed: null };
+      }
+    },
+    closeDrawer: (state) => {
       state.activeDrawer = null;
-    }
-  }
+      state.addressDrawer = null;
+    },
+  },
 });
 
-export const { openDrawer, closeDrawer } = drawerSlice.actions;
+export const { openDrawer, openAddressDrawer, closeDrawer } = drawerSlice.actions;
 export default drawerSlice.reducer;

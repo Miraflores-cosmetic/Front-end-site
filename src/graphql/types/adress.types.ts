@@ -14,6 +14,8 @@ export interface AddressInput {
   companyName?: string;
   phone: string;
   streetAddress1: string;
+  /** Доп. строка в Saleor: тип доставки и пояснения для администратора */
+  streetAddress2?: string;
   city: string;
   cityArea?: string;
   postalCode: string;
@@ -27,6 +29,7 @@ export interface Address {
   firstName: string;
   lastName: string;
   streetAddress1: string;
+  streetAddress2?: string | null;
   city: string;
   postalCode: string;
   country: {

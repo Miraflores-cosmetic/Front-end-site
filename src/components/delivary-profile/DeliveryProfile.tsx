@@ -5,13 +5,16 @@ import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
 import { AddressInfo } from '@/types/auth';
-import { openDrawer } from '@/store/slices/drawerSlice';
+import { openAddressDrawer } from '@/store/slices/drawerSlice';
 import { setDefaultAddressService } from '@/graphql/queries/adress.service';
 import { AddressTypeEnum } from '@/graphql/types/adress.types';
 import { useToast } from '@/components/toast/toast';
 import { getMe } from '@/store/slices/authSlice';
-import { deleteAddress, updateAddress } from '@/graphql/queries/address.service';
-import AddressModal from '@/components/address-modal/AddressModal';
+import { deleteAddress } from '@/graphql/queries/address.service';
+import {
+  formatProfileShippingAddressLine,
+  getDeliveryTypeLabelFromStreet2,
+} from '@/utils/deliveryAddressDisplay';
 
 interface DeliveryProfileProps {
   onSelectAddress: (address: AddressInfo) => void;
@@ -25,8 +28,6 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({ onSelectAddress }) =>
   const [selectedId, setSelectedId] = useState<string>('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [addressToEdit, setAddressToEdit] = useState<AddressInfo | null>(null);
   const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const isMobile = useScreenMatch(768);
 
@@ -67,7 +68,7 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({ onSelectAddress }) =>
   }, [openMenuId]);
 
   const handleAddAddress = () => {
-    dispatch(openDrawer('address'));
+    dispatch(openAddressDrawer());
   };
 
   // UPDATED FUNCTION
@@ -94,8 +95,7 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({ onSelectAddress }) =>
     }
   };
   const handleEdit = (address: AddressInfo) => {
-    setAddressToEdit(address);
-    setIsModalOpen(true);
+    dispatch(openAddressDrawer({ address }));
     setOpenMenuId(null);
   };
 
@@ -117,17 +117,6 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({ onSelectAddress }) =>
   const handleMenuToggle = (addressId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     setOpenMenuId(openMenuId === addressId ? null : addressId);
-  };
-
-  const handleModalClose = () => {
-    setIsModalOpen(false);
-    setAddressToEdit(null);
-  };
-
-  const handleAddressUpdated = async () => {
-    await dispatch(getMe());
-    setIsModalOpen(false);
-    setAddressToEdit(null);
   };
 
   return (
@@ -161,22 +150,11 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({ onSelectAddress }) =>
                       <p className={styles.type}>
                         {address.firstName} {address.lastName}
                       </p>
-                      <p className={styles.address}>
-                        {[
-                          address.countryArea,
-                          address.city,
-                          address.cityArea,
-                          address.streetAddress1,
-                          address.postalCode
-                        ].filter(Boolean).join(', ')}
+                      <p className={styles.deliveryType}>
+                        Тип доставки: {getDeliveryTypeLabelFromStreet2(address.streetAddress2)}
                       </p>
+                      <p className={styles.address}>{formatProfileShippingAddressLine(address)}</p>
                     </div>
-
-                    {/* Logic to show "Default" text */}
-                    {/* We check if it is explicitly default OR if it is the currently selected one */}
-                    {(address.isDefaultShippingAddress || isSelected) && !isMobile && (
-                      <p className={styles.defaultAddress}>адрес по умолчанию</p>
-                    )}
                   </div>
                 </label>
                 <div 
@@ -218,13 +196,6 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({ onSelectAddress }) =>
           + Новый адрес
         </button>
       )}
-      <AddressModal
-        visible={isModalOpen}
-        onClose={handleModalClose}
-        onAddressAdded={handleAddressUpdated}
-        onAddressUpdated={handleAddressUpdated}
-        addressToEdit={addressToEdit}
-      />
     </div>
   );
 };

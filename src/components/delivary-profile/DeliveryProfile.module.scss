@@ -72,6 +72,15 @@
         font-size: 14px;
       }
     }
+    .deliveryType {
+      margin: 4px 0 0;
+      color: #6e6d67;
+      font-size: 14px;
+      font-weight: 500;
+      @media (max-width: 500px) {
+        font-size: 13px;
+      }
+    }
     .address {
       color: #6e6d67;
       font-size: 14px;
@@ -85,11 +94,6 @@
       span {
         color: black;
       }
-    }
-    .defaultAddress {
-      margin-right: 24px;
-      color: #6e6d67;
-      font-size: 14px;
     }
   }
 }

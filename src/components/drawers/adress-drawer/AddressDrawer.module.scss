@@ -67,6 +67,111 @@
       }
     }
 
+    .deliveryMethodSection {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .deliveryMethodLabel {
+      margin: 0;
+      font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+      font-weight: 500;
+      font-size: 16px;
+      text-transform: uppercase;
+      color: #6e6d67;
+    }
+
+    .deliveryMethodGrid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+
+      @media (max-width: 393px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .deliveryMethodChip {
+      min-height: 44px;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      background: #fff;
+      color: #111;
+      font-size: 14px;
+      font-weight: 500;
+      text-align: center;
+      cursor: pointer;
+      transition:
+        border-color 0.2s,
+        background 0.2s,
+        color 0.2s;
+
+      &:hover {
+        border-color: rgba(0, 0, 0, 0.28);
+      }
+    }
+
+    .deliveryMethodChipActive {
+      border-color: #000;
+      background: #000;
+      color: #fff;
+
+      &:hover {
+        border-color: #000;
+      }
+    }
+
+    .widgetPanel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.02);
+    }
+
+    .widgetTitle {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0;
+    }
+
+    .widgetDescription {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.6);
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .placeholderWidget {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 120px;
+      padding: 16px;
+      text-align: center;
+    }
+
+    .placeholderTitle {
+      font-size: 15px;
+      font-weight: 600;
+      margin: 0;
+      color: #111;
+    }
+
+    .placeholderHint {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.5);
+      margin: 0;
+      line-height: 1.45;
+      max-width: 280px;
+    }
+
     .dadteOfBirdthWrapper {
       display: flex;
       flex-direction: column;

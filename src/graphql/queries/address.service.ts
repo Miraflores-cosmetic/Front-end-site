@@ -1,5 +1,6 @@
 import { graphqlRequest } from '../client';
 import { AddressInfo } from '@/types/auth';
+import { AddressMutationError, accountErrorsToFieldMap } from '@/graphql/addressMutationError';
 
 export interface AddressCreateInput {
   firstName: string;
@@ -134,8 +135,9 @@ export async function createAddress(
   const errors = result.accountAddressCreate.errors || [];
 
   if (errors.length > 0) {
-    throw new Error(
-      `Address creation failed: ${errors.map((e) => e.message).join(', ')}`
+    throw new AddressMutationError(
+      errors.map((e) => e.message).join(', '),
+      accountErrorsToFieldMap(errors),
     );
   }
 
@@ -199,8 +201,9 @@ export async function updateAddress(
   const errors = result.accountAddressUpdate.errors || [];
 
   if (errors.length > 0) {
-    throw new Error(
-      `Address update failed: ${errors.map((e) => e.message).join(', ')}`
+    throw new AddressMutationError(
+      errors.map((e) => e.message).join(', '),
+      accountErrorsToFieldMap(errors),
     );
   }
 

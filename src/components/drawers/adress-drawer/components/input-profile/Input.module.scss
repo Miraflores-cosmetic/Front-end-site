@@ -19,10 +19,18 @@
   margin-bottom: 4px;
 }
 
+.labelError {
+  color: #b42318;
+}
+
 .inputRow {
   display: flex;
   align-items: center;
   border-bottom: 1px solid #6e6d6799;
+}
+
+.inputRowError {
+  border-bottom-color: #b42318;
 }
 
 .input {
@@ -40,6 +48,17 @@
   &::placeholder {
     color: #6e6d67;
   }
+}
+
+.inputError {
+  color: #b42318;
+}
+
+.fieldErrorText {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.35;
+  color: #b42318;
 }
 
 .button {

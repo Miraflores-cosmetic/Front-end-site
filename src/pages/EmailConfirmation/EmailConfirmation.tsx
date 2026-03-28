@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styles from './EmailConfirmation.module.scss';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import logo from '@/assets/icons/Miraflores_logo.svg';
+import siteLogo from '@/assets/icons/Logo-mira.svg';
 
 import { TextField } from '@/components/text-field/TextField';
 import { Button } from '@/components/button/Button';
@@ -208,7 +208,7 @@ const EmailConfirmation: React.FC = () => {
     <section className={styles.confirmationContainer}>
       <div className={styles.confirmationWrapper}>
         <div className={styles.imageWrapper}>
-          <img src={logo} alt='logo' className={styles.logo} onClick={handleNavigatetoHome} />
+          <img src={siteLogo} alt='Miraflores' className={styles.logo} onClick={handleNavigatetoHome} />
         </div>
 
         <h2 className={styles.title}>Подтверждение почты</h2>

@@ -166,6 +166,13 @@
       object-position: center;
     }
 
+    .footerLogo {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+
     @media (max-width: 1290px) {
       width: 420px;
     }

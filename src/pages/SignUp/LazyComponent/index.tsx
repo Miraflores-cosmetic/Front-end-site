@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from '../SignUp.module.scss';
 import { useNavigate } from 'react-router-dom';
-import logo from '@/assets/icons/Miraflores_logo.svg';
+import siteLogo from '@/assets/icons/Logo-mira.svg';
 import { TextField } from '@/components/text-field/TextField';
 import { Button } from '@/components/button/Button';
 import goBackIcon from '@/assets/icons/go-back.svg';
@@ -181,7 +181,7 @@ const LazyComponent: React.FC = () => {
         <div className={styles.goBackIcon}>
           <img src={goBackIcon} alt='go_back_icon' className={''} />
         </div>
-        <img src={logo} alt='logo' className={styles.logo} onClick={handleNavigatetoHome} />
+        <img src={siteLogo} alt='Miraflores' className={styles.logo} onClick={handleNavigatetoHome} />
       </div>
       
       {/* Progress indicator */}

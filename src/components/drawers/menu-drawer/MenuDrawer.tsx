@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import styles from './MenuDrawer.module.scss';
 import MenuList from './menu-list/MenuList';
-import linToMenu from '@/assets/icons/Miraflores_logo.svg';
+import siteLogo from '@/assets/icons/Logo-mira.svg';
 import menuLine from '@/assets/icons/menuLine.svg';
 import { RootState, AppDispatch } from '@/store/store';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
@@ -86,7 +86,7 @@ const MenuDrawer: React.FC = () => {
       {isMobile && (
         <div className={styles.menuMobileHeader}>
           <img src={menuLine} alt='menuLine' onClick={() => dispatch(closeDrawer())} />
-          <img src={linToMenu} alt='linToMenu' />
+          <img src={siteLogo} alt='Miraflores' className={styles.menuHeaderLogo} />
         </div>
       )}
       <div className={styles.left}>

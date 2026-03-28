@@ -1,7 +1,6 @@
 import React from 'react';
 import styles from './Header.module.scss';
-import logo from '@/assets/icons/Miraflores_logo.svg';
-import logoMobile from '@/assets/icons/MirafloresMobile.svg';
+import siteLogo from '@/assets/icons/Logo-mira.svg';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { useScroll } from '@/hooks/useScroll';
 import HeaderLeft from './LeftSideHeader/HeaderLeftPart';
@@ -26,11 +25,11 @@ const Header: React.FC = () => {
 
         {isMobile ? (
           <div className={styles.logoMobile} onClick={handleToHome}>
-            <img src={logoMobile} alt='Miraflores' />
+            <img src={siteLogo} alt='Miraflores' />
           </div>
         ) : (
           <div className={styles.logo} onClick={handleToHome}>
-            <img src={logo} alt='Miraflores' />
+            <img src={siteLogo} alt='Miraflores' />
           </div>
         )}
 

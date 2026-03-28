@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './Footer.module.scss';
-import footerLogo from '@/assets/icons/footerLogo.svg';
+import siteLogo from '@/assets/icons/Logo-mira.svg';
 import lineTo from '@/assets/icons/lineTofooter.svg';
 import lineToMobile from '@/assets/icons/lineToMobile.svg';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
@@ -68,7 +68,7 @@ const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32
       {!isTablet && (
         <div className={styles.footerLeft}>
           <img src={footerImage} alt="footer" className={styles.footerBgImage} />
-          <img src={footerLogo} alt='logo' />
+          <img src={siteLogo} alt='Miraflores' className={styles.footerLogo} />
         </div>
       )}
 

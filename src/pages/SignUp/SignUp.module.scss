@@ -50,9 +50,15 @@ $transition-fast: 0.2s ease;
 
       .logo {
         cursor: pointer;
-        width: 179px;
+        width: 178px;
         height: 36px;
+        object-fit: contain;
         justify-self: center;
+
+        @media (max-width: 450px) {
+          width: 118px;
+          height: 24px;
+        }
       }
 
       .goBackIcon {

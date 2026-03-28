@@ -38,31 +38,6 @@ function editorJsToText(data: any): string {
     .join(' ');
 }
 
-const getVolumeFromVariant = (variant: any): string => {
-  if (!variant?.attributes || !Array.isArray(variant.attributes)) {
-    return variant?.name || '';
-  }
-  const volumeAttr = variant.attributes.find((attr: any) => {
-    const slug = attr.attribute?.slug?.toLowerCase() || '';
-    const name = attr.attribute?.name?.toLowerCase() || '';
-    return slug === 'obem' || 
-           slug === 'volume' ||
-           name.includes('объем') ||
-           name.includes('volume');
-  });
-  
-  if (volumeAttr) {
-    const value = volumeAttr.values?.[0];
-    if (value?.name) {
-      return value.name;
-    } else if (value?.plainText) {
-      return value.plainText;
-    }
-  }
-  
-  return variant?.name || '';
-};
-
 const convertToBestSellersProduct = (product: CollectionProduct): BestSellersProduct | null => {
   if (!product) return null;
 
@@ -72,8 +47,6 @@ const convertToBestSellersProduct = (product: CollectionProduct): BestSellersPro
   const variantId = defaultVariant.id;
   const variantPrice = defaultVariant.pricing.price.gross.amount || 0;
   const variantUndiscountedPrice = defaultVariant.pricing.priceUndiscounted?.gross?.amount;
-  const variantDiscountAmount = defaultVariant.pricing.discount?.gross?.amount;
-
   let oldPrice: number | undefined = undefined;
   if (variantUndiscountedPrice && variantUndiscountedPrice > variantPrice && variantPrice > 0) {
     oldPrice = variantUndiscountedPrice;
@@ -238,7 +211,7 @@ const MenuRightPart: React.FC = () => {
               loading={loading}
               onNavigate={() => dispatch(closeDrawer())}
             />
-            <img src={lineTo} alt='lineTo' className={styles.lineTo} />
+            <img src={lineTo} alt='' className={styles.lineTo} />
             {collectionDescription && (
               <p className={styles.textTo}>{collectionDescription}</p>
             )}
@@ -248,8 +221,9 @@ const MenuRightPart: React.FC = () => {
         )}
       </div>
       <div className={styles.centerImageContainer}>
-        <img src={centerImageMenu} alt='centerImageMenu' width={188} height={216} />
-        <button 
+        <img src={centerImageMenu} alt='' width={188} height={216} />
+        <button
+          type='button'
           onClick={() => {
             window.open('https://t.me/Miraflores_Cosmetics_Bot', '_blank', 'noopener,noreferrer');
             dispatch(closeDrawer());

@@ -68,12 +68,16 @@
 }
 
 .logo img {
+  width: 178px;
   height: 36px;
+  object-fit: contain;
   cursor: pointer;
 }
 
 .logoMobile img {
+  width: 118px;
   height: 24px;
+  object-fit: contain;
   cursor: pointer;
   display: flex;
 }

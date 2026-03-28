@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import styles from './OrderLeftPart.module.scss';
 import Input from '@/components/text-field/input/Input';
 import goBack from '@/assets/icons/go-back.svg';
-import Miraflores_logo from '@/assets/icons/Miraflores_logo.svg';
+import siteLogo from '@/assets/icons/Logo-mira.svg';
 import krem from '@/assets/images/Cream.png';
 
 import CustomCheckbox from '@/components/custom-checkBox/CustomCheckbox';
@@ -272,7 +272,7 @@ const OrderLeftPart: React.FC = () => {
           <div className={styles.mobileHeader}>
             <img src={goBack} alt='goBack' className={styles.goBackMobile} />
             <div className={styles.logoWrapper}>
-              <img src={Miraflores_logo} alt='Miraflores_logo' className={styles.Miraflores_logo} />
+              <img src={siteLogo} alt='Miraflores' className={styles.Miraflores_logo} />
             </div>
           </div>
         </section>

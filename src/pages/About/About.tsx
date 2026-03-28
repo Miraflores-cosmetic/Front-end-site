@@ -3,7 +3,7 @@ import styles from './About.module.scss';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
 import footerImage from '@/assets/images/footer-img.png';
-import logo from '@/assets/icons/Miraflores_logo.svg';
+import siteLogo from '@/assets/icons/Logo-mira.svg';
 import aboutImg from '@/assets/images/about-img.png';
 import flwImg from '@/assets/images/flw.png';
 import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
@@ -110,7 +110,7 @@ const About: React.FC = () => {
         <div className={styles.aboutContent}>
           <div className={styles.logoWrapper}>
             <img src={aboutImg} alt="" className={styles.aboutImg} />
-            <img src={logo} alt="Miraflores" className={styles.logo} />
+            <img src={siteLogo} alt="Miraflores" className={styles.logo} />
             <img
               src={flwImg}
               alt=""
@@ -197,7 +197,7 @@ const About: React.FC = () => {
                       {index === Math.min(1, aboutBlocks.length - 1) && (
                         <div className={styles.aboutGridTaglineBreak}>
                           <div className={styles.aboutTagline}>
-                            <img src={logo} alt="Miraflores" className={styles.aboutTaglineLogo} />
+                            <img src={siteLogo} alt="Miraflores" className={styles.aboutTaglineLogo} />
                             <span className={styles.aboutTaglineText}>
                               Создано с любовью, подтверждено наукой
                             </span>
@@ -213,7 +213,7 @@ const About: React.FC = () => {
 
           <div className={styles.aboutMissionWrapper}>
             <div className={styles.aboutMissionHead}>
-              <img src={logo} alt="Miraflores" className={styles.aboutMissionLogo} />
+              <img src={siteLogo} alt="Miraflores" className={styles.aboutMissionLogo} />
               <span className={styles.aboutMissionDash}>—</span>
               <span className={styles.aboutMissionTitle}>Дело всей жизни</span>
             </div>

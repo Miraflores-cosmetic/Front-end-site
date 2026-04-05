@@ -319,7 +319,8 @@
 
   .sliderWrapper {
     position: relative;
-    touch-action: pan-x;
+    /* pan-x pan-y: вертикальный жест прокручивает страницу, горизонтальный — ленту (pan-x одной оси блокировал скролл вниз) */
+    touch-action: pan-x pan-y;
     overscroll-behavior-x: contain;
     overflow-x: auto;
     overflow-y: hidden;

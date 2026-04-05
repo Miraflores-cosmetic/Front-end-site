@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -16,7 +16,6 @@ import FacePage from './pages/Face/Face';
 import Articles from './pages/Articles/Articles';
 import ArticleDetail from './pages/ArticleDetail/ArticleDetail';
 import About from './pages/About/About';
-import Atelier from './pages/Atelier/Atelier';
 import Category from '@/pages/Category/Category'
 import Order from './pages/Order/Order';
 import ProfilePage from './pages/Profile/Profile';
@@ -28,6 +27,7 @@ import Promocodes from './pages/Promocodes/Promocodes';
 import GiftCertificates from './pages/GiftCertificates/GiftCertificates';
 import { Spinner } from '@/components/spinner/Spinner';
 import NotFound from './pages/NotFound/NotFound';
+import Contacts from './pages/Contacts/Contacts';
 import SearchDrawer from '@/components/drawer/SearchDrawer';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe } from '@/store/slices/authSlice';
@@ -110,7 +110,7 @@ const App: React.FC = () => {
         <Route path='/category/:slug' element={<Category />} />
         <Route path='/face' element={<FacePage />} />
         <Route path='/about' element={<About />} />
-        <Route path='/atelier' element={<Atelier />} />
+        <Route path='/atelier' element={<Navigate to='/' replace />} />
         <Route path='/about/articles' element={<Articles />} />
         <Route path='/about/articles/:slug' element={<ArticleDetail />} />
         <Route path='/info/:slug' element={<ArticleDetail />} />
@@ -119,7 +119,8 @@ const App: React.FC = () => {
             <Route path='/profile' element={<ProfilePage />} />
             <Route path='/reviews' element={<ReviewsPage />} />
             <Route path='/reviews/create' element={<CreateReviewPage />} />
-            <Route path='/faq' element={<FAQ />} />
+            <Route path='/contacts' element={<Contacts />} />
+        <Route path='/faq' element={<FAQ />} />
             <Route path='/promocodes' element={<Promocodes />} />
             <Route path='/gift-certificates' element={<GiftCertificates />} />
             <Route path='/*' element={<NotFound />} />

@@ -180,7 +180,11 @@ export const FAQBlock: React.FC = () => {
 
   if (loading) {
     return (
-      <section ref={sectionRef} className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}>
+      <section
+        id="faq"
+        ref={sectionRef}
+        className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
+      >
         <SpinnerLoader />
       </section>
     );
@@ -189,7 +193,11 @@ export const FAQBlock: React.FC = () => {
   // Показываем FAQ даже если нет данных, но с сообщением
   if (faqItems.length === 0) {
     return (
-      <section ref={sectionRef} className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}>
+      <section
+        id="faq"
+        ref={sectionRef}
+        className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
+      >
         <div className={styles.faqContent}>
           <p>FAQ данные загружаются...</p>
         </div>

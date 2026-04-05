@@ -24,14 +24,22 @@ const Home: React.FC = () => {
   const [preHeader, setPreHeader] = useState<PageNode | null>(null);
   const [showPreHeader, setShowPreHeader] = useState(false);
 
+  // FAQ монтируется с задержкой (загрузка данных) — повторяем скролл, пока #faq не появится в DOM
   useEffect(() => {
-    if (location.hash === '#faq') {
-      const timer = setTimeout(() => {
-        document.getElementById('faq')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 400);
-      return () => clearTimeout(timer);
-    }
-  }, [location.hash]);
+    if (location.hash !== '#faq') return;
+    const id = window.setInterval(() => {
+      const el = document.getElementById('faq');
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        window.clearInterval(id);
+      }
+    }, 100);
+    const maxWait = window.setTimeout(() => window.clearInterval(id), 12000);
+    return () => {
+      window.clearInterval(id);
+      window.clearTimeout(maxWait);
+    };
+  }, [location.hash, location.pathname]);
 
   useEffect(() => {
     const fetchPreHeader = async () => {

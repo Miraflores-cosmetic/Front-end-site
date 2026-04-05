@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import styles from './Bestsellers.module.scss';
 import { BestSellerProductCard } from './bestSellerCard';
 import Layout from '@/components/Layout/Layout';
@@ -135,6 +135,7 @@ export default function Bestsellers({
 }: BestsellersProps) {
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
   const sectionRef = React.useRef<HTMLElement>(null);
+  const sliderWrapperRef = useRef<HTMLDivElement>(null);
 
   const { bestSellers, loading, hasAttemptedLoad } = useSelector((state: RootState) => state.bestsellerSlice);
   const dispatch = useDispatch<AppDispatch>();
@@ -373,6 +374,29 @@ export default function Bestsellers({
     };
   }, [isSectionLoaded]);
 
+  // Горизонтальный скролл ленты: тачпад (преобладает deltaX), Shift+колесо. Вертикальное колесо — прокрутка страницы.
+  useEffect(() => {
+    const el = sliderWrapperRef.current;
+    if (!el || !hasProducts) return;
+    const onWheel = (e: WheelEvent) => {
+      if (el.scrollWidth <= el.clientWidth + 1) return;
+      const absX = Math.abs(e.deltaX);
+      const absY = Math.abs(e.deltaY);
+      if (e.shiftKey) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+        return;
+      }
+      if (absX > absY) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaX + e.deltaY;
+        return;
+      }
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => el.removeEventListener('wheel', onWheel);
+  }, [hasProducts]);
+
   return (
     <section
       ref={sectionRef}
@@ -394,6 +418,7 @@ export default function Bestsellers({
 
         {hasProducts && (
           <div
+            ref={sliderWrapperRef}
             className={styles.sliderWrapper}
             aria-label="Список товаров"
           >

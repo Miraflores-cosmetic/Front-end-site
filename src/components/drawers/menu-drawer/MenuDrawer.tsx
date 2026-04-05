@@ -49,8 +49,7 @@ const MenuDrawer: React.FC = () => {
       items: [
         { label: 'Наша история', href: '/about' },
         { label: 'Полезные статьи', href: '/about/articles' },
-        { label: 'Программа благодарности', href: '/programma-blagodarnosti-2' },
-        { label: 'Косметическое Ателье', href: '/atelier' }
+        { label: 'Программа благодарности', href: '/programma-blagodarnosti-2' }
       ]
     },
     info: {
@@ -59,7 +58,8 @@ const MenuDrawer: React.FC = () => {
       items: [
         { label: 'Оферта и условия пользования', href: '/info/oferta-i-usloviia-polzovaniia' },
         { label: 'Политика конфиденциальности', href: '/info/politika-konfidentsialnosti' },
-        { label: 'Оплата и доставка', href: '/info/oplata-i-dostavka' }
+        { label: 'Оплата и доставка', href: '/info/oplata-i-dostavka' },
+        { label: 'FAQ', href: '/#faq' }
       ]
     },
     support: {
@@ -67,9 +67,7 @@ const MenuDrawer: React.FC = () => {
       link: '', // без ссылки и стрелки — только заголовок
       items: [
         { label: 'Статус заказа', href: '/profile' },
-        { label: 'info@miraflores.ru', href: 'mailto:info@miraflores.ru' },
-        { label: '+7 (800) 890 78 99', href: 'tel:+78008907899' },
-        { label: 'Телеграм →', href: 'https://t.me/Miraflores_Cosmetics_Bot' }
+        { label: 'Контакты', href: '/contacts' }
       ]
     },
 

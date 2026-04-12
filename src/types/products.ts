@@ -36,6 +36,8 @@ export interface BestSellersProduct {
   images: string | string[];
   thumbnail: string;
   productVariants: ProductVariant[];
+  /** Лимит активного варианта (если известен из API) — для корзины */
+  quantityLimitPerCustomer?: number | null;
   collections: ProductCollections;
   productType?: { name: string };
   attributes?: Array<{
@@ -109,6 +111,7 @@ export interface ProductVariant {
     id: string;
     sku: string;
     name: string;
+    quantityLimitPerCustomer?: number | null;
     attributes?: Array<{
       attribute: {
         id: string;

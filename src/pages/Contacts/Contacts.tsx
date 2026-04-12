@@ -121,8 +121,8 @@ const Contacts: React.FC = () => {
             </li>
           ))}
         </ul>
+        <Footer footerImage={footerImage} />
       </main>
-      <Footer footerImage={footerImage} />
     </>
   );
 };

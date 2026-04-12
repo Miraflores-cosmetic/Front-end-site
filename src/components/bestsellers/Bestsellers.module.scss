@@ -52,6 +52,16 @@
     }
   }
 
+  /* Горизонтальная лента в профиле: drag-to-scroll (классы вешаются из TSX) */
+  .sliderWrapperProfileDrag {
+    cursor: grab;
+  }
+
+  .sliderWrapperProfileDragging {
+    cursor: grabbing;
+    user-select: none;
+  }
+
   // Встроенная секция (страница Ателье) — по аналогии со слайдером на странице Product
   &.atelierSection {
     padding: 0;

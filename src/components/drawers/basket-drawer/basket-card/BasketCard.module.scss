@@ -53,6 +53,12 @@
         opacity: 0.5;
       }
 
+      &.addImageDisabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
       @media (max-width: 480px) {
         width: 18px;
         height: 18px;
@@ -302,6 +308,12 @@
           width: 18px;
           height: 18px;
         }
+
+        &.addImageDisabled {
+          opacity: 0.35;
+          cursor: not-allowed;
+          pointer-events: none;
+        }
       }
 
       .trashCount {
@@ -470,4 +482,10 @@
         text-transform: uppercase;
         color: #000000;
     }
+}
+
+.addImageDisabled {
+  opacity: 0.35 !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
 }

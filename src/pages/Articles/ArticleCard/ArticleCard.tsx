@@ -18,19 +18,29 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({ article, reverse }) =>
 
   const handleChooseArticle = () => {
     dispatch(setArticle(article));
-    navigate(`/about/articles/${article.slug}`);
+    navigate(`/articles/${article.slug}`);
   };
 
+  const listImageSrc = article.previewImage ?? article.image ?? '';
+
   return (
-    <div
-      className={`${styles.card} ${reverse ? styles.reverse : ''}`}
-      onClick={() => {
-        if (isMobile) handleChooseArticle();
-      }}
-    >
-      <div className={`${styles.topWrapper} ${reverse ? styles.reverse : ''}`}>
-        <div className={styles.imageWrapper} onClick={handleChooseArticle}>
-          <img src={article?.image ?? ''} alt={article.title} />
+    <div className={`${styles.card} ${reverse ? styles.reverse : ''}`}>
+      <div
+        className={`${styles.topWrapper} ${reverse ? styles.reverse : ''}`}
+        role="link"
+        tabIndex={0}
+        onClick={handleChooseArticle}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleChooseArticle();
+          }
+        }}
+      >
+        <div className={styles.imageWrapper}>
+          {listImageSrc ? (
+            <img src={listImageSrc} alt={article.title} />
+          ) : null}
         </div>
         <div className={styles.content}>
           <div className={styles.header}>

@@ -5,8 +5,8 @@
   padding-left: 0;
   max-width: 1536px;
   margin: 0 auto;
-  /* Якорь #faq: останавливаем скролл чуть выше блока (хедер + воздух) */
-  scroll-margin-top: 120px;
+  /* Якорь #faq: хедер sticky + запас (в т.ч. Safari при нативном переходе по #) */
+  scroll-margin-top: 200px;
 
   // Начальное состояние — скрыто для анимации
   .faqContent {
@@ -30,7 +30,7 @@
     margin-bottom: 0;
     padding-left: 16px;
     padding-right: 16px;
-    scroll-margin-top: 88px;
+    scroll-margin-top: 160px;
   }
 
   @media (max-width: 450px) {
@@ -40,7 +40,7 @@
     margin-bottom: 0;
     padding-left: 12px;
     padding-right: 12px;
-    scroll-margin-top: 72px;
+    scroll-margin-top: 148px;
   }
 }
 

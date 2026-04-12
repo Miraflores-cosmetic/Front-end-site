@@ -26,6 +26,10 @@ export interface ArticleAssignedAttribute {
     url: string;
   };
   textValue?: string;
+  /** AssignedDateAttribute */
+  dateValue?: string | null;
+  /** AssignedDateTimeAttribute */
+  dateTimeValue?: string | null;
 }
 
 export interface ArticleNode {
@@ -88,6 +92,31 @@ export async function getArticlePageTypeId(): Promise<string | null> {
   const articlesType = data.pageTypes.edges.find(e => e.node.name ==="Cтатьи");
   return articlesType?.node.id ?? null;
 }
+
+const PAGE_ASSIGNED_ATTRIBUTES_BODY = `
+  assignedAttributes {
+    attribute {
+      id
+      slug
+      name
+    }
+    ... on AssignedFileAttribute {
+      fileValue: value {
+        url
+      }
+    }
+    ... on AssignedPlainTextAttribute {
+      textValue: value
+    }
+    ... on AssignedDateAttribute {
+      dateValue: value
+    }
+    ... on AssignedDateTimeAttribute {
+      dateTimeValue: value
+    }
+  }
+`;
+
 // 🔹 1. Получить все статьи (pages)
 export async function getAllArticles(first: number): Promise<ArticleNode[]> {
   const pageTypeId = await getCachedArticlePageTypeId();
@@ -109,21 +138,7 @@ export async function getAllArticles(first: number): Promise<ArticleNode[]> {
             title
             created
             content
-            assignedAttributes {
-              attribute {
-                id
-                slug
-                name
-              }
-              ... on AssignedFileAttribute {
-                fileValue: value {
-                  url
-                }
-              }
-              ... on AssignedPlainTextAttribute {
-                textValue: value
-              }
-            }
+            ${PAGE_ASSIGNED_ATTRIBUTES_BODY}
             metadata {
               key
               value
@@ -150,22 +165,7 @@ export async function getSingleArticle(slug: string): Promise<ArticleNode | null
         title
         created
         content
-        assignedAttributes {
-          attribute {
-            id
-            slug
-            name
-          }
-          
-          ... on AssignedFileAttribute {
-            fileValue: value {
-              url
-            }
-          }
-          ... on AssignedPlainTextAttribute {
-            textValue: value
-          }
-        }
+        ${PAGE_ASSIGNED_ATTRIBUTES_BODY}
         metadata {
           key
           value

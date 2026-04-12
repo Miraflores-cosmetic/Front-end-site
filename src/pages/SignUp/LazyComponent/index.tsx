@@ -16,7 +16,8 @@ import {
   switchSignUpAgreement,
   setFalseSignUpAgreement,
   sendSignUpData,
-  sendSignInData
+  sendSignInData,
+  clearSignUpSuccessOnly
 } from '@/store/slices/authSlice';
 import { useToast } from '@/components/toast/toast';
 import { translateAuthError } from '@/utils/translateAuthError';
@@ -138,24 +139,23 @@ const LazyComponent: React.FC = () => {
   };
 
   useEffect(() => {
-    if (signUp.success) {
-      // После успешной регистрации автоматически логиним пользователя,
-      // чтобы получить токен для отправки письма подтверждения
-      dispatch(sendSignInData({ email, pass })).then((result) => {
-        if (sendSignInData.fulfilled.match(result)) {
-          toast.success('Успешно зарегистрирован!');
-          setTimeout(() => {
-            handleConfirmEmail();
-          }, 1500);
-        } else {
-          // Если автологин не удался, всё равно переходим на страницу подтверждения
-          toast.success('Успешно зарегистрирован!');
-          setTimeout(() => {
-            handleConfirmEmail();
-          }, 1500);
-        }
+    if (!signUp.success) return;
+
+    // Сразу сбрасываем флаг, иначе при повторных рендерах / Strict Mode эффект
+    // снова вызывает автологин и показывает несколько toast подряд.
+    dispatch(clearSignUpSuccessOnly());
+
+    dispatch(sendSignInData({ email, pass }))
+      .unwrap()
+      .then(() => {
+        toast.success('Успешно зарегистрирован!');
+        setTimeout(() => handleConfirmEmail(), 1500);
+      })
+      .catch(() => {
+        toast.success('Успешно зарегистрирован!');
+        setTimeout(() => handleConfirmEmail(), 1500);
       });
-    }
+    // toast из контекста — новый объект на каждом рендере, не кладём в deps
   }, [signUp.success, email, pass, dispatch]);
 
   useEffect(() => {

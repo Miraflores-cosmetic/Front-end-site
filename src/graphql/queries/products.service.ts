@@ -62,6 +62,7 @@ export async function getSingleProduct(slug: string): Promise<ProductDetailNode 
           id
           name
           sku
+          quantityLimitPerCustomer
           attributes {
             attribute {
               id
@@ -102,6 +103,7 @@ export async function getSingleProduct(slug: string): Promise<ProductDetailNode 
               id
               name
               sku
+              quantityLimitPerCustomer
               attributes {
                 attribute {
                   id
@@ -344,6 +346,7 @@ export async function getBestsellerProducts(): Promise<{ edges: ProductEdge[] }>
               defaultVariant {
                 id
                 name
+                quantityLimitPerCustomer
                 attributes {
                   attribute {
                     id
@@ -388,6 +391,7 @@ export async function getBestsellerProducts(): Promise<{ edges: ProductEdge[] }>
                     id
                     sku
                     name
+                    quantityLimitPerCustomer
                     attributes {
                       attribute {
                         id
@@ -493,6 +497,7 @@ export async function getAllProducts(maxLimit: number = 100): Promise<{ edges: P
             defaultVariant {
               id
               name
+              quantityLimitPerCustomer
               attributes {
                 attribute {
                   id
@@ -537,6 +542,7 @@ export async function getAllProducts(maxLimit: number = 100): Promise<{ edges: P
                   id
                   sku
                   name
+                  quantityLimitPerCustomer
                   attributes {
                     attribute {
                       id

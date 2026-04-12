@@ -22,8 +22,8 @@ const menuData = {
     items: [
       { label: 'Каталог', href: '/catalog/', isExternal: false },
       { label: 'Наша история', href: '/about', isExternal: false },
-      { label: 'Полезные статьи', href: '/about/articles', isExternal: false },
-      { label: 'Программа благодарности', href: '/about/articles/programma-blagodarnosti-2', isExternal: false }
+      { label: 'Полезные статьи', href: '/articles', isExternal: false },
+      { label: 'Программа благодарности', href: '/articles/programma-blagodarnosti-2', isExternal: false }
     ]
   },
   info: {
@@ -42,8 +42,8 @@ const menuData = {
       { label: 'Статус заказа', href: '/profile', isExternal: false },
       { label: 'info@miraflores.ru', href: 'mailto:info@miraflores.ru', isExternal: true },
       {
-        label: '+7 (800) 890 78 99',
-        href: 'tel:+78008907899',
+        label: '+7 (916) 427-9237',
+        href: 'tel:+79164279237',
         isExternal: true,
         title: 'Нажимая на соответствующую кнопку и/или переходя по ссылке, я выражаю своё согласие на обработку моих персональных данных в соответствии с Политикой конфиденциальности.'
       },

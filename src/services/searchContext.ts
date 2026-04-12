@@ -159,7 +159,7 @@ export async function searchByContext(query: string): Promise<SearchResultItem[]
           id: node.id,
           title: node.title ?? '',
           slug: node.slug ?? '',
-          url: `/about/articles/${node.slug}`
+          url: `/articles/${node.slug}`
         });
       }
     }

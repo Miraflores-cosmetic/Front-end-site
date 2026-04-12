@@ -11,11 +11,21 @@ interface ReviewProps {
   text: string;
   rating: number;
   date: string;
+  /** Превью на главной: фиксированная колонка текста и квадратные фото */
+  isHomePreview?: boolean;
 }
 
-export const Review: React.FC<ReviewProps> = ({ images, title, subtitle, text, rating, date }) => {
+export const Review: React.FC<ReviewProps> = ({
+  images,
+  title,
+  subtitle,
+  text,
+  rating,
+  date,
+  isHomePreview
+}) => {
   return (
-    <div className={styles.review}>
+    <div className={`${styles.review} ${isHomePreview ? styles.homePreview : ''}`}>
       <div className={styles.images}>
         {images && images.length > 0 ? (
           images.map((img, i) => (

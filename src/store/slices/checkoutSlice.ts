@@ -2,6 +2,7 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { createCheckout, getCheckoutById } from '@/graphql/queries/checkout.service';
 import { graphqlRequest } from '@/graphql/client';
 import { CheckoutState, CheckoutCreateInput, CheckoutLine, CheckoutStateInLocalStorage } from '@/types/checkout';
+import { maxQuantityForVariantLine } from '@/utils/checkoutLineLimits';
 
 // localStorage key
 const CART_STORAGE_KEY = 'checkout_cart';
@@ -89,12 +90,14 @@ export const createCheckoutApi = createAsyncThunk(
   async (input: CheckoutCreateInput, { rejectWithValue }) => {
       try {
         const result = await createCheckout(input);
-        if (result.errors) {
-          console.error('Checkout errors:', result.errors);
+        const gqlErrors = result?.checkoutCreate?.errors;
+        if (gqlErrors && gqlErrors.length > 0) {
+          const msg = gqlErrors[0]?.message || 'Ошибка при создании корзины';
+          return rejectWithValue(msg);
         }
         return result;
       } catch (error) {
-        return rejectWithValue(error);
+        return rejectWithValue(error instanceof Error ? error.message : error);
       }
   }
 );
@@ -108,25 +111,39 @@ const checkoutSlice = createSlice({
         item => item.variantId === action.payload.variantId
       );
 
+      const limitSrc =
+        action.payload.quantityLimitPerCustomer ??
+        (existingItemIndex !== -1 ? state.lines[existingItemIndex].quantityLimitPerCustomer : undefined);
+      const maxQ = maxQuantityForVariantLine(limitSrc);
+
       if (existingItemIndex !== -1) {
-        state.lines[existingItemIndex].quantity += 1;
-        // Обновляем oldPrice и discount, если они были null, а теперь есть
-        if (action.payload.oldPrice && !state.lines[existingItemIndex].oldPrice) {
-          state.lines[existingItemIndex].oldPrice = action.payload.oldPrice;
+        const line = state.lines[existingItemIndex];
+        if (line.quantity >= maxQ) {
+          return;
         }
-        if (action.payload.discount && !state.lines[existingItemIndex].discount) {
-          state.lines[existingItemIndex].discount = action.payload.discount;
+        line.quantity += 1;
+        if (action.payload.quantityLimitPerCustomer != null) {
+          line.quantityLimitPerCustomer = action.payload.quantityLimitPerCustomer;
+        }
+        // Обновляем oldPrice и discount, если они были null, а теперь есть
+        if (action.payload.oldPrice && !line.oldPrice) {
+          line.oldPrice = action.payload.oldPrice;
+        }
+        if (action.payload.discount && !line.discount) {
+          line.discount = action.payload.discount;
         }
       } else {
+        const startQty = Math.min(action.payload.quantity || 1, maxQ);
         state.lines.push({
           variantId: action.payload.variantId,
-          quantity: 1,
+          quantity: startQty,
           title: action.payload.title,
           thumbnail: action.payload.thumbnail,
           price: action.payload.price,
           oldPrice: action.payload.oldPrice ?? null,
           discount: action.payload.discount ?? null,
-          size: action.payload.size
+          size: action.payload.size,
+          quantityLimitPerCustomer: action.payload.quantityLimitPerCustomer ?? null
         });
       }
       // Сохраняем только lines в localStorage, без id и token
@@ -152,7 +169,12 @@ const checkoutSlice = createSlice({
       const existingItemIndex = state.lines.findIndex(item => item.variantId === action.payload);
 
       if (existingItemIndex !== -1) {
-        state.lines[existingItemIndex].quantity += 1;
+        const line = state.lines[existingItemIndex];
+        const maxQ = maxQuantityForVariantLine(line.quantityLimitPerCustomer);
+        if (line.quantity >= maxQ) {
+          return;
+        }
+        line.quantity += 1;
       }
 
       const cartToSave: CheckoutStateInLocalStorage = {
@@ -249,8 +271,12 @@ const checkoutSlice = createSlice({
       })
       .addCase(createCheckoutApi.rejected, (state, action) => {
         state.loading = false;
+        // rejectWithValue кладёт текст в payload; иначе — message из Error
+        const errorMessage =
+          (typeof action.payload === 'string' ? action.payload : '') ||
+          action.error.message ||
+          'Failed to create checkout';
         // Проверяем ошибку наличия товара
-        const errorMessage = action.error.message || 'Failed to create checkout';
         if (errorMessage.includes('Only 0 remaining in stock') || errorMessage.includes('remaining in stock')) {
           state.error = 'Некоторые товары закончились. Пожалуйста, удалите их из корзины.';
           

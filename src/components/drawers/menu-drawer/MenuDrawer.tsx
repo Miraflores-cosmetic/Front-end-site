@@ -48,8 +48,8 @@ const MenuDrawer: React.FC = () => {
       withColor: true,
       items: [
         { label: 'Наша история', href: '/about' },
-        { label: 'Полезные статьи', href: '/about/articles' },
-        { label: 'Программа благодарности', href: '/programma-blagodarnosti-2' }
+        { label: 'Полезные статьи', href: '/articles' },
+        { label: 'Программа благодарности', href: '/articles/programma-blagodarnosti-2' }
       ]
     },
     info: {

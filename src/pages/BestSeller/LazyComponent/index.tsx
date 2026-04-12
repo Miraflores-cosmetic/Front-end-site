@@ -462,6 +462,10 @@ const LazyComponent: React.FC = () => {
                     disabled={!activeVariantId}
                     productId={item.id}
                     variant="product"
+                    quantityLimitPerCustomer={
+                      (activeVariant?.node as { quantityLimitPerCustomer?: number | null } | undefined)
+                        ?.quantityLimitPerCustomer ?? null
+                    }
                   />
                 );
               })()}

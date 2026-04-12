@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import styles from './OrderLeftPart.module.scss';
 import Input from '@/components/text-field/input/Input';
@@ -60,46 +60,46 @@ const OrderLeftPart: React.FC = () => {
   const { lines } = useSelector((state: RootState) => state.checkout);
   const { voucherDiscount } = useSelector((state: RootState) => state.checkout);
 
-  // 3. One Effect to sync Redux data to Inputs
+  /** Один раз подставляем ФИО/email/телефон из профиля. После смены ПВЗ вызывается getMe() — без этого снова затирало вручную введённые поля. */
+  const didHydrateFormFromMeRef = useRef(false);
+
+  // 3. Один раз подставляем данные из профиля в пустые поля (не затираем уже введённое; не трогаем форму при повторных getMe после смены ПВЗ)
   useEffect(() => {
-    if (me) {
-      const fullName = `${me.firstName || ''} ${me.lastName || ''}`.trim();
-      const userEmail = me.email || '';
+    if (!me || didHydrateFormFromMeRef.current) return;
+    didHydrateFormFromMeRef.current = true;
 
-      // Всегда обновляем имя и email из данных пользователя
-      setFormData((prev) => ({
-        ...prev,
-        name: fullName || '',
-        email: userEmail || '',
-      }));
+    const fullName = `${me.firstName || ''} ${me.lastName || ''}`.trim();
+    const userEmail = me.email || '';
 
-      // Автозаполнение телефона из адреса по умолчанию или из метаданных
-      let phone = '';
-      if (me.addresses && me.addresses.length > 0) {
-        const defaultAddress = me.addresses.find(a => a.isDefaultShippingAddress) ||
-          me.addresses.find(a => a.isDefaultBillingAddress) ||
-          me.addresses[0];
+    let phone = '';
+    if (me.addresses && me.addresses.length > 0) {
+      const defaultAddress =
+        me.addresses.find(a => a.isDefaultShippingAddress) ||
+        me.addresses.find(a => a.isDefaultBillingAddress) ||
+        me.addresses[0];
 
-        if (defaultAddress?.phone) {
-          phone = defaultAddress.phone;
-        }
-      }
-
-      // Если в адресе нет телефона, ищем в metadata
-      if (!phone && me.metadata) {
-        const phoneMeta = me.metadata.find(m => m.key === 'phone');
-        if (phoneMeta?.value) {
-          phone = phoneMeta.value;
-        }
-      }
-
-      if (phone) {
-        setFormData((prev) => ({
-          ...prev,
-          phone: formatPhoneNumber(phone) || prev.phone
-        }));
+      if (defaultAddress?.phone) {
+        phone = defaultAddress.phone;
       }
     }
+
+    if (!phone && me.metadata) {
+      const phoneMeta = me.metadata.find(m => m.key === 'phone');
+      if (phoneMeta?.value) {
+        phone = phoneMeta.value;
+      }
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      name: prev.name.trim() ? prev.name : fullName || prev.name,
+      email: prev.email.trim() ? prev.email : userEmail || prev.email,
+      phone: prev.phone.trim()
+        ? prev.phone
+        : phone
+          ? formatPhoneNumber(phone) || prev.phone
+          : prev.phone,
+    }));
   }, [me]);
 
 

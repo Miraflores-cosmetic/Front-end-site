@@ -12,7 +12,10 @@ export interface Article {
   description: string;
   author: string;
   authorRole: string;
+  /** Основное изображение статьи (атрибут kartinka), герой на странице статьи */
   image: string | null;
+  /** Превью для списка статей (атрибут prevyu-stati) */
+  previewImage: string | null;
   imageAuthor: string | null;
   content?: string | null;
 }
@@ -39,8 +42,36 @@ function htmlToText(html: string, maxLen = 500): string {
     : text;
 }
 
+/** Атрибут «Дата» на модели страницы-статьи (slug или имя из дашборда) */
+function isArticleDateAttribute(a: ArticleNode['assignedAttributes'][0]): boolean {
+  const slug = a.attribute.slug.toLowerCase();
+  const name = (a.attribute.name || '').trim().toLowerCase();
+  return slug === 'data' || slug === 'data-stati' || name === 'дата';
+}
+
+function formatArticleDisplayDate(
+  attr: ArticleNode['assignedAttributes'][0] | undefined,
+  fallback: string
+): string {
+  if (!attr) return fallback;
+  if (attr.dateTimeValue) {
+    const d = new Date(attr.dateTimeValue);
+    if (!Number.isNaN(d.getTime())) return d.toLocaleDateString('ru-RU');
+  }
+  if (attr.dateValue) {
+    const d = new Date(attr.dateValue);
+    if (!Number.isNaN(d.getTime())) return d.toLocaleDateString('ru-RU');
+  }
+  const text = attr.textValue?.trim();
+  if (text) return text;
+  return fallback;
+}
+
 export function mapArticleNodeToArticle(node: ArticleNode): Article {
   const imageAttr = node.assignedAttributes.find(item => item.attribute.slug === 'kartinka');
+  const previewAttr = node.assignedAttributes.find(
+    item => item.attribute.slug === 'prevyu-stati'
+  );
   const authorAttr = node.assignedAttributes.find(item => item.attribute.slug === 'imya-avtora');
   const authorPhotoAttr = node.assignedAttributes.find(item => item.attribute.slug === 'foto-avtora');
   const authorRoleMeta = node.metadata?.find(m => m.key === 'authorRole')?.value;
@@ -55,15 +86,20 @@ export function mapArticleNodeToArticle(node: ArticleNode): Article {
     previewText = '';
   }
 
+  const fallbackDate = new Date(node.created).toLocaleDateString('ru-RU');
+  const dateAttr = node.assignedAttributes.find(isArticleDateAttribute);
+  const displayDate = formatArticleDisplayDate(dateAttr, fallbackDate);
+
   return {
     id: node.id,
     slug: node.slug,
-    date: new Date(node.created).toLocaleDateString('ru-RU'),
+    date: displayDate,
     title: node.title,
     description: previewText,
     author: authorAttr?.textValue ?? '',
     authorRole:authorRoleMeta ?? '',
     image: imageAttr?.fileValue?.url ?? null,
+    previewImage: previewAttr?.fileValue?.url ?? null,
     imageAuthor: authorPhotoAttr?.fileValue?.url ?? null,
     content: node.content ?? null,
   };

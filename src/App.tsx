@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -32,6 +32,12 @@ import SearchDrawer from '@/components/drawer/SearchDrawer';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe } from '@/store/slices/authSlice';
 import { initializeCart } from '@/store/slices/checkoutSlice';
+
+/** Редирект /about/articles/:slug → /articles/:slug (старые ссылки и закладки) */
+const LegacyAboutArticleToArticles: React.FC = () => {
+  const { slug } = useParams();
+  return <Navigate to={`/articles/${slug ?? ''}`} replace />;
+};
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -111,8 +117,10 @@ const App: React.FC = () => {
         <Route path='/face' element={<FacePage />} />
         <Route path='/about' element={<About />} />
         <Route path='/atelier' element={<Navigate to='/' replace />} />
-        <Route path='/about/articles' element={<Articles />} />
-        <Route path='/about/articles/:slug' element={<ArticleDetail />} />
+        <Route path='/articles' element={<Articles />} />
+        <Route path='/articles/:slug' element={<ArticleDetail />} />
+        <Route path='/about/articles' element={<Navigate to='/articles' replace />} />
+        <Route path='/about/articles/:slug' element={<LegacyAboutArticleToArticles />} />
         <Route path='/info/:slug' element={<ArticleDetail />} />
             <Route path='/order' element={<Order />} />
             <Route path='/order/success' element={<OrderSuccess />} />

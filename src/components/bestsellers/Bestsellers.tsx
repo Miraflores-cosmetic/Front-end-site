@@ -102,6 +102,9 @@ function mapProductNodeToBestSellers(productNode: any): BestSellersProduct {
     }
     return { node: { ...variantNode, name: vName } };
   });
+  const qlimit =
+    (variant as { quantityLimitPerCustomer?: number | null } | undefined)?.quantityLimitPerCustomer ?? null;
+
   return {
     id: variantId,
     productId: productNode.id,
@@ -117,6 +120,7 @@ function mapProductNodeToBestSellers(productNode: any): BestSellersProduct {
     attributes: productNode.attributes || [],
     productType: productNode.productType ? { name: productNode.productType.name } : undefined,
     productVariants: productVariantsFormatted,
+    quantityLimitPerCustomer: qlimit,
     collections: productNode.collections || []
   };
 }
@@ -136,6 +140,13 @@ export default function Bestsellers({
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
   const sectionRef = React.useRef<HTMLElement>(null);
   const sliderWrapperRef = useRef<HTMLDivElement>(null);
+  const profileSliderDragRef = useRef<{
+    active: boolean;
+    pointerId: number;
+    startX: number;
+    startScroll: number;
+  } | null>(null);
+  const [profileSliderDragging, setProfileSliderDragging] = useState(false);
 
   const { bestSellers, loading, hasAttemptedLoad } = useSelector((state: RootState) => state.bestsellerSlice);
   const dispatch = useDispatch<AppDispatch>();
@@ -397,6 +408,58 @@ export default function Bestsellers({
     return () => el.removeEventListener('wheel', onWheel);
   }, [hasProducts]);
 
+  // Профиль: перетаскивание ленты (scrollTrack / горизонтальный скролл)
+  useEffect(() => {
+    if (!isProfilePage || !hasProducts) return;
+    const el = sliderWrapperRef.current;
+    if (!el) return;
+
+    const onPointerDown = (e: PointerEvent) => {
+      if (e.button !== 0) return;
+      const target = e.target as HTMLElement;
+      if (target.closest('a, button, [role="button"], input, textarea, select')) return;
+      profileSliderDragRef.current = {
+        active: true,
+        pointerId: e.pointerId,
+        startX: e.clientX,
+        startScroll: el.scrollLeft,
+      };
+      el.setPointerCapture(e.pointerId);
+      setProfileSliderDragging(true);
+    };
+
+    const onPointerMove = (e: PointerEvent) => {
+      const d = profileSliderDragRef.current;
+      if (!d?.active || d.pointerId !== e.pointerId) return;
+      el.scrollLeft = d.startScroll - (e.clientX - d.startX);
+    };
+
+    const endPointer = (e: PointerEvent) => {
+      const d = profileSliderDragRef.current;
+      if (!d?.active || d.pointerId !== e.pointerId) return;
+      try {
+        if (el.hasPointerCapture(e.pointerId)) {
+          el.releasePointerCapture(e.pointerId);
+        }
+      } catch {
+        /* ignore */
+      }
+      profileSliderDragRef.current = null;
+      setProfileSliderDragging(false);
+    };
+
+    el.addEventListener('pointerdown', onPointerDown);
+    el.addEventListener('pointermove', onPointerMove);
+    el.addEventListener('pointerup', endPointer);
+    el.addEventListener('pointercancel', endPointer);
+    return () => {
+      el.removeEventListener('pointerdown', onPointerDown);
+      el.removeEventListener('pointermove', onPointerMove);
+      el.removeEventListener('pointerup', endPointer);
+      el.removeEventListener('pointercancel', endPointer);
+    };
+  }, [isProfilePage, hasProducts]);
+
   return (
     <section
       ref={sectionRef}
@@ -419,7 +482,7 @@ export default function Bestsellers({
         {hasProducts && (
           <div
             ref={sliderWrapperRef}
-            className={styles.sliderWrapper}
+            className={`${styles.sliderWrapper} ${isProfilePage ? styles.sliderWrapperProfileDrag : ''} ${profileSliderDragging ? styles.sliderWrapperProfileDragging : ''}`}
             aria-label="Список товаров"
           >
             <div className={styles.scrollTrack}>

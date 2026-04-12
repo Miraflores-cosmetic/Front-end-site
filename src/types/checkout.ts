@@ -13,6 +13,8 @@ export interface CheckoutLine {
   oldPrice?: number | null;
   discount?: number | null;
   size?: string;
+  /** Лимит с варианта (дашборд); null — на клиенте не ограничиваем (кроме VITE_MAX_LINE_QUANTITY). */
+  quantityLimitPerCustomer?: number | null;
   /** Подарок по программе благодарности — не удаляется из корзины */
   isGift?: boolean;
 }

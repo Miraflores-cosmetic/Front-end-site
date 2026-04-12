@@ -7,6 +7,43 @@
   }
 }
 
+/* Главная: блок отзыва в .reviewsContainer */
+.review.homePreview {
+  .content {
+    width: 532px;
+    max-width: 100%;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    @media (max-width: 950px) {
+      width: 100%;
+    }
+  }
+
+  .images {
+    img,
+    .reviewImage {
+      width: 245px;
+      height: 245px;
+      min-width: 245px;
+      object-fit: cover;
+      @media (max-width: 500px) {
+        min-width: 200px;
+        width: 200px;
+        height: 220px;
+      }
+    }
+
+    .imagePlaceholder {
+      width: 245px;
+      height: 245px;
+      @media (max-width: 500px) {
+        width: 200px;
+        height: 220px;
+      }
+    }
+  }
+}
+
 .images {
   display: flex;
   flex-wrap: wrap;

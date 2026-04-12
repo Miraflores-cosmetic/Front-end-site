@@ -39,6 +39,18 @@
       }
     }
 
+    .articleDate {
+      font-size: 14px;
+      color: #6e6d67;
+      margin: 0;
+      margin-top: 12px;
+      max-width: 768px;
+      @media (max-width: 450px) {
+        font-size: 13px;
+        margin-top: 8px;
+      }
+    }
+
     .title {
       font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
       max-width: 768px;
@@ -98,40 +110,56 @@
     margin-bottom: 94px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
+    gap: 20px;
     max-width: 768px;
+    color: #2c2c2c;
+    font-size: 20px;
+    line-height: 32px;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
+
     @media (max-width: 450px) {
-      gap: 16px;
+      gap: 18px;
       margin-top: 24px;
       margin-bottom: 40px;
+      font-size: 18px;
+      line-height: 30px;
     }
 
-    :global(h1) {
-      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-      font-size: 40px;
-      font-weight: 300;
-      line-height: 48px;
+    /* Ссылки из редактора (paragraph, заголовки, списки) */
+    :global(a) {
+      color: #297230;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      transition: opacity 0.2s ease, color 0.2s ease;
     }
-    :global(h2) {
-      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-      font-size: 32px;
-      font-weight: 300;
-      line-height: 38px;
+    :global(a:hover) {
+      opacity: 0.85;
+      color: #1f5a26;
     }
-    :global(h3) {
-      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-      font-size: 24px;
-      font-weight: 300;
+
+    :global(hr) {
+      border: none;
+      border-top: 1px solid rgba(0, 0, 0, 0.12);
+      margin: 1.25em 0;
     }
-    :global(h4) {
-      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-      font-size: 18px;
-      font-weight: 300;
+
+    :global(table) {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.95em;
+      margin: 1em 0;
     }
-    :global(h5) {
-      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-      font-size: 16px;
-      font-weight: 300;
+    :global(th),
+    :global(td) {
+      border: 1px solid rgba(0, 0, 0, 0.12);
+      padding: 0.5em 0.65em;
+      text-align: left;
+      vertical-align: top;
+    }
+    :global(th) {
+      font-weight: 600;
+      background: rgba(0, 0, 0, 0.04);
     }
   }
   .bottomPart {

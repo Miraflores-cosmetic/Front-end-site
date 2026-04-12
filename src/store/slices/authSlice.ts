@@ -100,6 +100,10 @@ const authSlice = createSlice({
     setFalseSignIiStatus(state) {
       state.signIn.success = false;
     },
+    /** Только сброс флага успеха — чтобы эффект после регистрации не срабатывал повторно */
+    clearSignUpSuccessOnly(state) {
+      state.signUp.success = false;
+    },
     resetSignUp(state) {
       // Сбрасываем данные регистрации для возможности начать заново
       state.email = '';
@@ -228,6 +232,7 @@ export const {
   switchSignUpAgreement,
   setFalseSignUpAgreement,
   setFalseSignIiStatus,
+  clearSignUpSuccessOnly,
   resetSignUp,
   logout
 } = authSlice.actions;

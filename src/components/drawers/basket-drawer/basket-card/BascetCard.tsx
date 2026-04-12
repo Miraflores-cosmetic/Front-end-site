@@ -13,6 +13,7 @@ import {
   increaseQuantity,
   decreaseQuantity
 } from '@/store/slices/checkoutSlice';
+import { isAtOrOverLineLimit } from '@/utils/checkoutLineLimits';
 
 const BasketCard: React.FC<BasketCardProps> = ({
   variantId,
@@ -24,9 +25,11 @@ const BasketCard: React.FC<BasketCardProps> = ({
   oldPrice,
   price,
   isGift = false,
+  quantityLimitPerCustomer,
 }) => {
   const isMobile = useScreenMatch(550); // Using 550 as requested
   const dispatch = useDispatch();
+  const plusDisabled = !isGift && isAtOrOverLineLimit(quantity, quantityLimitPerCustomer);
 
   return (
     <div className={styles.basketCardWrapper}>
@@ -91,8 +94,10 @@ const BasketCard: React.FC<BasketCardProps> = ({
               <img
                 src={add}
                 alt='add'
-                className={styles.addImage}
-                onClick={() => dispatch(increaseQuantity(variantId))}
+                className={`${styles.addImage} ${plusDisabled ? styles.addImageDisabled : ''}`}
+                onClick={() => {
+                  if (!plusDisabled) dispatch(increaseQuantity(variantId));
+                }}
               />
             </div>
           )}

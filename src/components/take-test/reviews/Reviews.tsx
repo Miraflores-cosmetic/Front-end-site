@@ -146,7 +146,9 @@ export const Reviews: React.FC<{
               ))}
             </>
           ) : reviews.length > 0 ? (
-            reviews.map((review, index) => <Review key={index} {...review} />)
+            reviews.map((review, index) => (
+              <Review key={index} {...review} isHomePreview />
+            ))
           ) : (
             <p className={styles.noReviews}>Пока нет отзывов </p>
           )}

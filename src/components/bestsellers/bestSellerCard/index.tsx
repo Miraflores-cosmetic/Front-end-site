@@ -80,6 +80,9 @@ export const BestSellerProductCard: React.FC<{
     ? product.productVariants.find(v => v.node.id === product.id) || product.productVariants[0]
     : null;
 
+  const quantityLimitForCard =
+    activeVariant?.node?.quantityLimitPerCustomer ?? product.quantityLimitPerCustomer ?? null;
+
   const getVolumeFromVariant = (variant: any): string => {
     if (!variant?.node?.attributes || !Array.isArray(variant.node.attributes)) {
       return variant?.node?.name || '';
@@ -225,6 +228,7 @@ export const BestSellerProductCard: React.FC<{
                   discount={product.discount}
                   size={activeVariant ? getVolumeFromVariant(activeVariant) : (product.size || '')}
                   productId={product.id}
+                  quantityLimitPerCustomer={quantityLimitForCard}
                 />
               </div>
             )}

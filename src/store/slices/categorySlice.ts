@@ -256,6 +256,9 @@ const categorySlice = createSlice({
             attributes: node.attributes || [],
             productType: node.productType ? { name: node.productType.name } : undefined,
             productVariants: variants,
+            quantityLimitPerCustomer:
+              (node.defaultVariant as { quantityLimitPerCustomer?: number | null } | undefined)
+                ?.quantityLimitPerCustomer ?? null,
             collections: node.collections || []
           });
         });

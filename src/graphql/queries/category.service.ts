@@ -170,6 +170,7 @@ export async function getCategoryBySlug(
               defaultVariant {
                 id
                 name
+                quantityLimitPerCustomer
                 pricing {
                   price {
                     gross { amount }
@@ -189,6 +190,7 @@ export async function getCategoryBySlug(
                     id
                     sku
                     name
+                    quantityLimitPerCustomer
                     attributes {
                       attribute {
                         id

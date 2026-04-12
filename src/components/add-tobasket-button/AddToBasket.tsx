@@ -2,14 +2,15 @@ import React, { useState } from 'react';
 import styles from './AddToBasket.module.scss';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToast } from '@/components/toast/toast';
-import { 
-  addItemToCart, 
-  increaseQuantity, 
-  decreaseQuantity, 
-  removeItemFromCart 
+import {
+  addItemToCart,
+  increaseQuantity,
+  decreaseQuantity,
+  removeItemFromCart
 } from '@/store/slices/checkoutSlice';
 import { RootState } from '@/store/store';
 import { FavoriteButton } from '@/components/favorite-button/FavoriteButton';
+import { isAtOrOverLineLimit, maxQuantityForVariantLine } from '@/utils/checkoutLineLimits';
 
 interface AddToCartButtonProps {
   defaultText?: string;
@@ -24,7 +25,9 @@ interface AddToCartButtonProps {
   size: string;
   disabled?: boolean;
   productId?: string;
-  variant?: 'home' | 'product'; // 'home' для главной, 'product' для страницы товара
+  variant?: 'home' | 'product';
+  /** Лимит с варианта (Saleor); влияет на + и добавление */
+  quantityLimitPerCustomer?: number | null;
 }
 
 const AddToCartButton: React.FC<AddToCartButtonProps> = ({
@@ -40,25 +43,27 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   size,
   disabled = false,
   productId,
-  variant = 'home' // По умолчанию для главной страницы
+  variant = 'home',
+  quantityLimitPerCustomer = null
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   const dispatch = useDispatch();
   const toast = useToast();
 
-  // Get the actual quantity from Redux store
-  const cartItem = useSelector((state: RootState) => 
+  const cartItem = useSelector((state: RootState) =>
     state.checkout.lines.find(item => item.variantId === activeVariantId)
   );
-  
+
   const count = cartItem?.quantity || 0;
+  const limitSrc = cartItem?.quantityLimitPerCustomer ?? quantityLimitPerCustomer;
+  const maxQ = maxQuantityForVariantLine(limitSrc);
+  const atLimit = count > 0 && count >= maxQ;
 
   const handleAdd = () => {
     if (disabled || !activeVariantId) return;
-    
+
     if (count === 0) {
-      // First time adding - use addItemToCart
       dispatch(
         addItemToCart({
           variantId: activeVariantId,
@@ -68,46 +73,74 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
           price: price,
           oldPrice: oldPrice,
           discount: discount,
-          size: size
+          size: size,
+          quantityLimitPerCustomer
         })
       );
       toast.success('Товар добавлен в корзину');
-    } else {
-      // Already in cart - just increase quantity
-      dispatch(increaseQuantity(activeVariantId));
-      toast.success('Количество увеличено');
+      return;
     }
+
+    if (atLimit) {
+      toast.error('Достигнуто максимальное количество для заказа');
+      return;
+    }
+    dispatch(increaseQuantity(activeVariantId));
+    toast.success('Количество увеличено');
   };
 
   const handleRemove = () => {
     if (!activeVariantId) return;
-    
+
     if (count > 1) {
       dispatch(decreaseQuantity(activeVariantId));
       toast.success('Количество уменьшено');
     } else {
-      // If count is 1, remove item completely
       dispatch(removeItemFromCart(activeVariantId));
       toast.success('Товар удален из корзины');
     }
   };
-
 
   const buttonText = count === 0 ? (isHovered ? hoverText : defaultText) : activeText;
   const isProductPage = variant === 'product';
 
   return (
     <div className={`${styles.wrapper} ${isProductPage ? styles.productPageWrapper : styles.homeWrapper}`}>
-      <button
-        onClick={handleAdd}
-        className={`${styles.mainBtn} ${isProductPage ? styles.productPageBtn : styles.homeBtn}`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        type='button'
-        disabled={disabled}
-      >
-        {buttonText}
-      </button>
+      {count === 0 ? (
+        <button
+          onClick={handleAdd}
+          className={`${styles.mainBtn} ${isProductPage ? styles.productPageBtn : styles.homeBtn}`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          type='button'
+          disabled={disabled}
+        >
+          {buttonText}
+        </button>
+      ) : (
+        <div
+          className={`${styles.stepper} ${isProductPage ? styles.stepperProduct : styles.stepperHome}`}
+        >
+          <button
+            type='button'
+            className={styles.stepperBtn}
+            onClick={handleRemove}
+            aria-label='Уменьшить количество'
+          >
+            −
+          </button>
+          <span className={styles.stepperCount}>{count}</span>
+          <button
+            type='button'
+            className={styles.stepperBtn}
+            onClick={handleAdd}
+            disabled={disabled || isAtOrOverLineLimit(count, limitSrc)}
+            aria-label='Увеличить количество'
+          >
+            +
+          </button>
+        </div>
+      )}
 
       {productId && !isProductPage && (
         <div className={styles.favoriteWrapper}>

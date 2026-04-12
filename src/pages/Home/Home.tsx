@@ -24,13 +24,31 @@ const Home: React.FC = () => {
   const [preHeader, setPreHeader] = useState<PageNode | null>(null);
   const [showPreHeader, setShowPreHeader] = useState(false);
 
-  // FAQ монтируется с задержкой (загрузка данных) — повторяем скролл, пока #faq не появится в DOM
+  // FAQ подгружается асинхронно; Safari плохо учитывает scroll-margin у scrollIntoView — скроллим вручную с отступом под sticky header
   useEffect(() => {
     if (location.hash !== '#faq') return;
+
+    const scrollToFaq = () => {
+      const el = document.getElementById('faq');
+      if (!el) return;
+      const header = document.querySelector('header');
+      const headerH = header?.getBoundingClientRect().height ?? 72;
+      const extra = 140;
+      const top = el.getBoundingClientRect().top + window.scrollY - headerH - extra;
+      window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    };
+
     const id = window.setInterval(() => {
       const el = document.getElementById('faq');
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            scrollToFaq();
+            // Safari: после шрифтов/картинок позиция #faq может сдвинуться — догоняем ещё раз
+            window.setTimeout(scrollToFaq, 350);
+            window.setTimeout(scrollToFaq, 700);
+          });
+        });
         window.clearInterval(id);
       }
     }, 100);

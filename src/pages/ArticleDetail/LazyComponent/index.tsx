@@ -35,10 +35,11 @@ const LazyComponent: React.FC = () => {
       <section className={styles.titleContainer}>
         <div className={styles.goBackWrapper}>
           <img className={styles.back} src={back} alt='go back'/>
-          <Link to={isInfoPage ? '/' : '/about/articles'} className={styles.goBackText}>
+          <Link to={isInfoPage ? '/' : '/articles'} className={styles.goBackText}>
             {isInfoPage ? 'На главную' : 'Вернуться в блог'}
           </Link>
         </div>
+        <p className={styles.articleDate}>{article.date}</p>
         <p className={styles.title}>{article?.title}</p>
         {showAuthor && (
           <div className={styles.userWrapper}>

@@ -146,6 +146,7 @@ export async function getCollectionById(id: string, first: number = 10): Promise
               defaultVariant {
                 id
                 name
+                quantityLimitPerCustomer
                 pricing {
                   price {
                     gross {
@@ -169,6 +170,7 @@ export async function getCollectionById(id: string, first: number = 10): Promise
                   node {
                     id
                     name
+                    quantityLimitPerCustomer
                     pricing {
                       price {
                         gross {

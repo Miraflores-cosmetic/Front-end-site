@@ -130,12 +130,13 @@ const AboutBlock: React.FC = () => {
         {/* Center */}
         <div className={styles.center}>
           <video
-            src={aboutVideo}
+            src={isSectionLoaded ? aboutVideo : undefined}
             poster={AvoutCenter}
             muted
             autoPlay
             loop
             playsInline
+            preload="none"
             className={styles.centerVideo}
             aria-label="О компании Miraflores"
           />

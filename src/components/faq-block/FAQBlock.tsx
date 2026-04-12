@@ -176,7 +176,7 @@ export const FAQBlock: React.FC = () => {
       video.removeEventListener('ended', onEnded);
       clearFaqVideoPauseTimeout();
     };
-  }, [loading, faqItems.length, clearFaqVideoPauseTimeout]);
+  }, [loading, faqItems.length, clearFaqVideoPauseTimeout, isSectionLoaded]);
 
   if (loading) {
     return (
@@ -216,11 +216,12 @@ export const FAQBlock: React.FC = () => {
           <div className={styles.imageWrapper}>
             <video
               ref={faqVideoRef}
-              src={faqVideo}
+              src={isSectionLoaded ? faqVideo : undefined}
               className={styles.video}
               autoPlay
               muted
               playsInline
+              preload="none"
             />
           </div>
         </div>

@@ -182,7 +182,11 @@ export const HeroSlider: React.FC = () => {
               {isMobile ? <DesktopTextImages /> : isTablet ? <MarqueeText /> : <DesktopTextImages />}
 
               <div className={topBlockStyles.content}>
-                <ImageWithFallback src={smallImage} alt='Маленький цветок' />
+                <ImageWithFallback
+                  src={smallImage}
+                  alt='Маленький цветок'
+                  loading={index === 0 ? 'eager' : 'lazy'}
+                />
 
                 <div className={topBlockStyles.contentText}>
                   <TextWrapper
@@ -206,7 +210,11 @@ export const HeroSlider: React.FC = () => {
           </article>
 
           <article className={topBlockStyles.right}>
-            <ImageWithFallback src={largeImage} alt='Цветок' />
+            <ImageWithFallback
+              src={largeImage}
+              alt='Цветок'
+              loading={index === 0 ? 'eager' : 'lazy'}
+            />
           </article>
         </section>
       </div>

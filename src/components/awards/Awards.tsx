@@ -89,23 +89,25 @@ export const Awards: React.FC = () => {
           {isMobile ? (
             <div className={styles.bottomImageWrapper}>
               <video
-                src={awardsVideo}
+                src={isSectionLoaded ? awardsVideo : undefined}
                 className={styles.awardImageMobile}
                 autoPlay
                 muted
                 loop
                 playsInline
+                preload="none"
               />
               <img src={leaf} className={styles.leaf} alt='Листок' />
             </div>
           ) : (
             <video
-              src={awardsVideo}
+              src={isSectionLoaded ? awardsVideo : undefined}
               className={styles.awardVideo}
               autoPlay
               muted
               loop
               playsInline
+              preload="none"
             />
           )}
         </div>

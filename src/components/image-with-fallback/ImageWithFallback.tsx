@@ -19,6 +19,8 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   className = '',
   fallbackSrc,
   placeholder,
+  loading = 'lazy',
+  decoding = 'async',
   ...rest
 }) => {
   const effectiveSrc = isEmptySrc(src) ? (placeholder || defaultPlaceholder) : src;
@@ -50,6 +52,8 @@ export const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
       alt={alt}
       className={`${styles.image} ${className}`}
       onError={handleError}
+      loading={loading}
+      decoding={decoding}
       {...rest}
     />
   );

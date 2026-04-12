@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useMemo, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import styles from '../Category.module.scss';
 import Footer from '@/components/Footer/Footer';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import footerImage from '@/assets/images/footer-img.png';
 import TabBar from '@/components/tab-bar/TabBar';
 import { AnimatePresence } from 'framer-motion';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import AppLink from '@/components/AppLink/AppLink';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
@@ -26,8 +26,12 @@ import {
 const GIFT_CERTIFICATES_CATEGORY_SLUG =
   import.meta.env.VITE_HIDE_HEADER_CATEGORY_SLUG || 'podarochnye-sertifikaty';
 
+const TAB_QUERY = 'tab';
+const SUBTAB_QUERY = 'subtab';
+
 const LazyComponent: React.FC = () => {
   const { slug } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useDispatch<AppDispatch>();
   const isGiftCertificatesCategory = slug === GIFT_CERTIFICATES_CATEGORY_SLUG;
 
@@ -39,6 +43,78 @@ const LazyComponent: React.FC = () => {
   const PAGE_SIZE = 12;
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  const syncTabParamsToUrl = useCallback(
+    (next: { tab?: 'ALL' | string; subtab?: 'ALL' | string | null }) => {
+      if (isGiftCertificatesCategory) return;
+      setSearchParams(
+        prev => {
+          const p = new URLSearchParams(prev);
+          if (next.tab !== undefined) {
+            if (next.tab === 'ALL') p.delete(TAB_QUERY);
+            else p.set(TAB_QUERY, next.tab);
+          }
+          if (next.subtab !== undefined) {
+            if (next.subtab === null || next.subtab === 'ALL') p.delete(SUBTAB_QUERY);
+            else p.set(SUBTAB_QUERY, next.subtab);
+          }
+          return p;
+        },
+        { replace: true }
+      );
+    },
+    [isGiftCertificatesCategory, setSearchParams]
+  );
+
+  // Восстанавливаем верхний таб из ?tab= (в т.ч. после «Назад» из карточки товара)
+  useEffect(() => {
+    if (isGiftCertificatesCategory || !slug || tabs.length === 0 || activeTabSlug === null) return;
+
+    const raw = searchParams.get(TAB_QUERY);
+    const want: string | 'ALL' =
+      !raw || raw.toLowerCase() === 'all'
+        ? 'ALL'
+        : tabs.some(t => t.slug === raw)
+          ? raw
+          : 'ALL';
+
+    if (want !== activeTabSlug) {
+      dispatch(setActiveTabSlug(want));
+    }
+  }, [isGiftCertificatesCategory, slug, tabs, searchParams, activeTabSlug, dispatch]);
+
+  // Восстанавливаем подтаб из ?subtab=
+  useEffect(() => {
+    if (
+      isGiftCertificatesCategory ||
+      !slug ||
+      activeTabSlug === null ||
+      activeTabSlug === 'ALL'
+    ) {
+      return;
+    }
+
+    const raw = searchParams.get(SUBTAB_QUERY);
+    const want: string | 'ALL' =
+      !raw || raw.toLowerCase() === 'all'
+        ? 'ALL'
+        : subTabs.some(t => t.slug === raw)
+          ? raw
+          : 'ALL';
+
+    const currentSub = activeSubTabSlug ?? 'ALL';
+    if (want !== currentSub) {
+      dispatch(setActiveSubTabSlug(want));
+    }
+  }, [
+    isGiftCertificatesCategory,
+    slug,
+    activeTabSlug,
+    subTabs,
+    searchParams,
+    activeSubTabSlug,
+    dispatch
+  ]);
 
   // Загружаем 1-й уровень табов (дети корневой категории по slug из URL)
   useEffect(() => {
@@ -121,23 +197,27 @@ const LazyComponent: React.FC = () => {
   const handleTopTabChange = (name: string) => {
     if (name === 'ВСЕ') {
       dispatch(setActiveTabSlug('ALL'));
+      syncTabParamsToUrl({ tab: 'ALL', subtab: 'ALL' });
       return;
     }
     const tab = tabs.find(t => t.name === name);
-    if (!tab) return;
+    if (!tab?.slug) return;
     dispatch(setActiveTabSlug(tab.slug));
+    syncTabParamsToUrl({ tab: tab.slug, subtab: 'ALL' });
   };
 
   const handleSubTabChange = (name: string) => {
     // Если выбрано "ВСЕ", устанавливаем специальное значение
     if (name === 'ВСЕ') {
       dispatch(setActiveSubTabSlug('ALL'));
+      syncTabParamsToUrl({ subtab: 'ALL' });
       return;
     }
 
     const tab = subTabs.find(t => t.name === name);
-    if (!tab) return;
+    if (!tab?.slug) return;
     dispatch(setActiveSubTabSlug(tab.slug));
+    syncTabParamsToUrl({ subtab: tab.slug });
   };
   // Показываем лоадер, пока список пуст и мы либо грузим, либо ещё не получали ответ по продуктам
   if (products.length === 0 && (loading || loadingMore || !productsFetched)) {

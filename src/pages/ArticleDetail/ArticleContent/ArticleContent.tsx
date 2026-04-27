@@ -5,6 +5,30 @@ interface Props {
   contentJson: string | null | undefined;
 }
 
+function renderListItems(items: any): React.ReactNode {
+  if (!Array.isArray(items)) return null;
+  return items.map((item, idx) => {
+    // Editor.js "list" tool чаще всего отдаёт массив строк (HTML/markdown уже преобразованы на бэке)
+    if (typeof item === 'string') {
+      return <li key={idx} dangerouslySetInnerHTML={{__html: item}} />;
+    }
+
+    // Поддержка для вложенных структур (на случай другого лист-плагина)
+    if (item && typeof item === 'object') {
+      const content = typeof item.content === 'string' ? item.content : '';
+      const children = renderListItems(item.items);
+      return (
+        <li key={idx}>
+          {content ? <span dangerouslySetInnerHTML={{__html: content}} /> : null}
+          {children ? <ul>{children}</ul> : null}
+        </li>
+      );
+    }
+
+    return null;
+  });
+}
+
 const ArticleContent: React.FC<Props> = ({contentJson}) => {
   if (!contentJson) return null;
   let content;
@@ -35,6 +59,17 @@ const ArticleContent: React.FC<Props> = ({contentJson}) => {
                 dangerouslySetInnerHTML={{__html: block.data.text}}
               />
             );
+          case 'list': {
+            const isOrdered = block.data?.style === 'ordered';
+            const ListTag = (isOrdered ? 'ol' : 'ul') as keyof JSX.IntrinsicElements;
+            const items = renderListItems(block.data?.items);
+            if (!items) return null;
+            return (
+              <ListTag key={block.id}>
+                {items}
+              </ListTag>
+            );
+          }
           case 'image':
             return (
               <div  key={block.id}  className={styles.imageWrapper}>

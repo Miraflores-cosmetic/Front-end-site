@@ -150,12 +150,21 @@
       list-style-type: disc;
     }
 
+    :global(ul > li::marker) {
+      color: #297230;
+      font-size: 0.95em;
+    }
+
     :global(ol) {
       list-style-type: decimal;
     }
 
     :global(li) {
       margin: 0.35em 0;
+    }
+
+    :global(li > p) {
+      margin: 0;
     }
 
     :global(li > ul),

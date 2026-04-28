@@ -36,13 +36,17 @@ const LazyComponent: React.FC = () => {
   const isGiftCertificatesCategory = slug === GIFT_CERTIFICATES_CATEGORY_SLUG;
 
   const items = useSelector((state: RootState) => state.nav.items);
-  const { title, description, tabs, subTabs, activeTabSlug, activeSubTabSlug, products, loading, loadingMore, productsFetched, pageInfo } =
+  const { description, tabs, subTabs, activeTabSlug, activeSubTabSlug, products, loading, loadingMore, productsFetched, pageInfo } =
     useSelector((state: RootState) => state.category);
 
   const isMobile = useScreenMatch(756);
   const PAGE_SIZE = 12;
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  /** Чтобы не дергать getCategoryProducts дважды при появлении subTabs (0 → N) для того же slug */
+  const lastProductsSlugLoadedRef = useRef<string | null>(null);
+  /** Монотонный id списка: устаревшие ответы getCategoryProducts отбрасываются в categorySlice */
+  const listRequestIdRef = useRef(0);
 
   const syncTabParamsToUrl = useCallback(
     (next: { tab?: 'ALL' | string; subtab?: 'ALL' | string | null }) => {
@@ -119,7 +123,9 @@ const LazyComponent: React.FC = () => {
   // Загружаем 1-й уровень табов (дети корневой категории по slug из URL)
   useEffect(() => {
     if (!slug) return;
-    dispatch(resetCategoryState());
+    lastProductsSlugLoadedRef.current = null;
+    listRequestIdRef.current = 0;
+    dispatch(resetCategoryState(slug));
     dispatch(getCategoryTabs({ first: 50, slug }));
   }, [slug, dispatch]);
 
@@ -142,15 +148,23 @@ const LazyComponent: React.FC = () => {
 
     if (!slugToLoad) return;
 
+    // Уже загрузили товары по этому slug в текущем цикле (например эффект повторился из‑за subTabs.length)
+    if (productsFetched && lastProductsSlugLoadedRef.current === slugToLoad) {
+      return;
+    }
+
+    lastProductsSlugLoadedRef.current = slugToLoad;
+    const listRequestId = ++listRequestIdRef.current;
     dispatch(
       getCategoryProducts({
         slug: slugToLoad,
         first: PAGE_SIZE,
         after: null,
-        append: false
+        append: false,
+        listRequestId
       })
     );
-  }, [activeSubTabSlug, activeTabSlug, subTabs.length, slug, dispatch]);
+  }, [activeSubTabSlug, activeTabSlug, subTabs.length, slug, dispatch, productsFetched]);
 
   const canLoadMore = useMemo(() => {
     return !!activeTabSlug && !!pageInfo?.hasNextPage && !loading && !loadingMore;
@@ -196,12 +210,14 @@ const LazyComponent: React.FC = () => {
 
   const handleTopTabChange = (name: string) => {
     if (name === 'ВСЕ') {
+      if (activeTabSlug === 'ALL') return;
       dispatch(setActiveTabSlug('ALL'));
       syncTabParamsToUrl({ tab: 'ALL', subtab: 'ALL' });
       return;
     }
     const tab = tabs.find(t => t.name === name);
     if (!tab?.slug) return;
+    if (activeTabSlug === tab.slug) return;
     dispatch(setActiveTabSlug(tab.slug));
     syncTabParamsToUrl({ tab: tab.slug, subtab: 'ALL' });
   };
@@ -209,6 +225,8 @@ const LazyComponent: React.FC = () => {
   const handleSubTabChange = (name: string) => {
     // Если выбрано "ВСЕ", устанавливаем специальное значение
     if (name === 'ВСЕ') {
+      const current = activeSubTabSlug ?? 'ALL';
+      if (current === 'ALL') return;
       dispatch(setActiveSubTabSlug('ALL'));
       syncTabParamsToUrl({ subtab: 'ALL' });
       return;
@@ -216,17 +234,22 @@ const LazyComponent: React.FC = () => {
 
     const tab = subTabs.find(t => t.name === name);
     if (!tab?.slug) return;
+    if (activeSubTabSlug === tab.slug) return;
     dispatch(setActiveSubTabSlug(tab.slug));
     syncTabParamsToUrl({ subtab: tab.slug });
   };
-  // Показываем лоадер, пока список пуст и мы либо грузим, либо ещё не получали ответ по продуктам
-  if (products.length === 0 && (loading || loadingMore || !productsFetched)) {
-    return (
-      <div className={styles.categoryLoader}>
-        <SpinnerLoader />
-      </div>
-    );
-  }
+
+  /** Подзаголовок дублирует выбранный подтаб / таб (не имя категории из GraphQL — оно «прыгает» между запросами). */
+  const subtitleHeading = useMemo(() => {
+    if (activeTabSlug === 'ALL' || !activeTabSlug) return '';
+    const sub =
+      activeSubTabSlug &&
+      activeSubTabSlug !== 'ALL' &&
+      subTabs.find(s => s.slug === activeSubTabSlug)?.name;
+    if (sub) return sub;
+    return tabs.find(t => t.slug === activeTabSlug)?.name ?? '';
+  }, [activeTabSlug, activeSubTabSlug, tabs, subTabs]);
+  const showInitialSkeletons = products.length === 0 && (loading || loadingMore || !productsFetched);
 
   return (
     <>
@@ -234,16 +257,17 @@ const LazyComponent: React.FC = () => {
       {!isGiftCertificatesCategory && (
         <>
           <TabBar
-            tabs={['ВСЕ', ...tabs.map(t => t.name).reverse()]}
-            active={activeTabSlug === 'ALL' ? 'ВСЕ' : tabs.find(t => t.slug === activeTabSlug)?.name}
+            // Важно: не использовать .reverse() напрямую — он мутирует массив из Redux state.
+            tabs={['ВСЕ', ...tabs.map(t => t.name).slice().reverse()]}
+            active={activeTabSlug === 'ALL' ? 'ВСЕ' : (tabs.find(t => t.slug === activeTabSlug)?.name ?? 'ВСЕ')}
             onChange={handleTopTabChange}
           />
           {activeTabSlug !== 'ALL' && subTabs.length > 0 && (
             <TabBar
-              tabs={['ВСЕ', ...subTabs.map(t => t.name).reverse()]}
+              tabs={['ВСЕ', ...subTabs.map(t => t.name).slice().reverse()]}
               active={activeSubTabSlug === 'ALL' || !activeSubTabSlug
                 ? 'ВСЕ'
-                : subTabs.find(t => t.slug === activeSubTabSlug)?.name}
+                : (subTabs.find(t => t.slug === activeSubTabSlug)?.name ?? 'ВСЕ')}
               onChange={handleSubTabChange}
             />
           )}
@@ -252,12 +276,28 @@ const LazyComponent: React.FC = () => {
 
       {!isMobile && !isGiftCertificatesCategory && (
         <div>
-          <h2 className={styles.subtitle}>{title}</h2>
-          <p className={styles.description}>{description}</p>
+          {subtitleHeading ? (
+            <h2 className={styles.subtitle}>{subtitleHeading}</h2>
+          ) : null}
+          {description ? (
+            <p className={styles.description}>{description}</p>
+          ) : null}
         </div>
       )}
 
-      {products.length > 0 ? (
+      {showInitialSkeletons ? (
+        <section className={styles.wrapper} aria-busy="true" aria-label="Загрузка товаров">
+          <AnimatePresence mode="sync">
+            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+              <BestSellerProductCard
+                key={`initial-skeleton-${i}`}
+                product={{} as any}
+                loading={true}
+              />
+            ))}
+          </AnimatePresence>
+        </section>
+      ) : products.length > 0 ? (
         <>
           <section className={styles.wrapper}>
             <AnimatePresence mode="sync">

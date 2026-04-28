@@ -8,6 +8,9 @@ import { createAddressService } from '@/graphql/queries/adress.service';
 import { updateAddress } from '@/graphql/queries/address.service';
 import { AddressInput, AddressTypeEnum } from '@/graphql/types/adress.types';
 import CdekPvzList, { CdekPvzInfo } from '@/components/cdek/CdekPvzList';
+import YandexPvzList, { type YandexPvzBrief } from '@/components/yandex/YandexPvzList';
+import DeliveryCourierMap from '@/components/yandex/DeliveryCourierMap';
+import { buildStreetAddress2WithMeta, parseVspAddressMeta } from '@/lib/addressVspMeta';
 import { useToast } from '@/components/toast/toast';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe } from '@/store/slices/authSlice';
@@ -17,8 +20,8 @@ import { AddressMutationError } from '@/graphql/addressMutationError';
 const DELIVERY_OPTIONS = [
   { id: 'cdek_pvz', label: 'СДЭК ПВЗ' },
   { id: 'cdek_courier', label: 'СДЭК Курьер' },
-  { id: 'yandex_pvz', label: 'Яндекс доставка ПВЗ' },
-  { id: 'five_post', label: '5Post' },
+  { id: 'yandex_pvz', label: 'Яндекс ПВЗ' },
+  { id: 'yandex_courier', label: 'Яндекс Курьер' },
 ] as const;
 
 type DeliveryMethodId = (typeof DELIVERY_OPTIONS)[number]['id'];
@@ -26,8 +29,8 @@ type DeliveryMethodId = (typeof DELIVERY_OPTIONS)[number]['id'];
 const DELIVERY_TYPE_LINE: Record<DeliveryMethodId, string> = {
     cdek_pvz: 'СДЭК ПВЗ',
     cdek_courier: 'СДЭК Курьер',
-    yandex_pvz: 'Яндекс доставка ПВЗ',
-    five_post: '5Post',
+    yandex_pvz: 'Яндекс Доставка ПВЗ',
+    yandex_courier: 'Яндекс Доставка Курьер',
 };
 
 /** Saleor Address: street_address_2 max 256 символов */
@@ -96,11 +99,27 @@ function applyCdekPvzToForm(prev: AddressInput, info: CdekPvzInfo): AddressInput
     };
 }
 
+function applyYandexPvzToForm(prev: AddressInput, info: YandexPvzBrief): AddressInput {
+    const nextCity = (info.city || prev.city).trim();
+    return {
+        ...prev,
+        city: nextCity || prev.city,
+        streetAddress1: (info.addressLine || prev.streetAddress1).trim() || prev.streetAddress1,
+        country: 'RU',
+        countryArea: (info.region || prev.countryArea || '').trim(),
+        postalCode: (info.postalCode || prev.postalCode || '').trim(),
+    };
+}
+
 function parseDeliveryMethodFromStreet2(street2: string | undefined | null): DeliveryMethodId {
+    const vm = parseVspAddressMeta(street2);
+    if (vm?.carrier === 'yandex') {
+        return vm.dropoff === 'courier' ? 'yandex_courier' : 'yandex_pvz';
+    }
     const s = street2 || '';
-    if (s.includes('Яндекс доставка ПВЗ')) return 'yandex_pvz';
+    if (/Яндекс.*Курьер/i.test(s) || /Яндекс Доставка Курьер/i.test(s)) return 'yandex_courier';
+    if (/Яндекс.*ПВЗ/i.test(s) || /Яндекс доставка ПВЗ/i.test(s)) return 'yandex_pvz';
     if (s.includes('СДЭК Курьер')) return 'cdek_courier';
-    if (s.includes('5Post')) return 'five_post';
     if (s.includes('СДЭК ПВЗ')) return 'cdek_pvz';
     return 'cdek_pvz';
 }
@@ -124,6 +143,14 @@ const AddressDrawer: React.FC = () => {
     const addressDrawer = useSelector((s: RootState) => s.drawer.addressDrawer);
     const [isLoading, setIsLoading] = useState(false);
     const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethodId>('cdek_pvz');
+    /** Для сохранённой строки меты Яндекс ПВЗ */
+    const [yandexPvzDraft, setYandexPvzDraft] = useState<{ id: string; lat: number; lon: number } | null>(
+        null,
+    );
+    /** Координаты курьера Яндекс */
+    const [yandexCourierLl, setYandexCourierLl] = useState<{ lon: string; lat: string } | null>(
+        null,
+    );
     const toast = useToast();
 
     const [formData, setFormData] = useState<AddressInput>({ ...EMPTY_FORM });
@@ -151,9 +178,31 @@ const AddressDrawer: React.FC = () => {
                 streetAddress2: seed.streetAddress2 || '',
             });
             setDeliveryMethod(parseDeliveryMethodFromStreet2(seed.streetAddress2));
+            const ym = parseVspAddressMeta(seed.streetAddress2);
+            if (ym?.carrier === 'yandex' && ym.dropoff === 'pvz' && ym.pvz) {
+                const la = parseFloat(ym.lat);
+                const lo = parseFloat(ym.lon);
+                setYandexPvzDraft({
+                    id: ym.pvz,
+                    lat: Number.isFinite(la) ? la : 0,
+                    lon: Number.isFinite(lo) ? lo : 0,
+                });
+            } else {
+                setYandexPvzDraft(null);
+            }
+            if (ym?.carrier === 'yandex' && ym.dropoff === 'courier') {
+                setYandexCourierLl({
+                    lon: ym.lon,
+                    lat: ym.lat,
+                });
+            } else {
+                setYandexCourierLl(null);
+            }
         } else {
             setFormData({ ...EMPTY_FORM });
             setDeliveryMethod('cdek_pvz');
+            setYandexPvzDraft(null);
+            setYandexCourierLl(null);
         }
     }, [activeDrawer, addressDrawer?.editingAddressId, addressDrawer?.seed?.id]);
 
@@ -193,7 +242,43 @@ const AddressDrawer: React.FC = () => {
             if (!payload.cityArea) payload.cityArea = "";
             if (!payload.countryArea) payload.countryArea = "";
             if (payload.country === 'RU') {
-                payload.streetAddress2 = buildDeliveryNoteForSaleor(deliveryMethod, payload);
+                const tail = buildDeliveryNoteForSaleor(deliveryMethod, payload);
+
+                if (deliveryMethod === 'yandex_pvz') {
+                    if (!yandexPvzDraft?.id) {
+                        toast.error('Выберите пункт Яндекс Доставки в списке или на карте');
+                        setIsLoading(false);
+                        return;
+                    }
+                    payload.streetAddress2 = buildStreetAddress2WithMeta(
+                        {
+                            carrier: 'yandex',
+                            lon: String(yandexPvzDraft.lon),
+                            lat: String(yandexPvzDraft.lat),
+                            pvz: yandexPvzDraft.id,
+                            dropoff: 'pvz',
+                        },
+                        tail,
+                    );
+                } else if (deliveryMethod === 'yandex_courier') {
+                    if (!yandexCourierLl?.lon || !yandexCourierLl?.lat) {
+                        toast.error('Нажмите на карте, чтобы указать адрес для курьера');
+                        setIsLoading(false);
+                        return;
+                    }
+                    payload.streetAddress2 = buildStreetAddress2WithMeta(
+                        {
+                            carrier: 'yandex',
+                            lon: yandexCourierLl.lon,
+                            lat: yandexCourierLl.lat,
+                            pvz: '',
+                            dropoff: 'courier',
+                        },
+                        tail,
+                    );
+                } else {
+                    payload.streetAddress2 = tail;
+                }
             } else {
                 payload.streetAddress2 = payload.streetAddress2?.trim() || '';
             }
@@ -300,20 +385,53 @@ const AddressDrawer: React.FC = () => {
                             )}
 
                             {deliveryMethod === 'yandex_pvz' && (
-                                <div className={`${styles.widgetPanel} ${styles.placeholderWidget}`}>
-                                    <p className={styles.placeholderTitle}>Яндекс доставка ПВЗ</p>
-                                    <p className={styles.placeholderHint}>
-                                        Виджет выбора пункта появится здесь в ближайшем обновлении.
-                                    </p>
+                                <div className={styles.widgetPanel}>
+                                    <div>
+                                        <h3 className={styles.widgetTitle}>Пункт выдачи — Яндекс Доставка</h3>
+                                        <p className={styles.widgetDescription}>
+                                            Выберите город и пункт выдачи. Адрес в форме ниже можно уточнить вручную.
+                                        </p>
+                                    </div>
+                                    <YandexPvzList
+                                        onChoose={(info: YandexPvzBrief) => {
+                                            setFormData((prev) => applyYandexPvzToForm(prev, info));
+                                            setYandexPvzDraft({
+                                                id: info.id,
+                                                lat: info.lat,
+                                                lon: info.lon,
+                                            });
+                                        }}
+                                        defaultCity={formData.city || 'Москва'}
+                                        initialMode="map"
+                                    />
                                 </div>
                             )}
 
-                            {deliveryMethod === 'five_post' && (
-                                <div className={`${styles.widgetPanel} ${styles.placeholderWidget}`}>
-                                    <p className={styles.placeholderTitle}>5Post</p>
-                                    <p className={styles.placeholderHint}>
-                                        Выбор постамата или пункта 5Post будет доступен позже.
+                            {deliveryMethod === 'yandex_courier' && (
+                                <div className={styles.widgetPanel}>
+                                    <h3 className={styles.widgetTitle}>Курьер — Яндекс Доставка</h3>
+                                    <p className={styles.widgetDescription}>
+                                        Отметьте на карте зону доставки. Уточните ниже номер дома, квартиру и контакты —
+                                        без курьерского адреса доставку не получится рассчитать автоматически.
                                     </p>
+                                    <DeliveryCourierMap
+                                        cityHint={formData.city || 'Москва'}
+                                        onChoose={(sel) => {
+                                            setYandexCourierLl({
+                                                lon: String(sel.lon),
+                                                lat: String(sel.lat),
+                                            });
+                                            const g = sel.geoLine?.trim();
+                                            if (g) {
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    streetAddress1: prev.streetAddress1?.trim()
+                                                        ? prev.streetAddress1
+                                                        : clampAddressField(g, 256),
+                                                }));
+                                            }
+                                        }}
+                                    />
                                 </div>
                             )}
                         </>

@@ -1,10 +1,16 @@
 import type { AddressInfo } from '@/types/auth';
+import { parseVspAddressMeta } from '@/lib/addressVspMeta';
 
 /**
  * Достаёт подпись способа из Saleor streetAddress2:
- * «Тип доставки: СДЭК ПВЗ. Детали: …»
+ * «Тип доставки: СДЭК ПВЗ. Детали: …» или мета __VSP: для Яндекса
  */
 export function getDeliveryTypeLabelFromStreet2(street2: string | undefined | null): string {
+    const vm = parseVspAddressMeta(street2);
+    if (vm?.carrier === 'yandex') {
+        return vm.dropoff === 'courier' ? 'Яндекс Доставка Курьер' : 'Яндекс Доставка ПВЗ';
+    }
+
     const s = (street2 || '').trim();
     if (!s) return 'Адрес';
 

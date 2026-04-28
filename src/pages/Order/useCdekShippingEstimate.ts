@@ -1,7 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { CheckoutLine } from '@/types/checkout';
 import type { AddressInfo } from '@/types/auth';
 import { fetchVariantsShippingData } from '@/graphql/queries/variantShipping.service';
+import { parseVspAddressMeta } from '@/lib/addressVspMeta';
 
 const FROM_CITY_CODE = Number(
     import.meta.env.VITE_CDEK_SHIP_FROM_CITY_CODE || '44',
@@ -14,11 +15,6 @@ function normalizePostalRu(s: string | undefined | null): string | null {
     return null;
 }
 
-/**
- * Вес одной единицы × quantity — фактический вес отправления.
- * Габариты из Saleor — на одну единицу; при quantity > 1 масштабируем стороны в ∛q,
- * чтобы объём (и объёмный вес в калькуляторе СДЭК) рос пропорционально количеству.
- */
 function packageDimsForQuantity(
     lengthCm: number,
     widthCm: number,
@@ -60,6 +56,35 @@ function buildPackages(lines: CheckoutLine[], byVariant: Awaited<ReturnType<type
     return packages;
 }
 
+/** Одно место для Яндекс pricing: суммарный вес, макс. габариты по сторонам */
+function buildYandexPlacesFromLines(
+    lines: CheckoutLine[],
+    byVariant: Awaited<ReturnType<typeof fetchVariantsShippingData>>,
+) {
+    const pkgs = buildPackages(lines, byVariant);
+    if (pkgs.length === 0) return [];
+    let maxL = 0;
+    let maxW = 0;
+    let maxH = 0;
+    let sumW = 0;
+    for (const p of pkgs) {
+        sumW += p.weight;
+        maxL = Math.max(maxL, p.length);
+        maxW = Math.max(maxW, p.width);
+        maxH = Math.max(maxH, p.height);
+    }
+    return [
+        {
+            physical_dims: {
+                weight_gross: Math.max(1, sumW),
+                dx: Math.max(1, maxL),
+                dy: Math.max(1, maxH),
+                dz: Math.max(1, maxW),
+            },
+        },
+    ];
+}
+
 function minDeliverySum(data: unknown): number | null {
     if (!data || typeof data !== 'object') return null;
     const raw = data as { tariff_codes?: Array<{ delivery_sum?: number; total_sum?: number }> };
@@ -73,7 +98,19 @@ function minDeliverySum(data: unknown): number | null {
     return min === Infinity ? null : min;
 }
 
-export function useCdekShippingEstimate(lines: CheckoutLine[], address: AddressInfo | null) {
+function parseYandexPricingTotal(data: unknown): number | null {
+    if (!data || typeof data !== 'object') return null;
+    const raw = data as { pricing_total?: string };
+    const pt = raw.pricing_total;
+    if (typeof pt !== 'string') return null;
+    const m = pt.match(/^([\d.]+)/);
+    if (!m) return null;
+    const v = parseFloat(m[1]);
+    return Number.isFinite(v) ? Math.round(v) : null;
+}
+
+/** Для простого текстового адреса без меты Яндекс — СДЭК (как раньше). */
+function useCdekOnlyEstimate(lines: CheckoutLine[], address: AddressInfo | null) {
     const [rub, setRub] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -164,4 +201,136 @@ export function useCdekShippingEstimate(lines: CheckoutLine[], address: AddressI
     }, [lines, address]);
 
     return { rub, loading, error };
+}
+
+function useYandexOnlyEstimate(lines: CheckoutLine[], address: AddressInfo | null) {
+    const [rub, setRub] = useState<number | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const seq = useRef(0);
+
+    const meta = useMemo(
+        () => parseVspAddressMeta(address?.streetAddress2),
+        [address?.streetAddress2],
+    );
+
+    useEffect(() => {
+        const id = ++seq.current;
+        const run = async () => {
+            setError(null);
+            const payableLines = lines.filter((l) => !l.isGift);
+            if (payableLines.length === 0 || !address || !meta || meta.carrier !== 'yandex') {
+                setRub(null);
+                setLoading(false);
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const variantIds = payableLines.map((l) => l.variantId);
+                const byVariant = await fetchVariantsShippingData(variantIds);
+                const places = buildYandexPlacesFromLines(payableLines, byVariant);
+                if (places.length === 0) {
+                    if (id === seq.current) {
+                        setRub(null);
+                        setLoading(false);
+                    }
+                    return;
+                }
+
+                let body: Record<string, unknown>;
+
+                if (meta.dropoff === 'pvz') {
+                    const stationId = meta.pvz?.trim();
+                    if (!stationId) {
+                        if (id === seq.current) {
+                            setRub(null);
+                            setError('Выберите пункт Яндекс Доставки');
+                            setLoading(false);
+                        }
+                        return;
+                    }
+                    body = {
+                        tariff: 'self_pickup',
+                        destination_station_id: stationId,
+                        places,
+                    };
+                } else {
+                    const city = (address.city || '').trim();
+                    const line = (address.streetAddress1 || '').trim();
+                    if (!city || !line) {
+                        if (id === seq.current) {
+                            setRub(null);
+                            setError('Укажите город и адрес (улица, дом) для курьера');
+                            setLoading(false);
+                        }
+                        return;
+                    }
+                    const destination_address = `${city}, ${line}`;
+                    body = {
+                        tariff: 'time_interval',
+                        destination_address,
+                        places,
+                    };
+                }
+
+                const res = await fetch(`${window.location.origin}/api/yandex/pricing`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body),
+                });
+                const json = (await res.json().catch(() => ({}))) as {
+                    error?: string;
+                    message?: string;
+                    description?: string;
+                    hint?: string;
+                };
+                if (!res.ok) {
+                    const base =
+                        json.message ||
+                        json.error ||
+                        json.description ||
+                        `Яндекс Доставка ${res.status}`;
+                    const msg = json.hint ? `${base} ${json.hint}` : String(base);
+                    throw new Error(msg);
+                }
+                const sum = parseYandexPricingTotal(json);
+                if (id === seq.current) {
+                    if (sum == null) {
+                        setRub(null);
+                        setError('Не удалось получить цену доставки Яндекс');
+                    } else {
+                        setRub(sum);
+                    }
+                }
+            } catch (e: unknown) {
+                if (id === seq.current) {
+                    setRub(null);
+                    setError(e instanceof Error ? e.message : 'Ошибка расчёта доставки');
+                }
+            } finally {
+                if (id === seq.current) setLoading(false);
+            }
+        };
+
+        const t = window.setTimeout(run, 400);
+        return () => window.clearTimeout(t);
+    }, [lines, address, meta]);
+
+    return { rub, loading, error };
+}
+
+/**
+ * Единый расчёт: СДЭК (как раньше) или Яндекс Доставка по мете __VSP__ в streetAddress2.
+ */
+export function useCdekShippingEstimate(lines: CheckoutLine[], address: AddressInfo | null) {
+    const street2 = address?.streetAddress2;
+    const isYandex = parseVspAddressMeta(street2)?.carrier === 'yandex';
+
+    const cdekResult = useCdekOnlyEstimate(lines, !isYandex ? address : null);
+
+    const yandexResult = useYandexOnlyEstimate(lines, isYandex ? address : null);
+
+    if (isYandex) return yandexResult;
+    return cdekResult;
 }

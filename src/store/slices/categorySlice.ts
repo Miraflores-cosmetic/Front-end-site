@@ -8,6 +8,9 @@ const initialState: categorySliceState = {
   activeTabSlug: null,
   subTabs: [],
   activeSubTabSlug: null,
+  activeListRequestId: 0,
+  productsListSlug: null,
+  pageCategorySlug: null,
   slug: null,
   title: '',
   description: '',
@@ -65,22 +68,27 @@ const categorySlice = createSlice({
       state.subTabs = [];
       state.activeSubTabSlug = 'ALL';
       state.products = [];
+      state.productsListSlug = null;
       state.pageInfo = { hasNextPage: false, endCursor: null };
       state.productsFetched = false;
     },
     setActiveSubTabSlug(state, action: PayloadAction<string | null>) {
       state.activeSubTabSlug = action.payload;
       state.products = [];
+      state.productsListSlug = null;
       state.pageInfo = { hasNextPage: false, endCursor: null };
       state.productsFetched = false;
     },
-    resetCategoryState(state) {
+    resetCategoryState(state, action: PayloadAction<string | undefined>) {
       state.tabs = [];
       state.subTabs = [];
       state.title = '';
       state.description = '';
       state.activeTabSlug = null;
       state.activeSubTabSlug = null;
+      state.activeListRequestId = 0;
+      state.productsListSlug = null;
+      state.pageCategorySlug = action.payload ?? null;
       state.products = [];
       state.pageInfo = { hasNextPage: false, endCursor: null };
       state.loading = false;
@@ -96,16 +104,39 @@ const categorySlice = createSlice({
         state.error = null;
       })
       .addCase(getCategoryTabs.fulfilled, (state, action) => {
+        const requestedSlug = action.meta.arg.slug;
+        if (
+          state.pageCategorySlug != null &&
+          requestedSlug !== state.pageCategorySlug
+        ) {
+          state.loading = false;
+          return;
+        }
         state.tabs = action.payload;
-        // По умолчанию «ВСЕ» — показываем все продукты категории
-        state.activeTabSlug = 'ALL';
+        // По умолчанию «ВСЕ» — показываем все продукты категории.
+        // Важно: не перетирать выбор пользователя, если он уже успел переключить таб
+        // (например, из-за двойного запуска эффектов в dev/StrictMode или гонки ответов).
+        if (state.activeTabSlug === null) {
+          state.activeTabSlug = 'ALL';
+        }
         state.loading = false;
       })
-      .addCase(getCategoryTabs.rejected, (state) => {
+      .addCase(getCategoryTabs.rejected, (state, action) => {
+        const requestedSlug = action.meta.arg?.slug;
+        if (
+          requestedSlug != null &&
+          state.pageCategorySlug != null &&
+          requestedSlug !== state.pageCategorySlug
+        ) {
+          state.loading = false;
+          return;
+        }
         state.loading = false;
         state.tabs = [];
         // Всё равно даём загрузить товары по slug (категория может быть без дочерних)
-        state.activeTabSlug = 'ALL';
+        if (state.activeTabSlug === null) {
+          state.activeTabSlug = 'ALL';
+        }
       })
 
       // 2-й уровень табов
@@ -114,9 +145,17 @@ const categorySlice = createSlice({
         state.error = null;
       })
       .addCase(getSubCategoryTabs.fulfilled, (state, action) => {
+        const requestedParentSlug = action.meta.arg;
+        if (state.activeTabSlug !== requestedParentSlug) {
+          state.loading = false;
+          return;
+        }
         state.subTabs = action.payload;
         // По умолчанию выбираем "ВСЕ" (ALL), чтобы показать все товары категории
-        state.activeSubTabSlug = 'ALL';
+        // Не перетираем выбор пользователя, если он уже выбрал подтаб (гонки ответов).
+        if (state.activeSubTabSlug === null) {
+          state.activeSubTabSlug = 'ALL';
+        }
         state.loading = false;
       })
       .addCase(getSubCategoryTabs.rejected, (state, action) => {
@@ -131,18 +170,37 @@ const categorySlice = createSlice({
           state.loadingMore = true;
         } else {
           state.loading = true;
+          const lid = action.meta.arg.listRequestId;
+          if (lid != null) {
+            state.activeListRequestId = lid;
+          }
         }
         state.error = null;
       })
       .addCase(getCategoryProducts.fulfilled, (state, action) => {
         const append = !!action.meta.arg.append;
+        const arg = action.meta.arg;
         const payload = action.payload;
+
+        if (!append) {
+          const lid = arg.listRequestId;
+          if (lid != null && lid !== state.activeListRequestId) {
+            return;
+          }
+        } else if (state.productsListSlug !== arg.slug) {
+          state.loadingMore = false;
+          return;
+        }
+
         if (!payload?.products?.edges) {
           state.products = append ? state.products : [];
           state.loading = false;
           state.loadingMore = false;
           state.productsFetched = true;
           state.pageInfo = { hasNextPage: false, endCursor: null };
+          if (!append) {
+            state.productsListSlug = arg.slug;
+          }
           return;
         }
 
@@ -282,6 +340,7 @@ const categorySlice = createSlice({
 
         if (!append) {
           state.products = newBProducts;
+          state.productsListSlug = arg.slug;
         } else {
           const map = new Map<string, BestSellersProduct>();
           for (const p of state.products) map.set(String(p.id), p);
@@ -294,6 +353,19 @@ const categorySlice = createSlice({
         state.error = null;
       })
       .addCase(getCategoryProducts.rejected, (state, action) => {
+        const append = !!action.meta.arg.append;
+        const arg = action.meta.arg;
+
+        if (!append) {
+          const lid = arg.listRequestId;
+          if (lid != null && lid !== state.activeListRequestId) {
+            return;
+          }
+        } else if (state.productsListSlug !== arg.slug) {
+          state.loadingMore = false;
+          return;
+        }
+
         state.loading = false;
         state.loadingMore = false;
         state.productsFetched = true;

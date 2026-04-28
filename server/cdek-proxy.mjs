@@ -211,6 +211,168 @@ app.get('/api/cdek/service', async (req, res) => {
   }
 });
 
+// —— Яндекс Доставка (Platform API) — см. YANDEX_PLATFORM_TOKEN, YANDEX_PLATFORM_SOURCE_STATION_ID
+const YANDEX_PLATFORM_BASE = 'https://b2b-authproxy.taxi.yandex.net';
+const YANDEX_PLATFORM_TOKEN = process.env.YANDEX_PLATFORM_TOKEN;
+const YANDEX_PLATFORM_SOURCE_STATION_ID = process.env.YANDEX_PLATFORM_SOURCE_STATION_ID;
+
+app.post('/api/yandex/pickup-points', async (req, res) => {
+  const startTime = Date.now();
+  try {
+    const geoId = req.body?.geo_id;
+    if (!YANDEX_PLATFORM_TOKEN) {
+      return res.status(500).json({ error: 'YANDEX_PLATFORM_TOKEN is not set in .env' });
+    }
+    if (geoId == null || geoId === '') {
+      return res.status(400).json({ error: 'geo_id is required' });
+    }
+    const body = {
+      geo_id: Number(geoId),
+      payment_method: 'already_paid',
+      available_for_dropoff: true,
+      type: 'pickup_point',
+      operator_ids: ['market_l4g', '5post'],
+    };
+    const url = `${YANDEX_PLATFORM_BASE}/api/b2b/platform/pickup-points/list`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${YANDEX_PLATFORM_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+    });
+    const text = await response.text();
+    let data;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { raw: text };
+    }
+    if (!response.ok) {
+      console.error('[Yandex Proxy] pickup-points error:', response.status, text);
+      return res.status(response.status).json(
+        typeof data === 'object' && data !== null ? data : { error: text || String(response.status) },
+      );
+    }
+    console.log(`[Yandex Proxy] pickup-points OK in ${Date.now() - startTime}ms`);
+    return res.json(data);
+  } catch (error) {
+    console.error('[Yandex Proxy] pickup-points exception:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
+/** Яндекс: GET на этот путь может открыться из браузера — подсказываем, нужен только POST из checkout */
+app.get('/api/yandex/pricing', (req, res) => {
+  res.status(405).set('Allow', 'POST').json({
+    error:
+      'Расчёт доставки: только POST из приложения. Откройте checkout и выберите адрес — GET здесь не используется.',
+  });
+});
+
+/** Предварительная оценка через Platform pricing-calculator */
+app.post('/api/yandex/pricing', async (req, res) => {
+  const startTime = Date.now();
+  try {
+    if (!YANDEX_PLATFORM_TOKEN) {
+      return res.status(500).json({ error: 'YANDEX_PLATFORM_TOKEN is not set in .env' });
+    }
+    if (!YANDEX_PLATFORM_SOURCE_STATION_ID) {
+      return res.status(500).json({
+        error:
+          'YANDEX_PLATFORM_SOURCE_STATION_ID is not set — укажите id станции отправления в .env',
+      });
+    }
+
+    const tariff = req.body?.tariff === 'time_interval' ? 'time_interval' : 'self_pickup';
+    const places = Array.isArray(req.body?.places)
+      ? req.body.places
+      : [
+          {
+            physical_dims: {
+              weight_gross: Number(req.body?.weight_gross) || 300,
+              dx: Number(req.body?.dx) || 20,
+              dy: Number(req.body?.dy) || 10,
+              dz: Number(req.body?.dz) || 15,
+            },
+          },
+        ];
+
+    let totalWeight = 0;
+    for (const p of places) {
+      const w = p?.physical_dims?.weight_gross;
+      if (typeof w === 'number' && w > 0) totalWeight += w;
+    }
+
+    const base = {
+      source: { platform_station_id: YANDEX_PLATFORM_SOURCE_STATION_ID },
+      tariff,
+      total_weight: totalWeight || Number(req.body?.total_weight) || 0,
+      total_assessed_price: Number(req.body?.total_assessed_price) || 0,
+      client_price: Number(req.body?.client_price) || 0,
+      payment_method: 'already_paid',
+      places,
+    };
+
+    let destination;
+    if (tariff === 'self_pickup') {
+      const id = req.body?.destination_station_id;
+      if (!id || typeof id !== 'string') {
+        return res.status(400).json({ error: 'destination_station_id required for self_pickup' });
+      }
+      destination = { platform_station_id: id };
+    } else {
+      const addr = req.body?.destination_address;
+      if (!addr || typeof addr !== 'string') {
+        return res.status(400).json({ error: 'destination_address required for time_interval' });
+      }
+      destination = { address: addr.trim() };
+    }
+
+    const payload = { ...base, destination };
+    const url = `${YANDEX_PLATFORM_BASE}/api/b2b/platform/pricing-calculator`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${YANDEX_PLATFORM_TOKEN}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    const text = await response.text();
+    let data;
+    try {
+      data = text ? JSON.parse(text) : {};
+    } catch {
+      data = { raw: text };
+    }
+    if (!response.ok) {
+      console.error('[Yandex Proxy] pricing error:', response.status, text);
+      const hintText =
+        typeof data === 'object' &&
+        data !== null &&
+        String(data.message || '').includes('Source station')
+          ? 'Проверьте YANDEX_PLATFORM_SOURCE_STATION_ID: это platform_station_id склада ОТПРАВЛЕНИЯ в кабинете Яндекс Доставки (не id ПВЗ получателя).'
+          : '';
+      if (hintText) console.error('[Yandex Proxy] ' + hintText);
+      const clientBody =
+        typeof data === 'object' && data !== null
+          ? {
+              ...data,
+              ...(hintText ? { hint: hintText } : {}),
+            }
+          : { error: text || String(response.status) };
+      return res.status(response.status).json(clientBody);
+    }
+    console.log(`[Yandex Proxy] pricing OK in ${Date.now() - startTime}ms`);
+    return res.json(data);
+  } catch (error) {
+    console.error('[Yandex Proxy] pricing exception:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 app.post('/api/cdek/calculator', async (req, res) => {
   const startTime = Date.now();
   try {
@@ -269,5 +431,11 @@ app.listen(PORT, '0.0.0.0', () => {
     console.error('⚠️  WARNING: CDEK_ACCOUNT or CDEK_SECURE not set in .env file!');
   } else {
     console.log(`✅ CDEK credentials found (Account: ${CDEK_ACCOUNT.substring(0, 4)}...)`);
+  }
+  if (!process.env.YANDEX_PLATFORM_TOKEN) {
+    console.error('⚠️  WARNING: YANDEX_PLATFORM_TOKEN not set — Yandex pickup/pricing недоступны');
+  }
+  if (!process.env.YANDEX_PLATFORM_SOURCE_STATION_ID) {
+    console.error('⚠️  WARNING: YANDEX_PLATFORM_SOURCE_STATION_ID not set — расчёт тарифов Яндекс не будет работать');
   }
 });

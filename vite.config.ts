@@ -80,6 +80,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: false
       },
+      '/api/yandex': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false
+      },
       '/api/yookassa': {
         target: 'http://localhost:3002',
         changeOrigin: true,

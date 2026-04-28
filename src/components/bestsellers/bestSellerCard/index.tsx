@@ -21,6 +21,9 @@ export const BestSellerProductCard: React.FC<{
   onNavigate
 }) => {
   const [isHovered, setIsHovered] = useState(false);
+  // Не рендерим hover-изображение, пока пользователь реально не навёл курсор:
+  // иначе браузер качает сразу 2 картинки на каждую карточку.
+  const [hasEverHovered, setHasEverHovered] = useState(false);
   const [shouldBlockClick, setShouldBlockClick] = useState(false);
 
   // Блокируем клик, если был драг
@@ -160,7 +163,10 @@ export const BestSellerProductCard: React.FC<{
         <>
           <div 
             className={styles.imageBox}
-            onMouseEnter={() => setIsHovered(true)}
+            onMouseEnter={() => {
+              setIsHovered(true);
+              setHasEverHovered(true);
+            }}
             onMouseLeave={() => setIsHovered(false)}
           >
             {product.discount && <span className={styles.discount}>-{product.discount}%</span>}
@@ -187,7 +193,7 @@ export const BestSellerProductCard: React.FC<{
                   className={`${styles.productImage} ${styles.mainImage} ${isHovered && hoverImage ? styles.hidden : ''}`}
                   placeholder="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='332' height='332'%3E%3Crect width='100%25' height='100%25' fill='%23F6F5EF'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%236E6D67' font-family='Avenir Next' font-size='14'%3EИзображение%3C/text%3E%3C/svg%3E"
                 />
-                {hoverImage && (
+                {hoverImage && hasEverHovered && (
                   <ImageWithFallback
                     src={hoverImage}
                     alt={product.title}

@@ -13,6 +13,18 @@ export interface categorySliceState {
   subTabs: CategoryTab[];
   activeSubTabSlug: string | null;
 
+  /**
+   * Последний list-запрос товаров (без append): только ответ с этим id применяем,
+   * чтобы устаревшие ответы не затирали список при быстром переключении табов.
+   */
+  activeListRequestId: number;
+
+  /** Slug категории, которой сейчас соответствует state.products (для отсечения stale page2 и т.п.) */
+  productsListSlug: string | null;
+
+  /** Slug из URL /category/:slug — отсекаем устаревшие getCategoryTabs при смене страницы */
+  pageCategorySlug: string | null;
+
   slug: string | null;
   loading: boolean;
   /** true при подгрузке следующей страницы (append), чтобы не переводить все карточки в скелетон */
@@ -29,6 +41,8 @@ export interface getCategoryProductsArgs {
   slug: string;
   after?: string | null;
   append?: boolean;
+  /** Клиентский счётчик для getCategoryProducts без append */
+  listRequestId?: number;
 }
 
 export interface CategoryTab {

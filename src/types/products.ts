@@ -38,6 +38,9 @@ export interface BestSellersProduct {
   productVariants: ProductVariant[];
   /** Лимит активного варианта (если известен из API) — для корзины */
   quantityLimitPerCustomer?: number | null;
+  /** Остаток дефолтного варианта в канале (из Saleor) */
+  quantityAvailable?: number | null;
+  trackInventory?: boolean | null;
   collections: ProductCollections;
   productType?: { name: string };
   attributes?: Array<{
@@ -112,6 +115,8 @@ export interface ProductVariant {
     sku: string;
     name: string;
     quantityLimitPerCustomer?: number | null;
+    quantityAvailable?: number | null;
+    trackInventory?: boolean | null;
     attributes?: Array<{
       attribute: {
         id: string;

@@ -36,11 +36,6 @@
       color: #297230;
       text-transform: uppercase;
     }
-
-    .arraw {
-      width: 32px;
-      cursor: pointer;
-    }
   }
 
   .mobileWrapper {
@@ -119,6 +114,10 @@
         color: black;
         text-decoration: none;
         font-size: 14px;
+
+        @media (max-width: 768px) {
+          font-size: 16px;
+        }
 
         &:hover {
           text-decoration: underline;

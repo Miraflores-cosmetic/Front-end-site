@@ -7,7 +7,7 @@ import siteLogo from '@/assets/icons/Logo-mira.svg';
 import { TextField } from '@/components/text-field/TextField';
 import { Button } from '@/components/button/Button';
 import goBackIcon from '@/assets/icons/go-back.svg';
-import { setEmail, setPass, sendSignInData, setFalseSignIiStatus } from '@/store/slices/authSlice';
+import { setEmail, setPass, sendSignInData, setFalseSignIiStatus, getMe } from '@/store/slices/authSlice';
 import { useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useToast } from '@/components/toast/toast';
@@ -36,6 +36,9 @@ const LazyComponent: React.FC = () => {
   useEffect(() => {
     if (signIn.success) {
       toast.success('Вход в аккаунт выполнен!');
+      dispatch(getMe()).catch(() => {
+        /* не блокируем вход — профиль подтянется со страницы профиля */
+      });
       setTimeout(() => {
         handleNavigatetoHome();
       }, 1500);

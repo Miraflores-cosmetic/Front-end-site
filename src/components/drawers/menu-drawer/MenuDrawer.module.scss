@@ -10,19 +10,54 @@
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    padding: 0 12px;
-    height: 52px;
+    padding: 14px 16px;
+    min-height: 52px;
+    box-sizing: border-box;
+    flex-shrink: 0;
 
-    img:first-child {
-      grid-column: 1; 
+    .closeButton {
+      grid-column: 1;
+      border: none;
+      background: transparent;
+      padding: 8px;
+      margin: -8px 0 -8px -8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    img:last-child {
-      grid-column: 2; 
-      justify-self: center;
+    .closeIcon {
+      width: 20px;
+      height: 20px;
+      position: relative;
+      display: block;
+
+      &::before,
+      &::after {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 20px;
+        height: 1.5px;
+        background: #000;
+        border-radius: 1px;
+      }
+
+      &::before {
+        transform: translate(-50%, -50%) rotate(45deg);
+      }
+
+      &::after {
+        transform: translate(-50%, -50%) rotate(-45deg);
+      }
     }
 
     .menuHeaderLogo {
+      grid-column: 2;
+      justify-self: center;
       width: 118px;
       height: 24px;
       object-fit: contain;
@@ -40,7 +75,7 @@
     gap: 40px;
 
     @media (max-width: 768px) {
-      padding: 32px 32px;
+      padding: 24px 16px 32px;
       max-width: none;
       width: 100%;
     }

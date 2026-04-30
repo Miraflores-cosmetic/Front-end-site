@@ -12,7 +12,7 @@ import FavoritesContent from './contents/favorites-content/FavoritesContent';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
-import { getMe, logout } from '@/store/slices/authSlice';
+import { getMe, logout, isAuthSessionInvalidMessage } from '@/store/slices/authSlice';
 import { LogoutConfirmationModal } from '@/components/logout-confirmation-modal/LogoutConfirmationModal';
 
 const ProfilePage: React.FC = () => {
@@ -124,31 +124,15 @@ const ProfilePage: React.FC = () => {
           navigate('/sign-in');
         }
       } catch (error: any) {
-        // Если токен истек или ошибка авторизации - редирект на вход
-        const errorMessage = error?.message || error?.error?.message || '';
-        if (
-          errorMessage.includes('TokenExpired') ||
-          errorMessage.includes('expired') ||
-          errorMessage.includes('PermissionDenied') ||
-          errorMessage.includes('Signature has expired') ||
-          errorMessage.includes('ExpiredSignatureError') ||
-          errorMessage.includes('AUTHENTICATED_USER')
-        ) {
+        const errorMessage = String(error?.message || error?.error?.message || '');
+        if (isAuthSessionInvalidMessage(errorMessage)) {
           localStorage.removeItem('token');
           localStorage.removeItem('refreshToken');
           localStorage.removeItem('userId');
-          // Используем window.location для гарантированного редиректа
           window.location.href = '/sign-in';
           return;
-        } else {
-          // Для других ошибок тоже редирект, если нет данных пользователя
-          // Даем небольшую задержку, чтобы App.tsx успел восстановить авторизацию
-          setTimeout(() => {
-            if (!me) {
-              window.location.href = '/sign-in';
-            }
-          }, 500);
         }
+        console.warn('[Profile] getMe не выполнен (не ошибка сессии):', errorMessage || error);
       }
     };
 

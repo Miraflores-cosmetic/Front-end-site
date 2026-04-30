@@ -11,6 +11,7 @@ import {
 import { RootState } from '@/store/store';
 import { FavoriteButton } from '@/components/favorite-button/FavoriteButton';
 import { isAtOrOverLineLimit, maxQuantityForVariantLine } from '@/utils/checkoutLineLimits';
+import { isVariantOutOfStock } from '@/utils/stock';
 
 interface AddToCartButtonProps {
   defaultText?: string;
@@ -28,6 +29,8 @@ interface AddToCartButtonProps {
   variant?: 'home' | 'product' | 'card';
   /** Лимит с варианта (Saleor); влияет на + и добавление */
   quantityLimitPerCustomer?: number | null;
+  quantityAvailable?: number | null;
+  trackInventory?: boolean | null;
 }
 
 const AddToCartButton: React.FC<AddToCartButtonProps> = ({
@@ -44,7 +47,9 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   disabled = false,
   productId,
   variant = 'home',
-  quantityLimitPerCustomer = null
+  quantityLimitPerCustomer = null,
+  quantityAvailable = null,
+  trackInventory = null
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -60,8 +65,18 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   const maxQ = maxQuantityForVariantLine(limitSrc);
   const atLimit = count > 0 && count >= maxQ;
 
+  const lineOutOfStock = isVariantOutOfStock({
+    trackInventory: cartItem?.trackInventory ?? trackInventory,
+    quantityAvailable: cartItem?.quantityAvailable ?? quantityAvailable
+  });
+
   const handleAdd = () => {
     if (disabled || !activeVariantId) return;
+
+    if (lineOutOfStock) {
+      toast.error('Нет в наличии');
+      return;
+    }
 
     if (count === 0) {
       dispatch(
@@ -74,7 +89,9 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
           oldPrice: oldPrice,
           discount: discount,
           size: size,
-          quantityLimitPerCustomer
+          quantityLimitPerCustomer,
+          quantityAvailable,
+          trackInventory
         })
       );
       toast.success('Товар добавлен в корзину');
@@ -124,7 +141,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           type='button'
-          disabled={disabled}
+          disabled={disabled || lineOutOfStock}
         >
           {buttonText}
         </button>
@@ -155,7 +172,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
               isCard ? styles.stepperBtnCard : ''
             ].filter(Boolean).join(' ')}
             onClick={handleAdd}
-            disabled={disabled || isAtOrOverLineLimit(count, limitSrc)}
+            disabled={disabled || isAtOrOverLineLimit(count, limitSrc) || lineOutOfStock}
             aria-label='Увеличить количество'
           >
             +

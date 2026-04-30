@@ -76,6 +76,8 @@ export interface ProductVariant {
   id: string;
   sku: string;
   name: string;
+  quantityAvailable?: number | null;
+  trackInventory?: boolean | null;
   attributes?: Attribute[]; // Атрибуты варианта (для получения объёма)
   media?: {
     id: string;

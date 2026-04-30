@@ -12,7 +12,7 @@ import { CHANNEL } from '@/graphql/client';
 import { normalizeMediaUrl } from '@/utils/mediaUrl';
 
 const OrderRightPart: React.FC = () => {
-  const isTablet = useScreenMatch(956);
+  const isTablet = useScreenMatch(768);
   const { lines } = useSelector((state: RootState) => state.checkout);
   const [giftLine, setGiftLine] = useState<OrderProduct | null>(null);
 

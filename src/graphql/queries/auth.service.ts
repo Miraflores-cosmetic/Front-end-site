@@ -1,4 +1,5 @@
 import { CHANNEL, graphqlRequest, RedirectUrl } from '../client';
+import { getGraphQLEndpoint } from '@/graphql/graphqlEndpoint';
 import {
   tokenCreate,
   TokenCreateResponse,
@@ -133,23 +134,12 @@ export async function getToken(email: string, password: string) {
   });
 }
 
-// Флаг для предотвращения рекурсивных вызовов refreshToken
-let isRefreshingToken = false;
-
 export async function refreshToken(refreshToken: string) {
-  // Если уже идет обновление токена, не вызываем повторно
-  if (isRefreshingToken) {
-    throw new Error('Token refresh already in progress');
-  }
+  // Прямой fetch — без graphqlRequest (избегаем рекурсии при истечении JWT).
+  // Тот же URL, что и у основных запросов (в dev — прокси /graphql/).
+  const endpoint = getGraphQLEndpoint();
 
-  isRefreshingToken = true;
-
-  try {
-    // Используем прямой fetch, чтобы избежать рекурсии через graphqlRequest
-    const endpoint = String(import.meta.env.VITE_GRAPHQL_URL || '');
-    if (!endpoint) throw new Error('VITE_GRAPHQL_URL is not defined');
-
-    const mutation = `
+  const mutation = `
       mutation RefreshToken($refreshToken: String!) {
         tokenRefresh(refreshToken: $refreshToken) {
           token
@@ -162,32 +152,29 @@ export async function refreshToken(refreshToken: string) {
       }
     `;
 
-    const variables = { refreshToken };
+  const variables = { refreshToken };
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ query: mutation, variables })
-    });
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ query: mutation, variables })
+  });
 
-    const result = await response.json();
+  const result = await response.json();
 
-    if (result.errors && result.errors.length > 0) {
-      throw new Error(`RefreshToken failed: ${result.errors.map((e: any) => e.message).join(', ')}`);
-    }
-
-    const payload = result.data?.tokenRefresh;
-
-    if (payload?.errors?.length > 0) {
-      throw new Error(`RefreshToken failed: ${payload.errors.map((e: any) => e.message).join(', ')}`);
-    }
-
-    return payload;
-  } finally {
-    isRefreshingToken = false;
+  if (result.errors && result.errors.length > 0) {
+    throw new Error(`RefreshToken failed: ${result.errors.map((e: any) => e.message).join(', ')}`);
   }
+
+  const payload = result.data?.tokenRefresh;
+
+  if (payload?.errors?.length > 0) {
+    throw new Error(`RefreshToken failed: ${payload.errors.map((e: any) => e.message).join(', ')}`);
+  }
+
+  return payload;
 }
 
 export async function verifyToken(token: string) {

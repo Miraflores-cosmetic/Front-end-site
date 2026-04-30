@@ -14,6 +14,7 @@ import {
   decreaseQuantity
 } from '@/store/slices/checkoutSlice';
 import { isAtOrOverLineLimit } from '@/utils/checkoutLineLimits';
+import { isVariantOutOfStock } from '@/utils/stock';
 
 const BasketCard: React.FC<BasketCardProps> = ({
   variantId,
@@ -26,10 +27,21 @@ const BasketCard: React.FC<BasketCardProps> = ({
   price,
   isGift = false,
   quantityLimitPerCustomer,
+  quantityAvailable,
+  trackInventory,
 }) => {
-  const isMobile = useScreenMatch(550); // Using 550 as requested
+  const isMobile = useScreenMatch(768);
   const dispatch = useDispatch();
-  const plusDisabled = !isGift && isAtOrOverLineLimit(quantity, quantityLimitPerCustomer);
+
+  const lineOutOfStock =
+    !isGift &&
+    isVariantOutOfStock({
+      trackInventory,
+      quantityAvailable
+    });
+
+  const plusDisabled =
+    !isGift && (isAtOrOverLineLimit(quantity, quantityLimitPerCustomer) || lineOutOfStock);
 
   return (
     <div className={styles.basketCardWrapper}>
@@ -51,16 +63,22 @@ const BasketCard: React.FC<BasketCardProps> = ({
 
               {isMobile && !isGift && (
                 <div className={styles.mobilePriceRow}>
-                  <p className={styles.toMobile}>
-                    {Math.round(price).toLocaleString('ru-RU') + '₽'}
-                  </p>
-                  {oldPrice && typeof oldPrice === 'number' && oldPrice > 0 && oldPrice > price && (
-                    <p className={styles.fromMobile}>
-                      {Math.round(oldPrice).toLocaleString('ru-RU') + '₽'}
-                    </p>
-                  )}
-                  {discount && discount > 0 && (
-                    <span className={styles.mobileDiscount}>-{discount}%</span>
+                  {lineOutOfStock ? (
+                    <p className={styles.outOfStockMobile}>Нет в наличии</p>
+                  ) : (
+                    <>
+                      <p className={styles.toMobile}>
+                        {Math.round(price).toLocaleString('ru-RU') + '₽'}
+                      </p>
+                      {oldPrice && typeof oldPrice === 'number' && oldPrice > 0 && oldPrice > price && (
+                        <p className={styles.fromMobile}>
+                          {Math.round(oldPrice).toLocaleString('ru-RU') + '₽'}
+                        </p>
+                      )}
+                      {discount && discount > 0 && (
+                        <span className={styles.mobileDiscount}>-{discount}%</span>
+                      )}
+                    </>
                   )}
                 </div>
               )}
@@ -111,6 +129,8 @@ const BasketCard: React.FC<BasketCardProps> = ({
         <div className={styles.baskePrice}>
           {isGift ? (
             <p className={styles.to}>Подарок</p>
+          ) : lineOutOfStock ? (
+            <p className={styles.outOfStockDesktop}>Нет в наличии</p>
           ) : (
             <>
               <p
@@ -152,8 +172,12 @@ const BasketCard: React.FC<BasketCardProps> = ({
           <span className={styles.quantityDisplay}>{quantity}</span>
 
           <button
+            type='button'
             className={styles.controlBtn}
-            onClick={() => dispatch(increaseQuantity(variantId))}
+            disabled={plusDisabled}
+            onClick={() => {
+              if (!plusDisabled) dispatch(increaseQuantity(variantId));
+            }}
           >
             <img src={add} alt='increase' />
           </button>

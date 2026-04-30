@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/store/store';
 
 import { setActiveVariantId } from '@/store/slices/productSlice';
+import { isVariantOutOfStock } from '@/utils/stock';
 
 interface ProductTabsProps {
   options: ProductVariant[];
@@ -16,6 +17,13 @@ interface ProductTabsProps {
 const SizeTabs: React.FC<ProductTabsProps> = ({ options, activeVariantId }) => {
   const activeOption = options.find(o => o.node.id === activeVariantId);
   const dispatch = useDispatch<AppDispatch>();
+
+  const activeOutOfStock = activeOption
+    ? isVariantOutOfStock({
+        trackInventory: activeOption.node.trackInventory,
+        quantityAvailable: activeOption.node.quantityAvailable
+      })
+    : false;
 
   const getVolumeFromVariant = (variant: ProductVariant): string => {
     if (!variant?.node?.attributes || !Array.isArray(variant.node.attributes)) {
@@ -72,11 +80,17 @@ const SizeTabs: React.FC<ProductTabsProps> = ({ options, activeVariantId }) => {
         </div>
 
         <div className={styles.info}>
-          <span className={styles.price}>{formatPrice(activeOption?.node.pricing.price.gross.amount ?? 0)}₽</span>
-          {activeOption?.node.pricing.discount && (
-            <span className={styles.oldPrice}>
-              {formatPrice(activeOption.node.pricing.priceUndiscounted.gross.amount)}₽
-            </span>
+          {activeOutOfStock ? (
+            <span className={styles.outOfStockLabel}>Нет в наличии</span>
+          ) : (
+            <>
+              <span className={styles.price}>{formatPrice(activeOption?.node.pricing.price.gross.amount ?? 0)}₽</span>
+              {activeOption?.node.pricing.discount && (
+                <span className={styles.oldPrice}>
+                  {formatPrice(activeOption.node.pricing.priceUndiscounted.gross.amount)}₽
+                </span>
+              )}
+            </>
           )}
           {/* {getDiscountPercentage(activeOption) && (
           <span className={styles.discount}>-{getDiscountPercentage(activeOption)}%</span>

@@ -20,12 +20,19 @@ interface Product {
   discount?: string;
   image: string;
   isGift?: boolean;
+  quantity?: number;
 }
 
 export interface TotalAccordionProps {
   total: number;
   totalOld?: number;
+  totalItems: number;
   products: Product[];
   discount?: number;
   promo?: number;
+  hasPayableLines?: boolean;
+  addressSelected?: boolean;
+  shippingRub?: number | null;
+  shippingLoading?: boolean;
+  shippingError?: string | null;
 }

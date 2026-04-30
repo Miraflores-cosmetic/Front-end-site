@@ -18,6 +18,15 @@
     }
   }
 
+  // На мобилке не используем reveal-анимацию, чтобы не блокировать первый жест скролла (iOS)
+  @media (max-width: 768px) {
+    > * {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+
   @media (max-width: 1024px) {
     padding: 0;
   }

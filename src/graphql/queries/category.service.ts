@@ -1,4 +1,4 @@
-import { CHANNEL, graphqlRequest } from '../client';
+import { AVAILABILITY_COUNTRY_FOR_STOCK, CHANNEL, graphqlRequest } from '../client';
 import { CategoryConnection, SingleCategoryConnection } from '../types/category';
 
 /** ID атрибута sortOrder для сортировки товаров в категории (dashboard/attributes) */
@@ -134,7 +134,8 @@ export async function getCategoryBySlug(
       $channel: String,
       $first: Int,
       $after: String,
-      $sortBy: ProductOrder
+      $sortBy: ProductOrder,
+      $availabilityCountry: CountryCode!
     ) {
       category(slug: $categorySlug) {
         id
@@ -171,6 +172,8 @@ export async function getCategoryBySlug(
                 id
                 name
                 quantityLimitPerCustomer
+                trackInventory
+                quantityAvailable(countryCode: $availabilityCountry)
                 pricing {
                   price {
                     gross { amount }
@@ -191,6 +194,8 @@ export async function getCategoryBySlug(
                     sku
                     name
                     quantityLimitPerCustomer
+                    trackInventory
+                    quantityAvailable(countryCode: $availabilityCountry)
                     attributes {
                       attribute {
                         id
@@ -222,7 +227,8 @@ export async function getCategoryBySlug(
     categorySlug,
     first,
     after: after ?? null,
-    sortBy: { direction: 'ASC', attributeId: SORT_ORDER_ATTRIBUTE_ID }
+    sortBy: { direction: 'ASC', attributeId: SORT_ORDER_ATTRIBUTE_ID },
+    availabilityCountry: AVAILABILITY_COUNTRY_FOR_STOCK
   };
   const data = await graphqlRequest<SingleCategoryConnection>(query, variables);
   return data.category;

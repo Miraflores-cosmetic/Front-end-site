@@ -4,7 +4,7 @@
   gap: 32px;
   max-width: 748px;
 
-  @media (max-width: 650px) {
+  @media (max-width: 768px) {
     max-width: calc(100vw - 16px);
     padding: 0 16px;
   }  
@@ -63,7 +63,9 @@
     }
     
     @media (max-width: 768px) {
-      font-size: 13px;
+      font-size: 15px;
+      line-height: 22px;
+      color: #000;
     }
   }
 }

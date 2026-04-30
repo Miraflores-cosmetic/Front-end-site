@@ -11,8 +11,10 @@
   font-size: 16px;
   font-weight: 600;
   @media (max-width: 768px) {
-    font-size: 13px;
+    font-size: 14px;
+    line-height: 20px;
     font-weight: 600;
+    color: #000;
   }
 }
 
@@ -20,7 +22,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  text-align: right;
+  text-align: left;
 }
 
 .item {
@@ -30,7 +32,13 @@
   margin-bottom: 8px;
   width: 100%;
   gap: 6px;
-  justify-content: flex-end;
+  justify-content: flex-start;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
 }
 
 .label {
@@ -39,7 +47,10 @@
   font-size: 16px;
   white-space: nowrap;
   @media (max-width: 768px) {
-    font-size: 13px;
+    font-size: 12px;
+    line-height: 16px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
 }
 
@@ -51,7 +62,9 @@
   white-space: normal;
   overflow-wrap: break-word;
   @media (max-width: 768px) {
-    font-size: 13px;
+    font-size: 16px;
+    line-height: 24px;
+    color: #000;
   }
 }
 
@@ -63,4 +76,8 @@
   margin: 0;
   height: 1px;
   align-self: center;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
 }

@@ -69,6 +69,15 @@
     }
   }
 
+  @media (max-width: 768px) {
+    :global {
+      .slick-prev,
+      .slick-next {
+        display: none !important;
+      }
+    }
+  }
+
   &:hover :global {
     .slick-prev,
     .slick-next {

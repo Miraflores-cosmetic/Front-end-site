@@ -1,4 +1,5 @@
 import { refreshToken } from './queries/auth.service';
+import { getGraphQLEndpoint } from '@/graphql/graphqlEndpoint';
 
 export interface GraphQLError {
   message: string;
@@ -12,76 +13,116 @@ export interface GraphQLResponse<T> {
   errors?: GraphQLError[];
 }
 export const CHANNEL = 'miraflores-site';
+
+/**
+ * Страна для поля ProductVariant.quantityAvailable(countryCode).
+ * Без совпадения зон доставки склада с этой страной Saleor может отдавать 0, хотя в дашборде на складе есть остаток.
+ * Переопределение: VITE_AVAILABILITY_COUNTRY_CODE (например KZ).
+ */
+export const AVAILABILITY_COUNTRY_FOR_STOCK =
+  (import.meta.env.VITE_AVAILABILITY_COUNTRY_CODE as string | undefined)?.trim() || 'RU';
+
 export const RedirectUrl = 'http://localhost:5173/email-confirmation';
 
-// Флаг для предотвращения повторных вызовов refresh token
-let isRefreshing = false;
-let refreshPromise: Promise<string | null> | null = null;
+type RefreshOutcome =
+  | { kind: 'ok'; token: string }
+  | { kind: 'logout' }
+  /** Временная ошибка (сеть/CORS): сессию не сбрасываем */
+  | { kind: 'soft_fail' };
 
-// Функция для обновления токена
-async function tryRefreshToken(): Promise<string | null> {
-  // Если уже идет обновление токена, возвращаем существующий промис
-  if (isRefreshing && refreshPromise) {
-    return refreshPromise;
-  }
+function isLikelyTransientFailure(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    m.includes('failed to fetch') ||
+    m.includes('networkerror') ||
+    m.includes('network request failed') ||
+    m.includes('load failed') ||
+    m.includes('aborted') ||
+    m.includes('aborterror') ||
+    m.includes('timeout') ||
+    m.includes('the internet connection appears') ||
+    m.includes('подключен')
+  );
+}
 
+/** Одна общая операция refresh для всех параллельных GraphQL-запросов с истёкшим JWT */
+let refreshChain: Promise<RefreshOutcome> | null = null;
+
+async function runRefreshOnce(): Promise<RefreshOutcome> {
   const storedRefreshToken = localStorage.getItem('refreshToken');
   if (!storedRefreshToken || storedRefreshToken === 'null' || storedRefreshToken === 'undefined') {
-    return null;
+    return { kind: 'logout' };
   }
 
-  // Устанавливаем флаг и создаем промис
-  isRefreshing = true;
-  refreshPromise = (async () => {
-    try {
-      console.log('[Token Refresh] Attempting to refresh token...');
-      const result = await refreshToken(storedRefreshToken);
-      if (result.token) {
-        localStorage.setItem('token', result.token);
-        console.log('[Token Refresh] Token refreshed successfully');
-        return result.token;
-      }
-      return null;
-    } catch (error) {
-      console.error('[Token Refresh] Failed to refresh token:', error);
-      // Очищаем токены при ошибке обновления
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userId');
-      return null;
-    } finally {
-      // Сбрасываем флаг и промис после завершения
-      isRefreshing = false;
-      refreshPromise = null;
+  try {
+    console.log('[Token Refresh] Attempting to refresh token...');
+    const result = await refreshToken(storedRefreshToken);
+    if (result?.token) {
+      localStorage.setItem('token', result.token);
+      console.log('[Token Refresh] Token refreshed successfully');
+      return { kind: 'ok', token: result.token };
     }
-  })();
+    return { kind: 'logout' };
+  } catch (error: unknown) {
+    console.error('[Token Refresh] Failed to refresh token:', error);
+    const msg = String(error instanceof Error ? error.message : error);
 
-  return refreshPromise;
+    if (isLikelyTransientFailure(msg)) {
+      return { kind: 'soft_fail' };
+    }
+
+    const lower = msg.toLowerCase();
+    if (
+      lower.includes('invalidrefreshtoken') ||
+      lower.includes('jwt_invalid') ||
+      lower.includes('token refresh failed') ||
+      (lower.includes('refresh') && lower.includes('invalid'))
+    ) {
+      return { kind: 'logout' };
+    }
+
+    // Неизвестная ошибка сервера — не разлогиниваем автоматически
+    return { kind: 'soft_fail' };
+  }
+}
+
+async function queueRefreshAccessToken(): Promise<RefreshOutcome> {
+  if (!refreshChain) {
+    refreshChain = runRefreshOnce().finally(() => {
+      refreshChain = null;
+    });
+  }
+  return refreshChain;
+}
+
+function clearAuthStorage(): void {
+  localStorage.removeItem('token');
+  localStorage.removeItem('refreshToken');
+  localStorage.removeItem('userId');
+}
+
+function isJwtExpiredGraphqlError(first: GraphQLError): boolean {
+  const msg = first.message || '';
+  const extCode = (first.extensions as { exception?: { code?: string } } | undefined)?.exception?.code;
+  return (
+    msg.includes('Signature has expired') ||
+    msg.includes('token expired') ||
+    msg.includes('ExpiredSignatureError') ||
+    msg.includes('JWT_EXPIRED') ||
+    extCode === 'ExpiredSignatureError' ||
+    extCode === 'JWT_EXPIRED'
+  );
 }
 
 export async function graphqlRequest<T>(
   query: string,
   variables: Record<string, unknown> = {}
 ): Promise<T> {
-  // В development используем относительный путь для прокси Vite
-  // В production используем полный URL из .env
-  const isDev = import.meta.env.DEV;
-  let endpoint = '';
-  
-  if (isDev) {
-    // В development используем относительный путь - Vite прокси обработает
-    endpoint = '/graphql/';
-  } else {
-    // В production используем полный URL из .env
-    endpoint = String(import.meta.env.VITE_GRAPHQL_URL || '');
-  }
-  
-  if (!endpoint) throw new Error('VITE_GRAPHQL_URL is not defined');
+  const endpoint = getGraphQLEndpoint();
 
   let rawToken = localStorage.getItem('token');
   let token = rawToken && rawToken !== 'null' && rawToken !== 'undefined' ? rawToken : null;
 
-  // Логирование для отладки
   if (query.includes('accountUpdate')) {
     console.log('GraphQL Request - Token check:', {
       hasToken: !!token,
@@ -97,7 +138,6 @@ export async function graphqlRequest<T>(
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   }
-  // Без токена запросы идут анонимно (каталог, товары) — это нормально, не логируем
 
   let res = await fetch(endpoint, {
     method: 'POST',
@@ -107,55 +147,44 @@ export async function graphqlRequest<T>(
 
   let json = (await res.json()) as GraphQLResponse<T>;
 
-  // Если токен истек, пытаемся обновить его (только один раз)
   if (json.errors && json.errors.length > 0) {
     const first = json.errors[0];
     const msg = first.message || '';
-    
-    // Проверка на истекший токен
-    if (
-      msg.includes('Signature has expired') || 
-      msg.includes('token expired') ||
-      msg.includes('ExpiredSignatureError') ||
-      ((first.extensions as any)?.exception?.code === 'ExpiredSignatureError')
-    ) {
-      // Пытаемся обновить токен (с защитой от повторных вызовов)
-      const newToken = await tryRefreshToken();
-      
-      if (newToken) {
-        // Повторяем запрос с новым токеном (только один раз)
-        headers['Authorization'] = `Bearer ${newToken}`;
+
+    if (isJwtExpiredGraphqlError(first)) {
+      const outcome = await queueRefreshAccessToken();
+
+      if (outcome.kind === 'ok') {
+        headers['Authorization'] = `Bearer ${outcome.token}`;
         res = await fetch(endpoint, {
           method: 'POST',
           headers,
           body: JSON.stringify({ query, variables })
         });
         json = (await res.json()) as GraphQLResponse<T>;
-        
-        // Если после обновления токена ошибок нет, возвращаем результат
+
         if (!json.errors || json.errors.length === 0) {
           if (!json.data) {
             throw new Error('GraphQL response did not contain data');
           }
           return json.data;
         }
-        
-        // Если после обновления токена все еще есть ошибки, не пытаемся снова
-        // Это предотвращает бесконечный цикл
+
         console.error('[GraphQL] Token refresh did not resolve errors:', json.errors);
+        throw new Error(json.errors[0]?.message || 'GraphQL error after token refresh');
       }
-      
-      // Если обновление не помогло или не удалось, редиректим на вход
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userId');
-      if (typeof window !== 'undefined' && window.location.pathname !== '/sign-in') {
-        window.location.href = '/sign-in';
+
+      if (outcome.kind === 'logout') {
+        clearAuthStorage();
+        if (typeof window !== 'undefined' && window.location.pathname !== '/sign-in') {
+          window.location.href = '/sign-in';
+        }
+        throw new Error('TokenExpired');
       }
-      throw new Error('TokenExpired');
+
+      throw new Error(msg || 'JWT expired; temporary refresh failure — try again');
     }
-    
-    // Проверка на ошибки авторизации
+
     if (msg.includes('PermissionDenied') || msg.includes('AUTHENTICATED_USER')) {
       const currentToken = localStorage.getItem('token');
       console.error('Permission denied error:', {
@@ -165,14 +194,13 @@ export async function graphqlRequest<T>(
         query: query.substring(0, 100),
         responseStatus: res.status
       });
-      
+
       if (currentToken) {
         console.warn('Permission denied - token may be invalid or expired. Try refreshing auth.');
       }
       throw new Error(msg || 'Permission denied');
     }
-    
-    // Для других ошибок просто пробрасываем
+
     throw new Error(msg || 'GraphQL error');
   }
 

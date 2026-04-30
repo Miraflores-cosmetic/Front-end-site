@@ -12,6 +12,44 @@ interface DescriptionProps {
 }
 
 const Description: React.FC<DescriptionProps> = ({ description, details }) => {
+  const normalizeTextToHtml = (text: string) => {
+    const lines = text
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    if (lines.length === 0) return '';
+
+    const isBullet = (l: string) => /^[-—•]\s+/.test(l);
+    const toBullet = (l: string) => l.replace(/^[-—•]\s+/, '').trim();
+
+    let html = '';
+    let inList = false;
+
+    const closeList = () => {
+      if (inList) {
+        html += '</ul>';
+        inList = false;
+      }
+    };
+
+    for (const line of lines) {
+      if (isBullet(line)) {
+        if (!inList) {
+          html += '<ul>';
+          inList = true;
+        }
+        html += `<li>${toBullet(line)}</li>`;
+        continue;
+      }
+      closeList();
+      html += `<p>${line}</p>`;
+    }
+
+    closeList();
+    return html;
+  };
+
   // Преобразуем описание в HTML, если это EditorJS формат или markdown
   const getDescriptionHtml = () => {
     if (!description) return '';
@@ -28,12 +66,12 @@ const Description: React.FC<DescriptionProps> = ({ description, details }) => {
         return editorJsToHtml(parsed);
       } catch (e) {
         // Если не JSON, обрабатываем как обычный текст с markdown
-        return description.replace(/\n/g, '<br>');
+        return normalizeTextToHtml(description);
       }
     }
     
     // Если это обычный текст, обрабатываем markdown и переносы строк
-    return description.replace(/\n/g, '<br>');
+    return normalizeTextToHtml(description);
   };
 
   return (

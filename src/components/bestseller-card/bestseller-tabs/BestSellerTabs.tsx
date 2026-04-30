@@ -23,7 +23,7 @@ const BestSellerTabs: React.FC<ProductTabsProps> = ({ options }) => {
 
   const [activeId, setActiveId] = useState(options[0].id);
   const activeOption = options.find(o => o.id === activeId);
-  const isMobile = useScreenMatch(450);
+  const isMobile = useScreenMatch(768);
 
   if (!activeOption) {
     return null;
@@ -33,21 +33,18 @@ const BestSellerTabs: React.FC<ProductTabsProps> = ({ options }) => {
 
   return (
     <div className={styles.wrapper}>
-      {isMobile ? (
-        <p className={`${styles.tabMobile}`}>Описание</p>
-      ) : (
-        <div className={styles.tabs}>
-          {options.map(opt => (
-            <button
-              key={opt.id}
-              className={`${styles.tab} ${opt.id === activeId ? styles.active : ''}`}
-              onClick={() => setActiveId(opt.id)}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      )}
+      <div className={styles.tabs} data-mobile={isMobile ? 'true' : 'false'}>
+        {options.map(opt => (
+          <button
+            key={opt.id}
+            className={`${styles.tab} ${opt.id === activeId ? styles.active : ''}`}
+            onClick={() => setActiveId(opt.id)}
+            type="button"
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
 
       <div className={styles.info}>
         <div className={styles.activeContent}>

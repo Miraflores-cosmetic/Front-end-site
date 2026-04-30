@@ -1,4 +1,4 @@
-import { CHANNEL, graphqlRequest } from '@/graphql/client';
+import { AVAILABILITY_COUNTRY_FOR_STOCK, CHANNEL, graphqlRequest } from '@/graphql/client';
 import type {
   ProductNode,
   ProductDetailNode,
@@ -16,7 +16,7 @@ import { BestSellersResponse, ProductEdge } from '@/types/products';
 // -----------------------------------------------------------
 export async function getSingleProduct(slug: string): Promise<ProductDetailNode | null> {
   const query = `
-    query getSingleProduct($slug: String!, $channel: String!) {
+    query getSingleProduct($slug: String!, $channel: String!, $availabilityCountry: CountryCode!) {
       product(slug: $slug, channel: $channel) {
         id
         name
@@ -63,6 +63,8 @@ export async function getSingleProduct(slug: string): Promise<ProductDetailNode 
           name
           sku
           quantityLimitPerCustomer
+          trackInventory
+          quantityAvailable(countryCode: $availabilityCountry)
           attributes {
             attribute {
               id
@@ -104,6 +106,8 @@ export async function getSingleProduct(slug: string): Promise<ProductDetailNode 
               name
               sku
               quantityLimitPerCustomer
+              trackInventory
+              quantityAvailable(countryCode: $availabilityCountry)
               attributes {
                 attribute {
                   id
@@ -155,7 +159,11 @@ export async function getSingleProduct(slug: string): Promise<ProductDetailNode 
     }
   `;
 
-  const variables = { slug, channel: CHANNEL };
+  const variables = {
+    slug,
+    channel: CHANNEL,
+    availabilityCountry: AVAILABILITY_COUNTRY_FOR_STOCK
+  };
   const data = await graphqlRequest<ProductData>(query, variables);
   return data.product;
 }
@@ -313,7 +321,7 @@ export async function updateProductName(productId: string, newName: string): Pro
 
 export async function getBestsellerProducts(): Promise<{ edges: ProductEdge[] }> {
   const query = `
-    query BestsellersCollection($id: ID!, $channel: String!) {
+    query BestsellersCollection($id: ID!, $channel: String!, $availabilityCountry: CountryCode!) {
       collection(id: $id, channel: $channel) {
         id
         name
@@ -347,6 +355,8 @@ export async function getBestsellerProducts(): Promise<{ edges: ProductEdge[] }>
                 id
                 name
                 quantityLimitPerCustomer
+                trackInventory
+                quantityAvailable(countryCode: $availabilityCountry)
                 attributes {
                   attribute {
                     id
@@ -392,6 +402,8 @@ export async function getBestsellerProducts(): Promise<{ edges: ProductEdge[] }>
                     sku
                     name
                     quantityLimitPerCustomer
+                    trackInventory
+                    quantityAvailable(countryCode: $availabilityCountry)
                     attributes {
                       attribute {
                         id
@@ -436,7 +448,8 @@ export async function getBestsellerProducts(): Promise<{ edges: ProductEdge[] }>
 
   const variables = {
     id: 'Q29sbGVjdGlvbjo3',
-    channel: CHANNEL
+    channel: CHANNEL,
+    availabilityCountry: AVAILABILITY_COUNTRY_FOR_STOCK
   };
 
   try {
@@ -462,7 +475,7 @@ export async function getBestsellerProducts(): Promise<{ edges: ProductEdge[] }>
  */
 export async function getAllProducts(maxLimit: number = 100): Promise<{ edges: ProductEdge[] }> {
   const query = `
-    query AllProducts($first: Int!, $after: String, $channel: String!) {
+    query AllProducts($first: Int!, $after: String, $channel: String!, $availabilityCountry: CountryCode!) {
       products(first: $first, after: $after, channel: $channel, filter: { isPublished: true, isVisibleInListing: true }) {
         pageInfo {
           hasNextPage
@@ -498,6 +511,8 @@ export async function getAllProducts(maxLimit: number = 100): Promise<{ edges: P
               id
               name
               quantityLimitPerCustomer
+              trackInventory
+              quantityAvailable(countryCode: $availabilityCountry)
               attributes {
                 attribute {
                   id
@@ -543,6 +558,8 @@ export async function getAllProducts(maxLimit: number = 100): Promise<{ edges: P
                   sku
                   name
                   quantityLimitPerCustomer
+                  trackInventory
+                  quantityAvailable(countryCode: $availabilityCountry)
                   attributes {
                     attribute {
                       id
@@ -595,10 +612,12 @@ export async function getAllProducts(maxLimit: number = 100): Promise<{ edges: P
         first: number;
         after: string | null;
         channel: string;
+        availabilityCountry: string;
       } = {
         first: Math.min(pageSize, maxLimit - allEdges.length),
         after: after,
-        channel: CHANNEL
+        channel: CHANNEL,
+        availabilityCountry: AVAILABILITY_COUNTRY_FOR_STOCK
       };
 
       const data: {

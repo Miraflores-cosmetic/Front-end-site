@@ -7,10 +7,12 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe } from '@/store/slices/authSlice';
 import Header from '@/components/Header/Header';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
 
 const Order: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { me } = useSelector((state: RootState) => state.authSlice);
+  const isMobile = useScreenMatch(768);
 
   // Загружаем данные пользователя при загрузке страницы корзины
   useEffect(() => {
@@ -24,7 +26,7 @@ const Order: React.FC = () => {
 
   return (
     <div className={styles.orderPage}>
-      <Header />
+      {!isMobile && <Header />}
       <main className={styles.orderContainer}>
         <OrderCheckoutProvider>
           <OrderLeftPart />

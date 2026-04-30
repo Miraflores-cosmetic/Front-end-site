@@ -30,7 +30,7 @@ import NotFound from './pages/NotFound/NotFound';
 import Contacts from './pages/Contacts/Contacts';
 import SearchDrawer from '@/components/drawer/SearchDrawer';
 import { AppDispatch, RootState } from '@/store/store';
-import { getMe } from '@/store/slices/authSlice';
+import { getMe, isAuthSessionInvalidMessage } from '@/store/slices/authSlice';
 import { initializeCart } from '@/store/slices/checkoutSlice';
 
 /** Редирект /about/articles/:slug → /articles/:slug (старые ссылки и закладки) */
@@ -66,29 +66,22 @@ const App: React.FC = () => {
     if (storedToken && storedToken !== 'null' && storedToken !== 'undefined' && !isAuth) {
       hasCalledGetMeRef.current = true;
       // Вызываем getMe только если пользователь еще не авторизован
-      dispatch(getMe()).catch((error: any) => {
-        hasCalledGetMeRef.current = false; // Сбрасываем флаг при ошибке, чтобы можно было повторить
-        // Если токен невалидный или истек после попытки обновления, очищаем localStorage
-        const errorMessage = error?.message || error?.error?.message || '';
-        if (
-          errorMessage.includes('TokenExpired') || 
-          errorMessage.includes('expired') || 
-          errorMessage.includes('PermissionDenied') ||
-          errorMessage.includes('Signature has expired') ||
-          errorMessage.includes('ExpiredSignatureError')
-        ) {
-          // Проверяем, есть ли refreshToken для попытки обновления
-          const refreshToken = localStorage.getItem('refreshToken');
-          if (!refreshToken || refreshToken === 'null' || refreshToken === 'undefined') {
-            // Если нет refreshToken, очищаем и редиректим
-            localStorage.removeItem('token');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('userId');
-            if (window.location.pathname !== '/sign-in') {
-              window.location.href = '/sign-in';
-            }
+      dispatch(getMe()).catch((error: unknown) => {
+        hasCalledGetMeRef.current = false;
+        const errorMessage = String(
+          error instanceof Error ? error.message : (error as { message?: string })?.message ?? ''
+        );
+        if (!isAuthSessionInvalidMessage(errorMessage)) {
+          return;
+        }
+        const rt = localStorage.getItem('refreshToken');
+        if (!rt || rt === 'null' || rt === 'undefined') {
+          localStorage.removeItem('token');
+          localStorage.removeItem('refreshToken');
+          localStorage.removeItem('userId');
+          if (window.location.pathname !== '/sign-in') {
+            window.location.href = '/sign-in';
           }
-          // Если есть refreshToken, graphqlRequest сам попытается обновить токен
         }
       });
     }

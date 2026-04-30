@@ -6,6 +6,7 @@ import { FavoriteButton } from '@/components/favorite-button/FavoriteButton';
 import AddToBasket from '@/components/add-tobasket-button/AddToBasket';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
+import { isVariantOutOfStock } from '@/utils/stock';
 
 export const BestSellerProductCard: React.FC<{ 
   product: BestSellersProduct; 
@@ -87,6 +88,14 @@ export const BestSellerProductCard: React.FC<{
 
   const quantityLimitForCard =
     activeVariant?.node?.quantityLimitPerCustomer ?? product.quantityLimitPerCustomer ?? null;
+
+  const stockNode = activeVariant?.node as
+    | { quantityAvailable?: number | null; trackInventory?: boolean | null }
+    | undefined;
+  const outOfStock = isVariantOutOfStock({
+    trackInventory: stockNode?.trackInventory ?? product.trackInventory,
+    quantityAvailable: stockNode?.quantityAvailable ?? product.quantityAvailable
+  });
 
   const getVolumeFromVariant = (variant: any): string => {
     if (!variant?.node?.attributes || !Array.isArray(variant.node.attributes)) {
@@ -175,7 +184,9 @@ export const BestSellerProductCard: React.FC<{
               setIsHovered(false);
             }}
           >
-            {product.discount && <span className={styles.discount}>-{product.discount}%</span>}
+            {product.discount && !outOfStock && (
+              <span className={styles.discount}>-{product.discount}%</span>
+            )}
 
             {mainImage && (
               <Link 
@@ -242,6 +253,9 @@ export const BestSellerProductCard: React.FC<{
                   size={activeVariant ? getVolumeFromVariant(activeVariant) : (product.size || '')}
                   productId={product.id}
                   quantityLimitPerCustomer={quantityLimitForCard}
+                  quantityAvailable={stockNode?.quantityAvailable ?? product.quantityAvailable ?? null}
+                  trackInventory={stockNode?.trackInventory ?? product.trackInventory ?? null}
+                  disabled={outOfStock}
                 />
               </div>
             )}
@@ -270,10 +284,17 @@ export const BestSellerProductCard: React.FC<{
                 </p>
               </Link>
               <div className={styles.priceWrapper}>
-                {formattedOldPrice && product.oldPrice && product.oldPrice > product.price && (
-                  <span className={styles.oldPrice}>{formattedOldPrice}₽</span>
+                {!outOfStock &&
+                  formattedOldPrice &&
+                  product.oldPrice &&
+                  product.oldPrice > product.price && (
+                    <span className={styles.oldPrice}>{formattedOldPrice}₽</span>
+                  )}
+                {outOfStock ? (
+                  <span className={styles.outOfStockLabel}>Нет в наличии</span>
+                ) : (
+                  <span className={styles.price}>{formattedPrice}₽</span>
                 )}
-                <span className={styles.price}>{formattedPrice}₽</span>
               </div>
             </div>
             {isGiftCertificates && (activeVariant ? getVolumeFromVariant(activeVariant) : product.size) && (
@@ -295,6 +316,9 @@ export const BestSellerProductCard: React.FC<{
                 productId={product.id}
                 variant="card"
                 quantityLimitPerCustomer={quantityLimitForCard}
+                quantityAvailable={stockNode?.quantityAvailable ?? product.quantityAvailable ?? null}
+                trackInventory={stockNode?.trackInventory ?? product.trackInventory ?? null}
+                disabled={outOfStock}
               />
             ) : (
               <p className={styles.desc}>{product.description}</p>

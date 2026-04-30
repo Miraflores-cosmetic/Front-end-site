@@ -3,6 +3,37 @@ import { signUpService, getToken, getMeInfo, updateAccount } from '@/graphql/que
 import { tokenCreate } from '@/graphql/types/auth.types';
 import { AuthState, MeInfo, ResultType, SignUpArgs } from '@/types/auth'
 
+/** Сеть / обрыв — не считаем сессию недействительной */
+function isTransientGetMeFailure(message: string): boolean {
+  const m = message.toLowerCase();
+  return (
+    m.includes('failed to fetch') ||
+    m.includes('networkerror') ||
+    m.includes('network request failed') ||
+    m.includes('load failed') ||
+    m.includes('aborted') ||
+    m.includes('aborterror') ||
+    m.includes('timeout')
+  );
+}
+
+/** Разлогин только при явном ответе API о недействительной авторизации */
+export function isAuthSessionInvalidMessage(message: string): boolean {
+  if (!message?.trim()) return false;
+  if (isTransientGetMeFailure(message)) return false;
+  const m = message;
+  return (
+    m.includes('TokenExpired') ||
+    m.includes('PermissionDenied') ||
+    m.includes('Signature has expired') ||
+    m.includes('ExpiredSignatureError') ||
+    m.includes('InvalidRefreshToken') ||
+    m.includes('Token refresh did not resolve') ||
+    (m.includes('expired') &&
+      (m.includes('Signature') || m.includes('token') || m.includes('Token')))
+  );
+}
+
 export const sendSignUpData = createAsyncThunk<ResultType, SignUpArgs>(
   'auth/sendSignUpData',
   async ({ email, pass }) => {
@@ -195,15 +226,21 @@ const authSlice = createSlice({
         state.getMe.error = null;
       })
       .addCase(getMe.rejected, (state, action) => {
-        // Если getMe не удался, возможно токен невалидный
+        state.getMe.loadingStatus = false;
+        state.getMe.error = action.error;
+
+        const msg = String(action.error?.message ?? '');
+        // Раньше любая ошибка (в т.ч. обрыв сети) очищала токены — мгновенный «выход» из ЛК
+        if (!isAuthSessionInvalidMessage(msg)) {
+          return;
+        }
+
         state.isAuth = false;
         state.token = null;
         state.me = null;
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('userId');
-        state.getMe.loadingStatus = false;
-        state.getMe.error = action.error;
       })
       .addCase(updateAccountAction.pending, state => {
         // Можно добавить loading состояние если нужно

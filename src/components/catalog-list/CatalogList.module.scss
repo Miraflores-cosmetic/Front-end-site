@@ -62,21 +62,37 @@
   @media (max-width: 768px) {
     grid-template-columns: repeat(2, 1fr);
     grid-auto-rows: auto;
-    gap: 12px;
+    row-gap: 24px;
+    column-gap: 8px;
+    margin-bottom: 120px;
 
     .item {
+      .itemLink {
+        height: 220px;
+        gap: 12px;
+      }
+
       img,
       .itemImage {
         width: 100%;
-        height: auto;
+        flex: 0 0 176px;
+        height: 176px;
         object-fit: cover;
       }
       .itemTitle {
         width: 100%;
         text-align: start;
         position: static;
-        margin-top: 8px;
+        margin-top: 0;
         font-size: 13px;
+        line-height: 16px;
+        height: 32px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        -webkit-box-orient: vertical;
       }
     }
   }

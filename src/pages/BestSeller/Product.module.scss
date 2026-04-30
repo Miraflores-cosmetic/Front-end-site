@@ -12,7 +12,8 @@
   padding: 0;
   min-height: 100vh;
   background-color: $white;
-  overflow-x: hidden; // Предотвращаем горизонтальный скролл
+  /* clip вместо hidden: hidden заставляет overflow-y вычисляться как auto → второй скролл на iOS */
+  overflow-x: clip;
 
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
@@ -26,7 +27,8 @@
   padding: 24px 32px 0;
 
   @media (max-width: 768px) {
-    padding: 24px 12px 0;
+    /* как category/slug: 16px по бокам, воздух до футера */
+    padding: 24px 16px 180px;
   }
 }
 
@@ -42,7 +44,7 @@
     
     @media (max-width: 768px) {
       flex-direction: column;
-      gap: 20px;
+      gap: 24px;
     }
 
     // Заголовок для мобилки - виден только на мобилке
@@ -65,7 +67,7 @@
         max-width: 100%;
         min-width: 0;
         box-sizing: border-box;
-        margin-bottom: 20px;
+        margin-bottom: 16px;
         order: -1; // Размещаем перед другими элементами
       }
     }
@@ -126,6 +128,15 @@
         line-height: 19px;
         color: #FFFFFF;
         z-index: 2;
+
+        @media (max-width: 768px) {
+          height: 28px;
+          width: auto;
+          min-width: 44px;
+          padding: 6px 8px;
+          font-size: 12px;
+          line-height: 16px;
+        }
       }
       
       :global {
@@ -161,14 +172,14 @@
       justify-content: space-between;
       gap: 0;
       box-sizing: border-box;
-      overflow-x: hidden; // Предотвращаем горизонтальный overflow
-      overflow-y: visible; // Разрешаем вертикальный overflow
+      overflow-x: clip;
+      overflow-y: visible;
       align-self: stretch;
       @media (max-width: 768px) {
         flex: 0 0 100%;
         width: 100%;
         max-width: 100%;
-        gap: 50px;
+        gap: 32px;
         justify-content: flex-start;
       }
 
@@ -182,8 +193,8 @@
         box-sizing: border-box;
         word-wrap: break-word;
         overflow-wrap: break-word;
-        overflow-x: hidden; // Предотвращаем горизонтальный overflow
-        overflow-y: visible; // Разрешаем вертикальный overflow
+        overflow-x: clip;
+        overflow-y: visible;
         
         // Ограничиваем все дочерние элементы, кроме .desc
         > *:not(.desc) {
@@ -218,6 +229,23 @@
           text-decoration: none;
           color: inherit;
           cursor: pointer;
+
+          @media (max-width: 768px) {
+            :global(.wrapper) {
+              gap: 12px;
+            }
+
+            :global(.wrapper) p {
+              font-size: 14px;
+              line-height: 20px;
+              color: #6e6d67;
+            }
+
+            :global(.star) {
+              width: 16px;
+              height: 16px;
+            }
+          }
         }
         
         // Стили для описания - без ограничений по высоте
@@ -243,6 +271,11 @@
           height: auto !important; // Автоматическая высота
           white-space: normal !important; // Разрешаем перенос строк
           line-height: 1.5 !important; // Добавляем нормальный межстрочный интервал
+
+          @media (max-width: 768px) {
+            font-size: 14px !important;
+            line-height: 20px !important;
+          }
         }
 
         .productMetaBlock {
@@ -259,6 +292,11 @@
           word-wrap: break-word;
           overflow-wrap: break-word;
           margin: 0;
+
+          @media (max-width: 768px) {
+            font-size: 14px !important;
+            line-height: 20px !important;
+          }
         }
         
         // Ограничиваем компоненты SizeTabs внутри infoWrapper
@@ -268,7 +306,7 @@
             max-width: 100%;
             min-width: 0;
             box-sizing: border-box;
-            overflow-x: hidden;
+            overflow-x: clip;
           }
         }
       }
@@ -280,14 +318,18 @@
         max-width: 100%;
         min-width: 0; // Разрешаем сжатие
         box-sizing: border-box;
-        overflow-x: hidden; // Предотвращаем горизонтальный overflow
-        overflow-y: visible; // Разрешаем вертикальный overflow
+        overflow-x: clip;
+        overflow-y: visible;
         position: relative;
         top: -6px;
         
         // Добавляем margin-top для блока этапов на странице товара
         > :first-child {
           margin-top: 40px;
+
+          @media (max-width: 768px) {
+            margin-top: 24px;
+          }
         }
         
         // Ограничиваем ширину всех дочерних элементов
@@ -295,7 +337,7 @@
           max-width: 100%;
           min-width: 0;
           box-sizing: border-box;
-          overflow-x: hidden; // Предотвращаем выход содержимого за пределы
+          overflow-x: clip;
         }
         
         // Ограничиваем компоненты внутри
@@ -310,6 +352,88 @@
         }
       }
     }
+  }
+}
+
+.stickyBar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .stickyBar {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1200;
+    background: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .stickyBarInner {
+    display: grid;
+    /* фиксируем колонку с ценой, чтобы кнопка не "прыгала" при изменении количества цифр */
+    grid-template-columns: 110px 1fr;
+    align-items: center;
+    gap: 12px;
+    max-width: 1536px;
+    margin: 0 auto;
+  }
+
+  .stickyPrice {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    white-space: nowrap;
+    min-width: 110px;
+  }
+
+  .stickyPriceMain {
+    font-family: 'Onest', 'Avenir Next', sans-serif;
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 600;
+    color: #000;
+  }
+
+  .stickyPriceOld {
+    font-family: 'Onest', 'Avenir Next', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    color: #6e6d67;
+    text-decoration: line-through;
+  }
+
+  .stickyPriceOutOfStock {
+    font-family: 'Onest', 'Avenir Next', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    color: #6e6d67;
+  }
+
+  /* Кнопка в липкой панели — компактнее и стабильной высоты */
+  .stickyBar :global([class*='productPageWrapper']) {
+    width: 100%;
+  }
+
+  .stickyBar :global([class*='mainBtn'][class*='productPageBtn']) {
+    height: 36px;
+    padding: 8px 12px;
+    font-size: 15px;
+    line-height: 18px;
+  }
+
+  .stickyBar :global([class*='stepperProduct']) {
+    height: 36px;
+  }
+
+  .stickyBar :global([class*='stepperCount']) {
+    font-size: 15px;
+    line-height: 18px;
   }
 }
 

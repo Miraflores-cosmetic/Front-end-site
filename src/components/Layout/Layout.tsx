@@ -1,11 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import styles from './Layout.module.scss';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const layoutRef = useRef<HTMLDivElement>(null);
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
+  const isMobile = useScreenMatch(768);
 
   useEffect(() => {
+    // На мобилке reveal-анимация может блокировать первый скролл (особенно при смене направления на iOS).
+    // Поэтому сразу считаем секцию загруженной и не используем IntersectionObserver.
+    if (isMobile) {
+      setIsSectionLoaded(true);
+      return;
+    }
+
     const el = layoutRef.current;
     if (!el) return;
 
@@ -30,7 +39,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [isMobile]);
 
   return (
     <div

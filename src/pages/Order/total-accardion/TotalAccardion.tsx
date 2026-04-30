@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import styles from './TotalAccardion.module.scss';
 import { TotalAccordionProps } from '../types';
 import promoImage from '@/assets/icons/promocode.svg';
@@ -8,9 +8,36 @@ import { getCartTextPage } from '@/graphql/queries/pages.service';
 import { editorJsToHtml } from '@/utils/editorJsParser';
 import { useEffect } from 'react';
 
-const TotalAccordion: React.FC<TotalAccordionProps> = ({ total, totalOld, products }) => {
+const TotalAccordion: React.FC<TotalAccordionProps> = ({
+  total,
+  totalOld,
+  totalItems,
+  products,
+  discount,
+  promo,
+  hasPayableLines = false,
+  addressSelected = false,
+  shippingRub = null,
+  shippingLoading = false,
+  shippingError = null,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState<string | null>(null);
+
+  const formatPrice = (price: number) => Math.round(price).toLocaleString('ru-RU');
+  const itemsLabel =
+    totalItems === 1 ? 'товар' : totalItems > 1 && totalItems < 5 ? 'товара' : 'товаров';
+
+  const shippingText = useMemo(() => {
+    if (!hasPayableLines) return null;
+    if (shippingLoading) return { kind: 'muted' as const, value: 'Расчёт…' };
+    if (!shippingLoading && shippingError) return { kind: 'error' as const, value: shippingError };
+    if (!shippingLoading && !shippingError && shippingRub != null)
+      return { kind: 'value' as const, value: `${formatPrice(shippingRub)}₽` };
+    if (!shippingLoading && !shippingError && shippingRub == null && !addressSelected)
+      return { kind: 'muted' as const, value: 'Выберите адрес' };
+    return { kind: 'muted' as const, value: '—' };
+  }, [hasPayableLines, shippingLoading, shippingError, shippingRub, addressSelected]);
 
   useEffect(() => {
     getCartTextPage().then(page => {
@@ -34,9 +61,13 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({ total, totalOld, produc
           <div className={`${styles.arrow} ${isOpen ? styles.open : ''}`} />
         </div>
         <div className={styles.price}>
-          <p className={styles.count}>3 товара</p>
-          <p className={styles.priceNew}>{total}</p>
-          <p className={styles.priceOld}>{totalOld}</p>
+          <p className={styles.count}>
+            {totalItems} {itemsLabel}
+          </p>
+          <p className={styles.priceNew}>{formatPrice(total)}₽</p>
+          {totalOld != null && totalOld > total && (
+            <p className={styles.priceOld}>{formatPrice(totalOld)}₽</p>
+          )}
         </div>
       </button>
 
@@ -48,7 +79,7 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({ total, totalOld, produc
                 <div className={styles.imageWrapper}>
                   <div className={styles.countWrapper}>
                     {' '}
-                    <p className={styles.count}>{1}</p>
+                    <p className={styles.count}>{item.quantity ?? 1}</p>
                   </div>{' '}
                   <img src={item.image} alt={item.name} className={styles.image} />
                 </div>
@@ -57,17 +88,21 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({ total, totalOld, produc
                     <p className={styles.name}>{item.name}</p>
                     <p className={styles.size}>{item.size}</p>
                   </div>
-                  <p className={styles.priceBlock}>
-                    {!item.isGift && (
-                      <div className={styles.price}>
-                        <p className={styles.count}>3 товара</p>
-                        <p className={styles.priceNew}>{total}</p>
-                        <p className={styles.priceOld}>{totalOld}</p>
-                      </div>
+                  <div className={styles.priceBlock}>
+                    {item.isGift ? (
+                      <span className={styles.gift}>Подарок</span>
+                    ) : (
+                      <>
+                        <div className={styles.itemPriceRow}>
+                          <p className={styles.itemPriceNew}>{formatPrice(item.price)}₽</p>
+                          {item.oldPrice != null && item.oldPrice > item.price && (
+                            <p className={styles.itemPriceOld}>{formatPrice(item.oldPrice)}₽</p>
+                          )}
+                          {item.discount && <span className={styles.discount}>{item.discount}</span>}
+                        </div>
+                      </>
                     )}
-                    {item.discount && <span className={styles.discount}>{item.discount}</span>}
-                    {item.isGift && <span className={styles.gift}>Подарок</span>}
-                  </p>
+                  </div>
                 </div>
               </div>
             ))}
@@ -91,20 +126,46 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({ total, totalOld, produc
 
           <section className={styles.sectionSumDiscount}>
             <div className={styles.sumWrapper}>
-              <p className={styles.sum}>Сумма • {3} товара </p>
+              <p className={styles.sum}>
+                Сумма • {totalItems} {itemsLabel}
+              </p>
               <div className={styles.price}>
-                <p className={styles.priceNew}>7 180₽ </p>
-                <p className={styles.priceOld}>8 980₽</p>
+                <p className={styles.priceNew}>{formatPrice(total)}₽</p>
+                {totalOld != null && totalOld > total && (
+                  <p className={styles.priceOld}>{formatPrice(totalOld)}₽</p>
+                )}
               </div>
             </div>
-            <div className={styles.discountWrapper}>
-              <p className={styles.name}>Скидка</p>
-              <p className={styles.value}>-800₽ </p>
-            </div>
-            <div className={styles.promocodeWrapper}>
-              <p className={styles.name}>Промокод</p>
-              <p className={styles.value}>-1 000₽ </p>
-            </div>
+            {Boolean(discount && discount > 0) && (
+              <div className={styles.discountWrapper}>
+                <p className={styles.name}>Скидка</p>
+                <p className={styles.value}>-{formatPrice(discount || 0)}₽</p>
+              </div>
+            )}
+            {Boolean(promo && promo > 0) && (
+              <div className={styles.promocodeWrapper}>
+                <p className={styles.name}>Промокод</p>
+                <p className={styles.value}>-{formatPrice(promo || 0)}₽</p>
+              </div>
+            )}
+            {hasPayableLines && shippingText && (
+              <div className={styles.shippingWrapper}>
+                <p className={styles.name}>Доставка</p>
+                <div className={styles.shippingValueCol}>
+                  <p
+                    className={
+                      shippingText.kind === 'error'
+                        ? styles.shippingValueError
+                        : shippingText.kind === 'muted'
+                          ? styles.shippingValueMuted
+                          : styles.shippingValue
+                    }
+                  >
+                    {shippingText.value}
+                  </p>
+                </div>
+              </div>
+            )}
           </section>
 
           <section className={styles.infoWrapper}>

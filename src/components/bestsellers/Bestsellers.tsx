@@ -5,6 +5,7 @@ import Layout from '@/components/Layout/Layout';
 import { getBestSellers } from '@/store/slices/bestsellersSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { getAllProducts } from '@/graphql/queries/products.service';
 import { getCollectionById } from '@/graphql/queries/collection.service';
 import type { BestSellersProduct } from '@/types/products';
@@ -121,6 +122,8 @@ function mapProductNodeToBestSellers(productNode: any): BestSellersProduct {
     productType: productNode.productType ? { name: productNode.productType.name } : undefined,
     productVariants: productVariantsFormatted,
     quantityLimitPerCustomer: qlimit,
+    quantityAvailable: variant?.quantityAvailable ?? null,
+    trackInventory: variant?.trackInventory ?? null,
     collections: productNode.collections || []
   };
 }
@@ -147,6 +150,7 @@ export default function Bestsellers({
     startScroll: number;
   } | null>(null);
   const [profileSliderDragging, setProfileSliderDragging] = useState(false);
+  const isMobile = useScreenMatch(768);
 
   const { bestSellers, loading, hasAttemptedLoad } = useSelector((state: RootState) => state.bestsellerSlice);
   const dispatch = useDispatch<AppDispatch>();
@@ -329,6 +333,12 @@ export default function Bestsellers({
 
   // Intersection Observer для запуска анимации при скролле к секции
   React.useEffect(() => {
+    // На мобилке reveal через transform/opacity + горизонтальная лента ломают первый вертикальный скролл (iOS/WebKit).
+    if (isMobile) {
+      setIsSectionLoaded(true);
+      return;
+    }
+
     if (!sectionRef.current || isSectionLoaded) return;
 
     // Проверяем, видна ли секция сразу при загрузке
@@ -383,7 +393,7 @@ export default function Bestsellers({
         observer.unobserve(sectionRef.current);
       }
     };
-  }, [isSectionLoaded]);
+  }, [isMobile, isSectionLoaded]);
 
   // Горизонтальный скролл ленты: тачпад (преобладает deltaX), Shift+колесо. Вертикальное колесо — прокрутка страницы.
   useEffect(() => {

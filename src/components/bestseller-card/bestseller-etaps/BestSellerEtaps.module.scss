@@ -11,13 +11,28 @@
   @media (max-width: 768px) {
     margin-top: 52px;
     margin-bottom: 20px;
+    padding-left: 0;
+    padding-right: 0;
   }
   .etaps {
     display: flex;
     align-items: start;
     gap: 24px;
     @media (max-width: 768px) {
-      gap: 8px;
+      width: 100%;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 24px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      overflow-y: hidden;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
 
     .etap {
@@ -26,6 +41,7 @@
       gap: 24px;
       cursor: pointer;
       transition: color 0.25s ease;
+      flex: 0 0 auto;
 
       &:hover .etapTextWrapper {
         .etapTitle,
@@ -37,9 +53,6 @@
       @media (max-width: 768px) {
         gap: 12px;
       }
-      @media (max-width: 400px) {
-        gap: 6px;
-      }
       .etapTextWrapper {
         .etapTitle {
           font-size: 16px;
@@ -49,12 +62,6 @@
           font-weight: 300;
           color: #6e6d67cc;
           transition: color 0.25s ease;
-          @media (max-width: 956px) {
-            font-size: 24px;
-          }
-          @media (max-width: 570px) {
-            font-size: 20px;
-          }
           @media (max-width: 768px) {
             font-size: 15px;
           }
@@ -64,9 +71,6 @@
           font-family: 300;
           font-size: 16px;
           transition: color 0.25s ease;
-          @media (max-width: 956px) {
-            font-size: 14px;
-          }
           @media (max-width: 768px) {
             font-size: 13px;
           }
@@ -79,6 +83,7 @@
       gap: 24px;
       cursor: pointer;
       transition: color 0.25s ease;
+      flex: 0 0 auto;
 
       &:hover .etapTextWrapper {
         .etapTitle,
@@ -90,9 +95,6 @@
       @media (max-width: 768px) {
         gap: 12px;
       }
-      @media (max-width: 400px) {
-        gap: 6px;
-      }
 
       .etapTextWrapper {
         .etapTitle {
@@ -103,12 +105,6 @@
           font-weight: 300;
           color: black;
           transition: color 0.25s ease;
-          @media (max-width: 956px) {
-            font-size: 24px;
-          }
-          @media (max-width: 570px) {
-            font-size: 20px;
-          }
           @media (max-width: 768px) {
             font-size: 16px;
           }
@@ -118,13 +114,16 @@
           font-family: 300;
           font-size: 16px;
           transition: color 0.25s ease;
-          @media (max-width: 956px) {
-            font-size: 14px;
-          }
           @media (max-width: 768px) {
             font-size: 13px;
           }
         }
+      }
+    }
+
+    @media (max-width: 768px) {
+      img.check {
+        display: none;
       }
     }
   }

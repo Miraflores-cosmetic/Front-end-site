@@ -31,7 +31,7 @@ interface OrderFormData {
 const OrderLeftPart: React.FC = () => {
   const navigate = useNavigate();
   const { me } = useSelector((state: RootState) => state.authSlice);
-  const isMobile = useScreenMatch(500);
+  const isMobile = useScreenMatch(768);
 
   // 2. Consolidated State (Cleaner hooks)
   const [formData, setFormData] = useState<OrderFormData>({
@@ -242,18 +242,62 @@ const OrderLeftPart: React.FC = () => {
     }
   };
 
-  const products = [
-    {
-      id: 1,
-      name: 'Цветочный мист с экстрактами розы',
-      size: '50 мл',
-      price: 3590,
-      oldPrice: 4800,
-      discount: '-23%',
-      image: krem,
-    },
-    // ... items
-  ];
+  const mobileAccordionData = React.useMemo(() => {
+    const safeLines = lines || [];
+
+    let totalItems = 0;
+    let totalPrice = 0;
+    let totalOldPrice = 0;
+
+    safeLines.forEach((line: any) => {
+      const q = Number(line.quantity ?? 0) || 0;
+      const price = Number(line.price ?? 0) || 0;
+      const old = Number(line.oldPrice ?? 0) || 0;
+
+      totalItems += q;
+      totalPrice += price * q;
+      totalOldPrice += (old > price ? old : price) * q;
+    });
+
+    const totalDiscount = Math.max(0, totalOldPrice - totalPrice);
+    const promo = voucherDiscount || 0;
+
+    const hasPayableLines = safeLines.some((line: any) => !line.isGift);
+    const shippingIncluded =
+      hasPayableLines && !cdekShippingLoading && (cdekShippingRub ?? null) != null && !cdekShippingError;
+    const shippingAmount = shippingIncluded ? (cdekShippingRub ?? 0) : 0;
+
+    const finalTotal = Math.max(0, totalPrice - promo + shippingAmount);
+
+    const products = safeLines.map((line: any, idx: number) => {
+      const price = Number(line.price ?? 0) || 0;
+      const old = Number(line.oldPrice ?? 0) || 0;
+      const discountLabel =
+        old > price && old > 0 ? `-${Math.round(((old - price) / old) * 100)}%` : undefined;
+
+      return {
+        id: idx + 1,
+        name: line.title || 'Товар',
+        size: line.size || '',
+        price,
+        oldPrice: old > price ? old : undefined,
+        discount: discountLabel,
+        image: line.thumbnail || krem,
+        isGift: Boolean(line.isGift),
+        quantity: Number(line.quantity ?? 1) || 1,
+      };
+    });
+
+    return {
+      totalItems,
+      finalTotal,
+      totalOldPrice,
+      totalDiscount,
+      promo,
+      products,
+      hasPayableLines,
+    };
+  }, [lines, voucherDiscount, cdekShippingRub, cdekShippingLoading, cdekShippingError]);
 
   return (
     <section className={styles.left}>
@@ -270,9 +314,18 @@ const OrderLeftPart: React.FC = () => {
       {isMobile && (
         <section className={styles.mobileHeaderContainer}>
           <div className={styles.mobileHeader}>
-            <img src={goBack} alt='goBack' className={styles.goBackMobile} />
+            <button
+              type="button"
+              className={styles.goBackBtn}
+              aria-label="Назад"
+              onClick={() => navigate(-1)}
+            >
+              <img src={goBack} alt='' className={styles.goBackMobile} />
+            </button>
             <div className={styles.logoWrapper}>
-              <img src={siteLogo} alt='Miraflores' className={styles.Miraflores_logo} />
+              <Link to="/" aria-label="На главную">
+                <img src={siteLogo} alt='Miraflores' className={styles.Miraflores_logo} />
+              </Link>
             </div>
           </div>
         </section>
@@ -281,11 +334,17 @@ const OrderLeftPart: React.FC = () => {
       {isMobile && (
         <section>
           <TotalAccordion
-            total={13590}
-            totalOld={24800}
-            products={products}
-            discount={800}
-            promo={1000}
+            total={mobileAccordionData.finalTotal}
+            totalOld={mobileAccordionData.totalOldPrice}
+            totalItems={mobileAccordionData.totalItems}
+            products={mobileAccordionData.products}
+            discount={mobileAccordionData.totalDiscount}
+            promo={mobileAccordionData.promo}
+            shippingRub={cdekShippingRub ?? null}
+            shippingLoading={cdekShippingLoading}
+            shippingError={cdekShippingError ?? null}
+            addressSelected={Boolean(selectedAddress)}
+            hasPayableLines={mobileAccordionData.hasPayableLines}
           />
         </section>
       )}

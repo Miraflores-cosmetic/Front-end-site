@@ -1,4 +1,4 @@
-import { CHANNEL, graphqlRequest } from '../client';
+import { AVAILABILITY_COUNTRY_FOR_STOCK, CHANNEL, graphqlRequest } from '../client';
 
 export interface CollectionProduct {
   id: string;
@@ -110,7 +110,7 @@ export interface CollectionResponse {
  */
 export async function getCollectionById(id: string, first: number = 10): Promise<Collection | null> {
   const query = `
-    query GetCollection($id: ID!, $channel: String!, $first: Int!) {
+    query GetCollection($id: ID!, $channel: String!, $first: Int!, $availabilityCountry: CountryCode!) {
       collection(id: $id, channel: $channel) {
         id
         name
@@ -147,6 +147,8 @@ export async function getCollectionById(id: string, first: number = 10): Promise
                 id
                 name
                 quantityLimitPerCustomer
+                trackInventory
+                quantityAvailable(countryCode: $availabilityCountry)
                 pricing {
                   price {
                     gross {
@@ -171,6 +173,8 @@ export async function getCollectionById(id: string, first: number = 10): Promise
                     id
                     name
                     quantityLimitPerCustomer
+                    trackInventory
+                    quantityAvailable(countryCode: $availabilityCountry)
                     pricing {
                       price {
                         gross {
@@ -215,7 +219,12 @@ export async function getCollectionById(id: string, first: number = 10): Promise
     }
   `;
 
-  const variables = { id, channel: CHANNEL, first };
+  const variables = {
+    id,
+    channel: CHANNEL,
+    first,
+    availabilityCountry: AVAILABILITY_COUNTRY_FOR_STOCK
+  };
   
   try {
     const data = await graphqlRequest<CollectionResponse>(query, variables);

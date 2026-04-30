@@ -4,11 +4,8 @@
   padding: 24px 32px 0 32px;
   min-height: 100vh;
   background-color: $white;
-  overflow-x: hidden;
-  @media (max-width: 768px) {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
+  /* clip вместо hidden: hidden заставляет браузер вычислять overflow-y как auto → второй скролл на iOS (первый жест «теряется») */
+  overflow-x: clip;
 
   .categoryLoader {
     display: flex;
@@ -26,6 +23,11 @@
   max-width: 1536px;
   margin: 0 auto;
 
+  @media (max-width: 768px) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
   // Начальное состояние — скрыто для анимации
   >* {
     opacity: 0;
@@ -36,6 +38,15 @@
   &.sectionAnimated>* {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  // На мобилке не анимируем появление контента (иначе может "гасить" первый скролл на iOS)
+  @media (max-width: 768px) {
+    >* {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
   }
 
   .wrapper {
@@ -63,7 +74,7 @@
       row-gap: 32px;
       column-gap: 8px;
       padding-top: 32px;
-      padding-bottom: 32px;
+      padding-bottom: 120px;
     }
   }
 

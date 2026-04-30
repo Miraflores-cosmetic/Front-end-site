@@ -1,8 +1,5 @@
 import React from 'react';
 import styles from './MenuList.module.scss';
-import { useScreenMatch } from '@/hooks/useScreenMatch';
-import arrow from '@/assets/icons/ArrowToRight.svg';
-import mobileImage from '@/assets/images/mobileImage.webp';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { closeDrawer } from '@/store/slices/drawerSlice';
@@ -21,7 +18,6 @@ type MenuListProps = {
 };
 
 const MenuList: React.FC<MenuListProps> = ({ title, items, withColor, link }) => {
-  const isMobile = useScreenMatch(450);
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -55,23 +51,7 @@ const MenuList: React.FC<MenuListProps> = ({ title, items, withColor, link }) =>
         onKeyDown={isTitleClickable ? (e) => e.key === 'Enter' && handletoCatalog() : undefined}
       >
         <p className={`${styles.menuTitle} ${withColor ? styles.withColor : ''}`}>{title}</p>
-        {isTitleClickable && <img src={arrow} alt='' className={styles.arraw} />}
       </div>
-      {isMobile && title === 'Аккаунт' && (
-        <div className={styles.mobileWrapper}>
-          <p className={styles.mobileWrapperTxt}>Подберем персональный уход за 5 мин!</p>
-          <img src={mobileImage} alt='mobileImage' className={styles.mobileImage} />
-          <a 
-            href="https://t.me/Miraflores_Cosmetics_Bot" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className={styles.mobileBtn}
-            onClick={handleCloseDrawer}
-          >
-            Пройти тест
-          </a>
-        </div>
-      )}
       <ul className={styles.menuList}>
         {items.map((item, index) => (
           <li key={index} className={styles.menuItem}>

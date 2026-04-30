@@ -22,13 +22,12 @@ import HeroSlider from '@/components/HeroSlider/HeroSlider';
 import { ReviewModal } from '@/components/review-modal/ReviewModal';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
-import { Product } from '@/types/types';
-import { getSingleProduct } from '@/graphql/queries/products.service';
 import { generateBestsellerTabsOptions } from '@/utils/tabsGenerator';
 import { editorJsToHtml } from '@/utils/editorJsParser';
 
 import { getProductBySlug } from '@/store/slices/productSlice';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
+import { isVariantOutOfStock } from '@/utils/stock';
 
 const LazyComponent: React.FC = () => {
   const { item, activeVariantId, loading } = useSelector((state: RootState) => state.product);
@@ -39,27 +38,7 @@ const LazyComponent: React.FC = () => {
   }, [slug]);
 
   const navigate = useNavigate();
-  const [activeSize, setActiveSize] = useState(null);
-  const [actualProduct, setActualProduct] = useState<Product | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
-
-  useEffect(() => {
-    getSingleProduct(slug || '')
-      .then(res => {
-        console.log("*******")
-        console.log("getSingleProduct")
-        console.log(res);
-      })
-      .catch(err => {
-        console.log(err?.message);
-      });
-  }, [slug]);
-
-  useEffect(()=>{
-    console.log("*******")
-    console.log("myItem")
-    console.log(item);
-  },[item])
 
   const getCurrentProductEtap = (): string | null => {
     if (!item?.attributes) return null;
@@ -203,11 +182,7 @@ const LazyComponent: React.FC = () => {
   const availableEtaps = allEtaps;
 
 
-  const isMobile = useScreenMatch(756);
-
-  const handleSizeChange = (option: any) => {
-    setActiveSize(option);
-  };
+  const isMobile = useScreenMatch(768);
 
   // Используем импортированную функцию editorJsToHtml из utils, которая правильно обрабатывает все блоки
 
@@ -225,6 +200,15 @@ const LazyComponent: React.FC = () => {
     const undiscountedPrice = activeVariant?.node.pricing.priceUndiscounted ? (activeVariant.node.pricing.priceUndiscounted as any)?.gross?.amount : null;
     const oldPrice = undiscountedPrice && undiscountedPrice > currentPrice ? undiscountedPrice : null;
     const discount = oldPrice && currentPrice > 0 ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100) : null;
+    const formattedPrice = Math.round(currentPrice).toLocaleString('ru-RU');
+    const formattedOldPrice = oldPrice ? Math.round(oldPrice).toLocaleString('ru-RU') : null;
+
+    const variantOutOfStock = activeVariant
+      ? isVariantOutOfStock({
+          trackInventory: activeVariant.node.trackInventory,
+          quantityAvailable: activeVariant.node.quantityAvailable
+        })
+      : false;
 
     // Сортируем медиа по sortOrder (как в дашборде), затем маппим в { url, alt, id }
     const sortMediaByOrder = (media: Array<{ url: string; alt?: string; id?: string; sortOrder?: number | null }>) =>
@@ -266,7 +250,7 @@ const LazyComponent: React.FC = () => {
           
           <article className={styles.imagePart}>
             <div className={styles.imageWrapper}>
-              {discount && discount > 0 && (
+              {discount && discount > 0 && !variantOutOfStock && (
                 <span className={styles.discount}>-{discount}%</span>
               )}
               <HeroSlider
@@ -415,6 +399,8 @@ const LazyComponent: React.FC = () => {
             <div className={styles.bottomWrapper}>
               <Etaps items={etapsData} />
               {(() => {
+                // На мобилке кнопку держим только в липкой панели снизу
+                if (isMobile) return null;
                 if (!activeVariant) return null;
                 
                 const getVolumeFromVariant = (variant: any): string => {
@@ -459,12 +445,20 @@ const LazyComponent: React.FC = () => {
                     defaultText={'Добавить в корзину'}
                     activeText={'Добавить в корзину'}
                     hoverText={'Добавить в корзину'}
-                    disabled={!activeVariantId}
+                    disabled={!activeVariantId || variantOutOfStock}
                     productId={item.id}
                     variant="product"
                     quantityLimitPerCustomer={
                       (activeVariant?.node as { quantityLimitPerCustomer?: number | null } | undefined)
                         ?.quantityLimitPerCustomer ?? null
+                    }
+                    quantityAvailable={
+                      (activeVariant?.node as { quantityAvailable?: number | null } | undefined)
+                        ?.quantityAvailable ?? null
+                    }
+                    trackInventory={
+                      (activeVariant?.node as { trackInventory?: boolean | null } | undefined)
+                        ?.trackInventory ?? null
                     }
                   />
                 );
@@ -472,6 +466,81 @@ const LazyComponent: React.FC = () => {
             </div>
           </article>
         </section>
+
+        {isMobile && activeVariant && (
+          <div className={styles.stickyBar} role="region" aria-label="Панель добавления в корзину">
+            <div className={styles.stickyBarInner}>
+              <div className={styles.stickyPrice}>
+                {variantOutOfStock ? (
+                  <span className={styles.stickyPriceOutOfStock}>Нет в наличии</span>
+                ) : (
+                  <>
+                    <span className={styles.stickyPriceMain}>{formattedPrice}₽</span>
+                    {formattedOldPrice ? (
+                      <span className={styles.stickyPriceOld}>{formattedOldPrice}₽</span>
+                    ) : null}
+                  </>
+                )}
+              </div>
+
+              {(() => {
+                const getVolumeFromVariant = (variant: any): string => {
+                  if (!variant?.node?.attributes || !Array.isArray(variant.node.attributes)) {
+                    return variant?.node?.name || '';
+                  }
+
+                  const volumeAttr = variant.node.attributes.find((attr: any) => {
+                    const slug = attr.attribute?.slug?.toLowerCase() || '';
+                    const name = attr.attribute?.name?.toLowerCase() || '';
+                    return slug === 'obem' || slug === 'volume' || name.includes('объем') || name.includes('volume');
+                  });
+
+                  if (volumeAttr) {
+                    const value = volumeAttr.values?.[0];
+                    if (value?.name) return value.name;
+                    if (value?.plainText) return value.plainText;
+                    if (value?.slug) return value.slug;
+                  }
+
+                  return variant?.node?.name || '';
+                };
+
+                const volume = getVolumeFromVariant(activeVariant);
+
+                return (
+                  <AddToCartButton
+                    activeVariantId={activeVariantId}
+                    title={item.name}
+                    thumbnail={item.thumbnail}
+                    price={currentPrice}
+                    oldPrice={oldPrice}
+                    discount={discount}
+                    size={volume}
+                    defaultText={'В корзину'}
+                    activeText={'В корзину'}
+                    hoverText={'В корзину'}
+                    disabled={!activeVariantId || variantOutOfStock}
+                    productId={item.id}
+                    variant="product"
+                    quantityLimitPerCustomer={
+                      (activeVariant?.node as { quantityLimitPerCustomer?: number | null } | undefined)
+                        ?.quantityLimitPerCustomer ?? null
+                    }
+                    quantityAvailable={
+                      (activeVariant?.node as { quantityAvailable?: number | null } | undefined)
+                        ?.quantityAvailable ?? null
+                    }
+                    trackInventory={
+                      (activeVariant?.node as { trackInventory?: boolean | null } | undefined)
+                        ?.trackInventory ?? null
+                    }
+                  />
+                );
+              })()}
+            </div>
+          </div>
+        )}
+
         <div className={styles.productSections}>
           <BestSellerTabs options={generateBestsellerTabsOptions(item)} />
           <BestSellerEtaps 

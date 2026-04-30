@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import styles from './MenuDrawer.module.scss';
 import MenuList from './menu-list/MenuList';
 import siteLogo from '@/assets/icons/Logo-mira.svg';
-import menuLine from '@/assets/icons/menuLine.svg';
 import { RootState, AppDispatch } from '@/store/store';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import MenuRightPart from './menu-right-part/MenuRightPart';
@@ -11,8 +10,8 @@ import { closeDrawer } from '@/store/slices/drawerSlice';
 import { getMenuItems } from '@/store/slices/navSlice';
 
 const MenuDrawer: React.FC = () => {
-  const isMobile = useScreenMatch(450);
-  const { items, loading } = useSelector((state: RootState) => state.nav);
+  const isMobile = useScreenMatch(768);
+  const { items } = useSelector((state: RootState) => state.nav);
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
@@ -54,7 +53,7 @@ const MenuDrawer: React.FC = () => {
     },
     info: {
       title: 'Информация',
-      link: '', // без ссылки и стрелки — только заголовок
+      link: '',
       items: [
         { label: 'Оферта и условия пользования', href: '/info/oferta-i-usloviia-polzovaniia' },
         { label: 'Политика конфиденциальности', href: '/info/politika-konfidentsialnosti' },
@@ -64,27 +63,27 @@ const MenuDrawer: React.FC = () => {
     },
     support: {
       title: 'Поддержка',
-      link: '', // без ссылки и стрелки — только заголовок
+      link: '',
       items: [
         { label: 'Статус заказа', href: '/profile' },
         { label: 'Контакты', href: '/contacts' }
       ]
-    },
-
-    ...(isMobile && {
-      account: {
-        title: 'Аккаунт',
-        items: []
-      }
-    })
+    }
   };
 
   return (
     <div className={styles.menuContainer}>
       {isMobile && (
         <div className={styles.menuMobileHeader}>
-          <img src={menuLine} alt='menuLine' onClick={() => dispatch(closeDrawer())} />
-          <img src={siteLogo} alt='Miraflores' className={styles.menuHeaderLogo} />
+          <button
+            type="button"
+            className={styles.closeButton}
+            aria-label="Закрыть меню"
+            onClick={() => dispatch(closeDrawer())}
+          >
+            <span className={styles.closeIcon} aria-hidden="true" />
+          </button>
+          <img src={siteLogo} alt="Miraflores" className={styles.menuHeaderLogo} />
         </div>
       )}
       <div className={styles.left}>

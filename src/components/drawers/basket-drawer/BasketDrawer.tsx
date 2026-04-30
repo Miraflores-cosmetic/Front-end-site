@@ -25,7 +25,7 @@ const BasketDrawer: React.FC = () => {
     threshold: 15780,
     successText: 'Бесплатная доставка!'
   });
-  const isMobile = useScreenMatch(664);
+  const isMobile = useScreenMatch(768);
 
   const remainder = Math.max(0, progressBar.threshold - totalToPrice);
   const progressPercent =
@@ -40,6 +40,7 @@ const BasketDrawer: React.FC = () => {
   const [isPromoInputOpen, setIsPromoInputOpen] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [isApplying, setIsApplying] = useState(false);
+  const [isOrdering, setIsOrdering] = useState(false);
   const [giftLine, setGiftLine] = useState<{
     variantId: string;
     title: string;
@@ -93,10 +94,16 @@ const BasketDrawer: React.FC = () => {
     });
   }, [lines]);
 
-  const handleOrder = () => {
-    dispatch(closeDrawer());
+  const isCartEmpty = lines.length === 0;
+  const isOrderDisabled = isCartEmpty || isOrdering;
 
+  const handleOrder = async () => {
+    if (isOrderDisabled) return;
+
+    setIsOrdering(true);
     if (!isAuth) {
+      setIsOrdering(false);
+      dispatch(closeDrawer());
       navigate('/sign-in');
       return;
     }
@@ -108,15 +115,29 @@ const BasketDrawer: React.FC = () => {
       };
     });
 
-    dispatch(
-      createCheckoutApi({
-        email: email,
-        channel: CHANNEL,
-        lines: adaptedLines
-      })
-    );
+    try {
+      await dispatch(
+        createCheckoutApi({
+          email: email,
+          channel: CHANNEL,
+          lines: adaptedLines
+        })
+      ).unwrap();
 
-    navigate('/order');
+      setIsOrdering(false);
+      dispatch(closeDrawer());
+      navigate('/order');
+    } catch (error: any) {
+      setIsOrdering(false);
+      // rejectWithValue из RTK попадает в unwrap как error.payload, не в error.message
+      const payloadMsg =
+        typeof error?.payload === 'string'
+          ? error.payload
+          : typeof error?.payload?.message === 'string'
+            ? error.payload.message
+            : '';
+      toast.error(payloadMsg || error?.message || 'Ошибка при оформлении заказа');
+    }
   };
 
   const handleClearCart = () => {
@@ -200,42 +221,42 @@ const BasketDrawer: React.FC = () => {
           ) : (
             <p className={styles.sum}>Корзина пуста</p>
           )}
-        </div>
 
-        {/* Promo Code Section */}
-        <div className={styles.promoSection}>
-          <div className={styles.promoRow} onClick={handleTogglePromoInput}>
-            <img src={promocodeIcon} alt='promocode' className={styles.promoIcon} />
-            <span className={styles.promoText}>
-              {voucherCode ? 'Промокод применен' : 'Добавить промокод или сертификат'}
-            </span>
-            <span className={styles.promoPlus}>{voucherCode ? '−' : (isPromoInputOpen ? '−' : '+')}</span>
-          </div>
-
-          {isPromoInputOpen && !voucherCode && (
-            <div className={styles.promoInputWrapper}>
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value)}
-                onKeyPress={handlePromoKeyPress}
-                placeholder="Введите промокод"
-                className={styles.promoInput}
-                disabled={isApplying}
-              />
-              <button
-                onClick={handleApplyPromo}
-                disabled={isApplying || !promoCode.trim()}
-                className={styles.promoApplyBtn}
-              >
-                {isApplying ? '...' : 'Применить'}
-              </button>
+          {/* Promo Code Section (scrolls with items) */}
+          <div className={styles.promoSection}>
+            <div className={styles.promoRow} onClick={handleTogglePromoInput}>
+              <img src={promocodeIcon} alt='promocode' className={styles.promoIcon} />
+              <span className={styles.promoText}>
+                {voucherCode ? 'Промокод применен' : 'Добавить промокод или сертификат'}
+              </span>
+              <span className={styles.promoPlus}>{voucherCode ? '−' : (isPromoInputOpen ? '−' : '+')}</span>
             </div>
-          )}
 
-          {voucherCode && (
-            <p className={styles.appliedPromo}>{voucherCode}</p>
-          )}
+            {isPromoInputOpen && !voucherCode && (
+              <div className={styles.promoInputWrapper}>
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => setPromoCode(e.target.value)}
+                  onKeyPress={handlePromoKeyPress}
+                  placeholder="Введите промокод"
+                  className={styles.promoInput}
+                  disabled={isApplying}
+                />
+                <button
+                  onClick={handleApplyPromo}
+                  disabled={isApplying || !promoCode.trim()}
+                  className={styles.promoApplyBtn}
+                >
+                  {isApplying ? '...' : 'Применить'}
+                </button>
+              </div>
+            )}
+
+            {voucherCode && (
+              <p className={styles.appliedPromo}>{voucherCode}</p>
+            )}
+          </div>
         </div>
       </div>
       <div className={styles.orderButtonContainer}>
@@ -262,8 +283,21 @@ const BasketDrawer: React.FC = () => {
           </div>
 
           <div className={styles.actions}>
-            <button className={styles.orderButtonLeft} onClick={handleOrder}>
-              {isAuth ? 'Оформить заказ' : 'Войти'}
+            <button
+              className={styles.orderButtonLeft}
+              onClick={handleOrder}
+              disabled={isOrderDisabled}
+              aria-disabled={isOrderDisabled}
+              aria-busy={isOrdering}
+            >
+              {isOrdering ? (
+                <>
+                  <span className={styles.orderButtonLoader} aria-hidden="true" />
+                  <span>Загрузка</span>
+                </>
+              ) : (
+                <span>{isAuth ? 'Оформить заказ' : 'Войти'}</span>
+              )}
             </button>
           </div>
         </div>

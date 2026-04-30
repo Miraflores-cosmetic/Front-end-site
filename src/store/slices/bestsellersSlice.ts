@@ -142,7 +142,9 @@ const bestsellerSlice = createSlice({
                 }
               };
             }),
-            collections: node.node.collections || []
+            collections: node.node.collections || [],
+            quantityAvailable: variant?.quantityAvailable ?? null,
+            trackInventory: variant?.trackInventory ?? null
           });
         });
         state.bestSellers = newBestSellers;

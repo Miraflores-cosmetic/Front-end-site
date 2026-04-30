@@ -68,12 +68,35 @@
   font-size: 24px;
   font-weight: 600;
   color: #000;
+
+  @media (max-width: 768px) {
+    font-family: 'Onest', 'Avenir Next', sans-serif;
+    font-size: 16px;
+    line-height: 20px;
+  }
 }
 
 .oldPrice {
   font-size: 20px;
   color: #6e6d67b3;
   text-decoration: line-through;
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+    line-height: 20px;
+  }
+}
+
+.outOfStockLabel {
+  font-size: 24px;
+  font-weight: 600;
+  color: #6e6d67;
+
+  @media (max-width: 768px) {
+    font-family: 'Onest', 'Avenir Next', sans-serif;
+    font-size: 16px;
+    line-height: 20px;
+  }
 }
 
 .discount {

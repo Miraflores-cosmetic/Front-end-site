@@ -6,6 +6,13 @@
     display: flex;
     justify-content: space-between;
 
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      gap: 16px;
+    }
+
     &.etapsLeft {
       justify-content: flex-start;
       gap: 40px;
@@ -17,7 +24,7 @@
       gap: 8px;
       
       @media (max-width: 768px) {
-        gap: 0px;
+        gap: 8px;
       }
       
       .etapTextWrapper {
@@ -25,7 +32,7 @@
           font-weight: 600;
           font-size: 16px;
           @media (max-width: 768px) {
-            font-size: 13px;
+            font-size: 16px;
           }
         }
         .etapName {
@@ -33,7 +40,7 @@
           font-family: 300;
           font-size: 16px;
           @media (max-width: 768px) {
-            font-size: 13px;
+            font-size: 16px;
             line-height: 1.2;
           }
           @media (max-width: 956px) {

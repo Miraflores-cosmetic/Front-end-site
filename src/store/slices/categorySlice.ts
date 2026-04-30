@@ -317,6 +317,12 @@ const categorySlice = createSlice({
             quantityLimitPerCustomer:
               (node.defaultVariant as { quantityLimitPerCustomer?: number | null } | undefined)
                 ?.quantityLimitPerCustomer ?? null,
+            quantityAvailable:
+              (node.defaultVariant as { quantityAvailable?: number | null } | undefined)
+                ?.quantityAvailable ?? null,
+            trackInventory:
+              (node.defaultVariant as { trackInventory?: boolean | null } | undefined)
+                ?.trackInventory ?? null,
             collections: node.collections || []
           });
         });

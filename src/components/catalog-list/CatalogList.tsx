@@ -59,31 +59,8 @@ const CatalogList: React.FC = () => {
         setItems(categoryItems.slice(0, 12));
       } catch (error) {
         console.error('Error fetching categories:', error);
-        // Fallback на статичные данные при ошибке
-        setItems([
-          {
-            id: '1',
-            title: isMobile ? 'Волосы' : 'Наборы',
-            image: isMobile ? hear : kremgroup,
-            slug: ''
-          },
-          { id: '2', title: 'Лицо', image: isMobile ? etap3 : hear, slug: '' },
-          { id: '3', title: 'Волосы', image: isMobile ? hear : etap3, slug: '' },
-          { id: '4', title: 'Лицо', image: isMobile ? etap3 : hear, slug: '' },
-          { id: '5', title: 'Волосы', image: isMobile ? hear : etap2, slug: '' },
-          { id: '6', title: 'Лицо', image: isMobile ? etap3 : face, slug: '' },
-          {
-            id: '7',
-            title: isMobile ? 'Волосы' : 'Наборы',
-            image: isMobile ? hear : etap4,
-            slug: ''
-          },
-          { id: '8', title: 'Лицо', image: isMobile ? etap3 : hear, slug: '' },
-          { id: '9', title: 'Волосы', image: isMobile ? hear : etap2, slug: '' },
-          { id: '10', title: 'Лицо', image: isMobile ? etap3 : face, slug: '' },
-          { id: '11', title: 'Волосы', image: isMobile ? hear : etap3, slug: '' },
-          { id: '12', title: 'Лицо', image: isMobile ? etap3 : etap4, slug: '' }
-        ]);
+        // Моки не показываем — при ошибке просто оставляем пустой список.
+        setItems([]);
       } finally {
         setLoading(false);
       }

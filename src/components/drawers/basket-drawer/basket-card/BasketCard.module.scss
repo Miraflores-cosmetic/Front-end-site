@@ -5,7 +5,7 @@
   padding: 0;
   flex-direction: column;
 
-  @media (max-width: 550px) {
+  @media (max-width: 768px) {
     padding: 0;
   }
 
@@ -27,12 +27,12 @@
       width: 90px;
     }
 
-    @media (max-width: 720px) {
+    @media (max-width: 768px) {
       justify-content: flex-start;
       width: 95%;
     }
 
-    @media (max-width: 480px) {
+    @media (max-width: 768px) {
       margin-top: 4px;
       gap: 6px;
     }
@@ -59,14 +59,9 @@
         pointer-events: none;
       }
 
-      @media (max-width: 480px) {
+      @media (max-width: 768px) {
         width: 18px;
         height: 18px;
-      }
-
-      @media (max-width: 393px) {
-        width: 16px;
-        height: 16px;
       }
     }
 
@@ -77,14 +72,9 @@
       min-width: 20px;
       text-align: center;
 
-      @media (max-width: 480px) {
+      @media (max-width: 768px) {
         font-size: 14px;
         min-width: 18px;
-      }
-
-      @media (max-width: 393px) {
-        font-size: 13px;
-        min-width: 16px;
       }
     }
   }
@@ -135,6 +125,15 @@
           color: #297230;
           margin-left: 4px;
       }
+
+      .outOfStockMobile {
+        font-family: 'Onest', sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        line-height: 17px;
+        color: #6e6d67;
+        margin: 0;
+      }
   }
 }
 
@@ -146,14 +145,10 @@
   justify-content: space-between;
   gap: 10px;
 
-  @media (max-width: 550px) {
+  @media (max-width: 768px) {
     height: auto;
     gap: 10px; /* Frame 1948759811 gap */
-    align-items: center; 
-  }
-
-  @media (max-width: 393px) {
-    gap: 6px;
+    align-items: stretch;
   }
 
   .basketImage {
@@ -163,7 +158,7 @@
     overflow: hidden;
     background: #f6f5ef;
 
-    @media (max-width: 550px) {
+    @media (max-width: 768px) {
       width: 88px; /* Rectangle 4575 */
       height: 88px;
       padding: 11px; /* Image inside is 66x66, so (88-66)/2 = 11px padding */
@@ -178,7 +173,7 @@
       object-fit: cover;
       display: block;
       
-      @media (max-width: 550px) {
+      @media (max-width: 768px) {
          width: 66px;
          height: 66px;
          object-fit: contain; /* Ensure full product shows */
@@ -199,9 +194,9 @@
     width: 100%;
     height: 100%;
 
-    @media (max-width: 550px) {
+    @media (max-width: 768px) {
       height: 88px; /* Match image height */
-      justify-content: center;
+      justify-content: space-between;
       gap: 2px; /* Frame 1948759810 gap */
     }
 
@@ -211,20 +206,16 @@
       height: 100%;
       gap: 4px;
 
-      @media (max-width: 550px) {
+      @media (max-width: 768px) {
         height: auto;
         justify-content: center;
-      }
-
-      @media (max-width: 480px) {
-        gap: 2px;
       }
 
       .productNameSizeBlock {
         display: flex;
         flex-direction: column;
 
-        @media (min-width: 551px) {
+        @media (min-width: 769px) {
           gap: 4px;
         }
       }
@@ -243,7 +234,7 @@
         -webkit-box-orient: vertical;
         text-transform: uppercase;
 
-        @media (max-width: 550px) {
+        @media (max-width: 768px) {
           font-family: 'Avenir Next', sans-serif;
           font-size: 13px;
           line-height: 18px;
@@ -257,11 +248,11 @@
         color: #6e6d67;
         line-height: 1.2;
 
-        @media (min-width: 551px) {
+        @media (min-width: 769px) {
           font-weight: 400;
         }
 
-        @media (max-width: 550px) {
+        @media (max-width: 768px) {
           font-family: 'Avenir Next', sans-serif;
           font-size: 12px;
           line-height: 16px;
@@ -280,7 +271,7 @@
       justify-content: space-between;
       padding: 10px;
 
-      @media (max-width: 550px) {
+      @media (max-width: 768px) {
         display: none;
       }
 
@@ -339,8 +330,17 @@
     align-items: flex-end;
     flex-shrink: 0;
 
-    @media (max-width: 550px) {
+    @media (max-width: 768px) {
       display: none;
+    }
+
+    .outOfStockDesktop {
+      font-family: 'Onest', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: #6e6d67;
+      margin: 0;
+      text-align: right;
     }
 
     .discount {
@@ -437,7 +437,7 @@
   margin-top: 0;
   
    /* Add margin top for cards on mobile to separate them? Desktop has 0. */
-   @media (max-width: 550px) {
+   @media (max-width: 768px) {
        margin-top: 16px; /* Separation */
        border-bottom: none; /* No border here, border is on controls maybe? or just space */
        padding-bottom: 0;
@@ -470,6 +470,12 @@
         img {
             width: 100%;
             height: 100%;
+        }
+
+        &:disabled {
+            opacity: 0.35;
+            cursor: default;
+            pointer-events: none;
         }
     }
     

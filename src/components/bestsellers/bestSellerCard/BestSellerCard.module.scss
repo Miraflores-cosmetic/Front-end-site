@@ -414,6 +414,18 @@
           margin: 0;
           white-space: nowrap;
         }
+
+        .outOfStockLabel {
+          font-family: 'Onest', sans-serif;
+          font-style: normal;
+          font-weight: 600;
+          font-size: 14px;
+          line-height: 20px;
+          color: #6e6d67;
+          margin: 0;
+          white-space: nowrap;
+          text-transform: none;
+        }
       }
     }
 
@@ -482,7 +494,8 @@
 
         .priceWrapper {
           .oldPrice,
-          .price {
+          .price,
+          .outOfStockLabel {
             font-size: 13px;
             line-height: 17px;
           }

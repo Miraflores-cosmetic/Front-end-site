@@ -92,8 +92,11 @@ export const createCheckoutApi = createAsyncThunk(
         const result = await createCheckout(input);
         const gqlErrors = result?.checkoutCreate?.errors;
         if (gqlErrors && gqlErrors.length > 0) {
-          const msg = gqlErrors[0]?.message || 'Ошибка при создании корзины';
-          return rejectWithValue(msg);
+          const msg = gqlErrors.map((e: { message?: string }) => e?.message).filter(Boolean).join(' ');
+          return rejectWithValue(msg || 'Ошибка при создании корзины');
+        }
+        if (!result?.checkoutCreate?.checkout?.id) {
+          return rejectWithValue('Не удалось создать заказ. Попробуйте ещё раз.');
         }
         return result;
       } catch (error) {
@@ -125,6 +128,12 @@ const checkoutSlice = createSlice({
         if (action.payload.quantityLimitPerCustomer != null) {
           line.quantityLimitPerCustomer = action.payload.quantityLimitPerCustomer;
         }
+        if (action.payload.quantityAvailable !== undefined) {
+          line.quantityAvailable = action.payload.quantityAvailable ?? null;
+        }
+        if (action.payload.trackInventory !== undefined) {
+          line.trackInventory = action.payload.trackInventory ?? null;
+        }
         // Обновляем oldPrice и discount, если они были null, а теперь есть
         if (action.payload.oldPrice && !line.oldPrice) {
           line.oldPrice = action.payload.oldPrice;
@@ -143,7 +152,9 @@ const checkoutSlice = createSlice({
           oldPrice: action.payload.oldPrice ?? null,
           discount: action.payload.discount ?? null,
           size: action.payload.size,
-          quantityLimitPerCustomer: action.payload.quantityLimitPerCustomer ?? null
+          quantityLimitPerCustomer: action.payload.quantityLimitPerCustomer ?? null,
+          quantityAvailable: action.payload.quantityAvailable ?? null,
+          trackInventory: action.payload.trackInventory ?? null
         });
       }
       // Сохраняем только lines в localStorage, без id и token

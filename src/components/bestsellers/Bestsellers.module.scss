@@ -36,6 +36,11 @@
     padding-bottom: 0;
     margin-top: 0;
     margin-bottom: 240px;
+
+    @media (max-width: 768px) {
+      padding: 0;
+      margin-bottom: 120px;
+    }
   }
 
   // Стили для страницы профиля
@@ -142,6 +147,13 @@
     padding: 0 12px 100px 0;
     margin-top: 0;
     margin-bottom: 0;
+
+    .title,
+    .sliderWrapper {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
   }
 
   // Стили для страницы товара
@@ -197,11 +209,11 @@
       padding: 0;
       margin-top: 0;
       margin-bottom: 150px;
-      padding-left: 15px;
+      padding-left: 0;
 
       :global {
         .layout {
-          padding-left: 15px;
+          padding-left: 0;
         }
 
         .slick-list {
@@ -232,7 +244,7 @@
       overflow: visible;
       padding: 0 !important;
       // Более отзывчивый горизонтальный свайп на мобилке
-      touch-action: pan-x;
+      touch-action: pan-x pan-y;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -245,10 +257,10 @@
       padding: 0 !important;
 
       @media (max-width: 768px) {
-        margin-right: 20px !important;
-        width: 360px !important;
-        min-width: 360px;
-        max-width: 360px;
+        margin-right: 16px !important;
+        width: 264px !important;
+        min-width: 264px;
+        max-width: 264px;
       }
 
       &:first-child {
@@ -341,8 +353,10 @@
     margin-right: -32px;
 
     @media (max-width: 768px) {
-      width: calc(100% + 12px);
-      margin-right: -12px;
+      width: 100%;
+      margin-right: 0;
+      /* pan-x конкурирует с вертикальным скроллом документа — первый жест часто «съедается» */
+      touch-action: pan-y;
     }
 
     &::-webkit-scrollbar {
@@ -358,7 +372,7 @@
     padding-bottom: 20px;
 
     @media (max-width: 768px) {
-      gap: 20px;
+      gap: 16px;
     }
   }
 
@@ -368,9 +382,9 @@
     max-width: 432px;
 
     @media (max-width: 768px) {
-      flex-basis: 360px;
-      width: 360px;
-      max-width: 360px;
+      flex-basis: 264px;
+      width: 264px;
+      max-width: 264px;
     }
   }
 

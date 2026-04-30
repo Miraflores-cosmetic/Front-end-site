@@ -3,12 +3,14 @@ import { useParams } from 'react-router-dom';
 import styles from './Category.module.scss';
 import Header from '@/components/Header/Header';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
 const LazyComponent = lazy(() => import('./LazyComponent'));
 
 const Category: React.FC = () => {
   const { slug } = useParams();
   const sectionRef = useRef<HTMLElement>(null);
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
+  const isMobile = useScreenMatch(768);
 
   // При монтировании и при смене категории (slug) — прокрутка в самый верх
   useEffect(() => {
@@ -16,6 +18,13 @@ const Category: React.FC = () => {
   }, [slug]);
 
   useEffect(() => {
+    // На мобилке reveal-анимация часто сбивает первый скролл (momentum) на iOS.
+    // Сразу помечаем секцию загруженной и не запускаем IntersectionObserver.
+    if (isMobile) {
+      setIsSectionLoaded(true);
+      return;
+    }
+
     const el = sectionRef.current;
     if (!el) return;
 
@@ -40,7 +49,7 @@ const Category: React.FC = () => {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [isMobile]);
 
   return (
     <>

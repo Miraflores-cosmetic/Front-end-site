@@ -17,6 +17,9 @@ export interface CheckoutLine {
   quantityLimitPerCustomer?: number | null;
   /** Подарок по программе благодарности — не удаляется из корзины */
   isGift?: boolean;
+  /** Запас при добавлении в корзину (для подписи «Нет в наличии» в корзине) */
+  quantityAvailable?: number | null;
+  trackInventory?: boolean | null;
 }
 // ------------------------------------
 // Checkout State Storage

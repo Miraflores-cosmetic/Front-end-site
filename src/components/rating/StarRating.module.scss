@@ -1,12 +1,28 @@
 .wrapper {
   display: flex;
   gap: 16px;
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 20px;
+    color: #6e6d67;
+  }
+
+  @media (max-width: 768px) {
+    gap: 12px;
+  }
 }
 
 .star {
   width: 20px;
   height: 20px;
   opacity: 0.3;
+
+  @media (max-width: 768px) {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .full {

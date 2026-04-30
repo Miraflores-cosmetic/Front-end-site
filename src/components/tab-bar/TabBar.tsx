@@ -8,17 +8,25 @@ interface TabBarProps {
 }
 
 const TabBar: React.FC<TabBarProps> = ({ tabs, active: controlledActive, onChange }) => {
+  const isControlled = controlledActive !== undefined;
   const [internalActive, setInternalActive] = useState(tabs[0]);
 
   const active = controlledActive ?? internalActive;
 
   useEffect(() => {
-    // если извне пришло новое значение active — обновим внутреннее
-    if (controlledActive) setInternalActive(controlledActive);
-  }, [controlledActive]);
+    // controlled: зеркалим active, чтобы не было рассинхронизации/мигания.
+    if (isControlled) {
+      setInternalActive(controlledActive ?? tabs[0]);
+      return;
+    }
+    // uncontrolled: если набор табов поменялся, а активный исчез — сбрасываем на первый.
+    if (!tabs.includes(internalActive)) {
+      setInternalActive(tabs[0]);
+    }
+  }, [isControlled, controlledActive, tabs, internalActive]);
 
   const handleClick = (tab: string) => {
-    setInternalActive(tab);
+    if (!isControlled) setInternalActive(tab);
     onChange?.(tab);
   };
 

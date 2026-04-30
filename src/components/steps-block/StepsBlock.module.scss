@@ -78,7 +78,7 @@
       margin-left: 0;
     }
     
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       padding-right: 12px;
       padding-left: 12px;
       gap: 18px;
@@ -94,14 +94,6 @@
     margin-top: 0;
     margin-bottom: 0;
     gap: 20px;
-    overflow: visible;
-  }
-  @media (max-width: 450px) {
-    padding-right: 0;
-    padding-top: 0;
-    padding-bottom: 100px;
-    margin-top: 0;
-    margin-bottom: 0;
     overflow: visible;
   }
 
@@ -120,7 +112,7 @@
       text-transform: uppercase;
       padding-right: 10%;
       margin-bottom: 16px;
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         font-size: 24px;
         margin-bottom: 0;
       }
@@ -135,7 +127,7 @@
         line-height: 1.5;
         color: #6e6d67;
         max-width: 900px;
-        @media (max-width: 450px) {
+        @media (max-width: 768px) {
           font-size: 14px;
         }
       }
@@ -207,8 +199,3 @@
   }
 }
 
-@media (max-width: 450px) {
-  .stepsContainer {
-    padding-top: 0;
-  }
-}

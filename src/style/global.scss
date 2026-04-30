@@ -22,9 +22,6 @@ html {
   /* Якоря (#faq и др.) под sticky header — запас для Safari */
   scroll-padding-top: 168px;
   @media (max-width: 768px) {
-    scroll-padding-top: 140px;
-  }
-  @media (max-width: 450px) {
     scroll-padding-top: 128px;
   }
 }

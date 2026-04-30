@@ -17,6 +17,10 @@
   box-sizing: border-box;
 }
 
+.cardWrapper {
+  gap: 0;
+}
+
 .mainBtn {
   display: flex;
   flex-direction: row;
@@ -75,6 +79,23 @@
   }
 }
 
+.cardBtn {
+  height: 32px;
+  padding: 6px 10px;
+  width: 100%;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #000000;
+  border-radius: 0;
+  font-size: 13px;
+  line-height: 16px;
+
+  &:hover:not(:disabled) {
+    background-color: #000000;
+    color: #ffffff;
+  }
+}
+
 .stepper {
   display: flex;
   flex-direction: row;
@@ -99,6 +120,25 @@
   background: #000000;
   color: #ffffff;
   overflow: hidden;
+}
+
+.stepperCard {
+  height: 32px;
+  background: #ffffff;
+  color: #000000;
+  border: 1px solid #000000;
+  border-radius: 0;
+}
+
+.stepperBtnCard {
+  flex: 0 0 36px;
+  width: 36px;
+  font-size: 18px;
+}
+
+.stepperCard .stepperCount {
+  font-size: 13px;
+  line-height: 16px;
 }
 
 .stepperBtn {

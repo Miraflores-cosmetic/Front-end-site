@@ -9,8 +9,8 @@
   height: 540px;
   box-sizing: border-box;
 
-  @media (max-width: 450px) {
-    width: 360px;
+  @media (max-width: 768px) {
+    width: 100%;
     height: auto;
   }
 
@@ -21,8 +21,8 @@
     width: 432px;
     min-height: 540px;
 
-    @media (max-width: 450px) {
-      width: 360px;
+    @media (max-width: 768px) {
+      width: 100%;
     }
   }
 
@@ -39,9 +39,10 @@
     background-size: 200% 100%;
     animation: skeletonShimmer 1.2s ease-in-out infinite;
 
-    @media (max-width: 450px) {
-      width: 360px;
-      height: 360px;
+    @media (max-width: 768px) {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      height: auto;
     }
   }
 
@@ -116,9 +117,10 @@
     justify-content: center;
     overflow: hidden;
 
-    @media (max-width: 450px) {
-      width: 360px;
-      height: 360px;
+    @media (max-width: 768px) {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1 / 1;
     }
 
     .addToCardWrapper {
@@ -151,10 +153,10 @@
       margin: 0;
       transition: opacity 0.3s ease;
 
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         width: 100%;
-        height: auto;
-        aspect-ratio: 442 / 452;
+        height: 100%;
+        aspect-ratio: auto;
       }
     }
 
@@ -168,10 +170,10 @@
       margin: 0;
       transition: opacity 0.3s ease;
 
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         width: 100%;
-        height: auto;
-        aspect-ratio: 442 / 452;
+        height: 100%;
+        aspect-ratio: auto;
       }
     }
 
@@ -221,6 +223,15 @@
       line-height: 19px;
       color: #FFFFFF;
       z-index: 2;
+
+      @media (max-width: 768px) {
+        height: 28px;
+        width: auto;
+        min-width: 44px;
+        padding: 6px 8px;
+        font-size: 12px;
+        line-height: 16px;
+      }
     }
 
     .sizeRow {
@@ -271,6 +282,18 @@
       background: rgba(0, 0, 0, 0.18);
       min-width: 57px;
     }
+
+    // Мобилка: компактные варианты/объёмы
+    @media (max-width: 768px) {
+      .sizePill,
+      .sizePillActive {
+        height: 28px;
+        padding: 6px 8px;
+        min-width: 44px;
+        font-size: 12px;
+        line-height: 16px;
+      }
+    }
   }
 
   .info {
@@ -282,8 +305,8 @@
     width: 432px;
     box-sizing: border-box;
 
-    @media (max-width: 450px) {
-      width: 360px;
+    @media (max-width: 768px) {
+      width: 100%;
     }
 
     .titleRow {
@@ -436,6 +459,41 @@
       color: #6E6D67;
       margin: 0;
       margin-top: 4px;
+    }
+  }
+}
+
+// Мобилка: уменьшаем типографику карточки (в 2 колонки)
+@media (max-width: 768px) {
+  .productCard {
+    gap: 12px;
+
+    .info {
+      gap: 4px;
+
+      .titleRow {
+        gap: 4px;
+
+        .title {
+          font-size: 13px;
+          line-height: 17px;
+          min-height: 36px;
+        }
+
+        .priceWrapper {
+          .oldPrice,
+          .price {
+            font-size: 13px;
+            line-height: 17px;
+          }
+        }
+      }
+
+      .desc {
+        font-size: 13px;
+        line-height: 16px;
+        min-height: 32px;
+      }
     }
   }
 }

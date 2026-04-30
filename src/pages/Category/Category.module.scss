@@ -5,6 +5,10 @@
   min-height: 100vh;
   background-color: $white;
   overflow-x: hidden;
+  @media (max-width: 768px) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 
   .categoryLoader {
     display: flex;
@@ -53,10 +57,13 @@
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     }
 
-    @media (max-width: 450px) {
-      grid-template-columns: 1fr;
-      justify-items: center;
-      padding-bottom: 60px;
+    @media (max-width: 768px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      justify-items: stretch;
+      row-gap: 32px;
+      column-gap: 8px;
+      padding-top: 32px;
+      padding-bottom: 32px;
     }
   }
 
@@ -71,7 +78,7 @@
     margin-bottom: 40px;
     text-transform: uppercase;
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       font-size: 24px;
       margin-bottom: 16px;
     }
@@ -93,6 +100,12 @@
     color: #6e6d67;
     max-width: 30%;
   }
+}
+
+.stickyTabs {
+  background: $white;
+  padding-top: 8px;
+  padding-bottom: 8px;
 }
 
 .imageSlider {
@@ -173,10 +186,13 @@
     padding-bottom: 80px;
   }
 
-  @media (max-width: 450px) {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    gap: 20px;
+  @media (max-width: 768px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-items: stretch;
+    row-gap: 12px;
+    column-gap: 32px;
+    padding-top: 32px;
+    padding-bottom: 32px;
   }
 
   .card {

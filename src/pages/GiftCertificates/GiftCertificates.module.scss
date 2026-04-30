@@ -35,7 +35,7 @@
   margin-bottom: 24px;
   text-transform: uppercase;
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     font-size: 24px;
     margin-bottom: 16px;
   }
@@ -75,7 +75,7 @@
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   }
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     grid-template-columns: 1fr;
     justify-items: center;
     padding-bottom: 60px;

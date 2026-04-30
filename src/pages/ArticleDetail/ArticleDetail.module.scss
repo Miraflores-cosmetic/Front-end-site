@@ -23,7 +23,7 @@
     margin: 0 auto;
     margin-top: 56px;
     margin-bottom: 64px;
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       margin-bottom: 24px;
     }
     .goBackWrapper {
@@ -45,7 +45,7 @@
       margin: 0;
       margin-top: 12px;
       max-width: 768px;
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         font-size: 13px;
         margin-top: 8px;
       }
@@ -58,7 +58,7 @@
       font-size: 48px;
       margin-top: 16px;
       text-transform: uppercase;
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         margin-top: 8px;
         font-size: 32px;
       }
@@ -72,14 +72,14 @@
         .userName {
           font-size: 15px;
           font-weight: 500;
-          @media (max-width: 450px) {
+          @media (max-width: 768px) {
             font-size: 13px;
           }
         }
         .userRole {
           font-size: 14px;
           color: #6e6d67;
-          @media (max-width: 450px) {
+          @media (max-width: 768px) {
             font-size: 12px;
           }
         }
@@ -118,7 +118,7 @@
     overflow-wrap: break-word;
     word-wrap: break-word;
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       gap: 18px;
       margin-top: 24px;
       margin-bottom: 40px;

@@ -10,7 +10,7 @@
   align-items: center;
   font-size: 15px;
   color: #6e6d67;
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     font-size: 14px;
   }
 }
@@ -42,7 +42,7 @@
   font-size: 15px;
   color: #6e6d67;
   text-decoration: none;
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     font-size: 14px;
   }
 }

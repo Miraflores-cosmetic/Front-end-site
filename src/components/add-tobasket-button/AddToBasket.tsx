@@ -25,7 +25,7 @@ interface AddToCartButtonProps {
   size: string;
   disabled?: boolean;
   productId?: string;
-  variant?: 'home' | 'product';
+  variant?: 'home' | 'product' | 'card';
   /** Лимит с варианта (Saleor); влияет на + и добавление */
   quantityLimitPerCustomer?: number | null;
 }
@@ -103,13 +103,24 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
 
   const buttonText = count === 0 ? (isHovered ? hoverText : defaultText) : activeText;
   const isProductPage = variant === 'product';
+  const isCard = variant === 'card';
 
   return (
-    <div className={`${styles.wrapper} ${isProductPage ? styles.productPageWrapper : styles.homeWrapper}`}>
+    <div
+      className={[
+        styles.wrapper,
+        isProductPage ? styles.productPageWrapper : styles.homeWrapper,
+        isCard ? styles.cardWrapper : ''
+      ].filter(Boolean).join(' ')}
+    >
       {count === 0 ? (
         <button
           onClick={handleAdd}
-          className={`${styles.mainBtn} ${isProductPage ? styles.productPageBtn : styles.homeBtn}`}
+          className={[
+            styles.mainBtn,
+            isProductPage ? styles.productPageBtn : styles.homeBtn,
+            isCard ? styles.cardBtn : ''
+          ].filter(Boolean).join(' ')}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           type='button'
@@ -119,11 +130,18 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
         </button>
       ) : (
         <div
-          className={`${styles.stepper} ${isProductPage ? styles.stepperProduct : styles.stepperHome}`}
+          className={[
+            styles.stepper,
+            isProductPage ? styles.stepperProduct : styles.stepperHome,
+            isCard ? styles.stepperCard : ''
+          ].filter(Boolean).join(' ')}
         >
           <button
             type='button'
-            className={styles.stepperBtn}
+            className={[
+              styles.stepperBtn,
+              isCard ? styles.stepperBtnCard : ''
+            ].filter(Boolean).join(' ')}
             onClick={handleRemove}
             aria-label='Уменьшить количество'
           >
@@ -132,7 +150,10 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
           <span className={styles.stepperCount}>{count}</span>
           <button
             type='button'
-            className={styles.stepperBtn}
+            className={[
+              styles.stepperBtn,
+              isCard ? styles.stepperBtnCard : ''
+            ].filter(Boolean).join(' ')}
             onClick={handleAdd}
             disabled={disabled || isAtOrOverLineLimit(count, limitSrc)}
             aria-label='Увеличить количество'
@@ -142,7 +163,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
         </div>
       )}
 
-      {productId && !isProductPage && (
+      {productId && variant === 'home' && (
         <div className={styles.favoriteWrapper}>
           <FavoriteButton productId={productId} className={styles.favoriteButtonInBasket} />
         </div>

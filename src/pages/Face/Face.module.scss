@@ -11,7 +11,7 @@
   -ms-overflow-style: none; /* IE 10+ */
   max-width: 1536px;
   margin: 0 auto;
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     padding: 0 12px;
   }
 
@@ -34,7 +34,7 @@
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
     }
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       padding-bottom: 60px;
     }
@@ -50,7 +50,7 @@
     margin-bottom: 64px;
     text-transform: uppercase;
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       font-size: 24px;
       margin-bottom: 16px;
     }

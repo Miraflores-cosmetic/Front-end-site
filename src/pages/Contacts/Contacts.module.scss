@@ -9,7 +9,7 @@
   margin: 0 auto;
   padding-bottom: 80px;
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     padding: 24px 16px 60px;
   }
 }
@@ -21,7 +21,7 @@
   margin-bottom: 40px;
   text-transform: uppercase;
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     font-size: 24px;
     margin-bottom: 24px;
   }
@@ -39,7 +39,7 @@
     margin-top: 0;
   }
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     font-size: 20px;
     margin-top: 36px;
     margin-bottom: 16px;
@@ -50,7 +50,7 @@
   margin-top: 32px;
   margin-bottom: 16px;
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     margin-top: 32px;
     margin-bottom: 16px;
   }
@@ -63,7 +63,7 @@
   line-height: 1.5;
   color: #1a1a1a;
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     font-size: 15px;
   }
 }
@@ -104,7 +104,7 @@
 .iconListAfterPhone {
   margin-top: 32px;
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     margin-top: 24px;
   }
 }
@@ -134,7 +134,7 @@
   object-fit: contain;
   display: block;
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     width: 40px;
     height: 40px;
   }

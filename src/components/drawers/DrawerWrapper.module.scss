@@ -3,7 +3,7 @@
   -ms-overflow-style: none;
   display: flex;
   justify-content: center;
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     overflow-y: auto;
   }
 }

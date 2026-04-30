@@ -8,7 +8,7 @@
   &:is(h1) {
     font-size: 40px;
     line-height: 48px;
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       font-size: 28px;
       line-height: 34px;
     }
@@ -16,7 +16,7 @@
   &:is(h2) {
     font-size: 32px;
     line-height: 40px;
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       font-size: 22px;
       line-height: 28px;
     }
@@ -24,7 +24,7 @@
   &:is(h3) {
     font-size: 26px;
     line-height: 34px;
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       font-size: 20px;
       line-height: 26px;
     }
@@ -32,7 +32,7 @@
   &:is(h4) {
     font-size: 20px;
     line-height: 28px;
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       font-size: 18px;
       line-height: 26px;
     }
@@ -41,7 +41,7 @@
   &:is(h6) {
     font-size: 18px;
     line-height: 26px;
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       font-size: 16px;
       line-height: 24px;
     }
@@ -54,7 +54,7 @@
   margin: 0;
   color: #2c2c2c;
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     font-size: 18px;
     line-height: 30px;
   }
@@ -116,7 +116,7 @@
   max-width: 768px;
   margin: 0 auto;
   width: 100%;
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     margin-top: 0px;
   }
   img {

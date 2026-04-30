@@ -25,10 +25,6 @@
   margin: 0 auto;
   padding: 24px 32px 0;
 
-  @media (max-width: 450px) {
-    padding: 24px 12px 0;
-  }
-
   @media (max-width: 768px) {
     padding: 24px 12px 0;
   }
@@ -43,10 +39,6 @@
     gap: 32px;
     box-sizing: border-box;
     position: relative;
-    
-    @media (max-width: 450px) {
-      gap: 0;
-    }
     
     @media (max-width: 768px) {
       flex-direction: column;
@@ -75,10 +67,6 @@
         box-sizing: border-box;
         margin-bottom: 20px;
         order: -1; // Размещаем перед другими элементами
-      }
-
-      @media (max-width: 450px) {
-        font-size: 24px;
       }
     }
     
@@ -222,10 +210,6 @@
           
           @media (max-width: 768px) {
             display: none; // Скрываем на мобилке
-          }
-          
-          @media (max-width: 450px) {
-            font-size: 24px;
           }
         }
 

@@ -2,7 +2,16 @@
   width: 100%;
   display: flex;
   justify-content: flex-start;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox */
+  gap: 8px;
+}
+
+.wrapper::-webkit-scrollbar {
+  display: none;
 }
 
 .tabs {
@@ -24,22 +33,30 @@
   padding: 8px 16px;
   cursor: pointer;
   transition: all 0.25s ease;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  touch-action: manipulation;
 
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+  // Hover только для устройств с мышью (на мобилке не должен влиять на размер/фон)
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.05);
+    }
   }
 
   &.active {
     background-color: #297230;
     color: #fff;
 
-    &:hover {
-      background-color: #297230;
-      color: #fff;
+    @media (hover: hover) and (pointer: fine) {
+      &:hover {
+        background-color: #297230;
+        color: #fff;
+      }
     }
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     font-size: 13px;
     padding: 6px 12px;
   }
@@ -55,18 +72,23 @@
   transition:
     background 0.2s,
     color 0.2s;
-  @media (max-width: 450px) {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  @media (max-width: 768px) {
     font-size: 13px;
   }
-  &:hover {
-    background: #e6e6e6;
-    font-size: 14px;
-    font-weight: 500;
+  // Hover только для устройств с мышью; никаких изменений размера текста
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background: #e6e6e6;
+    }
   }
 
-  &.active:hover {
-    background: #297230;
-    color: white;
+  @media (hover: hover) and (pointer: fine) {
+    &.active:hover {
+      background: #297230;
+      color: white;
+    }
   }
 }
 
@@ -75,7 +97,22 @@
   color: white;
   font-size: 14px;
   font-weight: 500;
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     font-size: 13px;
+  }
+}
+
+// На touch (мобилка) hover-состояния только мешают — отключаем любые hover-эффекты.
+@media (hover: none) {
+  .tab:hover,
+  .active:hover,
+  .tab.active:hover {
+    background: transparent;
+    color: inherit;
+    font-size: inherit;
+  }
+  .active {
+    background: #297230;
+    color: white;
   }
 }

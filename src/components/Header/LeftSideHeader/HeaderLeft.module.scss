@@ -61,4 +61,35 @@
 .menuButton {
   border: none;
   background: transparent;
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.burgerIcon {
+  width: 24px;
+  height: 12px;
+  position: relative;
+  display: block;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1.5px;
+    background: $black;
+    border-radius: 2px;
+  }
+
+  &::before {
+    top: 0;
+  }
+
+  &::after {
+    bottom: 0;
+  }
 }

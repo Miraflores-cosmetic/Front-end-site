@@ -7,7 +7,7 @@
   flex-direction: column;
   justify-content: space-between;
   background-color: #fff;
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     width: 100%;
     padding: 24px 16px;
   }
@@ -29,9 +29,6 @@
         font-weight: 400;
         font-size: 20px;
         text-transform: uppercase;
-        @media (max-width: 450px) {
-          font-size: 20px;
-        }
       }
       .close {
         cursor: pointer;

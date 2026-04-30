@@ -25,7 +25,7 @@
     height: auto;
   }
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     margin-bottom: 100px;
     padding-right: 12px;
     padding-bottom: 0;
@@ -137,7 +137,7 @@
     }
   }
   
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     span,
     .secondLine {
       font-size: 36px;
@@ -172,7 +172,7 @@
     align-items: flex-end;
   }
   
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     margin-right: 0;
     align-items: baseline;
     position: absolute;
@@ -250,7 +250,7 @@
       height: 133px;
     }
     
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       position: relative;
       width: 100px;
       height: 133px;
@@ -278,7 +278,7 @@
       text-align: left;
     }
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       margin-left: 0;
       margin-right: auto;
       text-align: left;
@@ -294,7 +294,7 @@
     }
   }
   
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     flex-direction: column;
     align-items: flex-start;
     position: relative;
@@ -308,7 +308,7 @@
   left: 160px;
   z-index: 2;
   
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     position: absolute;
     left: 95px;
     bottom: 30px;
@@ -321,7 +321,7 @@
   left: 90px;
   z-index: 5;
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     position: absolute;
     bottom: 140px;
     left: 50px;
@@ -356,7 +356,7 @@
   animation: marqueeRightToLeft 10s linear infinite;
   margin-top: -90px;
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     margin-top: -74px;
   }
 }
@@ -365,7 +365,7 @@
   animation: marqueeLeftToRight 10s linear infinite;
   margin-top: -20px;
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     margin-top: -6px;
   }
 }
@@ -403,7 +403,7 @@
       margin-bottom: 100px;
       height: auto;
       
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         margin-bottom: 100px;
         height: auto;
       }
@@ -420,7 +420,7 @@
     width: 100%;
     height: auto;
     
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       margin-top: 120px;
     }
   }
@@ -438,7 +438,7 @@
     display: flex;
     flex-direction: column;
     
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       gap: 0;
       flex-direction: column;
     }
@@ -448,7 +448,7 @@
     margin-top: 0;
     z-index: 10;
     
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       margin-top: 0;
       order: 1;
       margin-bottom: 20px;
@@ -456,7 +456,7 @@
   }
   
   .marqueeWrapper {
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       order: 1;
       margin-bottom: 20px;
       position: relative;
@@ -467,7 +467,7 @@
   .content {
     width: 100%;
     
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       margin-top: 0;
       order: 2;
       display: flex;
@@ -476,7 +476,7 @@
     }
   }
   
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     .topBlockContainer {
       .right {
         margin-top: 0;

@@ -3,7 +3,6 @@ import AppLink from '@/components/AppLink/AppLink';
 import { openDrawer } from '@/store/slices/drawerSlice';
 import { useSelector, useDispatch } from 'react-redux';
 import styles from './HeaderLeft.module.scss';
-import menu from '@/assets/icons/menu.svg';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { RootState, AppDispatch } from '@/store/store';
 import { getMenuItems } from '@/store/slices/navSlice';
@@ -47,8 +46,13 @@ const HeaderLeft: React.FC = () => {
   return (
     <div>
       {isMobile ? (
-        <button className={styles.menuButton} onClick={() => dispatch(openDrawer('menu'))}>
-          <img src={menu} alt='menu' />
+        <button
+          type="button"
+          className={styles.menuButton}
+          aria-label="Open menu"
+          onClick={() => dispatch(openDrawer('menu'))}
+        >
+          <span className={styles.burgerIcon} aria-hidden="true" />
         </button>
       ) : (
         <nav className={styles.navLeft}>

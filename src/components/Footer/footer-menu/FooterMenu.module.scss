@@ -11,7 +11,7 @@
     color: #6e6d67;
     text-transform: uppercase;
     width: 190px;
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       font-size: 20px;
     }
 
@@ -19,7 +19,7 @@
       font-size: 18px;
     }
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       width: 150px;
     }
   }
@@ -31,13 +31,13 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       gap: 5px;
     }
     .menuItem {
       font-family: 'Onest', 'Avenir Next', sans-serif;
       font-weight: 300;
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         width: 200px;
       }
 
@@ -47,7 +47,7 @@
         text-decoration: none;
         font-size: 14px;
         font-family: 'Onest', 'Avenir Next', sans-serif;
-        @media (max-width: 450px) {
+        @media (max-width: 768px) {
           font-size: 14px;
         }
 

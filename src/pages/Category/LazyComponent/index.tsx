@@ -39,7 +39,7 @@ const LazyComponent: React.FC = () => {
   const { description, tabs, subTabs, activeTabSlug, activeSubTabSlug, products, loading, loadingMore, productsFetched, pageInfo } =
     useSelector((state: RootState) => state.category);
 
-  const isMobile = useScreenMatch(756);
+  const isMobile = useScreenMatch(768);
   const PAGE_SIZE = 12;
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
@@ -255,7 +255,7 @@ const LazyComponent: React.FC = () => {
     <>
       <p className={styles.title}>{items.find(item => item.category.slug === slug)?.name}</p>
       {!isGiftCertificatesCategory && (
-        <>
+        <div className={styles.stickyTabs}>
           <TabBar
             // Важно: не использовать .reverse() напрямую — он мутирует массив из Redux state.
             tabs={['ВСЕ', ...tabs.map(t => t.name).slice().reverse()]}
@@ -271,7 +271,7 @@ const LazyComponent: React.FC = () => {
               onChange={handleSubTabChange}
             />
           )}
-        </>
+        </div>
       )}
 
       {!isMobile && !isGiftCertificatesCategory && (
@@ -288,7 +288,7 @@ const LazyComponent: React.FC = () => {
       {showInitialSkeletons ? (
         <section className={styles.wrapper} aria-busy="true" aria-label="Загрузка товаров">
           <AnimatePresence mode="sync">
-            {Array.from({ length: PAGE_SIZE }).map((_, i) => (
+            {Array.from({ length: isMobile ? 6 : PAGE_SIZE }).map((_, i) => (
               <BestSellerProductCard
                 key={`initial-skeleton-${i}`}
                 product={{} as any}

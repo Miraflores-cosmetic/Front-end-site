@@ -16,7 +16,7 @@
       align-items: start;
       gap: 8px;
       
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         gap: 0px;
       }
       
@@ -24,7 +24,7 @@
         .etapTitle {
           font-weight: 600;
           font-size: 16px;
-          @media (max-width: 450px) {
+          @media (max-width: 768px) {
             font-size: 13px;
           }
         }
@@ -32,7 +32,7 @@
           color: #6e6d67;
           font-family: 300;
           font-size: 16px;
-          @media (max-width: 450px) {
+          @media (max-width: 768px) {
             font-size: 13px;
             line-height: 1.2;
           }

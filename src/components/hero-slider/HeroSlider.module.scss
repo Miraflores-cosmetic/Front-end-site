@@ -40,7 +40,7 @@
     min-height: auto;
   }
   
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     height: auto;
     min-height: auto;
     margin-top: 0;
@@ -69,7 +69,7 @@
   outline: none;
   height: calc(100vh - var(--header-height, 72px) - var(--preheader-height, 0px) - 20px);
   
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     height: auto;
     min-height: auto;
     margin-top: 0;

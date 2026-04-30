@@ -40,13 +40,6 @@
     padding-bottom: 0;
     margin-bottom: 100px;
   }
-  @media (max-width: 450px) {
-    padding-top: 0;
-    padding-right: 12px;
-    margin-top: 0;
-    padding-bottom: 0;
-    margin-bottom: 100px;
-  }
 
   .container {
     display: grid;
@@ -261,9 +254,6 @@
   align-items: center;
   gap: 10px;
   margin-top: 20px;
-  @media (max-width: 450px) {
-    margin-top: 20px;
-  }
   a {
     display: flex;
     align-items: center;

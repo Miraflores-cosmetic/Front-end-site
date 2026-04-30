@@ -37,14 +37,7 @@
     margin-top: 0;
     margin-bottom: 0;
     padding-left: 0;
-  }
-  @media (max-width: 450px) {
-    padding-top: 0;
-    padding-bottom: 100px;
-    margin-top: 0;
-    margin-bottom: 0;
     padding-right: 12px;
-    padding-left: 0;
   }
 
   .titleWrapper {
@@ -62,7 +55,7 @@
       font-weight: 300;
       font-size: 64px;
       text-align: start;
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         font-size: 24px;
       }
     }
@@ -169,7 +162,7 @@
           width: 196px;
           height: 196px;
           object-fit: cover;
-          @media (max-width: 450px) {
+          @media (max-width: 768px) {
             top: 160px;
             right: 0;
             width: 246px;

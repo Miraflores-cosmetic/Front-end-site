@@ -45,7 +45,7 @@
     margin-bottom: 20px;
     padding-right: 0;
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       padding: 0;
       margin-top: 20px;
       margin-bottom: 20px;
@@ -115,7 +115,7 @@
       }
     }
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       margin-top: 0;
       margin-bottom: 150px;
       padding-left: 15px;
@@ -138,7 +138,7 @@
     padding-top: 0;
   }
 
-  @media (max-width: 450px) {
+  @media (max-width: 768px) {
     padding: 0 12px 100px 0;
     margin-top: 0;
     margin-bottom: 0;
@@ -193,7 +193,7 @@
       }
     }
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       padding: 0;
       margin-top: 0;
       margin-bottom: 150px;
@@ -244,7 +244,7 @@
       box-sizing: border-box;
       padding: 0 !important;
 
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         margin-right: 20px !important;
         width: 360px !important;
         min-width: 360px;
@@ -340,7 +340,7 @@
     width: calc(100% + 32px);
     margin-right: -32px;
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       width: calc(100% + 12px);
       margin-right: -12px;
     }
@@ -357,7 +357,7 @@
     width: max-content;
     padding-bottom: 20px;
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       gap: 20px;
     }
   }
@@ -367,7 +367,7 @@
     width: 432px;
     max-width: 432px;
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       flex-basis: 360px;
       width: 360px;
       max-width: 360px;
@@ -413,7 +413,7 @@
     overflow: hidden;
     padding: 50px; // отступы до изображения, как в макете
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       height: 316px;
       padding: 32px;
     }
@@ -475,7 +475,7 @@
     box-sizing: border-box;
     overflow: hidden;
 
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       max-width: 360px;
     }
   }
@@ -668,7 +668,7 @@
   overflow: hidden; // важно, чтобы элементы не вылезали при анимации
   padding: 50px; // как в макете: отступы от краёв до изображения
 
-  @media (max-width: 450px) {
+    @media (max-width: 768px) {
     height: 316px;
     padding: 32px;
   }

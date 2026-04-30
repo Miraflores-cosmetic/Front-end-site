@@ -44,7 +44,7 @@ $color-border-hover: #91918d99;
         width: 100%;
       }
 
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         text-align: center;
       }
 
@@ -55,7 +55,7 @@ $color-border-hover: #91918d99;
         object-fit: contain;
         justify-self: center;
 
-        @media (max-width: 450px) {
+        @media (max-width: 768px) {
           width: 118px;
           height: 24px;
         }
@@ -77,7 +77,7 @@ $color-border-hover: #91918d99;
       font-weight: 800;
       line-height: 32px;
 
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         font-size: 20px;
       }
     }
@@ -87,7 +87,7 @@ $color-border-hover: #91918d99;
       font-size: $font-base;
       color: $color-text;
 
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         font-size: 14px;
       }
 

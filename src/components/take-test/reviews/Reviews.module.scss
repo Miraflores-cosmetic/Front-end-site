@@ -7,7 +7,7 @@
   &.reviewsContainerPage {
     padding-top: 0;
     margin-bottom: 140px;
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       padding-top: 24px;
     }
   }
@@ -16,12 +16,6 @@
     padding-top: 0;
     padding-bottom: 100px;
     margin-top: 0;
-    margin-bottom: 0;
-  }
-  @media (max-width: 450px) {
-    padding-top: 0;
-    padding-bottom: 100px;
-    margin-top: 40px;
     margin-bottom: 0;
   }
 
@@ -158,7 +152,7 @@
 
     justify-content: space-between;
     align-items: center;
-    @media (max-width: 450px) {
+    @media (max-width: 768px) {
       margin-bottom: 16px;
     }
     .title {
@@ -167,7 +161,7 @@
       font-weight: 300;
       font-size: 64px;
       text-align: start;
-      @media (max-width: 450px) {
+      @media (max-width: 768px) {
         font-size: 24px;
       }
     }

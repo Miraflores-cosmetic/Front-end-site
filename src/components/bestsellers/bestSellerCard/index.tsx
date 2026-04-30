@@ -5,6 +5,7 @@ import { BestSellersProduct } from '@/types/products';
 import { FavoriteButton } from '@/components/favorite-button/FavoriteButton';
 import AddToBasket from '@/components/add-tobasket-button/AddToBasket';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
 
 export const BestSellerProductCard: React.FC<{ 
   product: BestSellersProduct; 
@@ -25,6 +26,7 @@ export const BestSellerProductCard: React.FC<{
   // иначе браузер качает сразу 2 картинки на каждую карточку.
   const [hasEverHovered, setHasEverHovered] = useState(false);
   const [shouldBlockClick, setShouldBlockClick] = useState(false);
+  const isMobile = useScreenMatch(768);
 
   // Блокируем клик, если был драг
   React.useEffect(() => {
@@ -164,10 +166,14 @@ export const BestSellerProductCard: React.FC<{
           <div 
             className={styles.imageBox}
             onMouseEnter={() => {
+              if (isMobile) return;
               setIsHovered(true);
               setHasEverHovered(true);
             }}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseLeave={() => {
+              if (isMobile) return;
+              setIsHovered(false);
+            }}
           >
             {product.discount && <span className={styles.discount}>-{product.discount}%</span>}
 
@@ -193,7 +199,8 @@ export const BestSellerProductCard: React.FC<{
                   className={`${styles.productImage} ${styles.mainImage} ${isHovered && hoverImage ? styles.hidden : ''}`}
                   placeholder="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='332' height='332'%3E%3Crect width='100%25' height='100%25' fill='%23F6F5EF'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%236E6D67' font-family='Avenir Next' font-size='14'%3EИзображение%3C/text%3E%3C/svg%3E"
                 />
-                {hoverImage && hasEverHovered && (
+                {/* На мобилке hover-изображение не показываем и не грузим вообще */}
+                {!isMobile && hoverImage && hasEverHovered && (
                   <ImageWithFallback
                     src={hoverImage}
                     alt={product.title}
@@ -274,7 +281,24 @@ export const BestSellerProductCard: React.FC<{
                 {activeVariant ? getVolumeFromVariant(activeVariant) : product.size}
               </p>
             )}
-            <p className={styles.desc}>{product.description}</p>
+            {isMobile ? (
+              <AddToBasket
+                defaultText="В КОРЗИНУ"
+                hoverText="В КОРЗИНУ"
+                activeVariantId={activeVariantId}
+                title={product.title}
+                thumbnail={mainImage || ''}
+                price={product.price}
+                oldPrice={product.oldPrice}
+                discount={product.discount}
+                size={activeVariant ? getVolumeFromVariant(activeVariant) : (product.size || '')}
+                productId={product.id}
+                variant="card"
+                quantityLimitPerCustomer={quantityLimitForCard}
+              />
+            ) : (
+              <p className={styles.desc}>{product.description}</p>
+            )}
           </div>
         </>
       )}

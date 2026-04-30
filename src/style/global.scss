@@ -89,3 +89,18 @@ html {
 .show {
   display: flex;
 }
+
+/* Корзина: на iOS Safari нижний бар не должен перекрывать блок «Оформить заказ» (100vh ≠ видимая высота) */
+@media (max-width: 768px) {
+  nav.EZDrawer__container.basket-drawer {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+
+  .EZDrawer .EZDrawer__overlay {
+    height: 100vh;
+    height: 100dvh;
+  }
+}

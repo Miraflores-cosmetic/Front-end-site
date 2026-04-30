@@ -338,6 +338,11 @@
           min-width: 0;
           box-sizing: border-box;
           overflow-x: clip;
+
+          @media (max-width: 768px) {
+            /* Иначе горизонтальные ленты (Etaps и т.д.) не получают свайп внутри clip */
+            overflow-x: visible;
+          }
         }
         
         // Ограничиваем компоненты внутри
@@ -440,4 +445,8 @@
 // Секции на странице товара (BestSellerTabs, BestSellerEtaps) — отступы задаёт .productMain
 .productSections {
   box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    min-width: 0;
+  }
 }

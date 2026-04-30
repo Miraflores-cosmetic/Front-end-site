@@ -67,6 +67,21 @@ function formatArticleDisplayDate(
   return fallback;
 }
 
+/** Для сортировки списка: дата из атрибута «Дата» или дата создания страницы */
+export function getArticleNodeSortTimestamp(node: ArticleNode): number {
+  const attr = node.assignedAttributes.find(isArticleDateAttribute);
+  if (attr?.dateTimeValue) {
+    const t = new Date(attr.dateTimeValue).getTime();
+    if (!Number.isNaN(t)) return t;
+  }
+  if (attr?.dateValue) {
+    const t = new Date(attr.dateValue).getTime();
+    if (!Number.isNaN(t)) return t;
+  }
+  const created = new Date(node.created).getTime();
+  return Number.isNaN(created) ? 0 : created;
+}
+
 export function mapArticleNodeToArticle(node: ArticleNode): Article {
   const imageAttr = node.assignedAttributes.find(item => item.attribute.slug === 'kartinka');
   const previewAttr = node.assignedAttributes.find(

@@ -10,7 +10,8 @@
     line-height: 48px;
     @media (max-width: 768px) {
       font-size: 28px;
-      line-height: 34px;
+      line-height: 30px;
+      overflow-wrap: anywhere;
     }
   }
   &:is(h2) {
@@ -55,8 +56,9 @@
   color: #2c2c2c;
 
   @media (max-width: 768px) {
-    font-size: 18px;
-    line-height: 30px;
+    /* ближе к ритму текста на category/slug (карточки, описания) */
+    font-size: 16px;
+    line-height: 26px;
   }
 
   /* Вложенная разметка из редактора (списки, цитаты и т.д.) */

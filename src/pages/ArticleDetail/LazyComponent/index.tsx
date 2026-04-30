@@ -1,32 +1,52 @@
 'use client';
 
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 import styles from '../ArticleDetail.module.scss';
-import {useDispatch, useSelector} from 'react-redux';
-import {RootState} from '@/store/store';
-import {Link, useParams, useLocation} from 'react-router-dom';
-import back from "@/assets/icons/go-back.svg";
-import MaskedImage from "@/components/masked-image/MaskedImage";
-import ArticleContent from "@/pages/ArticleDetail/ArticleContent/ArticleContent";
-import {fetchArticleBySlug} from "@/store/slices/articleSlice";
-
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/store/store';
+import { Link, useParams, useLocation } from 'react-router-dom';
+import back from '@/assets/icons/go-back.svg';
+import MaskedImage from '@/components/masked-image/MaskedImage';
+import ArticleContent from '@/pages/ArticleDetail/ArticleContent/ArticleContent';
+import { fetchArticleBySlug } from '@/store/slices/articleSlice';
+import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 
 const LazyComponent: React.FC = () => {
-  const {slug} = useParams();
+  const { slug } = useParams();
   const location = useLocation();
-  const dispatch = useDispatch();
-  const {article, loading, error} = useSelector((state: RootState) => state.articleSlice);
+  const dispatch = useDispatch<AppDispatch>();
+  const { article, loading, error } = useSelector((state: RootState) => state.articleSlice);
   const isInfoPage = location.pathname.startsWith('/info/');
 
   useEffect(() => {
     if (!slug) return;
-    dispatch(fetchArticleBySlug(slug) as any);
+    dispatch(fetchArticleBySlug(slug));
   }, [slug, dispatch]);
 
+  if (loading) {
+    return (
+      <div className={styles.articleLoading}>
+        <SpinnerLoader />
+      </div>
+    );
+  }
 
-  if (loading) return null;
-  if (error) return <div>Ошибка: {error.message}</div>;
-  if (!article) return null;
+  if (error || !article) {
+    return (
+      <div className={styles.articleFeedback} role="alert">
+        <p>
+          {error
+            ? 'Не удалось загрузить материал. Проверьте соединение и попробуйте снова.'
+            : 'Статья не найдена.'}
+        </p>
+        {slug && error ? (
+          <button type="button" className={styles.articleRetryBtn} onClick={() => dispatch(fetchArticleBySlug(slug))}>
+            Повторить
+          </button>
+        ) : null}
+      </div>
+    );
+  }
 
   const showAuthor = !isInfoPage && (article.author || article.imageAuthor);
 

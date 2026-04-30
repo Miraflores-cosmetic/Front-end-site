@@ -327,6 +327,7 @@
     height: auto;
     min-height: auto;
     padding: 16px;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
   .footerContent {

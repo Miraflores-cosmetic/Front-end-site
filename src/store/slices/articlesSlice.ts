@@ -1,6 +1,6 @@
 ﻿import { createAsyncThunk, createSlice, SerializedError } from '@reduxjs/toolkit';
 import { getAllArticles, ArticleNode } from '@/graphql/queries/articles.service';
-import { Article, mapArticleNodeToArticle } from '@/store/slices/articleSlice';
+import { Article, getArticleNodeSortTimestamp, mapArticleNodeToArticle } from '@/store/slices/articleSlice';
 
 interface ArticlesState {
   items: Article[];
@@ -18,7 +18,10 @@ export const fetchArticles = createAsyncThunk<Article[], number | undefined>(
   'articles/fetchAll',
   async (limit) => {
     const data: ArticleNode[] = await getAllArticles(limit ?? 20);
-    return (data ?? []).map(mapArticleNodeToArticle);
+    const sorted = [...(data ?? [])].sort(
+      (a, b) => getArticleNodeSortTimestamp(b) - getArticleNodeSortTimestamp(a)
+    );
+    return sorted.map(mapArticleNodeToArticle);
   }
 );
 

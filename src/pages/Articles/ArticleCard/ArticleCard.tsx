@@ -12,7 +12,7 @@ interface ArticleCardProps {
 }
 
 export const ArticleCard: React.FC<ArticleCardProps> = ({ article, reverse }) => {
-  const isMobile = useScreenMatch(700);
+  const isMobile = useScreenMatch(768);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 

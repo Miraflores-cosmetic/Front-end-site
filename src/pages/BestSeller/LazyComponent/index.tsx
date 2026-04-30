@@ -184,6 +184,11 @@ const LazyComponent: React.FC = () => {
 
   const isMobile = useScreenMatch(768);
 
+  const bestsellerTabOptions = useMemo(() => {
+    if (!item) return [];
+    return generateBestsellerTabsOptions(item);
+  }, [item]);
+
   // Используем импортированную функцию editorJsToHtml из utils, которая правильно обрабатывает все блоки
 
   if (loading || !item) {
@@ -542,7 +547,9 @@ const LazyComponent: React.FC = () => {
         )}
 
         <div className={styles.productSections}>
-          <BestSellerTabs options={generateBestsellerTabsOptions(item)} />
+          {bestsellerTabOptions.length > 0 ? (
+            <BestSellerTabs key={`product-tabs-${item.id}`} options={bestsellerTabOptions} />
+          ) : null}
           <BestSellerEtaps 
             items={availableEtaps} 
             activeEtap={activeEtap}

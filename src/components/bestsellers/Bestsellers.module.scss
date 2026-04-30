@@ -98,7 +98,7 @@
     }
 
     .sliderWrapper {
-      touch-action: pan-y;
+      touch-action: pan-x pan-y;
     }
 
     @media (max-width: 768px) {
@@ -355,8 +355,8 @@
     @media (max-width: 768px) {
       width: 100%;
       margin-right: 0;
-      /* pan-x конкурирует с вертикальным скроллом документа — первый жест часто «съедается» */
-      touch-action: pan-y;
+      /* pan-x + pan-y: горизонтальный свайп по ленте карточек; вертикальный — страница (overscroll-x contain ниже) */
+      touch-action: pan-x pan-y;
     }
 
     &::-webkit-scrollbar {

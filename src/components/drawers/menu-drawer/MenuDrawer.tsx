@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import styles from './MenuDrawer.module.scss';
 import MenuList from './menu-list/MenuList';
 import siteLogo from '@/assets/icons/Logo-mira.svg';
@@ -12,6 +13,7 @@ import { getMenuItems } from '@/store/slices/navSlice';
 const MenuDrawer: React.FC = () => {
   const isMobile = useScreenMatch(768);
   const { items } = useSelector((state: RootState) => state.nav);
+  const { isAuth } = useSelector((state: RootState) => state.authSlice);
   const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
@@ -97,6 +99,18 @@ const MenuDrawer: React.FC = () => {
           />
         ))}
       </div>
+
+      {isMobile && (
+        <div className={styles.menuMobileAccount}>
+          <Link
+            to={isAuth ? '/profile' : '/sign-in'}
+            className={styles.menuMobileAccountBtn}
+            onClick={() => dispatch(closeDrawer())}
+          >
+            {isAuth ? 'Аккаунт' : 'Войти в аккаунт'}
+          </Link>
+        </div>
+      )}
 
       <MenuRightPart />
     </div>

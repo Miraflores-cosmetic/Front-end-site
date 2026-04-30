@@ -2,29 +2,44 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
+
+  @media (max-width: 768px) {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .etaps {
     display: flex;
     justify-content: space-between;
 
     @media (max-width: 768px) {
       flex-direction: column;
-      align-items: flex-start;
+      align-items: stretch;
       justify-content: flex-start;
-      gap: 16px;
+      gap: 20px;
+      overflow: visible;
     }
 
     &.etapsLeft {
       justify-content: flex-start;
       gap: 40px;
+
+      @media (max-width: 768px) {
+        justify-content: flex-start;
+        gap: 20px;
+      }
     }
 
     .etap {
       display: flex;
       align-items: start;
       gap: 8px;
-      
+      flex: 0 0 auto;
+
       @media (max-width: 768px) {
         gap: 8px;
+        max-width: none;
+        width: 100%;
       }
       
       .etapTextWrapper {

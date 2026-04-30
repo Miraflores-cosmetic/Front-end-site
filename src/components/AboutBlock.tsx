@@ -6,6 +6,7 @@ import AboutRight from '@/assets/images/AboutRight.webp';
 import AboutLeft from '@/assets/images/AboutLeft.png';
 import arrowToRoght from '@/assets/icons/ArrowToRight.svg';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
+import { VIEWPORT_TABLET_MAX } from '@/constants/viewport';
 import AppLink from '@/components/AppLink/AppLink';
 
 const AboutText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
@@ -34,8 +35,8 @@ const AboutMore: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => (
 );
 
 const AboutBlock: React.FC = () => {
-  const isTablet = useScreenMatch(1024);
-  const isMobile = useScreenMatch(950);
+  const isTablet = useScreenMatch(VIEWPORT_TABLET_MAX);
+  const isMobile = useScreenMatch();
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
   const sectionRef = React.useRef<HTMLElement>(null);
 

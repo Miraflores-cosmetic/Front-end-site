@@ -27,7 +27,7 @@ export const BestSellerProductCard: React.FC<{
   // иначе браузер качает сразу 2 картинки на каждую карточку.
   const [hasEverHovered, setHasEverHovered] = useState(false);
   const [shouldBlockClick, setShouldBlockClick] = useState(false);
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
 
   // Блокируем клик, если был драг
   React.useEffect(() => {

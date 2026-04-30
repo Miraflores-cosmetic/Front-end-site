@@ -15,7 +15,7 @@ const AboutDrawer: React.FC = () => {
   const { me } = useSelector((state: RootState) => state.authSlice);
   const dispatch = useDispatch<AppDispatch>();
   const toast = useToast();
-  const isMobile = useScreenMatch(450);
+  const isMobile = useScreenMatch();
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');

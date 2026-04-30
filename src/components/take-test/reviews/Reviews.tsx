@@ -23,7 +23,7 @@ export const Reviews: React.FC<{
   variant?: 'preview' | 'page';
   productSlug?: string;
 }> = ({ variant = 'preview', productSlug }) => {
-  const isMobile = useScreenMatch(500);
+  const isMobile = useScreenMatch();
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();

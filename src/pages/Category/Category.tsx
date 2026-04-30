@@ -10,7 +10,7 @@ const Category: React.FC = () => {
   const { slug } = useParams();
   const sectionRef = useRef<HTMLElement>(null);
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
 
   // При монтировании и при смене категории (slug) — прокрутка в самый верх
   useEffect(() => {

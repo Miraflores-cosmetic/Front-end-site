@@ -19,7 +19,7 @@ import Slider from 'react-slick';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 
 const FacePage: React.FC = () => {
-  const isMobile = useScreenMatch(756);
+  const isMobile = useScreenMatch();
   const [activeTab, setActiveTab] = useState('КРЕМ');
 
   const products = [

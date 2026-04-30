@@ -29,7 +29,7 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({ onSelectAddress }) =>
   const [isUpdating, setIsUpdating] = useState(false);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
 
   useEffect(() => {
     if (me?.addresses && me.addresses.length > 0) {

@@ -15,7 +15,7 @@ interface InfoMobileContentProps {
 }
 
 const FavoritesContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion }) => {
-  const isMobile = useScreenMatch(450);
+  const isMobile = useScreenMatch();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [clearing, setClearing] = useState(false);

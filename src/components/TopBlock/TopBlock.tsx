@@ -8,13 +8,14 @@ import lineToVertical from '@/assets/icons/lineToVertival.svg';
 import info from '@/assets/icons/info.svg';
 
 import { useScreenMatch } from '@/hooks/useScreenMatch';
+import { VIEWPORT_TABLET_MAX } from '@/constants/viewport';
 import DesktopTextImages from './DesktopTextImages';
 import TextWrapper from './TextWrapper';
 import MarqueeText from './MarqeenText';
 
 const TopBlock: React.FC = () => {
-  const isTablet = useScreenMatch(800);
-  const isMobile = useScreenMatch(450);
+  const isTablet = useScreenMatch(VIEWPORT_TABLET_MAX);
+  const isMobile = useScreenMatch();
 
   const mobileTexts = {
     title: 'Предложения',

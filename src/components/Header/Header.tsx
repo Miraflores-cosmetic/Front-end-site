@@ -5,21 +5,17 @@ import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { useScroll } from '@/hooks/useScroll';
 import HeaderLeft from './LeftSideHeader/HeaderLeftPart';
 import HeaderRight from './RightSideHeader/HeaderRightPart';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { getHeaderStyle } from '@/helpers/helpers';
+import { useNavigate } from 'react-router-dom';
+
 const Header: React.FC = () => {
-  const isMobile = useScreenMatch(450);
+  const isMobile = useScreenMatch();
   const isScrolled = useScroll();
   const navigate = useNavigate();
   const handleToHome = () => {
     navigate('/');
   };
-  const location = useLocation();
   return (
-    <header
-      className={`${styles.header} ${isScrolled ? styles.scrolled : ''}`}
-      style={getHeaderStyle(location.pathname, isMobile)}
-    >
+    <header className={`${styles.header} ${isScrolled ? styles.scrolled : ''}`}>
       <div className={styles.headerContent}>
         <HeaderLeft />
 

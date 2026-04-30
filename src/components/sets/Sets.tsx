@@ -91,7 +91,7 @@ const RightBlock: React.FC<{ setImage?: string; isMobile: boolean }> = ({ setIma
   );
 
 export const Sets: React.FC = () => {
-  const isMobile = useScreenMatch(680);
+  const isMobile = useScreenMatch();
   const [sets, setSets] = useState<SetData[]>([]);
   const [loading, setLoading] = useState(true);
   const [setImagesMap, setSetImagesMap] = useState<{ bySlug: Map<string, string>; byName: Map<string, string> }>({ bySlug: new Map(), byName: new Map() });

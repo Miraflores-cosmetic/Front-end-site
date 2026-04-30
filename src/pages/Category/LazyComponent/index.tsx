@@ -39,7 +39,7 @@ const LazyComponent: React.FC = () => {
   const { description, tabs, subTabs, activeTabSlug, activeSubTabSlug, products, loading, loadingMore, productsFetched, pageInfo } =
     useSelector((state: RootState) => state.category);
 
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
   const PAGE_SIZE = 12;
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);

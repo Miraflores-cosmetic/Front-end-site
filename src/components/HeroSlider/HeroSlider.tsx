@@ -9,7 +9,7 @@ interface HeroSliderProps {
 }
 
 const HeroSlider: React.FC<HeroSliderProps> = ({ media }) => {
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
   const settings = {
     dots: true,
     arrows: !isMobile,

@@ -18,7 +18,7 @@ const AWARD_TEXTS = [
 ];
 
 export const Awards: React.FC = () => {
-  const isMobile = useScreenMatch(800);
+  const isMobile = useScreenMatch();
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
 

@@ -7,7 +7,7 @@ import { openDrawer } from '@/store/slices/drawerSlice';
 import { RootState } from '@/store/store';
 
 const HeaderRight: React.FC = () => {
-  const isMobile = useScreenMatch(850);
+  const isMobile = useScreenMatch();
   const dispatch = useDispatch();
   const count = useSelector((state: RootState) => state.checkout.lines.length);
   const { isAuth } = useSelector((state: RootState) => state.authSlice);

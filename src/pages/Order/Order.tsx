@@ -12,7 +12,7 @@ import { useScreenMatch } from '@/hooks/useScreenMatch';
 const Order: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { me } = useSelector((state: RootState) => state.authSlice);
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
 
   // Загружаем данные пользователя при загрузке страницы корзины
   useEffect(() => {

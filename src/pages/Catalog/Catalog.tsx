@@ -14,7 +14,7 @@ import { useScreenMatch } from '@/hooks/useScreenMatch';
 
 const Catalog: React.FC = () => {
   const location = useLocation();
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
 
   useEffect(() => {
     // Если есть hash в URL, скроллим к элементу

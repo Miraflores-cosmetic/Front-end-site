@@ -150,7 +150,7 @@ export default function Bestsellers({
     startScroll: number;
   } | null>(null);
   const [profileSliderDragging, setProfileSliderDragging] = useState(false);
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
 
   const { bestSellers, loading, hasAttemptedLoad } = useSelector((state: RootState) => state.bestsellerSlice);
   const dispatch = useDispatch<AppDispatch>();

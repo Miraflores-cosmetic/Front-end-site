@@ -1,0 +1,50 @@
+.bonusContent {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  @media (max-width: 768px) {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid #6e6d6799;
+  }
+}
+
+.title {
+  font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 300;
+  margin: 0;
+}
+
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  margin: 0;
+  color: #6e6d67;
+  font-size: 14px;
+}
+
+.value {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.closeBtn {
+  margin-top: 8px;
+  margin-bottom: 24px;
+  align-self: flex-start;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: #6e6d67;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+}

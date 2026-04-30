@@ -31,7 +31,7 @@ interface OrderFormData {
 const OrderLeftPart: React.FC = () => {
   const navigate = useNavigate();
   const { me } = useSelector((state: RootState) => state.authSlice);
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
 
   // 2. Consolidated State (Cleaner hooks)
   const [formData, setFormData] = useState<OrderFormData>({

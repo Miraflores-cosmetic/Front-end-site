@@ -9,6 +9,7 @@ export interface MeInfo {
   lastName: string;
   addresses: AddressInfo[]
   giftCards: { totalCount: number };
+  orders?: { totalCount: number };
   avatar: ProfileAvatar | null;
   metadata?: { key: string; value: string }[];
 }

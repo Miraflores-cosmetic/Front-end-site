@@ -19,7 +19,7 @@ import { getPreHeader, PageNode } from '@/graphql/queries/pages.service';
 
 
 const Home: React.FC = () => {
-  const isMobile = useScreenMatch(450);
+  const isMobile = useScreenMatch();
   const location = useLocation();
   const [preHeader, setPreHeader] = useState<PageNode | null>(null);
   const [showPreHeader, setShowPreHeader] = useState(false);

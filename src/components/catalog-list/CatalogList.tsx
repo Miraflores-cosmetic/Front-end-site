@@ -19,7 +19,7 @@ interface CategoryItem {
 }
 
 const CatalogList: React.FC = () => {
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
   const [items, setItems] = useState<CategoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 

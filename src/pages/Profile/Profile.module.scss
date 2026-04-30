@@ -2,37 +2,50 @@
 
 .profileContainer {
   width: 100%;
-  padding: 0 32px;
+  /* как Category faceContainer */
+  padding: 24px 32px 0;
   min-height: 100vh;
   background-color: $white;
-  overflow-x: hidden;
+  overflow-x: clip;
   margin-bottom: 24px;
+  box-sizing: border-box;
 
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
   max-width: 1536px;
   margin: 0 auto;
+
   @media (max-width: 768px) {
-    padding: 0 12px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 0;
   }
+
   .contentWrapper {
-    margin-top: 100px;
+    margin-top: 80px;
     width: 100%;
-    @media (max-width: 756px) {
-      margin-top: 20px;
-    }
+
     @media (max-width: 1024px) {
-      margin-top: 80px;
+      margin-top: 72px;
     }
-    @media (max-width: 560px) {
+
+    @media (max-width: 768px) {
       margin-top: 32px;
     }
+
     .profile {
       display: flex;
       min-height: 100vh;
       gap: 100px;
+
       @media (max-width: 1024px) {
         gap: 60px;
+      }
+
+      @media (max-width: 768px) {
+        flex-direction: column;
+        gap: 32px;
+        min-height: 0;
       }
     }
   }

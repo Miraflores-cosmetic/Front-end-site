@@ -12,7 +12,8 @@ import { CHANNEL } from '@/graphql/client';
 import { normalizeMediaUrl } from '@/utils/mediaUrl';
 
 const OrderRightPart: React.FC = () => {
-  const isTablet = useScreenMatch(768);
+  /** Правый блок скрыт на узком экране (ширина меньше порога mobile из useScreenMatch). */
+  const hideOrderRightColumn = useScreenMatch();
   const { lines } = useSelector((state: RootState) => state.checkout);
   const [giftLine, setGiftLine] = useState<OrderProduct | null>(null);
 
@@ -72,7 +73,7 @@ const OrderRightPart: React.FC = () => {
 
   return (
     <>
-      {!isTablet && (
+      {!hideOrderRightColumn && (
         <section className={styles.right}>
           <article className={styles.listWrapper}>
             {/* 2. Pass the WHOLE array to CardList once, do not map here */}

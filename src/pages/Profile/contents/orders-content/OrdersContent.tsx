@@ -57,7 +57,7 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedProductForReview, setSelectedProductForReview] = useState<{ id: string; name: string; orderId: string } | null>(null);
-  const isMobile = useScreenMatch(450);
+  const isMobile = useScreenMatch();
   const toast = useToast();
 
   useEffect(() => {

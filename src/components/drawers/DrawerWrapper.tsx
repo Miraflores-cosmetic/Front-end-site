@@ -27,7 +27,7 @@ const DrawerWrapper: React.FC = () => {
   const isOpenMenu = activeDrawer === 'menu' ? true : false;
   const isOpenAbout = activeDrawer === 'about' ? true : false;
   const isAddComment = activeDrawer === 'add-comment' ? true : false;
-  const isMobileBasket = useScreenMatch(768);
+  const isMobileBasket = useScreenMatch();
 
   // Добавляем/удаляем класс на body когда drawer открыт
   React.useEffect(() => {

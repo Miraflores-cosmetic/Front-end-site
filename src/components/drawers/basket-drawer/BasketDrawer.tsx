@@ -25,7 +25,7 @@ const BasketDrawer: React.FC = () => {
     threshold: 15780,
     successText: 'Бесплатная доставка!'
   });
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
 
   const remainder = Math.max(0, progressBar.threshold - totalToPrice);
   const progressPercent =

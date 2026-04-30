@@ -5,7 +5,7 @@ import { useScreenMatch } from '@/hooks/useScreenMatch';
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const layoutRef = useRef<HTMLDivElement>(null);
   const [isSectionLoaded, setIsSectionLoaded] = useState(false);
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
 
   useEffect(() => {
     // На мобилке reveal-анимация может блокировать первый скролл (особенно при смене направления на iOS).

@@ -32,7 +32,7 @@ function isHiddenInNavLeft(item: { name?: string; category: { slug?: string } })
 
 const HeaderLeft: React.FC = () => {
   const items = useSelector((state: RootState) => state.nav.items);
-  const isMobile = useScreenMatch(850);
+  const isMobile = useScreenMatch();
   const dispatch = useDispatch<AppDispatch>();
 
   const headerItems = items.filter(item => !isHiddenInNavLeft(item));

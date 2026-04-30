@@ -30,7 +30,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   openAccordion,
   setOpenAccordion
 }) => {
-  const isMobile = useScreenMatch(756);
+  const isMobile = useScreenMatch();
 
   const handleClick = (id: TabId) => {
     // Если кликнули на "Выйти", вызываем обработчик через setActiveTab

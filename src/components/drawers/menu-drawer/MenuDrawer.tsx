@@ -11,7 +11,7 @@ import { closeDrawer } from '@/store/slices/drawerSlice';
 import { getMenuItems } from '@/store/slices/navSlice';
 
 const MenuDrawer: React.FC = () => {
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
   const { items } = useSelector((state: RootState) => state.nav);
   const { isAuth } = useSelector((state: RootState) => state.authSlice);
   const dispatch = useDispatch<AppDispatch>();

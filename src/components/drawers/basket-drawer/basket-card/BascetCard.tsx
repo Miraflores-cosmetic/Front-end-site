@@ -30,7 +30,7 @@ const BasketCard: React.FC<BasketCardProps> = ({
   quantityAvailable,
   trackInventory,
 }) => {
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
   const dispatch = useDispatch();
 
   const lineOutOfStock =

@@ -4,16 +4,32 @@
 .orderCart {
   @include mixins.flex(flex-start, stretch, row, 20px);
 
+  @media (max-width: 768px) {
+    gap: 10px;
+    align-items: stretch;
+  }
+
+  & + & {
+    @media (max-width: 768px) {
+      margin-top: 16px;
+    }
+  }
+
   .cartImageWrapper {
     @include mixins.flex(center, center);
     background-color: #f6f5ef;
     width: 100%;
     max-width: 180px;
     height: 180px;
+    flex-shrink: 0;
+    box-sizing: border-box;
 
     @media (max-width: 768px) {
       width: 88px;
       height: 88px;
+      min-width: 88px;
+      max-width: 88px;
+      padding: 11px;
     }
 
     .kremImage {
@@ -26,10 +42,11 @@
       margin: 0;
 
       @media (max-width: 768px) {
-        width: 100%;
-        height: auto;
-        aspect-ratio: 442 / 452;
-        object-fit: cover;
+        width: 66px;
+        height: 66px;
+        max-width: 66px;
+        max-height: 66px;
+        object-fit: contain;
       }
     }
   }
@@ -37,6 +54,12 @@
   .cardInfoWrapper {
     @include mixins.flex(space-between, stretch, column);
     width: 100%;
+    min-width: 0;
+
+    @media (max-width: 768px) {
+      min-height: 88px;
+      justify-content: space-between;
+    }
 
     .top {
       @include mixins.flex(space-between, flex-start, row, 8px);
@@ -62,8 +85,8 @@
         .size {
           @include mixins.font(14px, 400, #6e6d67);
 
-        @media (max-width: 768px) {
-            @include mixins.font(12px, 400, #6e6d67);
+          @media (max-width: 768px) {
+            @include mixins.font(13px, 400, #6e6d67);
           }
         }
       }
@@ -84,18 +107,12 @@
         @include mixins.font(16px, 600);
 
         @media (max-width: 768px) {
-          @include mixins.font(13px, 600);
-        }
-      }
-
-      .price {
-        font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-        font-size: 16px;
-        font-weight: 600;
-        color: #000000;
-
-      @media (max-width: 768px) {
+          font-family: 'Onest', sans-serif;
           font-size: 13px;
+          font-weight: 600;
+          line-height: 17px;
+          text-transform: uppercase;
+          color: #000000;
         }
       }
 
@@ -108,7 +125,18 @@
       }
 
       .price {
-        @include mixins.flex(flex-start, center, row, 10px);
+        font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        color: #000000;
+
+        @media (max-width: 768px) {
+          font-family: 'Onest', sans-serif;
+          font-size: 13px;
+          font-weight: 600;
+          line-height: 17px;
+          text-transform: uppercase;
+        }
 
         .priceOld {
           @include mixins.price-old();
@@ -148,7 +176,9 @@
 
       @media (max-width: 768px) {
         margin-top: 10px;
-        width: 140px;
+        align-self: stretch;
+        width: 100%;
+        max-width: 100%;
         height: 32px;
         font-size: 12px;
       }

@@ -182,7 +182,7 @@ const LazyComponent: React.FC = () => {
   const availableEtaps = allEtaps;
 
 
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
 
   const bestsellerTabOptions = useMemo(() => {
     if (!item) return [];

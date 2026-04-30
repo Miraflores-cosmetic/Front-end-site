@@ -1,9 +1,3 @@
-export function getHeaderStyle(pathname: string, isMobile: boolean) {
-  return {
-    // убрал paddingRight
-  };
-}
-
 export function formatCurrency(value: number | string): string {
   const num = Number(value);
 

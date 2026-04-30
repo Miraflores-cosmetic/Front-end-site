@@ -5,6 +5,7 @@ import topBlockStyles from '@/components/TopBlock/TopBlock.module.scss';
 import { getPageBySlug } from '@/graphql/queries/pages.service';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
+import { VIEWPORT_TABLET_MAX } from '@/constants/viewport';
 import DesktopTextImages from '@/components/TopBlock/DesktopTextImages';
 import TextWrapper from '@/components/TopBlock/TextWrapper';
 import MarqueeText from '@/components/TopBlock/MarqeenText';
@@ -26,8 +27,8 @@ export const HeroSlider: React.FC = () => {
   const [slides, setSlides] = useState<SlideData[]>([]);
   const [loading, setLoading] = useState(true);
   const [mobileActiveIndex, setMobileActiveIndex] = useState(0);
-  const isTablet = useScreenMatch(800);
-  const isMobile = useScreenMatch(450);
+  const isTablet = useScreenMatch(VIEWPORT_TABLET_MAX);
+  const isMobile = useScreenMatch();
   const hasMultipleSlides = slides.length > 1;
 
   const mobileTexts = {

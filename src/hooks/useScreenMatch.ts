@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
+import { VIEWPORT_MOBILE_MAX } from '@/constants/viewport';
 
-export function useScreenMatch(maxWidth: number = 450) {
+export function useScreenMatch(maxWidth: number = VIEWPORT_MOBILE_MAX) {
   const [isScreenMatch, setScreenMatch] = useState(
     typeof window !== 'undefined' ? window.innerWidth < maxWidth : false
   );

@@ -2,10 +2,9 @@ import React from 'react';
 import styles from './Footer.module.scss';
 import siteLogo from '@/assets/icons/Logo-mira.svg';
 import lineTo from '@/assets/icons/lineTofooter.svg';
-import lineToMobile from '@/assets/icons/lineToMobile.svg';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
+import { VIEWPORT_TABLET_MAX } from '@/constants/viewport';
 import FooterMenu from './footer-menu/FooterMenu';
-import { getHeaderStyle } from '@/helpers/helpers';
 
 interface FooterProps {
   /** URL or imported image for the left side background */
@@ -54,15 +53,25 @@ const menuData = {
 
 const socialLinks = ['Телеграмм канал', 'Pinterest', '© Miraflores 2026'];
 
+function LegalBlock() {
+  return (
+    <section className={styles.legalSection} aria-label="Реквизиты">
+      <p className={styles.supportLegal}>
+        ИП Патрацкий Д.А.
+        <br />
+        ИНН 504010991802 ОГРНИП 319774600587304
+      </p>
+    </section>
+  );
+}
+
 const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32 }) => {
-  const isTablet = useScreenMatch(1024);
-  const isMobile = useScreenMatch(657);
-  const isSmallMobile = useScreenMatch(450);
+  const isTablet = useScreenMatch(VIEWPORT_TABLET_MAX);
+  const isMobile = useScreenMatch();
 
   return (
     <footer
       className={`${styles.footer} ${paddingX32 ? styles.footerPaddingX32 : ''} ${paddingRight32 ? styles.footerPaddingRight32 : ''}`}
-      style={getHeaderStyle(location.pathname, isSmallMobile)}
     >
       {!isTablet && (
         <div className={styles.footerLeft}>
@@ -78,11 +87,7 @@ const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32
             <FooterMenu {...menuData.info} />
             <div className={styles.supportColumn}>
               <FooterMenu {...menuData.support} />
-              <p className={styles.supportLegal}>
-                ИП Патрацкий Д.А.
-                <br />
-                ИНН 504010991802 ОГРНИП 319774600587304
-              </p>
+              <LegalBlock />
             </div>
           </div>
 
@@ -99,13 +104,13 @@ const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32
                   {text}
                 </a>
               ) : (
-                <p key={text} className={styles.fotterBottmotxt}>
+                <p key={text} className={styles.footerBottomText}>
                   {text}
                 </p>
               )
             )}
-            <span className={styles.bimoTxt}>тут промокоды</span>
-            <img src={lineTo} className={styles.lineTo} alt='line' />
+            <span className={styles.footerPromoText}>тут промокоды</span>
+            <img src={lineTo} className={styles.lineTo} alt='' />
           </div>
         </div>
       ) : (
@@ -113,19 +118,13 @@ const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32
           <div className={styles.mobileContainer}>
             <div className={styles.mobileLeft}>
               <FooterMenu {...menuData.navigation} />
-              <span className={styles.bimoTxtMobile}>тут промокоды</span>
-              <img src={lineToMobile} className={styles.lineToMobile} alt='line' />
             </div>
 
             <div className={styles.mobileRight}>
               <FooterMenu {...menuData.info} />
               <div className={styles.supportColumn}>
                 <FooterMenu {...menuData.support} />
-                <p className={styles.supportLegal}>
-                  ИП Патрацкий Д.А.
-                  <br />
-                  ИНН 504010991802 ОГРНИП 319774600587304
-                </p>
+                <LegalBlock />
               </div>
             </div>
           </div>
@@ -143,7 +142,7 @@ const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32
                   {text}
                 </a>
               ) : (
-                <p key={text} className={styles.fotterBottmotxt}>
+                <p key={text} className={styles.footerBottomText}>
                   {text}
                 </p>
               )

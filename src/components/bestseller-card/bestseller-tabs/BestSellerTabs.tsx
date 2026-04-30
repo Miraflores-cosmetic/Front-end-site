@@ -19,7 +19,7 @@ interface ProductTabsProps {
 const BestSellerTabs: React.FC<ProductTabsProps> = ({ options }) => {
   const list = options?.length ? options : [];
   const [activeId, setActiveId] = useState<string>(() => list[0]?.id ?? '');
-  const isMobile = useScreenMatch(768);
+  const isMobile = useScreenMatch();
 
   const optionIdsKey = list.map(o => o.id).join(',');
 

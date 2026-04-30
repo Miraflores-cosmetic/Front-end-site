@@ -23,7 +23,7 @@ const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
-  const isMobile = useScreenMatch(756);
+  const isMobile = useScreenMatch();
 
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
@@ -56,7 +56,7 @@ const ProfilePage: React.FC = () => {
     {
       id: 'bonus' as TabId,
       label: 'БОНУСНЫЙ СЧЕТ',
-      content: <div>Контент избранного44</div>
+      content: <BonusContent onCloseAccordion={() => setOpenAccordion(null)} />
     },
     {
       id: 'logout' as TabId,

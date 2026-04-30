@@ -53,7 +53,7 @@ const menuData = {
 
 const socialLinks = ['Телеграмм канал', 'Pinterest', '© Miraflores 2026'];
 
-function LegalBlock() {
+function MobileLegalBlock() {
   return (
     <section className={styles.legalSection} aria-label="Реквизиты">
       <p className={styles.supportLegal}>
@@ -87,7 +87,11 @@ const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32
             <FooterMenu {...menuData.info} />
             <div className={styles.supportColumn}>
               <FooterMenu {...menuData.support} />
-              <LegalBlock />
+              <p className={styles.supportLegal}>
+                ИП Патрацкий Д.А.
+                <br />
+                ИНН 504010991802 ОГРНИП 319774600587304
+              </p>
             </div>
           </div>
 
@@ -104,13 +108,13 @@ const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32
                   {text}
                 </a>
               ) : (
-                <p key={text} className={styles.footerBottomText}>
+                <p key={text} className={styles.fotterBottmotxt}>
                   {text}
                 </p>
               )
             )}
-            <span className={styles.footerPromoText}>тут промокоды</span>
-            <img src={lineTo} className={styles.lineTo} alt='' />
+            <span className={styles.bimoTxt}>тут промокоды</span>
+            <img src={lineTo} className={styles.lineTo} alt='line' />
           </div>
         </div>
       ) : (
@@ -124,7 +128,7 @@ const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32
               <FooterMenu {...menuData.info} />
               <div className={styles.supportColumn}>
                 <FooterMenu {...menuData.support} />
-                <LegalBlock />
+                <MobileLegalBlock />
               </div>
             </div>
           </div>

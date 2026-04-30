@@ -23,7 +23,6 @@ const FooterMenu: React.FC<FooterMenuProps> = ({ title, items }) => (
         <li key={index} className={styles.menuItem}>
           {item.isExternal ? (
             <a
-              className={styles.menuItemLink}
               href={item.href}
               target={item.href.startsWith('http') ? '_blank' : undefined}
               rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
@@ -32,11 +31,11 @@ const FooterMenu: React.FC<FooterMenuProps> = ({ title, items }) => (
               {item.label}
             </a>
           ) : item.scrollToId ? (
-            <AppLink to={item.href} title={item.title} className={styles.menuItemLink}>
+            <AppLink to={item.href} title={item.title}>
               {item.label}
             </AppLink>
           ) : (
-            <AppLink to={item.href} title={item.title} className={styles.menuItemLink}>
+            <AppLink to={item.href} title={item.title}>
               {item.label}
             </AppLink>
           )}

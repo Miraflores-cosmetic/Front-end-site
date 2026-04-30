@@ -41,7 +41,19 @@
 
   @media (max-width: 1100px) {
     gap: 25px;
+  }
+
+  @media (max-width: 1100px) {
     padding: 0 12px;
+  }
+
+  @media (max-width: 480px) {
+    margin-bottom: 0;
+    height: 420px;
+  }
+
+  @media (max-width: 420px) {
+    padding: 0;
   }
 
   @media (max-width: 768px) {
@@ -54,41 +66,29 @@
     margin-bottom: 0;
   }
 
-  @media (max-width: 480px) {
-    margin-bottom: 0;
-  }
-
-  @media (max-width: 420px) {
-    padding-left: 16px;
-    padding-right: 16px;
-  }
-
   .supportColumn {
     display: flex;
     flex-direction: column;
     gap: 24px;
-
-    .legalSection {
-      max-width: 36rem;
-    }
 
     .supportLegal {
       font-family: 'Onest', 'Avenir Next', sans-serif;
       font-size: 12px;
       color: #6e6d67;
       margin: 0;
-      line-height: 1.55;
+      line-height: 1.4;
     }
   }
 
+  .footerMobile .legalSection {
+    max-width: 36rem;
+  }
+
+  .footerMobile .legalSection .supportLegal {
+    line-height: 1.55;
+  }
+
   .footerBottomLink {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 44px;
-    min-width: 44px;
-    padding: 6px 10px;
-    box-sizing: border-box;
     font-size: 14px;
     color: #6e6d67;
     text-decoration: none;
@@ -100,15 +100,28 @@
     }
   }
 
+  .footerMobile .footerBottomLink {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    min-width: 44px;
+    padding: 6px 10px;
+    box-sizing: border-box;
+  }
+
   .footerBottomText {
+    font-size: 14px;
+    color: #6e6d67;
+  }
+
+  .footerMobile .footerBottomText {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
     margin: 0;
     padding: 6px 8px;
     box-sizing: border-box;
-    font-size: 14px;
-    color: #6e6d67;
   }
 
   .footerMobile {
@@ -216,7 +229,12 @@
         justify-content: space-between;
       }
 
-      .footerPromoText {
+      .fotterBottmotxt {
+        font-size: 14px;
+        color: #6e6d67;
+      }
+
+      .bimoTxt {
         position: absolute;
         left: -90px;
         top: -150px;

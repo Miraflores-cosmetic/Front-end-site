@@ -90,9 +90,10 @@ html {
   display: flex;
 }
 
-/* Корзина: на iOS Safari нижний бар не должен перекрывать блок «Оформить заказ» (100vh ≠ видимая высота) */
+/* Корзина и полноэкранное меню: iOS Safari — нижняя панель браузера (100vh ≠ видимая высота) */
 @media (max-width: 768px) {
-  nav.EZDrawer__container.basket-drawer {
+  nav.EZDrawer__container.basket-drawer,
+  nav.EZDrawer__container.menu-drawer {
     height: 100vh !important;
     max-height: 100vh !important;
     height: 100dvh !important;

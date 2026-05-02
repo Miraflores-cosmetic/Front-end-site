@@ -10,6 +10,8 @@ declare global {
 
 export interface YandexPvzBrief {
     id: string;
+    /** operator id из pickup-points (для Cargo point_id при UUID id) */
+    operatorId?: string;
     name: string;
     addressLine: string;
     city: string;

@@ -11,6 +11,7 @@ import CdekPvzList, { CdekPvzInfo } from '@/components/cdek/CdekPvzList';
 import YandexPvzList, { type YandexPvzBrief } from '@/components/yandex/YandexPvzList';
 import DeliveryCourierMap from '@/components/yandex/DeliveryCourierMap';
 import { buildStreetAddress2WithMeta, parseVspAddressMeta } from '@/lib/addressVspMeta';
+import { yandexPointIdForCargoOffers } from '@/lib/yandexPvzCargoId';
 import { useToast } from '@/components/toast/toast';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe } from '@/store/slices/authSlice';
@@ -144,9 +145,12 @@ const AddressDrawer: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethodId>('cdek_pvz');
     /** Для сохранённой строки меты Яндекс ПВЗ */
-    const [yandexPvzDraft, setYandexPvzDraft] = useState<{ id: string; lat: number; lon: number } | null>(
-        null,
-    );
+    const [yandexPvzDraft, setYandexPvzDraft] = useState<{
+        id: string;
+        cid: string;
+        lat: number;
+        lon: number;
+    } | null>(null);
     /** Координаты курьера Яндекс */
     const [yandexCourierLl, setYandexCourierLl] = useState<{ lon: string; lat: string } | null>(
         null,
@@ -184,6 +188,7 @@ const AddressDrawer: React.FC = () => {
                 const lo = parseFloat(ym.lon);
                 setYandexPvzDraft({
                     id: ym.pvz,
+                    cid: (ym.cid || ym.pvz || '').trim(),
                     lat: Number.isFinite(la) ? la : 0,
                     lon: Number.isFinite(lo) ? lo : 0,
                 });
@@ -256,6 +261,7 @@ const AddressDrawer: React.FC = () => {
                             lon: String(yandexPvzDraft.lon),
                             lat: String(yandexPvzDraft.lat),
                             pvz: yandexPvzDraft.id,
+                            cid: yandexPvzDraft.cid !== yandexPvzDraft.id ? yandexPvzDraft.cid : '',
                             dropoff: 'pvz',
                         },
                         tail,
@@ -272,6 +278,7 @@ const AddressDrawer: React.FC = () => {
                             lon: yandexCourierLl.lon,
                             lat: yandexCourierLl.lat,
                             pvz: '',
+                            cid: '',
                             dropoff: 'courier',
                         },
                         tail,
@@ -395,8 +402,13 @@ const AddressDrawer: React.FC = () => {
                                     <YandexPvzList
                                         onChoose={(info: YandexPvzBrief) => {
                                             setFormData((prev) => applyYandexPvzToForm(prev, info));
+                                            const cid = yandexPointIdForCargoOffers({
+                                                id: info.id,
+                                                operatorId: info.operatorId,
+                                            });
                                             setYandexPvzDraft({
                                                 id: info.id,
+                                                cid: cid || info.id,
                                                 lat: info.lat,
                                                 lon: info.lon,
                                             });

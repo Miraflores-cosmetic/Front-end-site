@@ -56,33 +56,22 @@ function buildPackages(lines: CheckoutLine[], byVariant: Awaited<ReturnType<type
     return packages;
 }
 
-/** Одно место для Яндекс pricing: суммарный вес, макс. габариты по сторонам */
-function buildYandexPlacesFromLines(
-    lines: CheckoutLine[],
-    byVariant: Awaited<ReturnType<typeof fetchVariantsShippingData>>,
-) {
-    const pkgs = buildPackages(lines, byVariant);
-    if (pkgs.length === 0) return [];
-    let maxL = 0;
-    let maxW = 0;
-    let maxH = 0;
-    let sumW = 0;
-    for (const p of pkgs) {
-        sumW += p.weight;
-        maxL = Math.max(maxL, p.length);
-        maxW = Math.max(maxW, p.width);
-        maxH = Math.max(maxH, p.height);
-    }
-    return [
-        {
-            physical_dims: {
-                weight_gross: Math.max(1, sumW),
-                dx: Math.max(1, maxL),
-                dy: Math.max(1, maxH),
-                dz: Math.max(1, maxW),
-            },
-        },
-    ];
+function parseYandexOfferPrice(raw: string | undefined): number {
+    if (raw == null || raw === '') return 0;
+    const normalized = String(raw).replace(/\s/g, '').replace(',', '.');
+    const n = parseFloat(normalized);
+    return Number.isFinite(n) ? n : 0;
+}
+
+function getCheapestOffer(
+    offers: Array<{ price?: { total_price?: string | undefined } }>,
+): { price?: { total_price?: string | undefined } } | null {
+    if (!offers?.length) return null;
+    return offers.reduce((min, o) => {
+        const price = parseYandexOfferPrice(o.price?.total_price);
+        const minPrice = parseYandexOfferPrice(min.price?.total_price);
+        return price < minPrice ? o : min;
+    });
 }
 
 function minDeliverySum(data: unknown): number | null {
@@ -97,19 +86,6 @@ function minDeliverySum(data: unknown): number | null {
     }
     return min === Infinity ? null : min;
 }
-
-function parseYandexPricingTotal(data: unknown): number | null {
-    if (!data || typeof data !== 'object') return null;
-    const raw = data as { pricing_total?: string };
-    const pt = raw.pricing_total;
-    if (typeof pt !== 'string') return null;
-    const m = pt.match(/^([\d.]+)/);
-    if (!m) return null;
-    const v = parseFloat(m[1]);
-    return Number.isFinite(v) ? Math.round(v) : null;
-}
-
-/** Для простого текстового адреса без меты Яндекс — СДЭК (как раньше). */
 function useCdekOnlyEstimate(lines: CheckoutLine[], address: AddressInfo | null) {
     const [rub, setRub] = useState<number | null>(null);
     const [loading, setLoading] = useState(false);
@@ -225,83 +201,112 @@ function useYandexOnlyEstimate(lines: CheckoutLine[], address: AddressInfo | nul
                 return;
             }
 
+            const city = (address.city || '').trim();
+            if (!city) {
+                setRub(null);
+                setError('Укажите город для расчёта доставки');
+                setLoading(false);
+                return;
+            }
+
+            const usePvz =
+                meta.dropoff === 'pvz' ||
+                (meta.dropoff !== 'courier' && Boolean((meta.pvz || meta.cid)?.trim()));
+            const pvzId = usePvz ? (meta.cid || meta.pvz || '').trim() : '';
+
+            if (usePvz && !pvzId) {
+                setRub(null);
+                setError('Выберите пункт Яндекс Доставки');
+                setLoading(false);
+                return;
+            }
+
+            const fullname = (address.streetAddress1 || '').trim();
+            if (!usePvz && !fullname) {
+                setRub(null);
+                setError('Укажите город и адрес (улица, дом) для курьера');
+                setLoading(false);
+                return;
+            }
+
+            const lonParsed = Number.parseFloat(meta.lon || '');
+            const latParsed = Number.parseFloat(meta.lat || '');
+            const coordinates =
+                Number.isFinite(lonParsed) && Number.isFinite(latParsed)
+                    ? ([lonParsed, latParsed] as [number, number])
+                    : undefined;
+
             setLoading(true);
             try {
                 const variantIds = payableLines.map((l) => l.variantId);
                 const byVariant = await fetchVariantsShippingData(variantIds);
-                const places = buildYandexPlacesFromLines(payableLines, byVariant);
-                if (places.length === 0) {
-                    if (id === seq.current) {
-                        setRub(null);
-                        setLoading(false);
-                    }
-                    return;
-                }
-
-                let body: Record<string, unknown>;
-
-                if (meta.dropoff === 'pvz') {
-                    const stationId = meta.pvz?.trim();
-                    if (!stationId) {
-                        if (id === seq.current) {
-                            setRub(null);
-                            setError('Выберите пункт Яндекс Доставки');
-                            setLoading(false);
-                        }
-                        return;
-                    }
-                    body = {
-                        tariff: 'self_pickup',
-                        destination_station_id: stationId,
-                        places,
+                const shipment_lines = payableLines.map((line) => {
+                    const row = byVariant.get(line.variantId);
+                    const q = Math.max(1, Math.floor(line.quantity || 1));
+                    const wG = row?.weightGrams ?? 300;
+                    const lCm = row?.lengthCm ?? 20;
+                    const wCm = row?.widthCm ?? 15;
+                    const hCm = row?.heightCm ?? 10;
+                    return {
+                        quantity: q,
+                        weight_kg: wG / 1000,
+                        length_mm: lCm * 10,
+                        width_mm: wCm * 10,
+                        height_mm: hCm * 10,
                     };
-                } else {
-                    const city = (address.city || '').trim();
-                    const line = (address.streetAddress1 || '').trim();
-                    if (!city || !line) {
-                        if (id === seq.current) {
-                            setRub(null);
-                            setError('Укажите город и адрес (улица, дом) для курьера');
-                            setLoading(false);
-                        }
-                        return;
-                    }
-                    const destination_address = `${city}, ${line}`;
-                    body = {
-                        tariff: 'time_interval',
-                        destination_address,
-                        places,
-                    };
-                }
+                });
 
-                const res = await fetch(`${window.location.origin}/api/yandex/pricing`, {
+                const body = {
+                    action: 'calculate' as const,
+                    mode: usePvz && pvzId ? ('pvz' as const) : ('door' as const),
+                    to: {
+                        city,
+                        fullname,
+                        ...(coordinates ? { coordinates } : {}),
+                        ...(usePvz && pvzId ? { yandex_point_id: pvzId } : {}),
+                    },
+                    shipment_lines,
+                };
+
+                const res = await fetch(`${window.location.origin}/api/yandex-delivery`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(body),
                 });
                 const json = (await res.json().catch(() => ({}))) as {
                     error?: string;
-                    message?: string;
-                    description?: string;
-                    hint?: string;
+                    offers?: Array<{ price?: { total_price?: string } }>;
                 };
+
                 if (!res.ok) {
-                    const base =
-                        json.message ||
-                        json.error ||
-                        json.description ||
-                        `Яндекс Доставка ${res.status}`;
-                    const msg = json.hint ? `${base} ${json.hint}` : String(base);
-                    throw new Error(msg);
+                    throw new Error(json.error || `Яндекс Доставка ${res.status}`);
                 }
-                const sum = parseYandexPricingTotal(json);
-                if (id === seq.current) {
-                    if (sum == null) {
-                        setRub(null);
-                        setError('Не удалось получить цену доставки Яндекс');
-                    } else {
-                        setRub(sum);
+
+                const allOffers = json.offers || [];
+                const positiveOffers = allOffers.filter(
+                    (o) => parseYandexOfferPrice(o.price?.total_price) > 0,
+                );
+                const cheapest = getCheapestOffer(
+                    positiveOffers.length > 0 ? positiveOffers : allOffers,
+                );
+
+                if (cheapest?.price?.total_price != null) {
+                    const sum = parseYandexOfferPrice(cheapest.price.total_price);
+                    if (id === seq.current) {
+                        setRub(sum > 0 ? Math.round(sum) : 0);
+                        setError(null);
                     }
+                    return;
+                }
+
+                if (id === seq.current) {
+                    setRub(null);
+                    setError(
+                        json.error ||
+                            (Array.isArray(allOffers) && allOffers.length === 0
+                                ? 'Не удалось получить тариф Яндекс Доставки для этого адреса'
+                                : 'Не удалось получить цену доставки Яндекс'),
+                    );
                 }
             } catch (e: unknown) {
                 if (id === seq.current) {

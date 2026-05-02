@@ -10,7 +10,12 @@ export interface VspAddressMeta {
     carrier: VspCarrier;
     lon: string;
     lat: string;
+    /** id строки пункта из pickup-points/list (для совпадения с картой) */
     pvz: string;
+    /**
+     * point_id для Cargo / yandex_point_id для Platform калькулятора (часто operator id вместо UUID).
+     */
+    cid: string;
     dropoff: VspDropoff;
 }
 
@@ -52,19 +57,36 @@ export function parseVspAddressMeta(streetAddress2: string | null | undefined): 
     }
     if (kv.carrier !== 'yandex') return null;
     const dropoff = kv.dropoff === 'courier' ? 'courier' : 'pvz';
+    let pvzDecoded = kv.pvz || '';
+    let cidDecoded = kv.cid || '';
+    try {
+        if (pvzDecoded) pvzDecoded = decodeURIComponent(pvzDecoded);
+    } catch {
+        /* noop */
+    }
+    try {
+        if (cidDecoded) cidDecoded = decodeURIComponent(cidDecoded);
+    } catch {
+        /* noop */
+    }
     return {
         carrier: 'yandex',
         lon: kv.lon || '',
         lat: kv.lat || '',
-        pvz: kv.pvz || '',
+        pvz: pvzDecoded,
+        cid: cidDecoded,
         dropoff,
     };
 }
 
 /** Собирает первую строку меты (__VSP:...__). */
 export function buildVspMetaLine(meta: VspAddressMeta): string {
-    const { carrier, lon, lat, pvz, dropoff } = meta;
-    return `${VSP_META_PREFIX}carrier=${carrier}|lon=${lon}|lat=${lat}|pvz=${pvz}|dropoff=${dropoff}__`;
+    const { carrier, lon, lat, pvz, cid, dropoff } = meta;
+    const cidPart =
+        cid && cid.trim()
+            ? `|cid=${encodeURIComponent(cid.trim())}`
+            : '';
+    return `${VSP_META_PREFIX}carrier=${carrier}|lon=${lon}|lat=${lat}|pvz=${encodeURIComponent(pvz)}|dropoff=${dropoff}${cidPart}__`;
 }
 
 export function buildStreetAddress2WithMeta(meta: VspAddressMeta, tail: string): string {

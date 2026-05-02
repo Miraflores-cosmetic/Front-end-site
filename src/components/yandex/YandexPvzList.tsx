@@ -7,6 +7,7 @@ import {
     yandexGeoCenter,
 } from '@/lib/yandexCityGeo';
 import YandexPvzMap, { type YandexPvzBrief } from './YandexPvzMap';
+import { pickupPointOperatorId } from '@/lib/yandexPvzCargoId';
 
 interface YandexPvzListProps {
     onChoose: (info: YandexPvzBrief) => void;
@@ -39,8 +40,10 @@ function normalizePvzApi(raw: Record<string, unknown>): YandexPvzBrief | null {
               : '';
     const postal = typeof addr?.postal_code === 'string' ? addr.postal_code : '';
     const name = typeof raw.name === 'string' ? raw.name : 'Пункт выдачи';
+    const operatorId = pickupPointOperatorId(raw);
     return {
         id,
+        ...(operatorId ? { operatorId } : {}),
         name,
         addressLine: full || name,
         city: locality,
@@ -88,10 +91,13 @@ const YandexPvzList: React.FC<YandexPvzListProps> = ({
             setPvzError(null);
             setPvzList([]);
             try {
-                const res = await fetch(`${window.location.origin}/api/yandex/pickup-points`, {
+                const res = await fetch(`${window.location.origin}/api/yandex-delivery`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ geo_id: geoId }),
+                    body: JSON.stringify({
+                        action: 'list-pickup-points',
+                        geo_id: geoId,
+                    }),
                 });
                 const json = (await res.json().catch(() => ({}))) as {
                     points?: unknown[];

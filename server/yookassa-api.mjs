@@ -1,6 +1,29 @@
-import 'dotenv/config';
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const frontRoot = path.resolve(__dirname, '..');
+
+function loadFrontEnv() {
+  for (const p of [path.join(frontRoot, '.env'), path.join(frontRoot, '.env.local')]) {
+    if (fs.existsSync(p)) dotenv.config({ path: p, override: true });
+  }
+  const cwd = process.cwd();
+  if (cwd !== frontRoot) {
+    for (const p of [path.join(cwd, '.env'), path.join(cwd, '.env.local')]) {
+      if (fs.existsSync(p)) dotenv.config({ path: p, override: true });
+    }
+    for (const p of [path.join(cwd, 'Front', '.env'), path.join(cwd, 'Front', '.env.local')]) {
+      if (fs.existsSync(p)) dotenv.config({ path: p, override: true });
+    }
+  }
+}
+
+loadFrontEnv();
 
 const app = express();
 const PORT = 3002;

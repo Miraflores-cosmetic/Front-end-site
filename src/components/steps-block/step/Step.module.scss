@@ -1,3 +1,5 @@
+@use '@/style/variables.scss' as *;
+
 .step {
   position: relative;
   cursor: pointer;
@@ -15,9 +17,14 @@
   transform-origin: center top;
   flex-shrink: 0;
 
-  @media (max-width: 768px) {
-    min-width: 280px;
-    width: 280px;
+  @media (max-width: $viewport-mobile-max) {
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    min-width: 220px;
+    height: auto;
+    max-height: none;
+    overflow: visible;
   }
 
   &:hover {
@@ -26,9 +33,9 @@
     //box-shadow: 0 16px 45px rgba(0, 0, 0, 0.18);
     z-index: 10;
     
-    @media (max-width: 768px) {
-      width: 280px;
-      height: 320px;
+    @media (max-width: $viewport-mobile-max) {
+      width: 220px;
+      height: auto;
     }
   }
 
@@ -72,6 +79,13 @@
     }
   }
 
+  @media (max-width: $viewport-mobile-max) {
+    .stepWrapper {
+      height: 200px;
+      flex-shrink: 0;
+    }
+  }
+
   &:hover .stepWrapper {
     height: 480px;
 
@@ -80,6 +94,17 @@
       height: 480px;
       transform: scale(1.03);
       margin: 0 auto;
+    }
+
+    @media (max-width: $viewport-mobile-max) {
+      height: 200px;
+
+      .stepImage {
+        width: 100%;
+        height: 100%;
+        transform: none;
+        margin: 0;
+      }
     }
   }
 
@@ -106,6 +131,25 @@
       font-weight: 400;
       color: #444;
       line-height: 1.6;
+    }
+
+    @media (max-width: $viewport-mobile-max) {
+      opacity: 1;
+      transform: none;
+      padding: 10px 0 0;
+      border-radius: 0;
+      flex: 1;
+      min-height: 0;
+
+      .textTitle {
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+
+      .textDesc {
+        font-size: 13px;
+        line-height: 1.5;
+      }
     }
   }
 
@@ -135,9 +179,26 @@
       transform: translateY(0);
     }
 
-    @media (max-width: 768px) {
-      width: 500px;
-      height: 640px;
+    @media (max-width: $viewport-mobile-max) {
+      width: 220px;
+      height: auto;
+      z-index: 1;
+
+      .stepWrapper {
+        height: 200px;
+
+        .stepImage {
+          width: 100%;
+          height: 100%;
+          transform: none;
+          margin: 0;
+        }
+      }
+
+      .textContent {
+        opacity: 1;
+        transform: none;
+      }
     }
   }
 }

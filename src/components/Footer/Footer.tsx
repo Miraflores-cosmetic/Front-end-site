@@ -13,6 +13,8 @@ interface FooterProps {
   paddingX32?: boolean;
   /** Right padding 32px (e.g. on Home page) */
   paddingRight32?: boolean;
+  /** Главная: на мобилке без горизонтальных отступов у футера */
+  pageHome?: boolean;
 }
 
 const menuData = {
@@ -65,13 +67,13 @@ function MobileLegalBlock() {
   );
 }
 
-const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32 }) => {
+const Footer: React.FC<FooterProps> = ({ footerImage, paddingX32, paddingRight32, pageHome }) => {
   const isTablet = useScreenMatch(VIEWPORT_TABLET_MAX);
   const isMobile = useScreenMatch();
 
   return (
     <footer
-      className={`${styles.footer} ${paddingX32 ? styles.footerPaddingX32 : ''} ${paddingRight32 ? styles.footerPaddingRight32 : ''}`}
+      className={`${styles.footer} ${paddingX32 ? styles.footerPaddingX32 : ''} ${paddingRight32 ? styles.footerPaddingRight32 : ''} ${pageHome ? styles.footerPageHome : ''}`}
     >
       {!isTablet && (
         <div className={styles.footerLeft}>

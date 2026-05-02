@@ -24,22 +24,22 @@ export const Review: React.FC<ReviewProps> = ({
   date,
   isHomePreview
 }) => {
+  const hasImages = Array.isArray(images) && images.length > 0;
+
   return (
     <div className={`${styles.review} ${isHomePreview ? styles.homePreview : ''}`}>
-      <div className={styles.images}>
-        {images && images.length > 0 ? (
-          images.map((img, i) => (
+      {hasImages && (
+        <div className={styles.images}>
+          {images.map((img, i) => (
             <ImageWithFallback
               key={i}
               src={normalizeMediaUrl(img)}
               alt={title}
               className={styles.reviewImage}
             />
-          ))
-        ) : (
-          <div className={styles.imagePlaceholder} aria-hidden />
-        )}
-      </div>
+          ))}
+        </div>
+      )}
 
       <div className={styles.rating}>
         <div>

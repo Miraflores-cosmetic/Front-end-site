@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import styles from './Awards.module.scss';
 
 import awardsVideo from '@/assets/videos/awards.mp4';
-import leaf from '@/assets/images/leaf.webp';
 import romashkaBig from '@/assets/icons/romashkaBig.svg';
 import medal from '@/assets/icons/medal.webp';
 
@@ -97,7 +96,6 @@ export const Awards: React.FC = () => {
                 playsInline
                 preload="none"
               />
-              <img src={leaf} className={styles.leaf} alt='Листок' />
             </div>
           ) : (
             <video

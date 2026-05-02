@@ -9,6 +9,10 @@ $red-ff: #ff4766;
 $red-line: #ff0808;
 $bg-light: #f6f5ef;
 
+// Layout breakpoints — синхрон с `src/constants/viewport.ts` (VIEWPORT_MOBILE_MAX и т.д.)
+$viewport-mobile-max: 768px;
+$viewport-tablet-max: 1024px;
+
 // Spacing
 $spacing-xs: 4px;
 $spacing-sm: 8px;

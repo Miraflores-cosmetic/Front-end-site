@@ -47,7 +47,7 @@
     padding-bottom: 100px;
     margin-top: 0;
     margin-bottom: 0;
-    padding-right: 12px;
+    padding-right: 0;
   }
 
   .titleWrapper {
@@ -112,17 +112,12 @@
       width: calc(100% + 32px);
     }
     
-    @media (max-width: 768px) {
-      padding-right: 20px;
-      margin-right: -20px;
-      width: calc(100% + 20px);
+    @media (max-width: $viewport-mobile-max) {
+      padding-top: 48px;
+      padding-right: 12px;
+      margin-right: -12px;
+      width: calc(100% + 12px);
     }
-    
-      @media (max-width: 768px) {
-        padding-right: 12px;
-        margin-right: -12px;
-        width: calc(100% + 12px);
-      }
     
     .gratitudeImageWrapper {
       margin-bottom: 54px;
@@ -229,18 +224,22 @@
           height: 250px;
         }
         @media (max-width: 1100px) {
+          width: 230px;
           min-width: 230px;
-          height: 220px;
+          height: 230px;
         }
-        @media (max-width: 768px) {
+        @media (max-width: $viewport-mobile-max) {
+          width: 161px;
           min-width: 161px;
+          max-width: 161px;
           height: 161px;
-          width: 181px;
+          aspect-ratio: 1;
         }
         .kremImage {
           width: 100%;
           height: 100%;
           object-fit: cover;
+          border-radius: 50%;
         }
 
         .placeholderImage {

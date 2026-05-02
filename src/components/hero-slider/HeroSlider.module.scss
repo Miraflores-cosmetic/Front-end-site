@@ -1,3 +1,5 @@
+@use '@/style/variables.scss' as *;
+
 @keyframes heroSlideAppear {
   from {
     opacity: 0;
@@ -6,6 +8,18 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* Крупное фото в hero (мобилка): фиксированная высота кадра — см. TopBlock .right img */
+.heroMainImage {
+  @media (max-width: $viewport-mobile-max) {
+    height: 70vh !important;
+    min-height: 70vh;
+    width: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
   }
 }
 
@@ -19,7 +33,8 @@
   overscroll-behavior-x: contain;
   transition: height 0.5s ease;
 
-  @media (min-width: 451px) {
+  /* > VIEWPORT_MOBILE_MAX (768) */
+  @media (min-width: 769px) {
     :global(.slick-slide) {
       opacity: 0;
     }
@@ -28,19 +43,12 @@
       opacity: 1;
     }
 
-    /* анимация только при первой загрузке — только у первого слайда */
     :global(.slick-slide:first-child) {
       animation: heroSlideAppear 0.55s ease-out forwards;
     }
   }
 
-  @media (max-width: 768px) {
-    margin-bottom: 0;
-    height: auto;
-    min-height: auto;
-  }
-  
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     height: auto;
     min-height: auto;
     margin-top: 0;
@@ -58,8 +66,8 @@
   width: 100%;
   height: 100%;
   transition: height 0.5s ease;
-  
-  @media (max-width: 768px) {
+
+  @media (max-width: $viewport-mobile-max) {
     height: auto;
   }
 }
@@ -68,8 +76,8 @@
   width: 100%;
   outline: none;
   height: calc(100vh - var(--header-height, 72px) - var(--preheader-height, 0px) - 20px);
-  
-  @media (max-width: 768px) {
+
+  @media (max-width: $viewport-mobile-max) {
     height: auto;
     min-height: auto;
     margin-top: 0;

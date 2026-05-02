@@ -9,6 +9,8 @@
     margin-bottom: 140px;
     @media (max-width: 768px) {
       padding-top: 24px;
+      padding-bottom: 0;
+      margin-bottom: 0;
     }
   }
 
@@ -68,6 +70,14 @@
     }
     &:hover {
       color: #297230;
+    }
+
+    @media (max-width: $viewport-mobile-max) {
+      margin-top: 24px;
+      width: 100%;
+      box-sizing: border-box;
+      justify-content: flex-start;
+      align-self: flex-start;
     }
   }
 

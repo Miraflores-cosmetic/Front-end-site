@@ -23,9 +23,8 @@ interface SetData {
   product?: BestSellersProduct;
 }
 
-const LeftBlock: React.FC<{ isMobile: boolean }> = ({ isMobile }) => (
-  <div className={styles.left}>
-    <p className={styles.leftTitle}>
+const LeftBlockText: React.FC = () => (
+  <p className={styles.leftTitle}>
     Наши продукты прекрасно
 сочетаются между собой,
 усиливая действие друг друга.
@@ -46,25 +45,27 @@ const LeftBlock: React.FC<{ isMobile: boolean }> = ({ isMobile }) => (
 полноценный ритуал ухода по
 более привлекательной цене.
 </span>
-    </p>
+  </p>
+);
 
-    {isMobile && (
-      <div className={styles.rightWrapper}>
-        <img src={creamImage} alt='Крем' />
-      </div>
-    )}
-
-    <div className={styles.moreWrapper}>
-      <AppLink to='/category/nabory'>
-        <p>Больше наборов</p>
-        <img src={arrowToRight} alt='Показать больше наборов' />
-      </AppLink>
-    </div>
+const MoreNaboryLink: React.FC = () => (
+  <div className={styles.moreWrapper}>
+    <AppLink to='/category/nabory'>
+      <p>Больше наборов</p>
+      <img src={arrowToRight} alt='Показать больше наборов' />
+    </AppLink>
   </div>
 );
 
-const CenterBlock: React.FC<{ product: BestSellersProduct | null; isMobile: boolean }> = ({ product, isMobile }) => {
-  if (isMobile || !product) return null;
+const LeftBlock: React.FC = () => (
+  <div className={styles.left}>
+    <LeftBlockText />
+    <MoreNaboryLink />
+  </div>
+);
+
+const CenterBlock: React.FC<{ product: BestSellersProduct | null }> = ({ product }) => {
+  if (!product) return null;
 
   return (
     <div className={styles.center}>
@@ -375,9 +376,23 @@ export const Sets: React.FC = () => {
     >
       <h2 className={styles.title}>Наборы</h2>
       <div className={styles.setsWrapper}>
-        <LeftBlock isMobile={isMobile} />
-        <CenterBlock product={firstSet?.product || null} isMobile={isMobile} />
-        <RightBlock setImage={displaySetImage || undefined} isMobile={isMobile} />
+        {isMobile ? (
+          <>
+            <div className={styles.left}>
+              <LeftBlockText />
+            </div>
+            <CenterBlock product={firstSet?.product || null} />
+            <div className={styles.left}>
+              <MoreNaboryLink />
+            </div>
+          </>
+        ) : (
+          <>
+            <LeftBlock />
+            <CenterBlock product={firstSet?.product || null} />
+            <RightBlock setImage={displaySetImage || undefined} isMobile={isMobile} />
+          </>
+        )}
       </div>
     </section>
   );

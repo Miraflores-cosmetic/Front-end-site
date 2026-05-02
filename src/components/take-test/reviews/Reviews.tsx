@@ -4,7 +4,6 @@ import img1 from '@/assets/images/etap3.webp';
 import img2 from '@/assets/images/etap2.webp';
 import ArrowToRight from '@/assets/icons/ArrowToRight.svg';
 import { Review } from './review/Review';
-import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { Link, useNavigate } from 'react-router-dom';
 import { getAllPublishedReviews } from '@/graphql/queries/reviewsAll.service';
 import { useSelector } from 'react-redux';
@@ -23,7 +22,6 @@ export const Reviews: React.FC<{
   variant?: 'preview' | 'page';
   productSlug?: string;
 }> = ({ variant = 'preview', productSlug }) => {
-  const isMobile = useScreenMatch();
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
@@ -155,7 +153,7 @@ export const Reviews: React.FC<{
         </div>
       </div>
 
-      {!isMobile && !showAll && (
+      {!showAll && (
         <Link
           to='/reviews/'
           className={styles.allWrapper}

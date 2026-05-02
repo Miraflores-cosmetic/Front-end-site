@@ -1,3 +1,5 @@
+@use '@/style/variables.scss' as *;
+
 .infoTest {
   width: 100%;
   padding-top: 200px;
@@ -34,12 +36,14 @@
       transform: translateY(0);
     }
   }
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     padding-top: 0;
     padding-bottom: 100px;
     margin-top: 0;
     margin-bottom: 0;
-    padding-right: 12px;
+    padding-right: 0;
+    align-items: center;
+    width: 100%;
   }
   .textWrapper {
     position: relative;
@@ -54,11 +58,9 @@
       font-size: 64px;
       font-weight: 300;
 
-      @media (max-width: 700px) {
-        font-size: 32px;
-      }
-      @media (max-width: 576px) {
-        font-size: 24px;
+      @media (max-width: $viewport-mobile-max) {
+        font-size: 28px;
+        line-height: 1.25;
       }
     }
     
@@ -87,6 +89,20 @@
     display: flex;
     gap: 10px;
     margin-top: 32px;
+
+    @media (max-width: $viewport-mobile-max) {
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      max-width: 100%;
+      flex-wrap: wrap;
+      margin-left: auto;
+      margin-right: auto;
+      padding-left: $spacing-md;
+      padding-right: $spacing-md;
+      box-sizing: border-box;
+    }
+
     @media (max-width: 470px) {
       flex-direction: column;
       justify-content: center;

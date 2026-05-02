@@ -1,3 +1,5 @@
+@use '@/style/variables.scss' as *;
+
 .wrapper {
   position: relative;
   height: 100%;
@@ -5,7 +7,7 @@
   flex-direction: column;
   justify-content: space-between;
   
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     height: auto;
   }
 }
@@ -13,7 +15,9 @@
 .topBlockContainer {
   display: flex;
   width: 100%;
-  padding-right: 32px;
+  /* hero вне main: левый отступ как раньше у .homeContainer; справа без дублирования с main */
+  padding-left: $spacing-xl;
+  padding-right: $spacing-xl;
   padding-bottom: 24px;
   max-width: 1536px;
   margin: 0 auto;
@@ -21,15 +25,12 @@
   height: 100%;
   transition: height 0.5s ease;
 
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     height: auto;
-  }
-
-  @media (max-width: 768px) {
     margin-bottom: 100px;
-    padding-right: 12px;
+    padding-left: 0;
+    padding-right: 0;
     padding-bottom: 0;
-    height: auto;
   }
 }
 
@@ -72,7 +73,7 @@
     margin-right: -8%;
   }
   
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     margin-right: 0;
   }
 }
@@ -125,24 +126,12 @@
     top: 5px;
   }
   
-  @media (max-width: 768px) {
-    span,
-    .secondLine {
-      font-size: 48px;
-    }
-    
-    .dropIcon {
-      width: 35px;
-      height: 45px;
-    }
-  }
-  
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     span,
     .secondLine {
       font-size: 36px;
     }
-    
+
     .dropIcon {
       width: 26px;
       height: 33px;
@@ -167,19 +156,14 @@
   flex-direction: column;
   gap: 10px;
 
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     margin-right: 0;
-    align-items: flex-end;
-  }
-  
-  @media (max-width: 768px) {
-    margin-right: 0;
-    align-items: baseline;
-    position: absolute;
-    bottom: 20px;
-    left: 160px;
+    position: relative;
+    left: auto;
+    bottom: auto;
+    align-items: flex-start;
     text-align: left;
-    margin-bottom: 0;
+    width: 100%;
   }
 }
 
@@ -200,8 +184,8 @@
     }
   }
 
-  @media (max-width: 768px) {
-    text-align: right;
+  @media (max-width: $viewport-mobile-max) {
+    text-align: left;
   }
 }
 
@@ -220,8 +204,8 @@
     color: #000000;
   }
 
-  @media (max-width: 768px) {
-    text-align: right;
+  @media (max-width: $viewport-mobile-max) {
+    text-align: left;
   }
 }
 
@@ -240,24 +224,18 @@
     object-fit: cover;
     z-index: 1;
 
-    @media (max-width: 1024px) {
+    @media (max-width: $viewport-tablet-max) {
       width: 120px;
       height: 160px;
     }
     
-    @media (max-width: 768px) {
+    @media (max-width: $viewport-mobile-max) {
       width: 100px;
       height: 133px;
     }
     
-    @media (max-width: 768px) {
-      position: relative;
-      width: 100px;
-      height: 133px;
-      left: auto;
-      bottom: auto;
-      order: 2;
-      margin-top: 20px;
+    @media (max-width: $viewport-mobile-max) {
+      display: none;
     }
   }
 
@@ -272,19 +250,19 @@
       margin-left: 150px;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: $viewport-mobile-max) {
       margin-left: 0;
       margin-right: auto;
       text-align: left;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: $viewport-mobile-max) {
       margin-left: 0;
       margin-right: auto;
       text-align: left;
-      order: 3;
+      order: 1;
       width: 100%;
-      margin-top: 20px;
+      margin-top: 0;
     }
 
     @media (max-width: 350px) {
@@ -294,11 +272,12 @@
     }
   }
   
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     flex-direction: column;
     align-items: flex-start;
     position: relative;
-    margin-top: 150px;
+    /* отступ от hero-текста задаётся в блоке ниже (hero mobile), здесь не дублируем */
+    margin-top: 0;
   }
 }
 
@@ -308,10 +287,8 @@
   left: 160px;
   z-index: 2;
   
-  @media (max-width: 768px) {
-    position: absolute;
-    left: 95px;
-    bottom: 30px;
+  @media (max-width: $viewport-mobile-max) {
+    display: none;
   }
 }
 
@@ -321,11 +298,14 @@
   left: 90px;
   z-index: 5;
 
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     position: absolute;
-    bottom: 140px;
-    left: 50px;
-    z-index: 5;
+    bottom: auto;
+    top: -84px;
+    left: 180px;
+    z-index: 4;
+    width: 200px;
+    height: auto;
   }
 }
 
@@ -338,7 +318,7 @@
   z-index: 10;
 }
 
-@media (max-width: 768px) {
+@media (max-width: $viewport-mobile-max) {
   .textIcon {
     line-height: 60px;
     z-index: 10;
@@ -356,7 +336,7 @@
   animation: marqueeRightToLeft 10s linear infinite;
   margin-top: -90px;
 
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     margin-top: -74px;
   }
 }
@@ -365,7 +345,7 @@
   animation: marqueeLeftToRight 10s linear infinite;
   margin-top: -20px;
 
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     margin-top: -6px;
   }
 }
@@ -390,39 +370,39 @@
   }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1200px) and (min-width: 769px) {
   .lineTo {
     left: 160px;
     bottom: 60px;
   }
 }
 
-  @media (max-width: 800px) {
-    .topBlockContainer {
-      flex-direction: column-reverse;
-      margin-bottom: 100px;
-      height: auto;
-      
-      @media (max-width: 768px) {
-        margin-bottom: 100px;
-        height: auto;
-      }
-    }
+/* Мобильная колонка hero + контент: один порог с VIEWPORT_MOBILE_MAX */
+@media (max-width: $viewport-mobile-max) {
+  .topBlockContainer {
+    flex-direction: column-reverse;
+    margin-bottom: 100px;
+    height: auto;
+  }
 
   .right {
     height: auto;
     width: 100%;
     margin-top: 0;
     padding-top: 0;
+    position: relative;
+    z-index: 1;
   }
 
   .left {
     width: 100%;
     height: auto;
-    
-    @media (max-width: 768px) {
-      margin-top: 120px;
-    }
+    margin-top: 0;
+    padding-left: $spacing-md;
+    padding-right: $spacing-md;
+    box-sizing: border-box;
+    position: relative;
+    z-index: 2;
   }
 
   .right img {
@@ -434,64 +414,55 @@
 
   .wrapper {
     justify-content: initial;
-    gap: 120px;
+    gap: 0;
     display: flex;
     flex-direction: column;
-    
-    @media (max-width: 768px) {
-      gap: 0;
-      flex-direction: column;
-    }
   }
 
+  /* Заголовок чуть ниже, чем раньше (-56px), всё ещё слегка наезжает на фото */
   .imageWrapper {
-    margin-top: 0;
-    z-index: 10;
-    
-    @media (max-width: 768px) {
-      margin-top: 0;
-      order: 1;
-      margin-bottom: 20px;
-    }
+    margin-top: -28px;
+    z-index: 11;
+    order: 1;
+    margin-bottom: 24px;
+    position: relative;
   }
-  
+
   .marqueeWrapper {
-    @media (max-width: 768px) {
-      order: 1;
-      margin-bottom: 20px;
-      position: relative;
-      top: -110px;
-    }
+    order: 1;
+    margin-bottom: 20px;
+    position: relative;
+    top: -110px;
   }
 
   .content {
     width: 100%;
-    
-    @media (max-width: 768px) {
-      margin-top: 0;
-      order: 2;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-    }
+    margin-top: 52px;
+    padding-top: 4px;
+    order: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 0;
+    position: relative;
   }
-  
-  @media (max-width: 768px) {
-    .topBlockContainer {
-      .right {
-        margin-top: 0;
-        padding-top: 0;
-      }
-      
-      .right img {
-        margin-top: 0;
-        padding-top: 0;
-      }
-    }
-    
-    .lineTo {
-      left: 95px;
-      bottom: 30px;
-    }
+
+  .content .contentText {
+    order: 1;
+    margin-top: 14px;
+  }
+
+  .content .info {
+    order: 2;
+  }
+
+  .topBlockContainer .right {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .topBlockContainer .right img {
+    margin-top: 0;
+    padding-top: 0;
   }
 }

@@ -123,11 +123,11 @@
     @media (max-width: 768px) {
       margin-top: 0;
       margin-bottom: 150px;
-      padding-left: 15px;
+      padding-left: 0;
 
       :global {
         .layout {
-          padding-left: 15px;
+          padding-left: 0;
         }
 
         .slick-list {
@@ -144,7 +144,7 @@
   }
 
   @media (max-width: 768px) {
-    padding: 0 12px 100px 0;
+    padding: 0 0 100px;
     margin-top: 0;
     margin-bottom: 0;
 

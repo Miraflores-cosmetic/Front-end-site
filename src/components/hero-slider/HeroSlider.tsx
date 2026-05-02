@@ -31,12 +31,7 @@ export const HeroSlider: React.FC = () => {
   const isMobile = useScreenMatch();
   const hasMultipleSlides = slides.length > 1;
 
-  const mobileTexts = {
-    title: 'Предложения',
-    items: ['Подобрать уход', 'Акции']
-  };
-
-  const desktopTexts = {
+  const heroLinkTexts = {
     title: 'Подобрать уход',
     items: ['Программа благодарности', 'Шаг за шагом к чистой коже']
   };
@@ -191,8 +186,8 @@ export const HeroSlider: React.FC = () => {
 
                 <div className={topBlockStyles.contentText}>
                   <TextWrapper
-                    title={isTablet ? mobileTexts.title : desktopTexts.title}
-                    items={isTablet ? mobileTexts.items : desktopTexts.items}
+                    title={heroLinkTexts.title}
+                    items={heroLinkTexts.items}
                     titleStyle={{
                       textTransform: 'uppercase',
                       fontSize: isMobile ? '14px' : '16px'
@@ -212,6 +207,7 @@ export const HeroSlider: React.FC = () => {
 
           <article className={topBlockStyles.right}>
             <ImageWithFallback
+              className={styles.heroMainImage}
               src={largeImage}
               alt='Цветок'
               loading={index === 0 ? 'eager' : 'lazy'}

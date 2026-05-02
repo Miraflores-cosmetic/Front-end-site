@@ -124,8 +124,8 @@ const Home: React.FC = () => {
         <p className={styles.preHeaderTxt}>{preHeaderText}</p>
       )} */}
       <Header />
+      <HeroSlider />
       <main className={styles.homeContainer}>
-        <HeroSlider />
         <Bestsellers />
         <AboutBlock />
         <StepsBlock />
@@ -135,7 +135,7 @@ const Home: React.FC = () => {
         <GratitudeProgram />
         <FAQBlock />
         <Awards />
-        <Footer footerImage={footerImage} paddingRight32 />
+        <Footer footerImage={footerImage} paddingRight32 pageHome />
       </main>
     </>
   );

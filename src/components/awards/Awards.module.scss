@@ -37,7 +37,7 @@
     margin-top: 0;
     margin-bottom: 0;
     padding-left: 0;
-    padding-right: 12px;
+    padding-right: 0;
   }
 
   .titleWrapper {
@@ -142,33 +142,15 @@
       display: flex;
       align-items: flex-start;
       .bottomImageWrapper {
-        position: relative;
         width: 100%;
-        height: 400px;
+        height: auto;
         .awardImageMobile {
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 196px;
-          height: 196px;
+          display: block;
+          width: 100%;
+          height: auto;
+          aspect-ratio: 1;
           object-fit: cover;
           object-position: center;
-          z-index: 2;
-        }
-        .leaf {
-          position: absolute;
-          top: 180px;
-          right: 0;
-          width: 196px;
-          height: 196px;
-          object-fit: cover;
-          @media (max-width: 768px) {
-            top: 160px;
-            right: 0;
-            width: 246px;
-            height: 196px;
-            object-fit: cover;
-          }
         }
       }
       img {

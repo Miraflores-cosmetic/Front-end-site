@@ -37,8 +37,9 @@
   -ms-overflow-style: none; /* IE 10+ */
 }
 
-@media (max-width: 768px) {
+/* Мобилка: как category / product — 16px по бокам */
+@media (max-width: $viewport-mobile-max) {
   .homeContainer {
-    padding: 0 0 0 12px;
+    padding: 0 16px 0;
   }
 }

@@ -26,12 +26,16 @@
   height: auto;
   display: flex;
   flex-direction: column;
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     padding-top: 0;
     padding-bottom: 100px;
     margin-top: 0;
     margin-bottom: 0;
-    padding-right: 12px;
+    padding-right: 0;
+    padding-left: 0;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   // Начальное состояние - скрыто для анимации
@@ -46,7 +50,7 @@
     width: 100%;
     text-align: start;
     margin-bottom: 48px;
-    @media (max-width: 768px) {
+    @media (max-width: $viewport-mobile-max) {
       font-size: 24px;
       margin-bottom: 16px;
     }
@@ -68,8 +72,16 @@
     gap: 20px;
     padding-left: 0;
     padding-right: 32px;
-    @media (max-width: 768px) {
-      padding-right: 12px;
+    box-sizing: border-box;
+
+    @media (max-width: $viewport-mobile-max) {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 0;
+      margin: 0;
+      width: 100%;
+      max-width: 100%;
+      gap: 24px;
     }
 
     .left {
@@ -81,12 +93,18 @@
       min-width: 0;
       align-self: stretch;
 
+      @media (max-width: $viewport-mobile-max) {
+        width: 100%;
+        max-width: 100%;
+      }
+
       .leftTitle {
         font-size: 16px;
         color: #6e6d67;
         max-width: 346px;
-        @media (max-width: 768px) {
+        @media (max-width: $viewport-mobile-max) {
           font-size: 14px;
+          max-width: 100%;
         }
 
         .leftTitleParagraph {
@@ -117,33 +135,6 @@
         }
       }
 
-      .rightWrapper {
-        @include circle(320px, transparent);
-        margin: 0;
-
-        @media (max-width: 340px) {
-          width: 300px;
-          height: 300px;
-        }
-        @media (max-width: 330px) {
-          width: 280px;
-          height: 280px;
-        }
-
-        @media (max-width: 680px) {
-          background: #f6f5ef;
-          img {
-            transform: rotate(10.45deg);
-            width: 283px;
-
-            @media (max-width: 330px) {
-              width: 260px;
-              height: 260px;
-            }
-          }
-        }
-      }
-
       @media (max-width: 680px) {
         @include flex-center(column);
         gap: 12px;
@@ -156,6 +147,12 @@
       flex: 1;
       min-width: 0;
       height: auto;
+
+      @media (max-width: $viewport-mobile-max) {
+        width: 100%;
+        max-width: 100%;
+        flex: none;
+      }
     }
 
     /* --- адаптив --- */
@@ -182,7 +179,7 @@
       }
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: $viewport-mobile-max) {
       .center {
         .image {
           height: 340px;

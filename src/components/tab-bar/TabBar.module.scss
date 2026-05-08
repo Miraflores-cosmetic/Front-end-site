@@ -9,9 +9,8 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none; /* Firefox */
   gap: 8px;
-  // iOS Safari: горизонтальные скролл-контейнеры могут "съедать" первый вертикальный жест.
-  // Приоритет — вертикальный скролл страницы.
-  touch-action: pan-y;
+  /* горизонтальный свайп по ряду табов и вертикальный скролл страницы */
+  touch-action: pan-x pan-y;
 
   @media (max-width: 768px) {
     /* плотнее + ощущение "это скролл": убираем gaps и добавляем легкий fade по краям */
@@ -39,7 +38,8 @@
   transition: all 0.25s ease;
   flex: 0 0 auto;
   white-space: nowrap;
-  touch-action: manipulation;
+  /* manipulation ломает передачу горизонтального жеста родителю-.wrapper со скроллом на части браузеров */
+  touch-action: pan-x pan-y;
 
   // Hover только для устройств с мышью (на мобилке не должен влиять на размер/фон)
   @media (hover: hover) and (pointer: fine) {
@@ -72,24 +72,16 @@
   }
 }
 
-// На touch (мобилка) hover-состояния только мешают — отключаем любые hover-эффекты.
+// На touch нет реального hover: «липкий» :hover после тапа не должен ломать такой же активный вид, как на десктопе
 @media (hover: none) {
-  .tab:hover,
-  .active:hover,
-  .tab.active:hover {
-    background: transparent;
-    color: inherit;
-    font-size: inherit;
+  .tab:hover:not(.active) {
+    background-color: transparent;
+    color: #000;
   }
-  .active {
-    background: #297230;
-    color: white;
-  }
-}
 
-/* Как у .wrapper: дочерние кнопки с manipulation давали pan-x и снова блокировали вертикальный скролл */
-@media (max-width: 768px) {
-  .tab {
-    touch-action: pan-y;
+  .tab.active,
+  .tab.active:hover {
+    background-color: #297230;
+    color: #fff;
   }
 }

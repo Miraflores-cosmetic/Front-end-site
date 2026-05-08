@@ -35,6 +35,7 @@ export const HeroSlider: React.FC = () => {
     title: 'Подобрать уход',
     items: ['Программа благодарности', 'Шаг за шагом к чистой коже']
   };
+  const telegramBotUrl = 'https://t.me/Miraflores_Cosmetics_Bot';
 
   useEffect(() => {
     let isMounted = true;
@@ -200,7 +201,20 @@ export const HeroSlider: React.FC = () => {
                 </div>
 
                 <img src={isMobile ? lineToVertical : lineTo} alt='Стрелка' className={topBlockStyles.lineTo} />
-                <img src={info} alt='Информация' className={topBlockStyles.info} />
+                <img
+                  src={info}
+                  alt='Информация'
+                  className={topBlockStyles.info}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => window.open(telegramBotUrl, '_blank', 'noopener,noreferrer')}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      window.open(telegramBotUrl, '_blank', 'noopener,noreferrer');
+                    }
+                  }}
+                />
               </div>
             </div>
           </article>

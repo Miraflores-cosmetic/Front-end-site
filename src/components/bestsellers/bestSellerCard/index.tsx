@@ -184,6 +184,7 @@ export const BestSellerProductCard: React.FC<{
               setIsHovered(false);
             }}
           >
+            {isMobile && <FavoriteButton productId={product.id} />}
             {product.discount && !outOfStock && (
               <span className={styles.discount}>-{product.discount}%</span>
             )}
@@ -244,6 +245,8 @@ export const BestSellerProductCard: React.FC<{
             {isHovered && (
               <div className={styles.addToCardWrapper}>
                 <AddToBasket
+                  defaultText={outOfStock ? "НЕТ В НАЛИЧИИ" : "В КОРЗИНУ"}
+                  hoverText={outOfStock ? "НЕТ В НАЛИЧИИ" : "В КОРЗИНУ"}
                   activeVariantId={activeVariantId}
                   title={product.title}
                   thumbnail={mainImage || ''}
@@ -284,16 +287,9 @@ export const BestSellerProductCard: React.FC<{
                 </p>
               </Link>
               <div className={styles.priceWrapper}>
-                {!outOfStock &&
-                  formattedOldPrice &&
-                  product.oldPrice &&
-                  product.oldPrice > product.price && (
-                    <span className={styles.oldPrice}>{formattedOldPrice}₽</span>
-                  )}
-                {outOfStock ? (
-                  <span className={styles.outOfStockLabel}>Нет в наличии</span>
-                ) : (
-                  <span className={styles.price}>{formattedPrice}₽</span>
+                <span className={styles.price}>{formattedPrice}₽</span>
+                {formattedOldPrice && product.oldPrice && product.oldPrice > product.price && (
+                  <span className={styles.oldPrice}>{formattedOldPrice}₽</span>
                 )}
               </div>
             </div>
@@ -304,8 +300,8 @@ export const BestSellerProductCard: React.FC<{
             )}
             {isMobile ? (
               <AddToBasket
-                defaultText="В КОРЗИНУ"
-                hoverText="В КОРЗИНУ"
+                defaultText={outOfStock ? "НЕТ В НАЛИЧИИ" : "В КОРЗИНУ"}
+                hoverText={outOfStock ? "НЕТ В НАЛИЧИИ" : "В КОРЗИНУ"}
                 activeVariantId={activeVariantId}
                 title={product.title}
                 thumbnail={mainImage || ''}

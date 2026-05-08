@@ -5,7 +5,7 @@ import { addToFavorites, removeFromFavorites, isFavorite } from '@/graphql/queri
 import { useToast } from '@/components/toast/toast';
 import { getMe } from '@/store/slices/authSlice';
 import heartIcon from '@/assets/icons/heart.svg';
-import heartFilledIcon from '@/assets/icons/whiteHeart.svg';
+import heartRedIcon from '@/assets/icons/heartRed.svg';
 import styles from './FavoriteButton.module.scss';
 
 interface FavoriteButtonProps {
@@ -80,7 +80,7 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ productId, class
       aria-label={favorite ? 'Удалить из избранного' : 'Добавить в избранное'}
     >
       <img
-        src={favorite ? heartFilledIcon : heartIcon}
+        src={favorite ? heartRedIcon : heartIcon}
         alt={favorite ? 'В избранном' : 'Добавить в избранное'}
       />
     </button>

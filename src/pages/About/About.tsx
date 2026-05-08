@@ -9,6 +9,7 @@ import flwImg from '@/assets/images/flw.png';
 import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
 import { normalizeMediaUrl } from '@/utils/mediaUrl';
 import { editorJsToHtml } from '@/utils/editorJsParser';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
 
 const PARALLAX_RATE = 0.2;
 const ABOUT_PAGE_SLUG = 'stranitsa-o-nas';
@@ -77,6 +78,7 @@ function parseAboutBlocks(page: PageNode | null): AboutBlockItem[] {
 const About: React.FC = () => {
   const [scrollY, setScrollY] = useState(0);
   const [aboutPage, setAboutPage] = useState<PageNode | null>(null);
+  const isMobile = useScreenMatch();
 
   const aboutBlocks = useMemo(() => parseAboutBlocks(aboutPage), [aboutPage]);
 
@@ -182,7 +184,7 @@ const About: React.FC = () => {
                   return (
                     <React.Fragment key={index}>
                       <div className={styles.aboutGridRow}>
-                        {index % 2 === 0 ? (
+                        {isMobile || index % 2 === 0 ? (
                           <>
                             {imageCell}
                             {textCell}

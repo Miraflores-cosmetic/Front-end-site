@@ -1,12 +1,12 @@
 .favoriteButton {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  width: 40px;
-  height: 40px;
-  background: rgba(255, 255, 255, 0.9);
+  top: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  background: transparent;
   border: none;
-  border-radius: 50%;
+  border-radius: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -16,8 +16,7 @@
   padding: 0;
 
   &:hover {
-    background: rgba(255, 255, 255, 1);
-    transform: scale(1.1);
+    transform: scale(1.08);
   }
 
   &:disabled {
@@ -26,16 +25,15 @@
   }
 
   img {
-    width: 20px;
-    height: 20px;
+    width: 20px !important;
+    height: 20px !important;
     object-fit: contain;
+    transition: opacity 0.2s ease;
   }
 
   &.active {
-    background: black;
-
     img {
-      filter: none;
+      opacity: 1;
     }
   }
 }

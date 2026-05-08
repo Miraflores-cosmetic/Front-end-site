@@ -75,6 +75,7 @@
   
   @media (max-width: $viewport-mobile-max) {
     margin-right: 0;
+    margin-top: 120px;
   }
 }
 
@@ -297,6 +298,7 @@
   bottom: 170px;
   left: 90px;
   z-index: 5;
+  cursor: pointer;
 
   @media (max-width: $viewport-mobile-max) {
     position: absolute;
@@ -308,6 +310,7 @@
     height: auto;
   }
 }
+
 
 .textIcon {
   font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
@@ -421,7 +424,7 @@
 
   /* Заголовок чуть ниже, чем раньше (-56px), всё ещё слегка наезжает на фото */
   .imageWrapper {
-    margin-top: -28px;
+    margin-top: 16px;
     z-index: 11;
     order: 1;
     margin-bottom: 24px;

@@ -1,14 +1,14 @@
 .card {
   display: flex;
   align-items: end;
-  margin-bottom: 48px;
+  margin-bottom: 0;
   justify-content: space-between;
   gap: 32px;
   min-width: 0;
 
   @media (max-width: 768px) {
     align-items: normal;
-    margin-bottom: 48px;
+    margin-bottom: 0;
   }
 
   &.reverse {
@@ -50,7 +50,7 @@
       height: auto;
       flex-direction: column;
       gap: 16px;
-      padding-bottom: 0px;
+      padding-bottom: 24px;
     }
     &:last-child {
       border-bottom: none;

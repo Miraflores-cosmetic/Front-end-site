@@ -33,7 +33,8 @@ const Home: React.FC = () => {
       if (!el) return;
       const header = document.querySelector('header');
       const headerH = header?.getBoundingClientRect().height ?? 72;
-      const extra = 140;
+      // На мобилке отступ меньше, иначе уводит слишком высоко/низко из‑за другого хедера.
+      const extra = isMobile ? 96 : 140;
       const top = el.getBoundingClientRect().top + window.scrollY - headerH - extra;
       window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     };
@@ -57,7 +58,7 @@ const Home: React.FC = () => {
       window.clearInterval(id);
       window.clearTimeout(maxWait);
     };
-  }, [location.hash, location.pathname]);
+  }, [location.hash, location.pathname, isMobile]);
 
   useEffect(() => {
     const fetchPreHeader = async () => {

@@ -51,7 +51,7 @@ const Articles: React.FC = () => {
       <Header />
       <main className={styles.articlesContainer}>
         <section className={styles.titleContainer}>
-          <p className={styles.title}>Будь в курсе с Мирафлорес</p>
+          <h1 className={styles.title}>Будь в курсе с Мирафлорес</h1>
           <p className={styles.desc}>ботаническая косметика c меристемными экстрактами</p>
         </section>
         {loading && <ArticlesSkeleton />}

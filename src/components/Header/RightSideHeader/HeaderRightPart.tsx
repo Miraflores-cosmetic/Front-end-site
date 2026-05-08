@@ -9,7 +9,9 @@ import { RootState } from '@/store/store';
 const HeaderRight: React.FC = () => {
   const isMobile = useScreenMatch();
   const dispatch = useDispatch();
-  const count = useSelector((state: RootState) => state.checkout.lines.length);
+  const count = useSelector((state: RootState) =>
+    state.checkout.lines.reduce((sum, line) => sum + (line.quantity ?? 0), 0)
+  );
   const { isAuth } = useSelector((state: RootState) => state.authSlice);
 
   return (

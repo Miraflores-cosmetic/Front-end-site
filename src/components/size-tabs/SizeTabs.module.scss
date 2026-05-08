@@ -4,6 +4,10 @@
   min-width: 0;
   box-sizing: border-box;
   overflow-x: hidden; // Предотвращаем выход за пределы
+
+  @media (max-width: 768px) {
+    margin-top: 32px;
+  }
 }
 
 .tabs {
@@ -25,6 +29,15 @@
   &::-webkit-scrollbar {
     display: none; /* Chrome, Safari */
   }
+
+  @media (max-width: 768px) {
+    gap: 12px;
+    margin-bottom: 10px;
+    padding: 0 4px;
+    /* подсказка, что табы можно скроллить */
+    mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+  }
 }
 
 .tab {
@@ -37,6 +50,7 @@
   position: relative;
   user-select: none;
   transition: color 0.25s ease;
+  white-space: nowrap;
 
   &:hover:not(.active) {
     color: #297230;
@@ -55,6 +69,13 @@
       height: 1px;
       background: black;
     }
+  }
+
+  @media (max-width: 768px) {
+    font-size: 18px;
+    padding-bottom: 12px;
+    /* плотнее, чтобы кликабельность была очевиднее */
+    letter-spacing: 0.2px;
   }
 }
 

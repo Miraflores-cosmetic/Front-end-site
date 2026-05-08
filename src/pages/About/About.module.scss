@@ -82,7 +82,7 @@
   animation: aboutImgFadeIn 0.6s ease-out 0.6s forwards;
 
   @media (max-width: 768px) {
-    width: min(100%, 420px);
+    width: min(100%, 336px);
     height: auto;
     aspect-ratio: 560 / 540;
     max-height: 72vw;
@@ -364,7 +364,7 @@
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 32px; /* между блоками */
   }
 }
 
@@ -374,7 +374,7 @@
   @media (max-width: 768px) {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 24px; /* картинка → текст */
   }
 }
 
@@ -392,6 +392,12 @@
 
 .aboutGridCell {
   min-width: 0;
+  @media (max-width: 768px) {
+    /* текстовый контент остаётся в контейнере 16px, картинки будут full-bleed */
+    padding-left: $spacing-md;
+    padding-right: $spacing-md;
+    box-sizing: border-box;
+  }
 }
 
 .aboutGridImage {
@@ -402,6 +408,10 @@
   object-fit: cover;
 
   @media (max-width: 768px) {
+    /* full-bleed: на ширину viewport, без полей контейнера */
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
     max-height: none;
     aspect-ratio: 16 / 9;
     object-fit: cover;
@@ -452,7 +462,7 @@
 
   @media (max-width: 768px) {
     font-size: 16px;
-    line-height: 26px;
+    line-height: 1.6;
 
     :global(h1) {
       font-size: 24px;
@@ -470,6 +480,32 @@
     }
     :global(h5) {
       font-size: 15px;
+    }
+
+    :global(p:empty) {
+      display: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    :global(p) {
+      margin: 0 0 12px;
+    }
+
+    :global(h1),
+    :global(h2),
+    :global(h3),
+    :global(h4),
+    :global(h5) {
+      margin: 0 0 8px;
+    }
+
+    :global(h1 + p),
+    :global(h2 + p),
+    :global(h3 + p),
+    :global(h4 + p),
+    :global(h5 + p) {
+      margin-top: 0;
     }
   }
 }

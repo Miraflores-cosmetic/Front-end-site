@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import styles from './FavoritesContent.module.scss';
 import { TabId } from '@/pages/Profile/side-bar/SideBar';
-import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { getFavorites, clearAllFavorites } from '@/graphql/queries/favorites.service';
 import { BestSellerProductCard } from '@/components/bestsellers/bestSellerCard';
 
@@ -14,8 +13,7 @@ interface InfoMobileContentProps {
   setOpenAccordion: React.Dispatch<React.SetStateAction<TabId | null>>;
 }
 
-const FavoritesContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion }) => {
-  const isMobile = useScreenMatch();
+const FavoritesContent: React.FC<InfoMobileContentProps> = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [clearing, setClearing] = useState(false);
@@ -60,10 +58,6 @@ const FavoritesContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion }
       window.removeEventListener('favoritesUpdated', handleStorageChange);
     };
   }, []);
-
-  const handleCloseAccordion = () => {
-    setOpenAccordion(null);
-  };
 
   const handleClearAll = async () => {
     if (!window.confirm('Вы уверены, что хотите очистить все избранное?')) {
@@ -114,12 +108,6 @@ const FavoritesContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion }
         </article>
       ) : (
         <div className={styles.emptyState}>Нет товаров в избранном</div>
-      )}
-
-      {isMobile && (
-        <p className={styles.closeBtn} onClick={handleCloseAccordion}>
-          Закрыть
-        </p>
       )}
     </article>
   );

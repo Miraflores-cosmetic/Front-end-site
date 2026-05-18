@@ -457,6 +457,11 @@
       -webkit-box-orient: vertical;
       word-wrap: break-word;
       margin: 0;
+
+      :global(b),
+      :global(strong) {
+        font-weight: 600;
+      }
     }
 
     .volume {

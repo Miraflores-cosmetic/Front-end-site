@@ -8,6 +8,20 @@ import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFal
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { isVariantOutOfStock } from '@/utils/stock';
 
+const renderCardDescription = (description?: string | null) => {
+  if (!description?.trim()) return null;
+  const trimmed = description.trim();
+  if (/<[^>]+>/.test(trimmed)) {
+    return (
+      <p
+        className={styles.desc}
+        dangerouslySetInnerHTML={{ __html: trimmed }}
+      />
+    );
+  }
+  return <p className={styles.desc}>{trimmed}</p>;
+};
+
 export const BestSellerProductCard: React.FC<{ 
   product: BestSellersProduct; 
   loading: boolean;
@@ -317,7 +331,7 @@ export const BestSellerProductCard: React.FC<{
                 disabled={outOfStock}
               />
             ) : (
-              <p className={styles.desc}>{product.description}</p>
+              renderCardDescription(product.description)
             )}
           </div>
         </>

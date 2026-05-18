@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from '../SignUp.module.scss';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import siteLogo from '@/assets/icons/Logo-mira.svg';
 import { TextField } from '@/components/text-field/TextField';
 import { Button } from '@/components/button/Button';
@@ -248,9 +248,14 @@ const LazyComponent: React.FC = () => {
           onChange={e => dispatch(switchSignUpAgreement())}
         />
         <p className={styles.agreementTxt}>
-          Нажимая на кнопку «Далее», я соглашаюсь с условиями <span>Публичной оферты</span> и выражаю
-          своё согласие на обработку моих персональных данных в соответствии с{' '}
-          <span>Политикой конфиденциальности</span>
+          Нажимая на кнопку «Далее», я соглашаюсь с условиями{' '}
+          <Link to='/info/oferta-i-usloviia-polzovaniia' className={styles.agreementLink}>
+            Публичной оферты
+          </Link>{' '}
+          и выражаю своё согласие на обработку моих персональных данных в соответствии с{' '}
+          <Link to='/info/politika-konfidentsialnosti' className={styles.agreementLink}>
+            Политикой конфиденциальности
+          </Link>
         </p>
       </div>
       <Button

@@ -154,12 +154,17 @@ $transition-fast: 0.2s ease;
         font-size: 12px;
       }
 
-      span {
+      span,
+      .agreementLink {
         color: $color-primary;
 
         &:hover {
           @include link-hover;
         }
+      }
+
+      .agreementLink {
+        text-decoration: none;
       }
     }
   }

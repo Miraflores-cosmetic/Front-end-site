@@ -192,15 +192,21 @@ export const GratitudeProgram: React.FC = () => {
         <div className={styles.gratitudeImages}>
           {gifts.map((gift, index) => (
             <div key={index} id={`gift-${index + 1}`} className={styles.imageBlock}>
-              {gift.image ? (
-                <ImageWithFallback 
-                  src={gift.image} 
-                  alt={`gift ${index + 1}`} 
-                  className={styles.kremImage}
-                />
-              ) : (
-                <div className={styles.placeholderImage} />
-              )}
+              <AppLink
+                to="/articles/programma-blagodarnosti-2"
+                className={styles.imageLink}
+                aria-label={`Подарок ${giftAmounts[index] ?? index + 1}`}
+              >
+                {gift.image ? (
+                  <ImageWithFallback
+                    src={gift.image}
+                    alt={`gift ${index + 1}`}
+                    className={styles.kremImage}
+                  />
+                ) : (
+                  <div className={styles.placeholderImage} />
+                )}
+              </AppLink>
             </div>
           ))}
         </div>

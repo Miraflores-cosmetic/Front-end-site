@@ -5,10 +5,14 @@ import Footer from '@/components/Footer/Footer';
 import footerImage from '@/assets/images/footer-img.png';
 import Bestsellers from '@/components/bestsellers/Bestsellers';
 import {SpinnerLoader} from "@/components/spinner/SpinnerLoader";
+import { useLocation } from 'react-router-dom';
 
 const LazyComponent = lazy(() => import('./LazyComponent'));
 
 const ArticleDetail: React.FC = () => {
+  const location = useLocation();
+  const isInfoPage = location.pathname.startsWith('/info/');
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
@@ -16,7 +20,7 @@ const ArticleDetail: React.FC = () => {
   return (
     <>
       <Header />
-      <article className={styles.articlesDetails}>
+      <article className={`${styles.articlesDetails} ${isInfoPage ? styles.infoPage : ''}`}>
         <Suspense fallback={<SpinnerLoader/>}>
           <LazyComponent/>
         </Suspense>

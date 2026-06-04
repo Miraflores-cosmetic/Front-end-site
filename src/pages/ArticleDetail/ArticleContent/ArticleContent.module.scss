@@ -1,3 +1,35 @@
+.articleContentRoot,
+.infoArticleContent {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  min-width: 0;
+
+  @media (max-width: 768px) {
+    gap: 12px;
+  }
+}
+
+/* Info-страницы (/info/*): иерархия ниже заголовка страницы (24px на мобилке) */
+.infoArticleContent {
+  @media (max-width: 768px) {
+    :global(ul),
+    :global(ol) {
+      font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      color: #2c2c2c;
+      margin: 0;
+      padding-left: 1.25em;
+    }
+
+    :global(li) {
+      margin: 0.35em 0;
+    }
+  }
+}
+
 /* Заголовки из редактора: один класс, разные уровни h1–h6 */
 .titleTxt {
   font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
@@ -46,6 +78,62 @@
       font-size: 16px;
       line-height: 24px;
     }
+  }
+}
+
+.infoArticleContent .titleTxt {
+  &:not(:first-child) {
+    @media (max-width: 768px) {
+      margin-top: 8px;
+    }
+  }
+
+  &:is(h1) {
+    @media (max-width: 768px) {
+      font-size: 20px;
+      line-height: 1.2;
+    }
+  }
+  &:is(h2) {
+    @media (max-width: 768px) {
+      font-size: 18px;
+      line-height: 1.25;
+    }
+  }
+  &:is(h3) {
+    @media (max-width: 768px) {
+      font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      line-height: 1.35;
+    }
+  }
+  &:is(h4) {
+    @media (max-width: 768px) {
+      font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+  }
+  &:is(h5),
+  &:is(h6) {
+    @media (max-width: 768px) {
+      font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      font-weight: 600;
+      line-height: 1.4;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      color: #4a4a48;
+    }
+  }
+}
+
+.infoArticleContent .paragraph {
+  @media (max-width: 768px) {
+    font-size: 15px;
+    line-height: 1.6;
   }
 }
 

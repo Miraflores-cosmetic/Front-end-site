@@ -11,8 +11,8 @@ interface ReviewProps {
   text: string;
   rating: number;
   date: string;
-  /** Превью на главной: фиксированная колонка текста и квадратные фото */
-  isHomePreview?: boolean;
+  /** Широкая колонка текста (главная и /reviews/) */
+  wideContent?: boolean;
 }
 
 export const Review: React.FC<ReviewProps> = ({
@@ -22,12 +22,12 @@ export const Review: React.FC<ReviewProps> = ({
   text,
   rating,
   date,
-  isHomePreview
+  wideContent = false
 }) => {
   const hasImages = Array.isArray(images) && images.length > 0;
 
   return (
-    <div className={`${styles.review} ${isHomePreview ? styles.homePreview : ''}`}>
+    <div className={`${styles.review} ${wideContent ? styles.reviewsWide : ''}`}>
       {hasImages && (
         <div className={styles.images}>
           {images.map((img, i) => (

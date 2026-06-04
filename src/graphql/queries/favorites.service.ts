@@ -19,12 +19,43 @@ export interface FavoriteProduct {
 }
 
 
+const GUEST_STORAGE_KEY = 'favorites_guest';
+
 const getUserId = () => localStorage.getItem('userId') || 'guest';
-const getStorageKey = () => `favorites_${getUserId()}`;
+const getStorageKey = (userId?: string) => `favorites_${userId ?? getUserId()}`;
+
+/** Перенос избранного гостя в аккаунт после входа / getMe */
+export async function migrateGuestFavoritesToUser(userId: string): Promise<void> {
+  if (!userId || typeof window === 'undefined') return;
+
+  let guestIds: string[] = [];
+  try {
+    guestIds = JSON.parse(localStorage.getItem(GUEST_STORAGE_KEY) || '[]');
+  } catch {
+    guestIds = [];
+  }
+  if (!guestIds.length) return;
+
+  let userIds: string[] = [];
+  try {
+    userIds = JSON.parse(localStorage.getItem(getStorageKey(userId)) || '[]');
+  } catch {
+    userIds = [];
+  }
+
+  const merged = Array.from(new Set([...userIds, ...guestIds]));
+  localStorage.setItem(getStorageKey(userId), JSON.stringify(merged));
+  localStorage.removeItem(GUEST_STORAGE_KEY);
+
+  const token = localStorage.getItem('token');
+  if (token) {
+    await saveFavoriteIds(merged, userId);
+  }
+}
 
 const getLocalFavoriteIds = (): string[] => {
   if (typeof window === 'undefined') return [];
-  const key = getStorageKey();
+  const key = getStorageKey(getUserId());
   const stored = localStorage.getItem(key);
   try {
     return stored ? JSON.parse(stored) : [];
@@ -33,13 +64,14 @@ const getLocalFavoriteIds = (): string[] => {
   }
 };
 
-async function saveFavoriteIds(ids: string[]) {
+async function saveFavoriteIds(ids: string[], userIdOverride?: string) {
+  const userId = userIdOverride ?? getUserId();
   // 1. Save to LocalStorage
-  const key = getStorageKey();
+  const key = getStorageKey(userId);
   localStorage.setItem(key, JSON.stringify(ids));
 
   // 2. Sync with Server REST API
-  if (getUserId() !== 'guest') {
+  if (userId !== 'guest') {
     try {
       // В development используем относительный путь для прокси Vite
       // В production используем полный URL
@@ -76,62 +108,54 @@ async function saveFavoriteIds(ids: string[]) {
   }
 }
 
+function getFavoritesApiEndpoint(): string {
+  const isDev = import.meta.env.DEV;
+  if (isDev) {
+    return '/api/favorites';
+  }
+  const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL || '';
+  return graphqlUrl.replace('/graphql/', '/api/favorites/');
+}
+
+async function fetchServerFavoriteIds(token: string): Promise<string[] | null> {
+  try {
+    const res = await fetch(getFavoritesApiEndpoint(), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (!res.ok) return null;
+    const json = await res.json();
+    const serverIds = json.favorites;
+    return Array.isArray(serverIds) ? serverIds : null;
+  } catch (e) {
+    console.warn('Failed to fetch favorites from REST API', e);
+    return null;
+  }
+}
+
 // Получить избранные товары
 export async function getFavorites(): Promise<FavoriteProduct[]> {
   try {
+    const userId = getUserId();
     let favoriteIds = getLocalFavoriteIds();
     const token = localStorage.getItem('token');
 
     // Sync with REST API if user is logged in
-    if (getUserId() !== 'guest' && token) {
-      try {
-        // В development используем относительный путь для прокси Vite
-        // В production используем полный URL
-        const isDev = import.meta.env.DEV;
-        let endpoint = '';
+    if (userId !== 'guest' && token) {
+      const serverIds = await fetchServerFavoriteIds(token);
 
-        if (isDev) {
-          // В development используем относительный путь - Vite прокси обработает
-          endpoint = '/api/favorites'; // Прокси добавит trailing slash
-        } else {
-          // В production используем полный URL
-          const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL || '';
-          endpoint = graphqlUrl.replace('/graphql/', '/api/favorites/');
+      if (serverIds) {
+        const merged = Array.from(new Set([...serverIds, ...favoriteIds]));
+        favoriteIds = merged;
+        localStorage.setItem(getStorageKey(userId), JSON.stringify(favoriteIds));
+
+        const serverMissing = merged.some(id => !serverIds.includes(id));
+        if (serverMissing) {
+          await saveFavoriteIds(merged, userId);
         }
-
-        const res = await fetch(endpoint, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (res.ok) {
-          const json = await res.json();
-          const serverIds = json.favorites || [];
-
-          if (Array.isArray(serverIds)) {
-            // Объединяем локальные и серверные (уникальные)
-            const merged = Array.from(new Set([...favoriteIds, ...serverIds]));
-
-            const localMissing = merged.some(id => !favoriteIds.includes(id));
-            const serverMissing = merged.some(id => !serverIds.includes(id));
-
-            if (localMissing) {
-              // Если локально чего-то не хватало - обновляем LS
-              favoriteIds = merged;
-              localStorage.setItem(getStorageKey(), JSON.stringify(favoriteIds));
-            }
-
-            if (serverMissing) {
-              // Если на сервере чего-то не хватало - обновляем сервер
-              saveFavoriteIds(merged);
-            }
-          }
-        }
-      } catch (e) {
-        console.warn('Failed to fetch favorites from REST API', e);
       }
     }
 

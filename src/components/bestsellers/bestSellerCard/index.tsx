@@ -198,7 +198,9 @@ export const BestSellerProductCard: React.FC<{
               setIsHovered(false);
             }}
           >
-            {isMobile && <FavoriteButton productId={product.id} />}
+            {isMobile && activeVariantId && (
+              <FavoriteButton productId={activeVariantId} />
+            )}
             {product.discount && !outOfStock && (
               <span className={styles.discount}>-{product.discount}%</span>
             )}

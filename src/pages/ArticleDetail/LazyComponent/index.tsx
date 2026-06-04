@@ -76,8 +76,8 @@ const LazyComponent: React.FC = () => {
           <img src={article.image} alt={article?.title ?? ''} />
         </section>
       )}
-      <section className={styles.descContainer}>
-        <ArticleContent contentJson={article?.content}/>
+      <section className={`${styles.descContainer} ${isInfoPage ? styles.descContainerInfo : ''}`}>
+        <ArticleContent contentJson={article?.content} variant={isInfoPage ? 'info' : 'default'} />
       </section>
     </>
 

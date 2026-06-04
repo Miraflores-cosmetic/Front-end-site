@@ -57,6 +57,13 @@ const LazyComponent: React.FC = () => {
   }, []);
 
   const handleNavigatetoHome = () => navigate('/');
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
   const handleSignIn = () => navigate('/sign-in');
   const handleConfirmEmail = () => navigate('/email-confirmation');
 
@@ -178,9 +185,14 @@ const LazyComponent: React.FC = () => {
   return (
     <div className={styles.signUpWrapper}>
       <div className={styles.imageWrapper}>
-        <div className={styles.goBackIcon}>
-          <img src={goBackIcon} alt='go_back_icon' className={''} />
-        </div>
+        <button
+          type="button"
+          className={styles.goBackIcon}
+          onClick={handleGoBack}
+          aria-label="Назад"
+        >
+          <img src={goBackIcon} alt="" aria-hidden />
+        </button>
         <img src={siteLogo} alt='Miraflores' className={styles.logo} onClick={handleNavigatetoHome} />
       </div>
       

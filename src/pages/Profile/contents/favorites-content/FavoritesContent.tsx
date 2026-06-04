@@ -1,63 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import styles from './FavoritesContent.module.scss';
 import { TabId } from '@/pages/Profile/side-bar/SideBar';
-import { getFavorites, clearAllFavorites } from '@/graphql/queries/favorites.service';
+import { clearAllFavorites } from '@/graphql/queries/favorites.service';
 import { BestSellerProductCard } from '@/components/bestsellers/bestSellerCard';
-
 import { useToast } from '@/components/toast/toast';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/store/store';
 import { getMe } from '@/store/slices/authSlice';
+import { useFavorites } from '@/hooks/useFavorites';
 
-interface InfoMobileContentProps {
-  setOpenAccordion: React.Dispatch<React.SetStateAction<TabId | null>>;
+interface FavoritesContentProps {
+  setOpenAccordion?: React.Dispatch<React.SetStateAction<TabId | null>>;
 }
 
-const FavoritesContent: React.FC<InfoMobileContentProps> = () => {
-  const [products, setProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+const FavoritesContent: React.FC<FavoritesContentProps> = () => {
+  const { products, loading, reload, setProducts } = useFavorites();
   const [clearing, setClearing] = useState(false);
   const toast = useToast();
   const dispatch = useDispatch<AppDispatch>();
-
-  useEffect(() => {
-    async function loadFavorites() {
-      try {
-        setLoading(true);
-        const favorites = await getFavorites();
-        setProducts(favorites);
-      } catch (error: any) {
-        console.error('Error loading favorites:', error);
-        toast.error('Ошибка при загрузке избранного');
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadFavorites();
-  }, []);
-
-  // Обновляем избранное при изменении (например, после добавления/удаления через сердечко)
-  useEffect(() => {
-    const handleStorageChange = () => {
-      // Перезагружаем избранное при изменении в localStorage или других событиях
-      async function reloadFavorites() {
-        try {
-          const favorites = await getFavorites();
-          setProducts(favorites);
-        } catch (error: any) {
-          console.error('Error reloading favorites:', error);
-        }
-      }
-      reloadFavorites();
-    };
-
-    // Слушаем события изменения избранного (можно добавить кастомное событие)
-    window.addEventListener('favoritesUpdated', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('favoritesUpdated', handleStorageChange);
-    };
-  }, []);
 
   const handleClearAll = async () => {
     if (!window.confirm('Вы уверены, что хотите очистить все избранное?')) {

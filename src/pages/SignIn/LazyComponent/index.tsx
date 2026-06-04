@@ -22,6 +22,13 @@ const LazyComponent: React.FC = () => {
   const { email, pass, signIn, isAuth } = useSelector((state: RootState) => state.authSlice);
 
   const handleNavigatetoHome = () => navigate('/');
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate('/');
+    }
+  };
   const handleSignUp = () => navigate('/sign-up');
   const handleForgotPassword = () => navigate('/forgot-password');
 
@@ -57,9 +64,14 @@ const LazyComponent: React.FC = () => {
   return (
     <div className={styles.signInWrapper}>
       <div className={styles.imageWrapper}>
-        <div className={styles.goBackIcon}>
-          <img src={goBackIcon} alt='go_back_icon' className={''} />
-        </div>
+        <button
+          type="button"
+          className={styles.goBackIcon}
+          onClick={handleGoBack}
+          aria-label="Назад"
+        >
+          <img src={goBackIcon} alt="" aria-hidden />
+        </button>
         <img src={siteLogo} alt='Miraflores' className={styles.logo} onClick={handleNavigatetoHome} />
       </div>
       <h2 className={styles.title}>Вход в аккаунт</h2>

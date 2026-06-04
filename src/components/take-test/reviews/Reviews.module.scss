@@ -2,11 +2,28 @@
 
 .reviewsContainer {
   width: 100%;
+  max-width: 100%;
   padding-top: 240px;
+  box-sizing: border-box;
+
+  &:not(.reviewsContainerPage) {
+    padding-right: 32px;
+
+    @media (max-width: $viewport-mobile-max) {
+      padding-right: 0;
+    }
+  }
 
   &.reviewsContainerPage {
     padding-top: 0;
     margin-bottom: 140px;
+    width: 100%;
+
+    .reviewsWrapper {
+      width: 100%;
+      max-width: 100%;
+    }
+
     @media (max-width: 768px) {
       padding-top: 24px;
       padding-bottom: 0;
@@ -82,25 +99,35 @@
   }
 
   .reviewsWrapper {
+    width: 100%;
+    max-width: 100%;
+
     > div {
       display: flex;
       flex-direction: column;
       gap: 40px;
+      width: 100%;
     }
   }
 
   .reviewSkeleton {
     display: flex;
-    gap: 10px;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 16px;
+    width: 100%;
+
     @media (max-width: 950px) {
       flex-direction: column;
+      gap: 12px;
     }
   }
 
   .reviewSkeletonImage {
     width: 245px;
     height: 245px;
-    flex-shrink: 0;
+    flex: 0 0 auto;
     border-radius: 0;
     background: linear-gradient(110deg, #e8e6e1 25%, #f0eeea 37%, #e8e6e1 63%);
     background-size: 200% 100%;
@@ -115,8 +142,18 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
-    flex: 1;
+    flex: 0 1 70%;
     min-width: 0;
+    width: 70%;
+    max-width: 70%;
+    margin-left: auto;
+
+    @media (max-width: 950px) {
+      flex: 1 1 auto;
+      width: 100%;
+      max-width: 100%;
+      margin-left: 0;
+    }
   }
 
   .reviewSkeletonLine,

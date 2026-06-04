@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styles from './Profile.module.scss';
 import Header from '@/components/Header/Header';
 import Sidebar, { TabId } from './side-bar/SideBar';
@@ -14,6 +14,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
 import { getMe, logout, isAuthSessionInvalidMessage } from '@/store/slices/authSlice';
 import { LogoutConfirmationModal } from '@/components/logout-confirmation-modal/LogoutConfirmationModal';
+import { VIEWPORT_MOBILE_MAX } from '@/constants/viewport';
 
 const ProfilePage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -37,64 +38,55 @@ const ProfilePage: React.FC = () => {
     handleLogout();
   };
 
-  const menuMobileItems = [
-    {
-      id: 'info' as TabId,
-      label: 'ОБЩАЯ ИНФОРМАЦИЯ',
-      content: <InfoMobileContent setOpenAccordion={() => setOpenAccordion(null)} />
-    },
-    {
-      id: 'orders' as TabId,
-      label: 'ЗАКАЗЫ',
-      content: <OrdersContent setOpenAccordion={() => setOpenAccordion(null)} />
-    },
-    {
-      id: 'favorites' as TabId,
-      label: 'ИЗБРАННОЕ',
-      content: <FavoritesContent setOpenAccordion={() => setOpenAccordion(null)} />
-    },
-    {
-      id: 'bonus' as TabId,
-      label: 'БОНУСНЫЙ СЧЕТ',
-      content: <BonusContent onCloseAccordion={() => setOpenAccordion(null)} />
-    },
-    {
-      id: 'logout' as TabId,
-      label: 'ВЫЙТИ',
-      content: <div>Выход из аккаунта...</div>
-    }
+  const menuItems = [
+    { id: 'info' as TabId, label: 'ОБЩАЯ ИНФОРМАЦИЯ' },
+    { id: 'orders' as TabId, label: 'ЗАКАЗЫ' },
+    { id: 'favorites' as TabId, label: 'ИЗБРАННОЕ' },
+    { id: 'bonus' as TabId, label: 'БОНУСНЫЙ СЧЕТ' },
+    { id: 'logout' as TabId, label: 'ВЫЙТИ' },
   ];
+
+  const renderTabContent = useCallback(
+    (tab: TabId) => {
+      switch (tab) {
+        case 'info':
+          return isMobile ? (
+            <InfoMobileContent setOpenAccordion={() => setOpenAccordion(null)} />
+          ) : (
+            <InfoContent />
+          );
+        case 'orders':
+          return <OrdersContent setOpenAccordion={() => setOpenAccordion(null)} />;
+        case 'favorites':
+          return <FavoritesContent setOpenAccordion={() => setOpenAccordion(null)} />;
+        case 'bonus':
+          return <BonusContent onCloseAccordion={() => setOpenAccordion(null)} />;
+        case 'logout':
+          return null;
+        default:
+          return null;
+      }
+    },
+    [isMobile],
+  );
 
   // Обработка выхода при клике на "Выйти"
   useEffect(() => {
     if (activeTab === 'logout') {
       setIsLogoutModalOpen(true);
-      // Reset active tab to previous one so it doesn't get stuck on 'logout' if user cancels
       setActiveTab('info');
     }
   }, [activeTab]);
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'info':
-        return <InfoContent />;
-      case 'orders':
-        return <OrdersContent />;
-      case 'favorites':
-        return <FavoritesContent setOpenAccordion={() => setOpenAccordion(null)} />;
-      case 'bonus':
-        return <BonusContent />;
-      case 'logout':
-        return null;
-    }
-  };
 
   // Проверяем query параметр для открытия конкретного таба
   useEffect(() => {
     const tabParam = searchParams.get('tab');
     if (tabParam && ['info', 'orders', 'favorites', 'bonus'].includes(tabParam)) {
-      setActiveTab(tabParam as TabId);
-      // Убираем параметр из URL после установки таба (в следующем тике)
+      const tab = tabParam as TabId;
+      setActiveTab(tab);
+      if (typeof window !== 'undefined' && window.innerWidth < VIEWPORT_MOBILE_MAX) {
+        setOpenAccordion(tab);
+      }
       setTimeout(() => {
         navigate('/profile', { replace: true });
       }, 0);
@@ -103,24 +95,19 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      // Проверяем, есть ли токен в localStorage
       const storedToken = localStorage.getItem('token');
       if (!storedToken || storedToken === 'null' || storedToken === 'undefined') {
-        // Если токена нет, сразу редирект
         navigate('/sign-in');
         return;
       }
 
-      // Если уже есть данные пользователя и авторизация подтверждена, не проверяем снова
       if (isAuth && me) {
         return;
       }
 
       try {
         const result = await dispatch(getMe()).unwrap();
-        // Если getMe успешно выполнен, пользователь авторизован
         if (!result) {
-          // Если результат null, значит пользователь не авторизован
           navigate('/sign-in');
         }
       } catch (error: any) {
@@ -136,10 +123,8 @@ const ProfilePage: React.FC = () => {
       }
     };
 
-    // Проверяем авторизацию только один раз при монтировании
-    // App.tsx уже проверит при загрузке, но если пользователь перешел на /profile напрямую
     checkAuth();
-  }, []); // Пустой массив зависимостей - проверяем только при монтировании
+  }, []);
 
   return (
     <>
@@ -147,17 +132,21 @@ const ProfilePage: React.FC = () => {
       <main className={styles.profileContainer}>
         <section className={styles.contentWrapper}>
           <div className={styles.profile}>
-            {/* ЛЕВАЯ КОЛОНКА */}
             <Sidebar
               userName={me?.firstName || ''}
-              menuItems={menuMobileItems}
+              menuItems={menuItems}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
               openAccordion={openAccordion}
               setOpenAccordion={setOpenAccordion}
+              renderTabContent={renderTabContent}
             />
-            {/* ПРАВАЯ ЧАСТЬ */}
-            {!isMobile && <ProfileContent activeTab={activeTab} renderContent={renderContent} />}
+            {!isMobile && (
+              <ProfileContent
+                activeTab={activeTab}
+                renderContent={() => renderTabContent(activeTab)}
+              />
+            )}
           </div>
         </section>
         <LogoutConfirmationModal

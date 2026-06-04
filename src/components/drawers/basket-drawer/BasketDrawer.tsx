@@ -95,7 +95,8 @@ const BasketDrawer: React.FC = () => {
   }, [lines]);
 
   const isCartEmpty = lines.length === 0;
-  const isOrderDisabled = isCartEmpty || isOrdering;
+  // Гость может перейти на вход/регистрацию даже с пустой корзиной; оформление — только с товарами
+  const isOrderDisabled = isOrdering || (isAuth && isCartEmpty);
 
   const handleOrder = async () => {
     if (isOrderDisabled) return;

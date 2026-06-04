@@ -10,7 +10,6 @@ export type TabId = 'info' | 'orders' | 'favorites' | 'bonus' | 'logout';
 export interface MenuItem {
   id: TabId;
   label: string;
-  content?: React.ReactNode; // контент, который откроется в аккордеоне на мобилке
 }
 
 export interface SidebarProps {
@@ -18,8 +17,9 @@ export interface SidebarProps {
   menuItems: MenuItem[];
   activeTab: TabId;
   setActiveTab: (tab: TabId) => void;
-  openAccordion: TabId | null; // 🔹 new prop
-  setOpenAccordion: React.Dispatch<React.SetStateAction<TabId | null>>; // ✅ correct typing
+  openAccordion: TabId | null;
+  setOpenAccordion: React.Dispatch<React.SetStateAction<TabId | null>>;
+  renderTabContent: (tab: TabId) => React.ReactNode;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -28,7 +28,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
   openAccordion,
-  setOpenAccordion
+  setOpenAccordion,
+  renderTabContent,
 }) => {
   const isMobile = useScreenMatch();
 
@@ -70,8 +71,8 @@ const Sidebar: React.FC<SidebarProps> = ({
                   {item.label}
                   <div className={activeTab === item.id ? styles.activeDot : styles.notActiveDot} />
                 </li>
-                {isMobile && openAccordion === item.id && item.content && (
-                  <div className={styles.accordionContent}>{item.content}</div>
+                {isMobile && openAccordion === item.id && item.id !== 'logout' && (
+                  <div className={styles.accordionContent}>{renderTabContent(item.id)}</div>
                 )}
               </div>
             ))}

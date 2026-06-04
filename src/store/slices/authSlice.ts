@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { signUpService, getToken, getMeInfo, updateAccount } from '@/graphql/queries/auth.service';
+import { migrateGuestFavoritesToUser } from '@/graphql/queries/favorites.service';
 import { tokenCreate } from '@/graphql/types/auth.types';
 import { AuthState, MeInfo, ResultType, SignUpArgs } from '@/types/auth'
 
@@ -54,6 +55,13 @@ export const getMe = createAsyncThunk<MeInfo>(
   'auth/getMe',
   async () => {
     const result = await getMeInfo();
+    if (result?.id) {
+      localStorage.setItem('userId', result.id);
+      await migrateGuestFavoritesToUser(result.id);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('favoritesUpdated'));
+      }
+    }
     return result;
   }
 );

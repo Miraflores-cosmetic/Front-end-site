@@ -63,10 +63,23 @@ $transition-fast: 0.2s ease;
 
       .goBackIcon {
         display: none;
-        justify-self: start; // keep it on the left
+        justify-self: start;
+        border: none;
+        background: none;
+        padding: 8px;
+        margin: -8px;
+        cursor: pointer;
+        line-height: 0;
 
         @media (max-width: 648px) {
           display: block;
+        }
+
+        img {
+          display: block;
+          width: 20px;
+          height: 22px;
+          pointer-events: none;
         }
       }
     }

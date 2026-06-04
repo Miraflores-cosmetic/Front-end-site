@@ -3,6 +3,7 @@ import styles from './ArticleContent.module.scss';
 
 interface Props {
   contentJson: string | null | undefined;
+  variant?: 'default' | 'info';
 }
 
 function renderListItems(items: any): React.ReactNode {
@@ -29,7 +30,7 @@ function renderListItems(items: any): React.ReactNode {
   });
 }
 
-const ArticleContent: React.FC<Props> = ({contentJson}) => {
+const ArticleContent: React.FC<Props> = ({ contentJson, variant = 'default' }) => {
   if (!contentJson) return null;
   let content;
   try {
@@ -38,8 +39,10 @@ const ArticleContent: React.FC<Props> = ({contentJson}) => {
     return null;
   }
 
+  const rootClass = variant === 'info' ? styles.infoArticleContent : styles.articleContentRoot;
+
   return (
-    <>
+    <div className={rootClass}>
       {content.blocks?.map((block: any) => {
         switch (block.type) {
           case 'header': {
@@ -83,7 +86,7 @@ const ArticleContent: React.FC<Props> = ({contentJson}) => {
             return null;
         }
       })}
-    </>
+    </div>
   );
 };
 

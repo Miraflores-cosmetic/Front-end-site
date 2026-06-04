@@ -145,7 +145,7 @@ export const Reviews: React.FC<{
             </>
           ) : reviews.length > 0 ? (
             reviews.map((review, index) => (
-              <Review key={index} {...review} isHomePreview />
+              <Review key={index} {...review} wideContent />
             ))
           ) : (
             <p className={styles.noReviews}>Пока нет отзывов </p>

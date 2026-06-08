@@ -7,7 +7,8 @@ export interface FavoriteProduct {
   title: string;
   slug: string;
   description: string;
-  thumbnail?: string;
+  size: string;
+  thumbnail: string;
   images: string[];
   price: number;
   oldPrice?: number;
@@ -16,6 +17,28 @@ export interface FavoriteProduct {
   productVariants: any[];
   collections: any;
   attributes: any[];
+}
+
+function getVolumeFromVariant(variant: {
+  name?: string;
+  attributes?: Array<{
+    attribute?: { slug?: string; name?: string };
+    values?: Array<{ name?: string; plainText?: string }>;
+  }>;
+}): string {
+  let variantName = variant?.name || '';
+  if (variant?.attributes?.length) {
+    const volumeAttr = variant.attributes.find(
+      attr =>
+        attr.attribute?.slug === 'obem' ||
+        attr.attribute?.slug === 'volume' ||
+        attr.attribute?.name?.toLowerCase().includes('объем') ||
+        attr.attribute?.name?.toLowerCase().includes('volume'),
+    );
+    if (volumeAttr?.values?.[0]?.name) variantName = volumeAttr.values[0].name;
+    else if (volumeAttr?.values?.[0]?.plainText) variantName = volumeAttr.values[0].plainText;
+  }
+  return variantName;
 }
 
 
@@ -251,7 +274,8 @@ export async function getFavorites(): Promise<FavoriteProduct[]> {
         name: product.name,
         slug: product.slug,
         description: JSON.parse(product.description || '{}')?.blocks?.[0]?.data?.text || '',
-        thumbnail: product.thumbnail?.url,
+        size: getVolumeFromVariant(variant),
+        thumbnail: product.thumbnail?.url || '',
         images: product.media?.map((m: any) => m.url) || [],
         price,
         oldPrice: oldPrice && oldPrice > price ? oldPrice : undefined,

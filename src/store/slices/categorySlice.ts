@@ -2,6 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { getCategoryBySlug, getCategoryTabsBySlug } from '@/graphql/queries/category.service';
 import { categorySliceState, CategoryTab, getCategoryProductsArgs } from '@/types/category';
 import { BestSellersProduct } from '@/types/products';
+import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
 
 const initialState: categorySliceState = {
   tabs: [],
@@ -240,10 +241,8 @@ const categorySlice = createSlice({
             }
           }
           
-          // Чистим описание (убираем HTML теги, но не обрезаем текст)
           if (description) {
-            description = description.replace(/<[^>]+>/g, '').trim();
-            // Убрали обрезку текста - теперь полный текст отображается
+            description = sanitizeProductCardDescription(description, { preserveHtml: true });
           }
           
           // Обрабатываем варианты: извлекаем объем из атрибутов (как в bestsellersSlice)

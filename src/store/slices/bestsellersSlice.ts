@@ -1,4 +1,5 @@
 import { BestSellersProduct, BestsellerConnection } from '@/types/products';
+import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
 import { createSlice, createAsyncThunk, SerializedError, AsyncThunkConfig } from '@reduxjs/toolkit';
 import { getBestsellerProducts } from '@/graphql/queries/products.service';
 
@@ -103,6 +104,8 @@ const bestsellerSlice = createSlice({
               description = '';
             }
           }
+
+          description = sanitizeProductCardDescription(description, { preserveHtml: true });
           
           newBestSellers.push({
             id: variantId,

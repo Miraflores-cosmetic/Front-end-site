@@ -7,19 +7,20 @@ import AddToBasket from '@/components/add-tobasket-button/AddToBasket';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { isVariantOutOfStock } from '@/utils/stock';
+import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
 
 const renderCardDescription = (description?: string | null) => {
-  if (!description?.trim()) return null;
-  const trimmed = description.trim();
-  if (/<[^>]+>/.test(trimmed)) {
+  const normalized = sanitizeProductCardDescription(description, { preserveHtml: true });
+  if (!normalized) return null;
+  if (/<[^>]+>/.test(normalized)) {
     return (
       <p
         className={styles.desc}
-        dangerouslySetInnerHTML={{ __html: trimmed }}
+        dangerouslySetInnerHTML={{ __html: normalized }}
       />
     );
   }
-  return <p className={styles.desc}>{trimmed}</p>;
+  return <p className={styles.desc}>{normalized}</p>;
 };
 
 export const BestSellerProductCard: React.FC<{ 
@@ -270,6 +271,7 @@ export const BestSellerProductCard: React.FC<{
                   oldPrice={product.oldPrice}
                   discount={product.discount}
                   size={activeVariant ? getVolumeFromVariant(activeVariant) : (product.size || '')}
+                  slug={product.slug}
                   productId={product.id}
                   quantityLimitPerCustomer={quantityLimitForCard}
                   quantityAvailable={stockNode?.quantityAvailable ?? product.quantityAvailable ?? null}
@@ -309,11 +311,6 @@ export const BestSellerProductCard: React.FC<{
                 )}
               </div>
             </div>
-            {isGiftCertificates && (activeVariant ? getVolumeFromVariant(activeVariant) : product.size) && (
-              <p className={styles.variantName}>
-                {activeVariant ? getVolumeFromVariant(activeVariant) : product.size}
-              </p>
-            )}
             {isMobile ? (
               <AddToBasket
                 defaultText={outOfStock ? "НЕТ В НАЛИЧИИ" : "В КОРЗИНУ"}
@@ -325,6 +322,7 @@ export const BestSellerProductCard: React.FC<{
                 oldPrice={product.oldPrice}
                 discount={product.discount}
                 size={activeVariant ? getVolumeFromVariant(activeVariant) : (product.size || '')}
+                slug={product.slug}
                 productId={product.id}
                 variant="card"
                 quantityLimitPerCustomer={quantityLimitForCard}

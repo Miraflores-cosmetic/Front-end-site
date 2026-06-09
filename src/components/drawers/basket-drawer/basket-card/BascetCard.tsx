@@ -2,8 +2,11 @@
 
 import React from 'react';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import styles from './BasketCard.module.scss';
 import { BasketCardProps } from '@/types/checkout';
+import { closeDrawer } from '@/store/slices/drawerSlice';
+import { AppDispatch } from '@/store/store';
 import trash from '@/assets/icons/trash.svg';
 import add from '@/assets/icons/add.svg';
 import minus from '@/assets/icons/minus.svg';
@@ -20,6 +23,7 @@ const BasketCard: React.FC<BasketCardProps> = ({
   variantId,
   thumbnail,
   title,
+  slug,
   size,
   quantity,
   discount,
@@ -31,7 +35,19 @@ const BasketCard: React.FC<BasketCardProps> = ({
   trackInventory,
 }) => {
   const isMobile = useScreenMatch();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
+  const isProductLink = Boolean(slug && !isGift);
+
+  const handleProductNavigate = () => {
+    if (!slug || isGift) return;
+    dispatch(closeDrawer());
+    navigate(`/product/${slug}`);
+  };
+
+  const stopControlPropagation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
 
   const lineOutOfStock =
     !isGift &&
@@ -44,7 +60,22 @@ const BasketCard: React.FC<BasketCardProps> = ({
     !isGift && (isAtOrOverLineLimit(quantity, quantityLimitPerCustomer) || lineOutOfStock);
 
   return (
-    <div className={styles.basketCardWrapper}>
+    <div
+      className={`${styles.basketCardWrapper} ${isProductLink ? styles.basketCardWrapperClickable : ''}`}
+      onClick={isProductLink ? handleProductNavigate : undefined}
+      onKeyDown={
+        isProductLink
+          ? (e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                handleProductNavigate();
+              }
+            }
+          : undefined
+      }
+      role={isProductLink ? 'link' : undefined}
+      tabIndex={isProductLink ? 0 : undefined}
+    >
       <div className={styles.basketCard}>
         <div className={styles.basketImage}>
           {thumbnail ? (
@@ -91,7 +122,7 @@ const BasketCard: React.FC<BasketCardProps> = ({
           </div>
 
           {!isGift && (
-            <div className={styles.bottomInfo}>
+            <div className={styles.bottomInfo} onClick={stopControlPropagation}>
               {Boolean(quantity > 1) && (
                 <img
                   src={minus}
@@ -120,7 +151,7 @@ const BasketCard: React.FC<BasketCardProps> = ({
             </div>
           )}
           {isGift && (
-            <div className={styles.bottomInfo}>
+            <div className={styles.bottomInfo} onClick={stopControlPropagation}>
               <p className={styles.trashCount}>{quantity}</p>
             </div>
           )}
@@ -152,7 +183,7 @@ const BasketCard: React.FC<BasketCardProps> = ({
       </div>
 
       {isMobile && !isGift && (
-        <div className={styles.mobileControlsRow}>
+        <div className={styles.mobileControlsRow} onClick={stopControlPropagation}>
           {Boolean(quantity === 1) ? (
             <button
               className={styles.controlBtn}

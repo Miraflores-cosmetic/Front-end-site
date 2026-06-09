@@ -8,6 +8,7 @@ import { BestSellersProduct, ProductVariant } from '@/types/products';
 import { useDispatch } from 'react-redux';
 import { closeDrawer } from '@/store/slices/drawerSlice';
 import { getCollectionById, Collection, CollectionProduct } from '@/graphql/queries/collection.service';
+import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
 
 const MENU_COLLECTION_ID = 'Q29sbGVjdGlvbjoxMg==';
 
@@ -75,6 +76,7 @@ const convertToBestSellersProduct = (product: CollectionProduct): BestSellersPro
                    '';
     }
   }
+  description = sanitizeProductCardDescription(description, { preserveHtml: true });
 
   const productVariants: ProductVariant[] = (product.productVariants?.edges || []).map((v: any) => {
     let variantName = v.node?.name || '';

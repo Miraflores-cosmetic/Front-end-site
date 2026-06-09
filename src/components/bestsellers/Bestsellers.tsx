@@ -9,6 +9,7 @@ import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { getAllProducts } from '@/graphql/queries/products.service';
 import { getCollectionById } from '@/graphql/queries/collection.service';
 import type { BestSellersProduct } from '@/types/products';
+import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
 
 interface BestsellersProps {
   isTitleHidden?: boolean;
@@ -84,6 +85,7 @@ function mapProductNodeToBestSellers(productNode: any): BestSellersProduct {
       description = '';
     }
   }
+  description = sanitizeProductCardDescription(description, { preserveHtml: true });
   let productVariants: any[] = [];
   if (Array.isArray(productNode.productVariants)) {
     productVariants = productNode.productVariants;

@@ -41,6 +41,9 @@ async function getThumbnailUrlByVariantId(
   }
 }
 
+/** После 404/500 больше не дёргаем API в этой сессии (эндпоинт ещё не на сервере). */
+let giftApiUnavailable = false;
+
 export async function getApplicableGift(
   subtotal: number,
   channel: string = 'miraflores-site'
@@ -48,17 +51,39 @@ export async function getApplicableGift(
   if (subtotal <= 0) {
     return { applicable: false };
   }
+
+  // Включить после деплоя бэкенда: VITE_APPLICABLE_GIFT_API=true в .env
+  if (import.meta.env.VITE_APPLICABLE_GIFT_API !== 'true') {
+    return { applicable: false };
+  }
+
+  if (giftApiUnavailable) {
+    return { applicable: false };
+  }
+
   const subtotalInt = Math.round(subtotal);
-  const url = `/api/checkout/applicable-gift/?channel=${encodeURIComponent(channel)}&subtotal=${subtotalInt}`;
+  const isDev = import.meta.env.DEV;
+  const graphqlUrl = import.meta.env.VITE_GRAPHQL_URL || '';
+  const apiBase = isDev
+    ? ''
+    : graphqlUrl.replace(/\/graphql\/?$/, '');
+  const url = `${apiBase}/api/checkout/applicable-gift/?channel=${encodeURIComponent(channel)}&subtotal=${subtotalInt}`;
+
   try {
     const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) {
+      if (res.status === 404 || res.status === 500) {
+        giftApiUnavailable = true;
+      }
+      return { applicable: false };
+    }
     let data: ApplicableGiftResult;
     try {
       data = await res.json();
     } catch {
       return { applicable: false };
     }
-    if (!res.ok || !data || typeof data.applicable !== 'boolean') return { applicable: false };
+    if (!data || typeof data.applicable !== 'boolean') return { applicable: false };
     if (data.applicable && data.variantId) {
       const graphqlThumb = await getThumbnailUrlByVariantId(data.variantId, channel);
       if (graphqlThumb) data.thumbnailUrl = graphqlThumb;

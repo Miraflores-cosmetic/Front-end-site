@@ -24,6 +24,7 @@ interface AddToCartButtonProps {
   oldPrice?: number | null;
   discount?: number | null;
   size: string;
+  slug?: string;
   disabled?: boolean;
   productId?: string;
   variant?: 'home' | 'product' | 'card';
@@ -44,6 +45,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   oldPrice = null,
   discount = null,
   size,
+  slug,
   disabled = false,
   productId,
   variant = 'home',
@@ -89,6 +91,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
           oldPrice: oldPrice,
           discount: discount,
           size: size,
+          slug,
           quantityLimitPerCustomer,
           quantityAvailable,
           trackInventory

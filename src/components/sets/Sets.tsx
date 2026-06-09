@@ -11,6 +11,7 @@ import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { editorJsToHtml } from '@/utils/editorJsParser';
 import { BestSellerProductCard } from '@/components/bestsellers/bestSellerCard';
 import { BestSellersProduct } from '@/types/products';
+import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
 
 interface SetData {
   id: string;
@@ -177,6 +178,7 @@ export const Sets: React.FC = () => {
                 description = '';
               }
             }
+            description = sanitizeProductCardDescription(description, { preserveHtml: true });
             
             const productImage = product.thumbnail?.url || product.media?.[0]?.url || '';
             const images = product.media?.map((item: any) => item.url) || [];

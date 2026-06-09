@@ -48,7 +48,8 @@ const FavoriteCard: React.FC<FavoriteCardProps> = ({
         price,
         oldPrice: oldPrice || null,
         discount: discount || null,
-        size: ''
+        size: '',
+        slug,
       }));
       toast.success('Товар добавлен в корзину');
     }

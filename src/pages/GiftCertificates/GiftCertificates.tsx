@@ -116,6 +116,7 @@ const GiftCertificates: React.FC = () => {
                     oldPrice={node.pricing?.priceUndiscounted?.gross?.amount ?? null}
                     discount={null}
                     size={name}
+                    slug={item.slug}
                     productId={item.id as string}
                     variant="product"
                   />

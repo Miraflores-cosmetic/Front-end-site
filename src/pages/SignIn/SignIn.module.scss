@@ -36,13 +36,9 @@ $color-border-hover: #91918d99;
 
     .imageWrapper {
       width: 100%;
-
-      @media (max-width: 648px) {
-        display: grid;
-        grid-template-columns: 1fr auto 1fr;
-        align-items: center;
-        width: 100%;
-      }
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
 
       @media (max-width: 768px) {
         text-align: center;
@@ -62,7 +58,7 @@ $color-border-hover: #91918d99;
       }
 
       .goBackIcon {
-        display: none;
+        display: block;
         justify-self: start;
         border: none;
         background: none;
@@ -70,10 +66,6 @@ $color-border-hover: #91918d99;
         margin: -8px;
         cursor: pointer;
         line-height: 0;
-
-        @media (max-width: 648px) {
-          display: block;
-        }
 
         img {
           display: block;

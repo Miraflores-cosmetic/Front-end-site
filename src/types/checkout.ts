@@ -8,6 +8,7 @@ export interface CheckoutLine {
 
   title: string;
   price: number;
+  slug?: string;
 
   thumbnail?: string;
   oldPrice?: number | null;

@@ -447,6 +447,7 @@ const LazyComponent: React.FC = () => {
                     oldPrice={oldPrice}
                     discount={discount}
                     size={volume}
+                    slug={item.slug}
                     defaultText={'Добавить в корзину'}
                     activeText={'Добавить в корзину'}
                     hoverText={'Добавить в корзину'}
@@ -521,6 +522,7 @@ const LazyComponent: React.FC = () => {
                     oldPrice={oldPrice}
                     discount={discount}
                     size={volume}
+                    slug={item.slug}
                     defaultText={'В корзину'}
                     activeText={'В корзину'}
                     hoverText={'В корзину'}

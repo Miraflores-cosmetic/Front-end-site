@@ -141,6 +141,9 @@ const checkoutSlice = createSlice({
         if (action.payload.discount && !line.discount) {
           line.discount = action.payload.discount;
         }
+        if (action.payload.slug && !line.slug) {
+          line.slug = action.payload.slug;
+        }
       } else {
         const startQty = Math.min(action.payload.quantity || 1, maxQ);
         state.lines.push({
@@ -152,6 +155,7 @@ const checkoutSlice = createSlice({
           oldPrice: action.payload.oldPrice ?? null,
           discount: action.payload.discount ?? null,
           size: action.payload.size,
+          slug: action.payload.slug,
           quantityLimitPerCustomer: action.payload.quantityLimitPerCustomer ?? null,
           quantityAvailable: action.payload.quantityAvailable ?? null,
           trackInventory: action.payload.trackInventory ?? null

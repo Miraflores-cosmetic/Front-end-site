@@ -5,6 +5,18 @@
   padding: 0;
   flex-direction: column;
 
+  &.basketCardWrapperClickable {
+    cursor: pointer;
+
+    .productName {
+      transition: color 0.2s ease;
+    }
+
+    &:hover .productName {
+      color: #3d83f6;
+    }
+  }
+
   @media (max-width: 768px) {
     padding: 0;
   }

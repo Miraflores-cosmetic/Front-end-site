@@ -1,6 +1,35 @@
 /**
- * Service for completing checkout after payment
+ * Checkout REST helpers (обход проверки остатков на складе).
  */
+
+export interface CreateCheckoutRestResponse {
+  success: boolean;
+  checkout?: {
+    id: string;
+    token: string;
+  };
+  error?: string;
+}
+
+export async function createCheckoutWithoutStockCheck(params: {
+  channel: string;
+  email?: string;
+  lines: { variantId: string; quantity: number }[];
+}): Promise<CreateCheckoutRestResponse> {
+  const response = await fetch('/api/checkout/create-without-stock-check/', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(params),
+  });
+
+  const result: CreateCheckoutRestResponse = await response.json();
+
+  if (!response.ok || !result.success || !result.checkout?.id) {
+    throw new Error(result.error || 'Не удалось создать заказ');
+  }
+
+  return result;
+}
 
 export interface CompleteCheckoutResponse {
   success: boolean;

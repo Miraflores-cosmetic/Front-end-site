@@ -52,11 +52,6 @@ export async function getApplicableGift(
     return { applicable: false };
   }
 
-  // Включить после деплоя бэкенда: VITE_APPLICABLE_GIFT_API=true в .env
-  if (import.meta.env.VITE_APPLICABLE_GIFT_API !== 'true') {
-    return { applicable: false };
-  }
-
   if (giftApiUnavailable) {
     return { applicable: false };
   }

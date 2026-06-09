@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { createCheckout, getCheckoutById } from '@/graphql/queries/checkout.service';
+import { getCheckoutById } from '@/graphql/queries/checkout.service';
+import { createCheckoutWithoutStockCheck } from '@/services/checkout.service';
 import { graphqlRequest } from '@/graphql/client';
 import { CheckoutState, CheckoutCreateInput, CheckoutLine, CheckoutStateInLocalStorage } from '@/types/checkout';
 import { maxQuantityForVariantLine } from '@/utils/checkoutLineLimits';
@@ -88,21 +89,27 @@ export const initializeCart = createAsyncThunk(
 export const createCheckoutApi = createAsyncThunk(
   'checkout/create',
   async (input: CheckoutCreateInput, { rejectWithValue }) => {
-      try {
-        const result = await createCheckout(input);
-        const gqlErrors = result?.checkoutCreate?.errors;
-        if (gqlErrors && gqlErrors.length > 0) {
-          const msg = gqlErrors.map((e: { message?: string }) => e?.message).filter(Boolean).join(' ');
-          return rejectWithValue(msg || 'Ошибка при создании корзины');
-        }
-        if (!result?.checkoutCreate?.checkout?.id) {
-          return rejectWithValue('Не удалось создать заказ. Попробуйте ещё раз.');
-        }
-        return result;
-      } catch (error) {
-        return rejectWithValue(error instanceof Error ? error.message : error);
-      }
-  }
+    try {
+      const result = await createCheckoutWithoutStockCheck({
+        channel: input.channel || 'miraflores-site',
+        email: input.email,
+        lines: input.lines,
+      });
+
+      return {
+        checkoutCreate: {
+          checkout: {
+            id: result.checkout!.id,
+            token: result.checkout!.token,
+          },
+        },
+      };
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : 'Ошибка при создании корзины',
+      );
+    }
+  },
 );
 
 const checkoutSlice = createSlice({

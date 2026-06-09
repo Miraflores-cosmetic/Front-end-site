@@ -20,6 +20,7 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
   shippingRub = null,
   shippingLoading = false,
   shippingError = null,
+  freePvzShippingApplied = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [content, setContent] = useState<string | null>(null);
@@ -32,12 +33,16 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
     if (!hasPayableLines) return null;
     if (shippingLoading) return { kind: 'muted' as const, value: 'Расчёт…' };
     if (!shippingLoading && shippingError) return { kind: 'error' as const, value: shippingError };
-    if (!shippingLoading && !shippingError && shippingRub != null)
+    if (!shippingLoading && !shippingError && shippingRub != null) {
+      if (freePvzShippingApplied || shippingRub === 0) {
+        return { kind: 'value' as const, value: 'бесплатно' };
+      }
       return { kind: 'value' as const, value: `${formatPrice(shippingRub)}₽` };
+    }
     if (!shippingLoading && !shippingError && shippingRub == null && !addressSelected)
       return { kind: 'muted' as const, value: 'Выберите адрес' };
     return { kind: 'muted' as const, value: '—' };
-  }, [hasPayableLines, shippingLoading, shippingError, shippingRub, addressSelected]);
+  }, [hasPayableLines, shippingLoading, shippingError, shippingRub, addressSelected, freePvzShippingApplied]);
 
   useEffect(() => {
     getCartTextPage().then(page => {

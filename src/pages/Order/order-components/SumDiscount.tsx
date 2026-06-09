@@ -22,6 +22,7 @@ const SumDiscount = () => {
         shippingError: null as string | null,
         hasPayableLines: false,
         addressSelected: false,
+        freePvzShippingApplied: false,
         finalPrice: 0,
       };
     }
@@ -47,6 +48,7 @@ const SumDiscount = () => {
     const shippingLoading = orderCheckout?.cdekShippingLoading ?? false;
     const shippingError = orderCheckout?.cdekShippingError ?? null;
     const addressSelected = Boolean(orderCheckout?.selectedAddress);
+    const freePvzShippingApplied = orderCheckout?.freePvzShippingApplied ?? false;
 
     const shippingIncluded =
       hasPayableLines && !shippingLoading && shippingRub != null && !shippingError;
@@ -65,6 +67,7 @@ const SumDiscount = () => {
       shippingError,
       hasPayableLines,
       addressSelected,
+      freePvzShippingApplied,
       finalPrice,
     };
   }, [lines, voucherDiscount, orderCheckout]);
@@ -109,7 +112,11 @@ const SumDiscount = () => {
             {!calculations.shippingLoading &&
               !calculations.shippingError &&
               calculations.shippingRub != null && (
-                <p className={styles.shippingValue}>{formatPrice(calculations.shippingRub)}₽</p>
+                <p className={styles.shippingValue}>
+                  {calculations.freePvzShippingApplied || calculations.shippingRub === 0
+                    ? 'бесплатно'
+                    : `${formatPrice(calculations.shippingRub)}₽`}
+                </p>
               )}
             {!calculations.shippingLoading &&
               !calculations.shippingError &&

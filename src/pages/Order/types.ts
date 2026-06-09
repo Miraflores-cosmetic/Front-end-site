@@ -35,4 +35,5 @@ export interface TotalAccordionProps {
   shippingRub?: number | null;
   shippingLoading?: boolean;
   shippingError?: string | null;
+  freePvzShippingApplied?: boolean;
 }

@@ -47,6 +47,7 @@ const OrderLeftPart: React.FC = () => {
     cdekShippingRub,
     cdekShippingLoading,
     cdekShippingError,
+    freePvzShippingApplied,
   } = useOrderCheckout();
   const [confirmationToken, setConfirmationToken] = useState<string | null>(null);
   const [showYooKassaWidget, setShowYooKassaWidget] = useState(false);
@@ -343,6 +344,7 @@ const OrderLeftPart: React.FC = () => {
             shippingRub={cdekShippingRub ?? null}
             shippingLoading={cdekShippingLoading}
             shippingError={cdekShippingError ?? null}
+            freePvzShippingApplied={freePvzShippingApplied}
             addressSelected={Boolean(selectedAddress)}
             hasPayableLines={mobileAccordionData.hasPayableLines}
           />

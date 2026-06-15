@@ -1,0 +1,85 @@
+@use '@/style/variables.scss' as *;
+
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.previewGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: $spacing-md;
+
+  @media (max-width: $viewport-mobile-max) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.preview {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba($gray-6e, 0.2);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.removeButton {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background-color: rgba($black, 0.6);
+  color: $white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.addButton {
+  aspect-ratio: 1;
+  border: 2px dashed rgba($gray-6e, 0.4);
+  border-radius: 12px;
+  background-color: $white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: $gray-6e;
+  font-size: 14px;
+  font-family: $font-onest;
+  transition: border-color 0.2s ease;
+
+  span:first-child {
+    font-size: 28px;
+    line-height: 1;
+    color: $green-297;
+  }
+
+  &:hover {
+    border-color: $green-297;
+  }
+}
+
+.hint {
+  margin: 0;
+  font-size: 14px;
+  color: $gray-6e;
+  text-align: center;
+}
+
+.hiddenInput {
+  display: none;
+}

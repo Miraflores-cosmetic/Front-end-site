@@ -1,0 +1,36 @@
+@use '@/style/variables.scss' as *;
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.option {
+  width: 100%;
+  padding: 16px 20px;
+  border: 1px solid rgba($gray-6e, 0.3);
+  border-radius: 12px;
+  background-color: $white;
+  color: $black;
+  font-size: 15px;
+  font-family: $font-onest;
+  font-weight: $font-regular;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(.selected) {
+      border-color: $green-297;
+      background-color: rgba($green-297, 0.04);
+    }
+  }
+
+  &.selected {
+    border-color: $green-297;
+    background-color: $green-297;
+    color: $white;
+    font-weight: $font-medium;
+  }
+}

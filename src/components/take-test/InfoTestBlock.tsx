@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import styles from './InfoTestBlock.module.scss';
 import flower from '@/assets/images/romashka.png';
 
@@ -77,14 +78,9 @@ export const InfoTest: React.FC = () => {
         <img src={flower} alt={'Flower'} className={styles.romashka} />
       </div>
       <div className={styles.btnWrapper}>
-        <a 
-          href="https://t.me/Miraflores_Cosmetics_Bot" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className={styles.btnTest}
-        >
+        <Link to="/quiz" className={styles.btnTest}>
           Пройти тест
-        </a>
+        </Link>
         <a 
           href="mailto:info@miraflores-shop.ru"
           className={styles.btnWrite}

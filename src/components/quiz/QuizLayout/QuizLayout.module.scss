@@ -1,0 +1,41 @@
+@use '@/style/variables.scss' as *;
+
+.page {
+  min-height: calc(100vh - 80px);
+  background-color: $bg-light;
+  padding: $spacing-xl $spacing-md 80px;
+
+  @media (max-width: $viewport-mobile-max) {
+    padding: $spacing-lg $spacing-md 60px;
+  }
+}
+
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.backButton {
+  display: inline-flex;
+  align-items: center;
+  gap: $spacing-sm;
+  border: none;
+  background: none;
+  padding: $spacing-sm 0;
+  margin-bottom: $spacing-lg;
+  cursor: pointer;
+  color: $gray-6e;
+  font-size: 15px;
+  font-family: $font-onest;
+  transition: color 0.2s ease;
+
+  img {
+    width: 20px;
+    height: 22px;
+  }
+
+  &:hover {
+    color: $green-297;
+  }
+}

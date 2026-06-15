@@ -1,0 +1,57 @@
+@use '@/style/variables.scss' as *;
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: $spacing-md;
+
+  @media (max-width: $viewport-mobile-max) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: $spacing-sm;
+  padding: $spacing-xl $spacing-lg;
+  border: 1px solid rgba($gray-6e, 0.25);
+  border-radius: 16px;
+  background-color: $white;
+  cursor: pointer;
+  text-align: left;
+  font-family: $font-onest;
+  transition: all 0.25s ease;
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      border-color: $green-297;
+      box-shadow: 0 4px 20px rgba($green-297, 0.12);
+      transform: translateY(-2px);
+    }
+  }
+}
+
+.emoji {
+  font-size: 32px;
+  line-height: 1;
+}
+
+.title {
+  font-family: $font-oceanic;
+  font-size: 28px;
+  font-weight: $font-light;
+  text-transform: uppercase;
+  color: $black;
+
+  @media (max-width: $viewport-mobile-max) {
+    font-size: 22px;
+  }
+}
+
+.description {
+  font-size: 14px;
+  line-height: 1.5;
+  color: $gray-6e;
+}

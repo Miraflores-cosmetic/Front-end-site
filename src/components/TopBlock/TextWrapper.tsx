@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './TopBlock.module.scss';
 
 interface TextWrapperProps {
@@ -9,10 +10,11 @@ interface TextWrapperProps {
 }
 
 const TextWrapper: React.FC<TextWrapperProps> = ({ title, items, titleStyle, textStyle }) => {
+  const navigate = useNavigate();
+
   const handleItemClick = (item: string) => {
     if (item === 'Подобрать уход') {
-      // Ссылка на Telegram бота
-      window.open('https://t.me/Miraflores_Cosmetics_Bot', '_blank', 'noopener,noreferrer');
+      navigate('/quiz');
     } else if (item === 'Программа благодарности') {
       // Плавный скролл к блоку "Программа благодарности"
       const element = document.getElementById('gratitude-program');
@@ -30,8 +32,7 @@ const TextWrapper: React.FC<TextWrapperProps> = ({ title, items, titleStyle, tex
 
   const handleTitleClick = () => {
     if (title === 'Подобрать уход') {
-      // Ссылка на Telegram бота
-      window.open('https://t.me/Miraflores_Cosmetics_Bot', '_blank', 'noopener,noreferrer');
+      navigate('/quiz');
     }
   };
 

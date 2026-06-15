@@ -41,23 +41,25 @@ export const QuizLayout: React.FC<QuizLayoutProps> = ({
   return (
     <>
       <Header />
-      <main className={styles.page}>
-        <div className={styles.container}>
-          {showBack && (
-            <button
-              type="button"
-              className={styles.backButton}
-              onClick={handleBack}
-              aria-label="Назад"
-            >
-              <img src={goBackIcon} alt="" aria-hidden />
-              <span>Назад</span>
-            </button>
-          )}
-          {children}
-        </div>
-      </main>
-      <Footer footerImage={footerImage} />
+      <div className={styles.pageShell}>
+        <main className={styles.page}>
+          <div className={styles.container}>
+            {showBack && (
+              <button
+                type="button"
+                className={styles.backButton}
+                onClick={handleBack}
+                aria-label="Назад"
+              >
+                <img src={goBackIcon} alt="" aria-hidden />
+                <span>Назад</span>
+              </button>
+            )}
+            {children}
+          </div>
+          <Footer footerImage={footerImage} />
+        </main>
+      </div>
     </>
   );
 };

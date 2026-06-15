@@ -1,19 +1,44 @@
 @use '@/style/variables.scss' as *;
 
-.page {
-  min-height: calc(100vh - 80px);
+.pageShell {
+  width: 100%;
   background-color: $bg-light;
-  padding: $spacing-xl $spacing-md 80px;
+}
+
+.page {
+  overflow-x: clip;
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 24px 32px 0;
+  box-sizing: border-box;
 
   @media (max-width: $viewport-mobile-max) {
-    padding: $spacing-lg $spacing-md 60px;
+    padding: 24px 16px 0;
+  }
+
+  > :global(footer) {
+    width: 100%;
+    margin-top: 80px;
+
+    @media (max-width: $viewport-mobile-max) {
+      margin-top: 64px;
+    }
   }
 }
 
 .container {
+  min-height: 100vh;
   max-width: 640px;
   margin: 0 auto;
   width: 100%;
+  padding-top: $spacing-md;
+  padding-bottom: $spacing-xl;
+  box-sizing: border-box;
+
+  @media (max-width: $viewport-mobile-max) {
+    padding-top: 0;
+    padding-bottom: $spacing-lg;
+  }
 }
 
 .backButton {

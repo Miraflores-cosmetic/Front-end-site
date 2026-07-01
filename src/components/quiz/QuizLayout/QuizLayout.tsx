@@ -5,7 +5,7 @@ import Footer from '@/components/Footer/Footer';
 import footerImage from '@/assets/images/footer-img.png';
 import goBackIcon from '@/assets/icons/go-back.svg';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
-import { QuizContentProvider, useQuizContent } from '@/contexts/QuizContentContext';
+import { useQuizContent } from '@/contexts/QuizContentContext';
 import styles from './QuizLayout.module.scss';
 
 interface QuizLayoutProps {
@@ -14,7 +14,7 @@ interface QuizLayoutProps {
   showBack?: boolean;
 }
 
-const QuizLayoutInner: React.FC<QuizLayoutProps> = ({
+export const QuizLayout: React.FC<QuizLayoutProps> = ({
   children,
   onBack,
   showBack = true,
@@ -70,13 +70,5 @@ const QuizLayoutInner: React.FC<QuizLayoutProps> = ({
         </main>
       </div>
     </>
-  );
-};
-
-export const QuizLayout: React.FC<QuizLayoutProps> = (props) => {
-  return (
-    <QuizContentProvider>
-      <QuizLayoutInner {...props} />
-    </QuizContentProvider>
   );
 };

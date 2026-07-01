@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useParams } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams, Outlet } from 'react-router-dom';
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -32,6 +32,7 @@ import QuizZonePage from './pages/Quiz/QuizZone';
 import QuizFacePage from './pages/Quiz/QuizFace';
 import QuizHairPage from './pages/Quiz/QuizHair';
 import QuizResultPage from './pages/Quiz/QuizResult';
+import { QuizContentProvider } from '@/contexts/QuizContentContext';
 import SearchDrawer from '@/components/drawer/SearchDrawer';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe, isAuthSessionInvalidMessage } from '@/store/slices/authSlice';
@@ -42,6 +43,12 @@ const LegacyAboutArticleToArticles: React.FC = () => {
   const { slug } = useParams();
   return <Navigate to={`/articles/${slug ?? ''}`} replace />;
 };
+
+const QuizRoutesLayout: React.FC = () => (
+  <QuizContentProvider>
+    <Outlet />
+  </QuizContentProvider>
+);
 
 const App: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -112,15 +119,17 @@ const App: React.FC = () => {
         <Route path='/product/:slug' element={<BestSeller />} />
         <Route path='/category/:slug' element={<Category />} />
         <Route path='/face' element={<FacePage />} />
-        <Route path='/quiz' element={<QuizZonePage />} />
-        <Route path='/quiz/face' element={<QuizFacePage />} />
-        <Route path='/quiz/face/spf' element={<QuizFacePage />} />
-        <Route path='/quiz/face/issues' element={<QuizFacePage />} />
-        <Route path='/quiz/face/tasks' element={<QuizFacePage />} />
-        <Route path='/quiz/face/swelling' element={<QuizFacePage />} />
-        <Route path='/quiz/face/photo' element={<QuizFacePage />} />
-        <Route path='/quiz/face/result' element={<QuizResultPage />} />
-        <Route path='/quiz/hair' element={<QuizHairPage />} />
+        <Route element={<QuizRoutesLayout />}>
+          <Route path='/quiz' element={<QuizZonePage />} />
+          <Route path='/quiz/face' element={<QuizFacePage />} />
+          <Route path='/quiz/face/spf' element={<QuizFacePage />} />
+          <Route path='/quiz/face/issues' element={<QuizFacePage />} />
+          <Route path='/quiz/face/tasks' element={<QuizFacePage />} />
+          <Route path='/quiz/face/swelling' element={<QuizFacePage />} />
+          <Route path='/quiz/face/photo' element={<QuizFacePage />} />
+          <Route path='/quiz/face/result' element={<QuizResultPage />} />
+          <Route path='/quiz/hair' element={<QuizHairPage />} />
+        </Route>
         <Route path='/about' element={<About />} />
         <Route path='/atelier' element={<Navigate to='/' replace />} />
         <Route path='/articles' element={<Articles />} />

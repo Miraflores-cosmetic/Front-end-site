@@ -1,17 +1,23 @@
 import type { FaceResultMeta } from './buildFaceResult';
 import { getQuizHtml, getQuizMedia, getQuizPlain } from './contentUtils';
-import type { QuizContentMap, ResolvedContentBlock } from '@/types/quizContent';
+import type { QuizContentMap, ResolvedContentBlock, ResolvedTextBlock } from '@/types/quizContent';
 
 export function resolveFaceResultBlocks(
   result: FaceResultMeta,
   content: QuizContentMap,
 ): ResolvedContentBlock[] {
   return result.blocks.map((block) => ({
-    texts: block.texts.map((key) => ({
-      key,
-      html: getQuizHtml(content, key),
-      plain: getQuizPlain(content, key),
-    })).filter((text) => text.html),
+    texts: block.texts
+      .map((key): ResolvedTextBlock | null => {
+        const html = getQuizHtml(content, key);
+        if (!html) return null;
+        return {
+          key,
+          html,
+          plain: getQuizPlain(content, key),
+        };
+      })
+      .filter((text): text is ResolvedTextBlock => text !== null),
     media: block.media
       .map((key) => {
         const item = getQuizMedia(content, key);

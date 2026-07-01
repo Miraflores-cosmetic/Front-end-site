@@ -1,0 +1,27 @@
+@use '@/style/variables.scss' as *;
+
+.media {
+  width: 100%;
+  border-radius: 12px;
+  display: block;
+  object-fit: cover;
+}
+
+.pdfLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 16px 20px;
+  border-radius: 12px;
+  border: 1px solid rgba($green-297, 0.35);
+  background-color: rgba($green-297, 0.06);
+  color: $green-297;
+  font-size: 15px;
+  font-weight: $font-medium;
+  text-decoration: none;
+
+  &:hover {
+    background-color: rgba($green-297, 0.12);
+  }
+}

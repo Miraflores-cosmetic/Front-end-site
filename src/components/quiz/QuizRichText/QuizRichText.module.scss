@@ -1,0 +1,26 @@
+@use '@/style/variables.scss' as *;
+
+.richText {
+  font-size: 16px;
+  line-height: 1.6;
+  color: $gray-6e;
+
+  p {
+    margin: 0 0 $spacing-md;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  a {
+    color: $green-297;
+    text-decoration: underline;
+  }
+
+  ul,
+  ol {
+    margin: 0 0 $spacing-md;
+    padding-left: 1.25rem;
+  }
+}

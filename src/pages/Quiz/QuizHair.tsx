@@ -2,9 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QuizLayout } from '@/components/quiz/QuizLayout/QuizLayout';
+import { QuizRichText } from '@/components/quiz/QuizRichText/QuizRichText';
+import { QuizMedia } from '@/components/quiz/QuizMedia/QuizMedia';
 import { Button } from '@/components/button/Button';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
-import { QUIZ_CONTENT } from '@/config/quizContent';
+import { useQuizContent } from '@/contexts/QuizContentContext';
+import { getQuizHtml, getQuizMedia } from '@/lib/quiz/contentUtils';
 import { useQuizState } from '@/hooks/useQuizState';
 import styles from './Quiz.module.scss';
 
@@ -15,6 +18,7 @@ const HAIR_STEPS: HairStep[] = ['cleansing', 'care', 'loading', 'media1', 'media
 const QuizHairPage: React.FC = () => {
   const navigate = useNavigate();
   const { setZone } = useQuizState();
+  const { content } = useQuizContent();
   const [stepIndex, setStepIndex] = useState(0);
   const currentStep = HAIR_STEPS[stepIndex];
 
@@ -48,18 +52,21 @@ const QuizHairPage: React.FC = () => {
 
   const renderContent = () => {
     switch (currentStep) {
-      case 'cleansing':
+      case 'cleansing': {
+        const html = getQuizHtml(content, 'hair_cleansing');
         return (
           <>
-            <p className={styles.contentBlock}>{QUIZ_CONTENT.hair_cleansing}</p>
+            {html && <QuizRichText html={html} className={styles.contentBlock} />}
             <Button text="Далее" onClick={handleNext} />
           </>
         );
+      }
 
-      case 'care':
+      case 'care': {
+        const html = getQuizHtml(content, 'hair_care');
         return (
           <>
-            <p className={styles.contentBlock}>{QUIZ_CONTENT.hair_care}</p>
+            {html && <QuizRichText html={html} className={styles.contentBlock} />}
             <div className={styles.actions}>
               <Button text="Далее" onClick={handleNext} />
               <button
@@ -72,6 +79,7 @@ const QuizHairPage: React.FC = () => {
             </div>
           </>
         );
+      }
 
       case 'loading':
         return (
@@ -82,12 +90,22 @@ const QuizHairPage: React.FC = () => {
         );
 
       case 'media1':
-      case 'media2':
+      case 'media2': {
+        const mediaKey = currentStep === 'media1' ? 'file_1' : 'file_1.1';
+        const media = getQuizMedia(content, mediaKey);
         return (
           <>
-            <div className={styles.mediaPlaceholder}>
-              Рекомендация {currentStep === 'media1' ? '1' : '2'} (медиа из CMS)
-            </div>
+            {media?.mediaUrl && media.mediaType ? (
+              <QuizMedia
+                url={media.mediaUrl}
+                mediaType={media.mediaType}
+                title={`Рекомендация ${currentStep === 'media1' ? '1' : '2'}`}
+              />
+            ) : (
+              <div className={styles.mediaPlaceholder}>
+                Медиа «{mediaKey}» — добавьте в CMS
+              </div>
+            )}
             <div className={styles.actions}>
               {currentStep === 'media2' ? (
                 <>
@@ -106,6 +124,7 @@ const QuizHairPage: React.FC = () => {
             </div>
           </>
         );
+      }
 
       default:
         return null;

@@ -64,3 +64,9 @@
     color: $green-297;
   }
 }
+
+.loaderWrap {
+  display: flex;
+  justify-content: center;
+  padding: $spacing-xl 0;
+}

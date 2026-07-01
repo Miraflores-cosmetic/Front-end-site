@@ -116,6 +116,11 @@ export default defineConfig({
         changeOrigin: true,
         secure: true
       },
+      '/api/quiz': {
+        target: 'https://miraflores-shop.com',
+        changeOrigin: true,
+        secure: true
+      },
       '/api/favorites': { // Proxy for favorites endpoint
         target: 'https://miraflores-shop.com',
         changeOrigin: true,

@@ -111,7 +111,65 @@
   font-size: 16px;
   color: $gray-6e;
   line-height: 1.5;
+  margin: 0 0 $spacing-lg;
+}
+
+.resultMeta {
+  font-size: 14px;
+  color: $gray-a3;
+  margin: 0 0 $spacing-lg;
+}
+
+.resultBlocks {
+  list-style: none;
+  padding: 0;
   margin: 0 0 $spacing-xl;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  text-align: left;
+}
+
+.resultBlock {
+  padding: $spacing-md;
+  border-radius: 12px;
+  background-color: rgba($green-297, 0.04);
+  border: 1px solid rgba($green-297, 0.15);
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.resultBlockTexts,
+.resultBlockMedia {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.resultBlockMedia {
+  margin-top: $spacing-sm;
+}
+
+.resultBlockKey {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background-color: $white;
+  border: 1px solid rgba($gray-6e, 0.25);
+  font-size: 13px;
+  font-family: monospace;
+  color: $gray-6e;
+}
+
+.resultBlockKeyMedia {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  background-color: rgba($green-297, 0.12);
+  font-size: 13px;
+  font-family: monospace;
+  color: $green-297;
 }
 
 .ageList {

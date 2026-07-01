@@ -7,12 +7,13 @@ import { QuizOptionList } from '@/components/quiz/QuizOptionList/QuizOptionList'
 import { QuizMultiSelect } from '@/components/quiz/QuizMultiSelect/QuizMultiSelect';
 import { QuizPhotoUpload } from '@/components/quiz/QuizPhotoUpload/QuizPhotoUpload';
 import {
-  QUIZ_CONTENT,
   AGE_OPTIONS,
   YES_NO_OPTIONS,
   SKIN_ISSUE_OPTIONS,
   SKIN_TASK_OPTIONS,
 } from '@/config/quizContent';
+import { useQuizContent } from '@/contexts/QuizContentContext';
+import { getQuizPlain } from '@/lib/quiz/contentUtils';
 import { useQuizState } from '@/hooks/useQuizState';
 import {
   FACE_STEPS,
@@ -64,6 +65,7 @@ const QuizFacePage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { faceAnswers, updateFace } = useQuizState();
+  const { content } = useQuizContent();
   const [photos, setPhotos] = useState<File[]>([]);
   const [selectedAgeKey, setSelectedAgeKey] = useState<string | null>(null);
 
@@ -71,16 +73,16 @@ const QuizFacePage: React.FC = () => {
   const stepNumber = STEP_INDEX[currentStep];
 
   const questionText = useMemo(() => {
-    const map: Record<FaceStep, string> = {
-      age: QUIZ_CONTENT.face_q_age,
-      spf: QUIZ_CONTENT.face_q_spf,
-      issues: QUIZ_CONTENT.face_q_skin,
-      tasks: QUIZ_CONTENT.face_q_skin2,
-      swelling: QUIZ_CONTENT.face_q_edema,
-      photo: QUIZ_CONTENT.face_selfi,
+    const keyMap: Record<FaceStep, string> = {
+      age: 'face_q_age',
+      spf: 'face_q_spf',
+      issues: 'face_q_skin',
+      tasks: 'face_q_skin2',
+      swelling: 'face_q_edema',
+      photo: 'face_selfi',
     };
-    return map[currentStep];
-  }, [currentStep]);
+    return getQuizPlain(content, keyMap[currentStep]);
+  }, [currentStep, content]);
 
   const handleAgeSelect = (key: string, id: SkinAge) => {
     setSelectedAgeKey(key);
@@ -178,7 +180,7 @@ const QuizFacePage: React.FC = () => {
       <QuizStepper currentStep={stepNumber} totalSteps={6} />
 
       {currentStep === 'age' && (
-        <p className={styles.contentBlock}>{QUIZ_CONTENT.menu_face_hello}</p>
+        <p className={styles.contentBlock}>{getQuizPlain(content, 'menu_face_hello')}</p>
       )}
 
       <AnimatePresence mode="wait">

@@ -1,0 +1,128 @@
+@use '@/style/variables.scss' as *;
+
+.player {
+  width: 100%;
+  min-height: 320px;
+}
+
+.introText {
+  font-family: $font-oceanic;
+  font-size: 28px;
+  font-weight: $font-light;
+  text-transform: uppercase;
+  text-align: center;
+  color: $black;
+  line-height: 1.3;
+  padding: $spacing-xl 0;
+
+  @media (max-width: $viewport-mobile-max) {
+    font-size: 22px;
+  }
+}
+
+.loaderBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-lg;
+  padding: $spacing-xl 0;
+  text-align: center;
+}
+
+.loaderText {
+  font-size: 18px;
+  color: $gray-6e;
+  margin: 0;
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.blockList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.pendingLoader {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  padding: $spacing-md 0;
+}
+
+.pendingDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: $green-297;
+  opacity: 0.35;
+  animation: pulse 1.2s ease-in-out infinite;
+
+  &:nth-child(2) {
+    animation-delay: 0.2s;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0.4s;
+  }
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.footer {
+  text-align: center;
+  padding-top: $spacing-md;
+}
+
+.resultTitle {
+  font-family: $font-oceanic;
+  font-size: 32px;
+  font-weight: $font-light;
+  text-transform: uppercase;
+  margin: 0 0 $spacing-xl;
+  line-height: 1.2;
+
+  @media (max-width: $viewport-mobile-max) {
+    font-size: 24px;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.secondaryLink {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 15px;
+  color: $gray-6e;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  align-self: center;
+  font-family: $font-onest;
+
+  &:hover {
+    color: $green-297;
+  }
+}

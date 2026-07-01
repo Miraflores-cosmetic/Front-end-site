@@ -30,6 +30,10 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
   const [revealedCount, setRevealedCount] = useState(0);
   const listRef = useRef<HTMLOListElement>(null);
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, []);
+
   const { contentBlocks, endBlock } = useMemo(() => splitResultBlocks(blocks), [blocks]);
 
   const visibleBlocks = contentBlocks.slice(0, revealedCount);
@@ -67,9 +71,9 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
     return () => clearTimeout(timer);
   }, [phase, revealedCount, contentBlocks]);
 
-  // Прокрутка к новому блоку
+  // Прокрутка к новому блоку (не при первом показе — страница остаётся сверху)
   useEffect(() => {
-    if (revealedCount === 0 || !listRef.current) return;
+    if (revealedCount <= 1 || !listRef.current) return;
     const lastItem = listRef.current.lastElementChild;
     lastItem?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [revealedCount]);

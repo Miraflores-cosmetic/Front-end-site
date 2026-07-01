@@ -9,9 +9,9 @@ export function resolveFaceResultBlocks(
   return result.blocks.map((block) => ({
     texts: block.texts.map((key) => ({
       key,
-      html: getQuizHtml(content, key) ?? `<p>${key}</p>`,
+      html: getQuizHtml(content, key),
       plain: getQuizPlain(content, key),
-    })),
+    })).filter((text) => text.html),
     media: block.media
       .map((key) => {
         const item = getQuizMedia(content, key);

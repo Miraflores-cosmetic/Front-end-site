@@ -1,6 +1,6 @@
 import { editorJsToHtml } from '@/utils/editorJsParser';
 import { normalizeMediaUrl } from '@/utils/mediaUrl';
-import { QUIZ_TEXT_FALLBACKS } from '@/config/quizContent';
+import { QUIZ_ALL_TEXT_FALLBACKS } from '@/config/quizContent';
 import type { QuizContentItem, QuizContentMap, QuizMediaType } from '@/types/quizContent';
 
 const EMPTY_ITEM: QuizContentItem = {
@@ -77,12 +77,12 @@ export function mergeQuizContent(
   let usedCms = false;
   let usedFallback = false;
 
-  for (const [key, fallbackText] of Object.entries(QUIZ_TEXT_FALLBACKS)) {
+  for (const [key, fallbackText] of Object.entries(QUIZ_ALL_TEXT_FALLBACKS)) {
     const cmsItem = cmsContent[key];
     if (cmsItem?.html || cmsItem?.plain) {
       merged[key] = cmsItem;
       usedCms = true;
-    } else {
+    } else if (fallbackText.trim()) {
       merged[key] = {
         plain: fallbackText,
         html: `<p>${escapeHtml(fallbackText)}</p>`,
@@ -110,15 +110,15 @@ export function mergeQuizContent(
 export function getQuizPlain(content: QuizContentMap, key: string): string {
   const item = content[key];
   if (item?.plain) return item.plain;
-  const fallback = QUIZ_TEXT_FALLBACKS[key];
-  return fallback ?? key;
+  const fallback = QUIZ_ALL_TEXT_FALLBACKS[key];
+  return fallback?.trim() ? fallback : key;
 }
 
 export function getQuizHtml(content: QuizContentMap, key: string): string | null {
   const item = content[key];
   if (item?.html) return item.html;
-  const fallback = QUIZ_TEXT_FALLBACKS[key];
-  return fallback ? `<p>${escapeHtml(fallback)}</p>` : null;
+  const fallback = QUIZ_ALL_TEXT_FALLBACKS[key];
+  return fallback?.trim() ? `<p>${escapeHtml(fallback)}</p>` : null;
 }
 
 export function getQuizMedia(content: QuizContentMap, key: string): QuizContentItem | null {

@@ -27,6 +27,33 @@ export const QUIZ_TEXT_FALLBACKS: Record<string, string> = {
   end_face_care: 'Ваш персональный уход готов!',
 };
 
+/**
+ * Тексты блоков результата (§3.1, §6.2).
+ * Заполните из Telegram-бота или через CMS (атрибуты step_1_spf, other_steps_1…).
+ */
+export const QUIZ_RESULT_TEXT_FALLBACKS: Record<string, string> = {
+  step_1_spf: '',
+  step_1_nospf: '',
+  no_answers: '',
+  other_steps_1: '',
+  other_steps_2: '',
+  other_steps_3: '',
+  other_steps_4: '',
+  other_steps_5: '',
+  other_steps_6: '',
+  other_steps_7: '',
+  other_steps_8_1: '',
+  other_steps_8_2: '',
+  face_edema: '',
+  face_edema2: '',
+};
+
+/** Все текстовые fallback-значения (UI + результат). */
+export const QUIZ_ALL_TEXT_FALLBACKS: Record<string, string> = {
+  ...QUIZ_TEXT_FALLBACKS,
+  ...QUIZ_RESULT_TEXT_FALLBACKS,
+};
+
 /** @deprecated Используйте useQuizContent(). Сохранено для обратной совместимости. */
 export const QUIZ_CONTENT = QUIZ_TEXT_FALLBACKS;
 

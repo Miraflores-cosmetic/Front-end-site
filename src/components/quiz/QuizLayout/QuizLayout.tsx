@@ -6,6 +6,7 @@ import footerImage from '@/assets/images/footer-img.png';
 import goBackIcon from '@/assets/icons/go-back.svg';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { useQuizContent } from '@/contexts/QuizContentContext';
+import { scrollPageToTopAfterLayout } from '@/utils/scrollPageToTop';
 import styles from './QuizLayout.module.scss';
 
 interface QuizLayoutProps {
@@ -24,10 +25,14 @@ export const QuizLayout: React.FC<QuizLayoutProps> = ({
   const { loading } = useQuizContent();
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    scrollPageToTopAfterLayout();
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!loading) {
+      scrollPageToTopAfterLayout();
+    }
+  }, [loading]);
 
   const handleBack = () => {
     if (onBack) {

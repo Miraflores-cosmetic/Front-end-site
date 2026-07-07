@@ -1,5 +1,23 @@
-const PRODUCT_SLUG_RE = /\/product\/([^/?#]+)/gi;
+const PRODUCT_SLUG_RE = /\/product\/([^/?#\s]+)/gi;
+const PRODUCT_URL_RE = /https?:\/\/[^\s<]*\/product\/[^/?#\s<]+/i;
 const REMEDY_MARKER = /(?:\*{1,2})?Средство(?:\*{1,2})?\s*:/i;
+
+function findFirstProductIndex(text: string): number {
+  const urlMatch = text.search(PRODUCT_URL_RE);
+  if (urlMatch >= 0) return urlMatch;
+
+  const slugMatch = new RegExp(PRODUCT_SLUG_RE.source, 'i').exec(text);
+  return slugMatch?.index ?? -1;
+}
+
+function stripProductUrlsFromHtml(html: string): string {
+  return html
+    .replace(/<a\s[^>]*href="[^"]*\/product\/[^"]*"[^>]*>[\s\S]*?<\/a>/gi, '')
+    .replace(/<p[^>]*>\s*https?:\/\/[^\s<]*\/product\/[^\s<]*\s*<\/p>/gi, '')
+    .replace(/https?:\/\/[^\s<]*\/product\/[^\s<]*/gi, '')
+    .replace(/<p[^>]*>\s*<\/p>/gi, '')
+    .trim();
+}
 
 function plainToIntroHtml(text: string): string {
   if (!text.trim()) return '';
@@ -61,9 +79,19 @@ export function splitQuizIntroAndProducts(
     return { introHtml: html.slice(0, htmlMarker).trim(), productSlugs };
   }
 
-  const introHtml = html
-    .replace(/<a\s[^>]*href="[^"]*\/product\/[^"]*"[^>]*>[\s\S]*?<\/a>/gi, '')
-    .trim();
+  const plainProductIndex = findFirstProductIndex(plain);
+  if (plainProductIndex >= 0) {
+    const introPlain = plain.slice(0, plainProductIndex).trim();
+    const introHtml = plainToIntroHtml(introPlain);
+    if (introHtml) return { introHtml, productSlugs };
+  }
 
+  const htmlProductIndex = findFirstProductIndex(html);
+  if (htmlProductIndex >= 0) {
+    const introHtml = stripProductUrlsFromHtml(html.slice(0, htmlProductIndex).trim());
+    if (introHtml) return { introHtml, productSlugs };
+  }
+
+  const introHtml = stripProductUrlsFromHtml(html);
   return { introHtml, productSlugs };
 }

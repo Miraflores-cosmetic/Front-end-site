@@ -12,6 +12,7 @@ import {
   type ResultPlayerPhase,
 } from '@/lib/quiz/resultPlayback';
 import type { QuizContentMap, ResolvedContentBlock } from '@/types/quizContent';
+import { scrollPageToTopAfterLayout } from '@/utils/scrollPageToTop';
 import styles from './QuizResultPlayer.module.scss';
 
 interface QuizResultPlayerProps {
@@ -31,7 +32,7 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
   const listRef = useRef<HTMLOListElement>(null);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    scrollPageToTopAfterLayout();
   }, []);
 
   const { contentBlocks, endBlock } = useMemo(() => splitResultBlocks(blocks), [blocks]);
@@ -50,6 +51,12 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
     if (phase !== 'studying') return;
     const timer = setTimeout(() => setPhase('playing'), QUIZ_RESULT_TIMING.studyMs);
     return () => clearTimeout(timer);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase === 'playing') {
+      scrollPageToTopAfterLayout();
+    }
   }, [phase]);
 
   // Поэтапный показ блоков рекомендаций
@@ -71,9 +78,9 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
     return () => clearTimeout(timer);
   }, [phase, revealedCount, contentBlocks]);
 
-  // Прокрутка к новому блоку (не при первом показе — страница остаётся сверху)
+  // Прокрутка к новому блоку (не для первых двух — страница остаётся сверху)
   useEffect(() => {
-    if (revealedCount <= 1 || !listRef.current) return;
+    if (revealedCount <= 2 || !listRef.current) return;
     const lastItem = listRef.current.lastElementChild;
     lastItem?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [revealedCount]);

@@ -11,12 +11,35 @@ describe('parseQuizProducts', () => {
     ]);
   });
 
-  it('splits intro text before product sections', () => {
+  it('splits intro text before product sections with remedy marker', () => {
     const { introHtml, productSlugs } = splitQuizIntroAndProducts('', FACE_EDEMA_PLAIN);
 
     expect(productSlugs).toHaveLength(2);
     expect(introHtml).toContain('чувствительность');
     expect(introHtml).not.toContain('лимфодренажный тоник');
     expect(introHtml).not.toContain('/product/');
+  });
+
+  it('splits intro text before bare product URLs', () => {
+    const plain = `Вводный текст про отёчность.
+
+https://miraflores-shop.com/product/tonik-essentsiia-limfodrinazhnyi-oduvanchik-i-iva
+
+Описание тоника.
+
+https://miraflores-shop.com/product/essentsiia-s-meristemnymi-ekstraktami-i-peptidami
+
+Описание эссенции.`;
+
+    const { introHtml, productSlugs } = splitQuizIntroAndProducts('', plain);
+
+    expect(productSlugs).toEqual([
+      'tonik-essentsiia-limfodrinazhnyi-oduvanchik-i-iva',
+      'essentsiia-s-meristemnymi-ekstraktami-i-peptidami',
+    ]);
+    expect(introHtml).toContain('Вводный текст');
+    expect(introHtml).not.toContain('/product/');
+    expect(introHtml).not.toContain('Описание тоника');
+    expect(introHtml).not.toContain('Описание эссенции');
   });
 });

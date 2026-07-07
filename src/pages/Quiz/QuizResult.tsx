@@ -5,6 +5,7 @@ import { QuizResultPlayer } from '@/components/quiz/QuizResultPlayer/QuizResultP
 import { useQuizContent } from '@/contexts/QuizContentContext';
 import { useQuizState } from '@/hooks/useQuizState';
 import { buildFaceResult, isFaceQuizComplete, resolveFaceResultBlocks } from '@/lib/quiz';
+import { scrollPageToTopAfterLayout } from '@/utils/scrollPageToTop';
 
 const QuizResultPage: React.FC = () => {
   const navigate = useNavigate();
@@ -28,9 +29,7 @@ const QuizResultPage: React.FC = () => {
   }, [faceAnswers, navigate]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    scrollPageToTopAfterLayout();
   }, []);
 
   if (!result) {

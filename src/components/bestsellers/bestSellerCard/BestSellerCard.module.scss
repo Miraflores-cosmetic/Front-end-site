@@ -520,3 +520,60 @@
 .card {
   @extend .productCard;
 }
+
+// Узкий контейнер (квиз и др.): карточка занимает 100% ячейки сетки
+.fluid {
+  width: 100%;
+  height: auto;
+
+  .skeleton {
+    width: 100%;
+    min-height: auto;
+  }
+
+  .skeletonImage {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    height: auto;
+  }
+
+  .imageBox {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
+  }
+
+  .info {
+    width: 100%;
+
+    .titleRow {
+      flex-direction: column;
+      align-items: flex-start;
+      height: auto;
+      gap: 4px;
+
+      .priceWrapper {
+        margin-left: 0;
+        justify-content: flex-start;
+      }
+
+      .title {
+        font-size: 13px;
+        line-height: 17px;
+        min-height: auto;
+      }
+    }
+
+    .desc {
+      font-size: 13px;
+      line-height: 16px;
+      min-height: auto;
+    }
+  }
+
+  img,
+  .productImage {
+    width: 100%;
+    height: 100%;
+  }
+}

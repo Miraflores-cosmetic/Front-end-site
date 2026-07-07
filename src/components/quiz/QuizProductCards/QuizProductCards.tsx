@@ -49,7 +49,7 @@ export const QuizProductCards: React.FC<QuizProductCardsProps> = ({ slugs }) => 
     <div className={styles.grid}>
       {products.map((product) => (
         <div key={product.slug} className={styles.cardSlot}>
-          <BestSellerProductCard product={product} loading={false} />
+          <BestSellerProductCard product={product} loading={false} fluid />
         </div>
       ))}
     </div>

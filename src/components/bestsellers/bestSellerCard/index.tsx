@@ -26,6 +26,8 @@ const renderCardDescription = (description?: string | null) => {
 export const BestSellerProductCard: React.FC<{ 
   product: BestSellersProduct; 
   loading: boolean;
+  /** Карточка растягивается на ширину контейнера (квиз, узкие колонки). */
+  fluid?: boolean;
   isDragging?: boolean;
   isDraggingRef?: React.MutableRefObject<boolean>;
   /** Вызывается при переходе по ссылке на товар (например, закрыть меню) */
@@ -33,6 +35,7 @@ export const BestSellerProductCard: React.FC<{
 }> = ({
   product,
   loading,
+  fluid = false,
   isDragging = false,
   isDraggingRef,
   onNavigate
@@ -173,7 +176,7 @@ export const BestSellerProductCard: React.FC<{
 
   return (
     <div
-      className={`${styles.productCard} ${styles.card}`}
+      className={`${styles.productCard} ${styles.card} ${fluid ? styles.fluid : ''}`}
     >
       {loading && (
         <div className={styles.skeleton} aria-hidden="true">

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QuizRichText } from '@/components/quiz/QuizRichText/QuizRichText';
 import { QuizMedia } from '@/components/quiz/QuizMedia/QuizMedia';
+import { QuizProductCards } from '@/components/quiz/QuizProductCards/QuizProductCards';
 import type { ResolvedContentBlock } from '@/types/quizContent';
 import styles from './QuizResultBlock.module.scss';
 
@@ -19,7 +20,13 @@ export const QuizResultBlock: React.FC<QuizResultBlockProps> = ({ block }) => {
       layout
     >
       {block.texts.map((text) => (
-        <QuizRichText key={text.key} html={text.html} />
+        <React.Fragment key={text.key}>
+          {text.introHtml && <QuizRichText html={text.introHtml} />}
+          {text.productSlugs && text.productSlugs.length > 0 && (
+            <QuizProductCards slugs={text.productSlugs} />
+          )}
+          {!text.productSlugs?.length && text.html && <QuizRichText html={text.html} />}
+        </React.Fragment>
       ))}
       {block.media.map((media) => (
         <QuizMedia

@@ -19,6 +19,10 @@ export interface ResolvedTextBlock {
   key: string;
   html: string;
   plain: string;
+  /** Вводный текст без блоков «Средство» (если в ключе есть ссылки на товары). */
+  introHtml?: string;
+  /** Slug товаров из ссылок /product/{slug} в тексте ключа. */
+  productSlugs?: string[];
 }
 
 export interface ResolvedMediaBlock {

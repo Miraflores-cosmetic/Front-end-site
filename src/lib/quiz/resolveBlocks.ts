@@ -1,5 +1,6 @@
 import type { FaceResultMeta } from './buildFaceResult';
 import { getQuizHtml, getQuizMedia, getQuizPlain } from './contentUtils';
+import { splitQuizIntroAndProducts } from './parseQuizProducts';
 import type { QuizContentMap, ResolvedContentBlock, ResolvedTextBlock } from '@/types/quizContent';
 
 export function resolveFaceResultBlocks(
@@ -11,10 +12,15 @@ export function resolveFaceResultBlocks(
       .map((key): ResolvedTextBlock | null => {
         const html = getQuizHtml(content, key);
         if (!html) return null;
+        const plain = getQuizPlain(content, key);
+        const { introHtml, productSlugs } = splitQuizIntroAndProducts(html, plain);
+
         return {
           key,
           html,
-          plain: getQuizPlain(content, key),
+          plain,
+          introHtml: productSlugs.length > 0 ? introHtml : html,
+          productSlugs: productSlugs.length > 0 ? productSlugs : undefined,
         };
       })
       .filter((text): text is ResolvedTextBlock => text !== null),

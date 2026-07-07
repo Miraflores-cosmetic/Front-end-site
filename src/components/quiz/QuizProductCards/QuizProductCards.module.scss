@@ -1,0 +1,22 @@
+@use '@/style/variables.scss' as *;
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: $spacing-md;
+  width: 100%;
+
+  @media (max-width: $viewport-mobile-max) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.cardSlot {
+  min-width: 0;
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  padding: $spacing-md 0;
+}

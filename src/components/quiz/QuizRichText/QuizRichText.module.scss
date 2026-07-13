@@ -13,6 +13,37 @@
     }
   }
 
+  strong,
+  b {
+    font-weight: 600;
+    color: $black;
+  }
+
+  em,
+  i {
+    font-style: italic;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: $font-oceanic;
+    font-weight: $font-light;
+    color: $black;
+    margin: 0 0 $spacing-sm;
+    line-height: 1.3;
+  }
+
+  blockquote {
+    margin: 0 0 $spacing-md;
+    padding-left: $spacing-md;
+    border-left: 2px solid rgba($green-297, 0.35);
+    color: $gray-6e;
+  }
+
   a {
     color: $green-297;
     text-decoration: underline;

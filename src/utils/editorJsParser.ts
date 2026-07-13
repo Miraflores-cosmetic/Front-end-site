@@ -19,18 +19,16 @@ export function editorJsToHtml(data: any): string {
   // Функция для обработки markdown-разметки и HTML тегов в тексте
   const processMarkdown = (text: string): string => {
     if (!text) return '';
+
+    let processed = text.replace(/&nbsp;/gi, ' ');
     
     // Проверяем, есть ли уже HTML теги в тексте
-    const hasHtmlTags = /<[^>]+>/.test(text);
+    const hasHtmlTags = /<[^>]+>/.test(processed);
     
     // Если уже есть HTML теги, не обрабатываем markdown, только добавляем недостающие
     if (hasHtmlTags) {
-      // Оставляем HTML как есть, но можем добавить обработку markdown для частей без HTML
-      return text;
+      return processed;
     }
-    
-    // Если нет HTML тегов, обрабатываем markdown
-    let processed = text;
     
     // Преобразуем markdown ссылки [текст](url) в HTML
     processed = processed.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>');

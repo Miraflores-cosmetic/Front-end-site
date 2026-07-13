@@ -4,7 +4,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/button/Button';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { QuizResultBlock } from '@/components/quiz/QuizResultBlock/QuizResultBlock';
-import { getQuizPlain } from '@/lib/quiz/contentUtils';
+import { QuizRichText } from '@/components/quiz/QuizRichText/QuizRichText';
+import { getQuizHtml, getQuizPlain } from '@/lib/quiz/contentUtils';
 import {
   getDelayAfterBlock,
   QUIZ_RESULT_TIMING,
@@ -36,6 +37,7 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
   }, []);
 
   const { contentBlocks, endBlock } = useMemo(() => splitResultBlocks(blocks), [blocks]);
+  const introHtml = useMemo(() => getQuizHtml(content, 'face_steps'), [content]);
 
   const visibleBlocks = contentBlocks.slice(0, revealedCount);
   const isComplete = phase === 'finished';
@@ -89,16 +91,20 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
     <div className={styles.player}>
       <AnimatePresence mode="wait">
         {phase === 'intro' && (
-          <motion.p
+          <motion.div
             key="intro"
-            className={styles.introText}
+            className={styles.introBlock}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.35 }}
           >
-            {getQuizPlain(content, 'face_steps')}
-          </motion.p>
+            {introHtml ? (
+              <QuizRichText html={introHtml} className={styles.introRichText} />
+            ) : (
+              <p className={styles.introFallback}>{getQuizPlain(content, 'face_steps')}</p>
+            )}
+          </motion.div>
         )}
 
         {phase === 'studying' && (

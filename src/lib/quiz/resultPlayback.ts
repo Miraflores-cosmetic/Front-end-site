@@ -1,8 +1,8 @@
 import type { ResolvedContentBlock } from '@/types/quizContent';
 
 export const QUIZ_RESULT_TIMING = {
-  /** Показ face_steps перед loader */
-  introMs: 800,
+  /** Показ face_steps перед loader — достаточно для чтения этапов */
+  introMs: 7000,
   /** Loader «Изучаем ответы» */
   studyMs: 3000,
   /** После блока SPF */

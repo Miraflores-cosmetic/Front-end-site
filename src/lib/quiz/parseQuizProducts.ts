@@ -1,5 +1,5 @@
-const PRODUCT_SLUG_RE = /\/product\/([^/?#\s]+)/gi;
-const PRODUCT_URL_RE = /https?:\/\/[^\s<]*\/product\/[^/?#\s<]+/i;
+const PRODUCT_SLUG_RE = /\/product\/([a-zA-Z0-9_-]+)/gi;
+const PRODUCT_URL_RE = /https?:\/\/[^\s<"]*\/product\/[a-zA-Z0-9_-]+/i;
 const REMEDY_MARKER = /(?:\*{1,2})?Средство(?:\*{1,2})?\s*:/i;
 
 function findFirstProductIndex(text: string): number {
@@ -12,9 +12,9 @@ function findFirstProductIndex(text: string): number {
 
 function stripProductUrlsFromHtml(html: string): string {
   return html
-    .replace(/<a\s[^>]*href="[^"]*\/product\/[^"]*"[^>]*>[\s\S]*?<\/a>/gi, '')
-    .replace(/<p[^>]*>\s*https?:\/\/[^\s<]*\/product\/[^\s<]*\s*<\/p>/gi, '')
-    .replace(/https?:\/\/[^\s<]*\/product\/[^\s<]*/gi, '')
+    .replace(/<a\s[^>]*href="[^"]*\/product\/[a-zA-Z0-9_-]+[^"]*"[^>]*>[\s\S]*?<\/a>/gi, '')
+    .replace(/<p[^>]*>\s*https?:\/\/[^\s<"]*\/product\/[a-zA-Z0-9_-]+\s*<\/p>/gi, '')
+    .replace(/https?:\/\/[^\s<"]*\/product\/[a-zA-Z0-9_-]+/gi, '')
     .replace(/<p[^>]*>\s*<\/p>/gi, '')
     .trim();
 }
@@ -42,7 +42,7 @@ export function extractProductSlugs(text: string): string[] {
   const re = new RegExp(PRODUCT_SLUG_RE.source, 'gi');
 
   for (const match of text.matchAll(re)) {
-    const slug = decodeURIComponent(match[1]).trim();
+    const slug = decodeURIComponent(match[1]).trim().toLowerCase();
     if (slug && !seen.has(slug)) {
       seen.add(slug);
       slugs.push(slug);
@@ -79,17 +79,17 @@ export function splitQuizIntroAndProducts(
     return { introHtml: html.slice(0, htmlMarker).trim(), productSlugs };
   }
 
+  const htmlProductIndex = findFirstProductIndex(html);
+  if (htmlProductIndex >= 0) {
+    const introHtml = stripProductUrlsFromHtml(html.slice(0, htmlProductIndex).trim());
+    return { introHtml, productSlugs };
+  }
+
   const plainProductIndex = findFirstProductIndex(plain);
   if (plainProductIndex >= 0) {
     const introPlain = plain.slice(0, plainProductIndex).trim();
     const introHtml = plainToIntroHtml(introPlain);
-    if (introHtml) return { introHtml, productSlugs };
-  }
-
-  const htmlProductIndex = findFirstProductIndex(html);
-  if (htmlProductIndex >= 0) {
-    const introHtml = stripProductUrlsFromHtml(html.slice(0, htmlProductIndex).trim());
-    if (introHtml) return { introHtml, productSlugs };
+    return { introHtml, productSlugs };
   }
 
   const introHtml = stripProductUrlsFromHtml(html);

@@ -11,6 +11,13 @@
   }
 }
 
+.gridSingle {
+  grid-template-columns: 1fr;
+  width: 100%;
+  max-width: 432px;
+  margin: 0 auto;
+}
+
 .cardSlot {
   min-width: 0;
   width: 100%;

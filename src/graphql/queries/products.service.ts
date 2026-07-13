@@ -1,4 +1,5 @@
 import { AVAILABILITY_COUNTRY_FOR_STOCK, CHANNEL, graphqlRequest } from '@/graphql/client';
+import { getGraphQLEndpoint } from '@/graphql/graphqlEndpoint';
 import type {
   ProductNode,
   ProductDetailNode,
@@ -166,6 +167,176 @@ export async function getSingleProduct(slug: string): Promise<ProductDetailNode 
   };
   const data = await graphqlRequest<ProductData>(query, variables);
   return data.product;
+}
+
+const QUIZ_PRODUCT_CARD_QUERY = `
+  query getQuizProductCard($slug: String!, $channel: String!, $availabilityCountry: CountryCode!) {
+    product(slug: $slug, channel: $channel) {
+      id
+      name
+      slug
+      description
+      productType {
+        name
+      }
+      thumbnail {
+        url
+        alt
+      }
+      media {
+        id
+        url
+        alt
+        sortOrder
+      }
+      attributes {
+        attribute {
+          id
+          name
+          slug
+        }
+        values {
+          id
+          name
+          slug
+          plainText
+          richText
+        }
+      }
+      defaultVariant {
+        id
+        name
+        sku
+        quantityLimitPerCustomer
+        trackInventory
+        quantityAvailable(countryCode: $availabilityCountry)
+        attributes {
+          attribute {
+            id
+            name
+            slug
+          }
+          values {
+            id
+            name
+            slug
+            plainText
+          }
+        }
+        pricing {
+          price {
+            gross {
+              amount
+              currency
+            }
+          }
+          priceUndiscounted {
+            gross {
+              amount
+              currency
+            }
+          }
+          discount {
+            gross {
+              amount
+              currency
+            }
+          }
+        }
+      }
+      productVariants(first: 20) {
+        edges {
+          node {
+            id
+            name
+            sku
+            quantityLimitPerCustomer
+            trackInventory
+            quantityAvailable(countryCode: $availabilityCountry)
+            attributes {
+              attribute {
+                id
+                name
+                slug
+              }
+              values {
+                id
+                name
+                slug
+                plainText
+              }
+            }
+            media {
+              id
+              url
+              alt
+              sortOrder
+            }
+            pricing {
+              price {
+                gross {
+                  amount
+                  currency
+                }
+              }
+              priceUndiscounted {
+                gross {
+                  amount
+                  currency
+                }
+              }
+              discount {
+                gross {
+                  amount
+                  currency
+                }
+              }
+            }
+          }
+        }
+      }
+      collections {
+        id
+        name
+        slug
+      }
+    }
+  }
+`;
+
+/** Публичная загрузка товара для карточек квиза — без JWT пользователя (reviews не нужны). */
+export async function getQuizProductCard(slug: string): Promise<ProductDetailNode | null> {
+  const normalizedSlug = slug.trim().toLowerCase();
+  if (!normalizedSlug) return null;
+
+  try {
+    const res = await fetch(getGraphQLEndpoint(), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: QUIZ_PRODUCT_CARD_QUERY,
+        variables: {
+          slug: normalizedSlug,
+          channel: CHANNEL,
+          availabilityCountry: AVAILABILITY_COUNTRY_FOR_STOCK,
+        },
+      }),
+    });
+
+    const json = (await res.json()) as {
+      data?: ProductData;
+      errors?: { message: string }[];
+    };
+    if (json.errors?.length) {
+      console.error('[getQuizProductCard] GraphQL error:', normalizedSlug, json.errors[0]?.message);
+      return null;
+    }
+
+    return json.data?.product ?? null;
+  } catch (error) {
+    console.error('[getQuizProductCard] fetch failed:', normalizedSlug, error);
+    return null;
+  }
 }
 
 /**

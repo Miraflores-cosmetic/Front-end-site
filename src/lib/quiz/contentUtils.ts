@@ -31,6 +31,21 @@ export function detectMediaType(url: string): QuizMediaType {
   return 'unknown';
 }
 
+function htmlToPlainText(html: string): string {
+  return html
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/li>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -61,7 +76,7 @@ export function buildContentItemFromParts(parts: {
     const html = editorJsToHtml(parts.richText);
     if (html) {
       item.html = html;
-      item.plain = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+      item.plain = htmlToPlainText(html);
     }
   }
 

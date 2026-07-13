@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BestSellerProductCard } from '@/components/bestsellers/bestSellerCard';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
-import { getSingleProduct } from '@/graphql/queries/products.service';
+import { getQuizProductCard } from '@/graphql/queries/products.service';
 import { mapProductNodeToBestSeller } from '@/utils/mapProductNodeToBestSeller';
 import type { BestSellersProduct } from '@/types/products';
 import styles from './QuizProductCards.module.scss';
@@ -18,10 +18,11 @@ export const QuizProductCards: React.FC<QuizProductCardsProps> = ({ slugs }) => 
     let active = true;
     setLoading(true);
 
-    Promise.all(slugs.map((slug) => getSingleProduct(slug)))
-      .then((nodes) => {
+    Promise.allSettled(slugs.map((slug) => getQuizProductCard(slug)))
+      .then((results) => {
         if (!active) return;
-        const mapped = nodes
+        const mapped = results
+          .map((result) => (result.status === 'fulfilled' ? result.value : null))
           .filter((node): node is NonNullable<typeof node> => node != null)
           .map((node) => mapProductNodeToBestSeller(node));
         setProducts(mapped);
@@ -46,10 +47,10 @@ export const QuizProductCards: React.FC<QuizProductCardsProps> = ({ slugs }) => 
   if (products.length === 0) return null;
 
   return (
-    <div className={styles.grid}>
+    <div className={`${styles.grid} ${products.length === 1 ? styles.gridSingle : ''}`}>
       {products.map((product) => (
         <div key={product.slug} className={styles.cardSlot}>
-          <BestSellerProductCard product={product} loading={false} fluid />
+          <BestSellerProductCard product={product} loading={false} fluid={products.length > 1} />
         </div>
       ))}
     </div>

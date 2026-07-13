@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styles from './MenuRightPart.module.scss';
 import centerImageMenu from '@/assets/images/centerImageMenu.png';
 import lineTo from '@/assets/icons/linToMenu.svg';
@@ -167,6 +168,7 @@ const convertToBestSellersProduct = (product: CollectionProduct): BestSellersPro
 
 const MenuRightPart: React.FC = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [collection, setCollection] = useState<Collection | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -227,7 +229,7 @@ const MenuRightPart: React.FC = () => {
         <button
           type='button'
           onClick={() => {
-            window.open('https://t.me/Miraflores_Cosmetics_Bot', '_blank', 'noopener,noreferrer');
+            navigate('/quiz');
             dispatch(closeDrawer());
           }}
         >

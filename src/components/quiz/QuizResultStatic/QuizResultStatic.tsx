@@ -1,8 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { QuizEndFaceCareFooter } from '@/components/quiz/QuizEndFaceCareFooter/QuizEndFaceCareFooter';
 import { Button } from '@/components/button/Button';
 import { QuizResultBlock } from '@/components/quiz/QuizResultBlock/QuizResultBlock';
-import { getQuizPlain } from '@/lib/quiz/contentUtils';
 import { splitResultBlocks } from '@/lib/quiz/resultPlayback';
 import type { QuizContentMap, ResolvedContentBlock } from '@/types/quizContent';
 import styles from './QuizResultStatic.module.scss';
@@ -31,9 +31,7 @@ export const QuizResultStatic: React.FC<QuizResultStaticProps> = ({
 
       {endBlock && (
         <div className={styles.footer}>
-          <h1 className={styles.resultTitle}>
-            {endBlock.texts[0]?.plain ?? getQuizPlain(content, 'end_face_care')}
-          </h1>
+          <QuizEndFaceCareFooter textBlock={endBlock.texts[0]} content={content} />
           {showActions && (
             <div className={styles.actions}>
               <Button text="Перейти в каталог" onClick={() => navigate('/face')} />

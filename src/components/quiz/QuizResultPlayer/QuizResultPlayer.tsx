@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/button/Button';
+import { QuizEndFaceCareFooter } from '@/components/quiz/QuizEndFaceCareFooter/QuizEndFaceCareFooter';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { QuizResultBlock } from '@/components/quiz/QuizResultBlock/QuizResultBlock';
 import { QuizRichText } from '@/components/quiz/QuizRichText/QuizRichText';
@@ -190,9 +191,7 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.15 }}
               >
-                <h1 className={styles.resultTitle}>
-                  {endBlock?.texts[0]?.plain ?? getQuizPlain(content, 'end_face_care')}
-                </h1>
+                <QuizEndFaceCareFooter textBlock={endBlock?.texts[0]} content={content} />
 
                 <div className={styles.actions}>
                   <Button text="Перейти в каталог" onClick={() => navigate('/face')} />

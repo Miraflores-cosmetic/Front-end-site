@@ -1,0 +1,44 @@
+@use '@/style/variables.scss' as *;
+
+.endFaceCare {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-lg;
+  text-align: center;
+  margin-bottom: $spacing-xl;
+}
+
+.endBody {
+  font-family: $font-onest;
+  font-size: 16px;
+  line-height: 1.65;
+  color: $gray-6e;
+  font-weight: $font-regular;
+  text-transform: none;
+  letter-spacing: normal;
+  margin: 0;
+  max-width: 640px;
+
+  p {
+    margin: 0 0 $spacing-sm;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  strong,
+  b {
+    color: $black;
+    font-weight: $font-semibold;
+  }
+
+  @media (max-width: $viewport-mobile-max) {
+    font-size: 15px;
+  }
+}
+
+.naboryButton {
+  min-width: 240px;
+}

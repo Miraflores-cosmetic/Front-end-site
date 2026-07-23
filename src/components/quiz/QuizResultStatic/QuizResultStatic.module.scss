@@ -1,0 +1,58 @@
+@use '@/style/variables.scss' as *;
+
+.static {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+  width: 100%;
+}
+
+.blockList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.footer {
+  text-align: center;
+  padding-top: $spacing-md;
+}
+
+.resultTitle {
+  font-family: $font-oceanic;
+  font-size: 32px;
+  font-weight: $font-light;
+  text-transform: uppercase;
+  margin: 0 0 $spacing-xl;
+  line-height: 1.2;
+
+  @media (max-width: $viewport-mobile-max) {
+    font-size: 24px;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.secondaryLink {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 15px;
+  color: $gray-6e;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  align-self: center;
+  font-family: $font-onest;
+
+  &:hover {
+    color: $green-297;
+  }
+}

@@ -9,6 +9,7 @@ import BonusContent from './contents/bonuses-content/BonusContent';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import InfoMobileContent from './contents/info-content/mobile-content/InfoMobileContent';
 import FavoritesContent from './contents/favorites-content/FavoritesContent';
+import QuizCareContent from './contents/quiz-care/QuizCareContent';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
@@ -16,9 +17,18 @@ import { getMe, logout, isAuthSessionInvalidMessage } from '@/store/slices/authS
 import { LogoutConfirmationModal } from '@/components/logout-confirmation-modal/LogoutConfirmationModal';
 import { VIEWPORT_MOBILE_MAX } from '@/constants/viewport';
 
+const VALID_PROFILE_TABS: TabId[] = ['info', 'orders', 'favorites', 'quiz', 'bonus'];
+
+function parseProfileTab(tabParam: string | null): TabId {
+  if (tabParam && VALID_PROFILE_TABS.includes(tabParam as TabId)) {
+    return tabParam as TabId;
+  }
+  return 'info';
+}
+
 const ProfilePage: React.FC = () => {
-  const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState<TabId>('info');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<TabId>(() => parseProfileTab(searchParams.get('tab')));
   const [openAccordion, setOpenAccordion] = useState<TabId | null>(null);
   const { isAuth, me } = useSelector((state: RootState) => state.authSlice);
   const navigate = useNavigate();
@@ -42,6 +52,7 @@ const ProfilePage: React.FC = () => {
     { id: 'info' as TabId, label: 'ОБЩАЯ ИНФОРМАЦИЯ' },
     { id: 'orders' as TabId, label: 'ЗАКАЗЫ' },
     { id: 'favorites' as TabId, label: 'ИЗБРАННОЕ' },
+    { id: 'quiz' as TabId, label: 'МОЙ УХОД' },
     { id: 'bonus' as TabId, label: 'БОНУСНЫЙ СЧЕТ' },
     { id: 'logout' as TabId, label: 'ВЫЙТИ' },
   ];
@@ -59,6 +70,8 @@ const ProfilePage: React.FC = () => {
           return <OrdersContent setOpenAccordion={() => setOpenAccordion(null)} />;
         case 'favorites':
           return <FavoritesContent setOpenAccordion={() => setOpenAccordion(null)} />;
+        case 'quiz':
+          return <QuizCareContent />;
         case 'bonus':
           return <BonusContent onCloseAccordion={() => setOpenAccordion(null)} />;
         case 'logout':
@@ -70,28 +83,31 @@ const ProfilePage: React.FC = () => {
     [isMobile],
   );
 
-  // Обработка выхода при клике на "Выйти"
-  useEffect(() => {
-    if (activeTab === 'logout') {
-      setIsLogoutModalOpen(true);
-      setActiveTab('info');
-    }
-  }, [activeTab]);
-
-  // Проверяем query параметр для открытия конкретного таба
-  useEffect(() => {
-    const tabParam = searchParams.get('tab');
-    if (tabParam && ['info', 'orders', 'favorites', 'bonus'].includes(tabParam)) {
-      const tab = tabParam as TabId;
-      setActiveTab(tab);
-      if (typeof window !== 'undefined' && window.innerWidth < VIEWPORT_MOBILE_MAX) {
-        setOpenAccordion(tab);
+  const handleSetActiveTab = useCallback(
+    (tab: TabId) => {
+      if (tab === 'logout') {
+        setIsLogoutModalOpen(true);
+        return;
       }
-      setTimeout(() => {
-        navigate('/profile', { replace: true });
-      }, 0);
+
+      setActiveTab(tab);
+      if (tab === 'info') {
+        setSearchParams({}, { replace: true });
+      } else {
+        setSearchParams({ tab }, { replace: true });
+      }
+    },
+    [setSearchParams],
+  );
+
+  // Синхронизация таба с URL (?tab=quiz сохраняется при refresh)
+  useEffect(() => {
+    const tab = parseProfileTab(searchParams.get('tab'));
+    setActiveTab(tab);
+    if (typeof window !== 'undefined' && window.innerWidth < VIEWPORT_MOBILE_MAX && tab !== 'info') {
+      setOpenAccordion(tab);
     }
-  }, [searchParams, navigate]);
+  }, [searchParams]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -136,7 +152,7 @@ const ProfilePage: React.FC = () => {
               userName={me?.firstName || ''}
               menuItems={menuItems}
               activeTab={activeTab}
-              setActiveTab={setActiveTab}
+              setActiveTab={handleSetActiveTab}
               openAccordion={openAccordion}
               setOpenAccordion={setOpenAccordion}
               renderTabContent={renderTabContent}

@@ -9,7 +9,7 @@ import { setPassword } from '@/graphql/queries/auth.service';
 import { useToast } from '@/components/toast/toast';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/store/store';
-import { sendSignInData } from '@/store/slices/authSlice';
+import { resolvePostAuthRedirect } from '@/graphql/queries/quizResult.service';
 
 const ResetPassword: React.FC = () => {
   const [newPassword, setNewPassword] = useState('');
@@ -67,7 +67,7 @@ const ResetPassword: React.FC = () => {
         
         // Автоматически входим пользователя
         setTimeout(() => {
-          navigate('/');
+          navigate(resolvePostAuthRedirect('/'));
         }, 1500);
       } else {
         toast.error('Ошибка при сбросе пароля');

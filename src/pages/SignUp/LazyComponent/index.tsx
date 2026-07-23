@@ -21,6 +21,7 @@ import {
 } from '@/store/slices/authSlice';
 import { useToast } from '@/components/toast/toast';
 import { translateAuthError } from '@/utils/translateAuthError';
+import { peekAuthReturnUrl, resolvePostAuthRedirect } from '@/graphql/queries/quizResult.service';
 
 // Email validation function
 const validateEmail = (email: string): boolean => {
@@ -53,7 +54,9 @@ const LazyComponent: React.FC = () => {
 
   useEffect(() => {
     dispatch(setFalseSignUpAgreement());
-    if (isAuth) handleNavigatetoHome();
+    if (isAuth) {
+      navigate(resolvePostAuthRedirect('/'));
+    }
   }, []);
 
   const handleNavigatetoHome = () => navigate('/');
@@ -156,10 +159,16 @@ const LazyComponent: React.FC = () => {
       .unwrap()
       .then(() => {
         toast.success('Успешно зарегистрирован!');
+        if (peekAuthReturnUrl()) {
+          return;
+        }
         setTimeout(() => handleConfirmEmail(), 1500);
       })
       .catch(() => {
         toast.success('Успешно зарегистрирован!');
+        if (peekAuthReturnUrl()) {
+          return;
+        }
         setTimeout(() => handleConfirmEmail(), 1500);
       });
     // toast из контекста — новый объект на каждом рендере, не кладём в deps

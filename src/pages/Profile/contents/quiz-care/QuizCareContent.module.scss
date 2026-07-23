@@ -1,0 +1,83 @@
+@use '@/style/variables.scss' as *;
+
+.careContent {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.title {
+  font-family: $font-oceanic;
+  font-size: 28px;
+  font-weight: $font-light;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.date {
+  margin: 0;
+  color: $gray-6e;
+  font-size: 15px;
+}
+
+.summary {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(120px, 180px) 1fr;
+  gap: $spacing-sm;
+  align-items: start;
+
+  dt {
+    margin: 0;
+    color: $gray-6e;
+    font-size: 14px;
+  }
+
+  dd {
+    margin: 0;
+    color: $black;
+    font-size: 15px;
+    line-height: 1.5;
+  }
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  max-width: 320px;
+}
+
+.secondaryLink {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 15px;
+  color: $gray-6e;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  align-self: flex-start;
+  font-family: $font-onest;
+
+  &:hover {
+    color: $green-297;
+  }
+}
+
+.empty {
+  margin: 0;
+  color: $gray-6e;
+  line-height: 1.6;
+}
+
+.loading {
+  color: $gray-6e;
+  padding: $spacing-md 0;
+}

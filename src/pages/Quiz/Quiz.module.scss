@@ -205,3 +205,26 @@
   color: $white;
   font-weight: $font-medium;
 }
+
+.resultFallback {
+  padding: $spacing-xl 0;
+  text-align: center;
+}
+
+.resultFallbackActions {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  align-items: center;
+}
+
+.resultFallbackNotice {
+  margin-bottom: $spacing-lg;
+  padding: $spacing-md $spacing-lg;
+  border-radius: 12px;
+  background: rgba($green-297, 0.08);
+  color: $gray-6e;
+  font-size: 15px;
+  line-height: 1.5;
+  text-align: center;
+}

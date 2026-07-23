@@ -1,4 +1,5 @@
 export { buildFaceResult, isFaceQuizComplete } from './buildFaceResult';
+export { getFaceStepGuardRedirect, getFirstAllowedFaceStep } from './faceStepGuard';
 export type { ContentBlock, CompleteFaceQuizAnswers, FaceResultMeta } from './buildFaceResult';
 export { getPriorityIndex, SKIN_TASK_PRIORITIES } from './priorities';
 export { getRecommendationEntry, RECOMMENDATION_MATRIX } from './recommendationMatrix';

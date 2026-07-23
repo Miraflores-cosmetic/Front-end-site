@@ -5,7 +5,7 @@ import krem from '@/assets/images/Cream.png';
 import girlwithsmile from '@/assets/images/girlsmile.webp';
 import Bestsellers from '@/components/bestsellers/Bestsellers';
 
-export type TabId = 'info' | 'orders' | 'favorites' | 'bonus' | 'logout';
+export type TabId = 'info' | 'orders' | 'favorites' | 'quiz' | 'bonus' | 'logout';
 
 export interface MenuItem {
   id: TabId;

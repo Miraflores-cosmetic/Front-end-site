@@ -26,12 +26,14 @@ import FAQ from './pages/FAQ/FAQ';
 import Promocodes from './pages/Promocodes/Promocodes';
 import GiftCertificates from './pages/GiftCertificates/GiftCertificates';
 import { Spinner } from '@/components/spinner/Spinner';
+import { resolvePostAuthRedirect } from '@/graphql/queries/quizResult.service';
 import NotFound from './pages/NotFound/NotFound';
 import Contacts from './pages/Contacts/Contacts';
 import QuizZonePage from './pages/Quiz/QuizZone';
 import QuizFacePage from './pages/Quiz/QuizFace';
 import QuizHairPage from './pages/Quiz/QuizHair';
 import QuizResultPage from './pages/Quiz/QuizResult';
+import ProfileQuizResultPage from './pages/Profile/ProfileQuizResult';
 import { QuizContentProvider } from '@/contexts/QuizContentContext';
 import SearchDrawer from '@/components/drawer/SearchDrawer';
 import { AppDispatch, RootState } from '@/store/store';
@@ -98,10 +100,11 @@ const App: React.FC = () => {
     }
   }, []); // Пустой массив зависимостей - вызываем только один раз при монтировании
 
-  // Редирект с sign-in если пользователь уже авторизован
+  // Редирект с auth-страниц если пользователь уже авторизован
   useEffect(() => {
-    if (isAuth && location.pathname === '/sign-in') {
-      navigate('/');
+    const authLandingPaths = ['/sign-in', '/sign-up', '/email-confirmation'];
+    if (isAuth && authLandingPaths.includes(location.pathname)) {
+      navigate(resolvePostAuthRedirect('/'));
     }
   }, [isAuth, location.pathname, navigate]);
 
@@ -140,6 +143,14 @@ const App: React.FC = () => {
             <Route path='/order' element={<Order />} />
             <Route path='/order/success' element={<OrderSuccess />} />
             <Route path='/profile' element={<ProfilePage />} />
+        <Route
+          path='/profile/quiz-result'
+          element={
+            <QuizContentProvider>
+              <ProfileQuizResultPage />
+            </QuizContentProvider>
+          }
+        />
             <Route path='/reviews' element={<ReviewsPage />} />
             <Route path='/reviews/create' element={<CreateReviewPage />} />
             <Route path='/contacts' element={<Contacts />} />

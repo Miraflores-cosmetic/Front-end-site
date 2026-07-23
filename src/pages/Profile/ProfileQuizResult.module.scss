@@ -1,0 +1,47 @@
+@use '@/style/variables.scss' as *;
+
+.page {
+  background: $bg-light;
+  min-height: calc(100vh - 72px);
+  padding: 24px 32px 64px;
+
+  @media (max-width: $viewport-mobile-max) {
+    padding: 24px 16px 48px;
+  }
+}
+
+.container {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.backLink {
+  display: inline-block;
+  margin-bottom: $spacing-lg;
+  color: $gray-6e;
+  text-decoration: none;
+  font-size: 15px;
+
+  &:hover {
+    color: $green-297;
+  }
+}
+
+.pageTitle {
+  font-family: $font-oceanic;
+  font-size: 28px;
+  font-weight: $font-light;
+  text-transform: uppercase;
+  margin: 0 0 $spacing-xl;
+  line-height: 1.2;
+
+  @media (max-width: $viewport-mobile-max) {
+    font-size: 22px;
+  }
+}
+
+.loaderWrap {
+  display: flex;
+  justify-content: center;
+  padding: $spacing-xl 0;
+}

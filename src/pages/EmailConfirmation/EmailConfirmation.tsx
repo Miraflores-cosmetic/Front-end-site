@@ -12,6 +12,7 @@ import { useToast } from '@/components/toast/toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe, resetSignUp } from '@/store/slices/authSlice';
+import { resolvePostAuthRedirect } from '@/graphql/queries/quizResult.service';
 
 // Mask email for display
 const maskEmail = (email: string): string => {
@@ -45,7 +46,7 @@ const EmailConfirmation: React.FC = () => {
         if (me?.isConfirmed) {
           toast.success('Ваш email уже подтвержден');
           setTimeout(() => {
-            navigate('/');
+            navigate(resolvePostAuthRedirect('/'));
           }, 1500);
           return true;
         }
@@ -97,7 +98,7 @@ const EmailConfirmation: React.FC = () => {
         // Обновляем данные пользователя
         await dispatch(getMe());
         setTimeout(() => {
-          navigate('/');
+          navigate(resolvePostAuthRedirect('/'));
         }, 1500);
       }
     } catch (error: any) {
@@ -161,7 +162,7 @@ const EmailConfirmation: React.FC = () => {
         
         toast.success('Email успешно подтвержден!');
         setTimeout(() => {
-          navigate('/');
+          navigate(resolvePostAuthRedirect('/'));
         }, 1500);
       } else {
         // Handle expired code

@@ -20,12 +20,24 @@ interface QuizResultPlayerProps {
   blocks: ResolvedContentBlock[];
   content: QuizContentMap;
   onRestart: () => void;
+  onFinished?: () => void;
+  isAuthenticated?: boolean;
+  onLoginRequest?: () => void;
+  onSignUpRequest?: () => void;
+  saveStatus?: 'idle' | 'saving' | 'saved' | 'error';
+  onRetrySave?: () => void;
 }
 
 export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
   blocks,
   content,
   onRestart,
+  onFinished,
+  isAuthenticated = false,
+  onLoginRequest,
+  onSignUpRequest,
+  saveStatus = 'idle',
+  onRetrySave,
 }) => {
   const navigate = useNavigate();
   const [phase, setPhase] = useState<ResultPlayerPhase>('intro');
@@ -41,6 +53,12 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
 
   const visibleBlocks = contentBlocks.slice(0, revealedCount);
   const isComplete = phase === 'finished';
+
+  useEffect(() => {
+    if (phase === 'finished') {
+      onFinished?.();
+    }
+  }, [phase, onFinished]);
 
   // face_steps → face_study (loader)
   useEffect(() => {
@@ -88,7 +106,23 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
   }, [revealedCount]);
 
   return (
-    <div className={styles.player}>
+    <div className={`${styles.player} ${!isAuthenticated ? styles.playerWithStickyGuest : ''}`}>
+      {!isAuthenticated && onLoginRequest && (
+        <div className={styles.stickyGuestBar}>
+          <p className={styles.stickyGuestText}>Сохраните программу ухода в личном кабинете</p>
+          <div className={styles.stickyGuestActions}>
+            <button type="button" className={styles.stickyGuestPrimary} onClick={onLoginRequest}>
+              Войти и сохранить
+            </button>
+            {onSignUpRequest && (
+              <button type="button" className={styles.stickyGuestSecondary} onClick={onSignUpRequest}>
+                Регистрация
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
       <AnimatePresence mode="wait">
         {phase === 'intro' && (
           <motion.div
@@ -166,6 +200,21 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
                     Пройти заново
                   </button>
                 </div>
+
+                {isAuthenticated && saveStatus === 'error' && (
+                  <div className={styles.savePrompt}>
+                    <p className={styles.savePromptText}>
+                      Не удалось сохранить программу в личном кабинете.
+                    </p>
+                    <button type="button" className={styles.savePromptLink} onClick={onRetrySave}>
+                      Сохранить снова
+                    </button>
+                  </div>
+                )}
+
+                {isAuthenticated && saveStatus === 'saved' && (
+                  <p className={styles.saveSuccessText}>Программа сохранена в личном кабинете.</p>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

@@ -5,6 +5,68 @@
   min-height: 320px;
 }
 
+.playerWithStickyGuest {
+  padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+}
+
+.stickyGuestBar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-md $spacing-lg calc($spacing-md + env(safe-area-inset-bottom, 0px));
+  background: rgba($white, 0.96);
+  border-top: 1px solid rgba($green-297, 0.2);
+  box-shadow: 0 -8px 24px rgba($black, 0.08);
+}
+
+.stickyGuestText {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: $gray-6e;
+  text-align: center;
+}
+
+.stickyGuestActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: $spacing-sm;
+  width: 100%;
+  max-width: 420px;
+}
+
+.stickyGuestPrimary {
+  flex: 1 1 180px;
+  border: none;
+  border-radius: 999px;
+  padding: 12px 20px;
+  background: $green-297;
+  color: $white;
+  font-family: $font-onest;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.stickyGuestSecondary {
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  padding: 12px 8px;
+  color: $green-297;
+  font-family: $font-onest;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .introBlock {
   padding: $spacing-xl 0;
   text-align: left;
@@ -160,4 +222,44 @@
   &:hover {
     color: $green-297;
   }
+}
+
+.savePrompt {
+  margin-top: $spacing-lg;
+  padding-top: $spacing-md;
+  border-top: 1px solid rgba($green-297, 0.15);
+  text-align: center;
+}
+
+.savePromptText {
+  margin: 0 0 $spacing-sm;
+  color: $gray-6e;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.savePromptLink {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 15px;
+  color: $green-297;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-family: $font-onest;
+}
+
+.savePromptActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: $spacing-md;
+}
+
+.saveSuccessText {
+  margin: $spacing-lg 0 0;
+  color: $green-297;
+  font-size: 15px;
+  line-height: 1.5;
 }

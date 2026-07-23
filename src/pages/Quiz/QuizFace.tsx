@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QuizLayout } from '@/components/quiz/QuizLayout/QuizLayout';
@@ -14,6 +14,7 @@ import {
 } from '@/config/quizContent';
 import { useQuizContent } from '@/contexts/QuizContentContext';
 import { getQuizPlain } from '@/lib/quiz/contentUtils';
+import { getFaceStepGuardRedirect } from '@/lib/quiz/faceStepGuard';
 import { useQuizState } from '@/hooks/useQuizState';
 import {
   FACE_STEPS,
@@ -71,6 +72,13 @@ const QuizFacePage: React.FC = () => {
 
   const currentStep = PATH_TO_STEP[location.pathname] ?? 'age';
   const stepNumber = STEP_INDEX[currentStep];
+
+  useEffect(() => {
+    const redirect = getFaceStepGuardRedirect(currentStep, faceAnswers);
+    if (redirect && redirect !== location.pathname) {
+      navigate(redirect, { replace: true });
+    }
+  }, [currentStep, faceAnswers, location.pathname, navigate]);
 
   const questionText = useMemo(() => {
     const keyMap: Record<FaceStep, string> = {

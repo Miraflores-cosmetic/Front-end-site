@@ -7,7 +7,7 @@ type Crumb = { label: string; to?: string };
 
 type CategoryCrumb = {
   name: string;
-  slug: string;
+  slug?: string;
   parent?: { slug: string; parent?: { slug: string } | null } | null;
 };
 

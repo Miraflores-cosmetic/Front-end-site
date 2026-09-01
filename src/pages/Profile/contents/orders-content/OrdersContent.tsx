@@ -32,6 +32,7 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [reviewedProductIds, setReviewedProductIds] = useState<Set<string>>(new Set());
   const [selectedProductForReview, setSelectedProductForReview] = useState<{
     id: string;
     name: string;
@@ -114,6 +115,7 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
                   key={order.id}
                   order={order}
                   reviewable={isReviewableOrder(order)}
+                  reviewedProductIds={reviewedProductIds}
                   onReview={handleReviewClick}
                 />
               ))}
@@ -128,6 +130,9 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
           onClose={() => {
             setReviewModalOpen(false);
             setSelectedProductForReview(null);
+          }}
+          onSuccess={(productId) => {
+            setReviewedProductIds((prev) => new Set(prev).add(productId));
           }}
           productId={selectedProductForReview.id}
           productName={selectedProductForReview.name}

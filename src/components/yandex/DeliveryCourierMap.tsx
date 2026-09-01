@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Loader2, MapPin } from 'lucide-react';
 import { resolveYandexGeoId, yandexGeoCenter } from '@/lib/yandexCityGeo';
+import { getYandexMapApiKey, YANDEX_MAP_KEY_ENV_HINT } from '@/lib/yandexMapApiKey';
 
 declare global {
     interface Window {
@@ -14,8 +15,7 @@ export interface CourierMapSelection {
     geoLine?: string;
 }
 
-const YANDEX_MAP_API_KEY =
-    import.meta.env.VITE_PUBLIC_YANDEX_MAP_API_KEY || import.meta.env.PUBLIC_YANDEX_MAP_API_KEY || '';
+const YANDEX_MAP_API_KEY = getYandexMapApiKey();
 
 interface DeliveryCourierMapProps {
     cityHint: string;
@@ -36,7 +36,7 @@ const DeliveryCourierMap: React.FC<DeliveryCourierMapProps> = ({ cityHint, onCho
     useEffect(() => {
         const load = async () => {
             if (!YANDEX_MAP_API_KEY) {
-                setError('Укажите VITE_PUBLIC_YANDEX_MAP_API_KEY в .env для карты курьера');
+                setError(`Укажите ${YANDEX_MAP_KEY_ENV_HINT} для карты курьера`);
                 setMapLoading(false);
                 return;
             }

@@ -22,17 +22,21 @@ function formatPrice(amount: number): string {
 interface OrderCartListProps {
   cartData: CartItem[];
   onReview?: (productId: string, productName: string) => void;
+  reviewedProductIds?: Set<string>;
   asListItems?: boolean;
 }
 
 function OrderLineItem({
   item,
   onReview,
+  reviewedProductIds,
 }: {
   item: CartItem;
   onReview?: (productId: string, productName: string) => void;
+  reviewedProductIds?: Set<string>;
 }) {
   const qty = item.quantity ?? (parseInt(item.count, 10) || 1);
+  const alreadyReviewed = Boolean(item.productId && reviewedProductIds?.has(item.productId));
 
   return (
     <div className={styles.orderLine}>
@@ -62,7 +66,7 @@ function OrderLineItem({
         ) : (
           <p className={styles.meta}>{item.count}</p>
         )}
-        {onReview && item.productId && !item.isGift ? (
+        {onReview && item.productId && !item.isGift && !alreadyReviewed ? (
           <button
             type="button"
             className={styles.reviewButton}
@@ -70,19 +74,30 @@ function OrderLineItem({
           >
             Оставить отзыв
           </button>
+        ) : alreadyReviewed ? (
+          <span className={styles.reviewPending}>На модерации</span>
         ) : null}
       </div>
     </div>
   );
 }
 
-const CardList: React.FC<OrderCartListProps> = ({ cartData, onReview, asListItems }) => {
+const CardList: React.FC<OrderCartListProps> = ({
+  cartData,
+  onReview,
+  reviewedProductIds,
+  asListItems,
+}) => {
   if (asListItems) {
     return (
       <>
         {cartData.map(item => (
           <li key={item.id} className={styles.listItem}>
-            <OrderLineItem item={item} onReview={onReview} />
+            <OrderLineItem
+              item={item}
+              onReview={onReview}
+              reviewedProductIds={reviewedProductIds}
+            />
           </li>
         ))}
       </>
@@ -92,7 +107,12 @@ const CardList: React.FC<OrderCartListProps> = ({ cartData, onReview, asListItem
   return (
     <>
       {cartData.map(item => (
-        <OrderLineItem key={item.id} item={item} onReview={onReview} />
+        <OrderLineItem
+          key={item.id}
+          item={item}
+          onReview={onReview}
+          reviewedProductIds={reviewedProductIds}
+        />
       ))}
     </>
   );

@@ -303,10 +303,6 @@ const BasketDrawer: React.FC = () => {
                 </button>
               )}
             </div>
-            <p className={styles.note} role="note">
-              Сертификат списывается только с товаров — доставку не покрывает. Бесплатная
-              доставка — только до ПВЗ при сумме товаров от порога.
-            </p>
 
             {voucherDiscount > 0 || totalFromPrice > totalToPrice ? (
               <div className={styles.totals}>

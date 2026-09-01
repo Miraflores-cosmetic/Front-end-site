@@ -1,0 +1,24 @@
+@use '@/style/variables.scss' as *;
+
+.notice {
+  margin: $spacing-lg 0;
+  padding: 16px 18px;
+  border: 1px solid rgba($green-297, 0.35);
+  border-radius: 10px;
+  background: rgba($green-297, 0.06);
+}
+
+.title {
+  margin: 0 0 8px;
+  font-family: $font-oceanic;
+  font-size: 16px;
+  font-weight: $font-regular;
+  color: $gray-2b;
+}
+
+.text {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: $gray-6e;
+}

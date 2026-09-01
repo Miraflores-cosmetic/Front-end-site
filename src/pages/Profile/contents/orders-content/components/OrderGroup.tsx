@@ -60,9 +60,10 @@ export type OrderGroupProps = {
   };
   onReview?: (productId: string, productName: string, orderId: string) => void;
   reviewable?: boolean;
+  reviewedProductIds?: Set<string>;
 };
 
-export function OrderGroup({ order, onReview, reviewable }: OrderGroupProps) {
+export function OrderGroup({ order, onReview, reviewable, reviewedProductIds }: OrderGroupProps) {
   const status = order.statusDisplay || order.status;
   const tracking = order.tracking?.trim() || '';
   const trackingHref = tracking ? orderTrackingUrl(order.trackingProvider, tracking) : null;
@@ -120,6 +121,7 @@ export function OrderGroup({ order, onReview, reviewable }: OrderGroupProps) {
         <CardList
           asListItems
           cartData={cartData}
+          reviewedProductIds={reviewedProductIds}
           onReview={
             reviewable && onReview
               ? (productId, productName) => onReview(productId, productName, order.id)

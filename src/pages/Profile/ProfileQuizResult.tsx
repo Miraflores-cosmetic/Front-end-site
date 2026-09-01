@@ -6,6 +6,8 @@ import { useQuizContent } from '@/contexts/QuizContentContext';
 import { fetchSavedQuizResult } from '@/services/quizResult.service';
 import { buildFaceResult } from '@/lib/quiz/buildFaceResult';
 import { resolveFaceResultBlocks } from '@/lib/quiz/resolveBlocks';
+import { hasVisibleQuizResultBlocks } from '@/lib/quiz/quizResultVisibility';
+import { QuizResultEmptyNotice } from '@/components/quiz/QuizResultEmptyNotice/QuizResultEmptyNotice';
 import type { SavedQuizResult } from '@/types/quizResult';
 import styles from './ProfileQuizResult.module.scss';
 
@@ -39,6 +41,8 @@ const ProfileQuizResultPage: React.FC = () => {
     return resolveFaceResultBlocks(result, content);
   }, [saved, content]);
 
+  const hasVisibleBlocks = hasVisibleQuizResultBlocks(resolvedBlocks);
+
   if (loading || contentLoading) {
     return (
       <>
@@ -61,6 +65,7 @@ const ProfileQuizResultPage: React.FC = () => {
             ← В личный кабинет
           </Link>
           <h1 className={styles.pageTitle}>Персональная программа ухода</h1>
+          {!hasVisibleBlocks ? <QuizResultEmptyNotice variant="profile" /> : null}
           <QuizResultStatic blocks={resolvedBlocks} content={content} />
         </div>
       </main>

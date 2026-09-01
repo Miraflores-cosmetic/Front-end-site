@@ -131,7 +131,8 @@ export function getQuizPlain(content: QuizContentMap, key: string): string {
 
 export function getQuizHtml(content: QuizContentMap, key: string): string | null {
   const item = content[key];
-  if (item?.html) return item.html;
+  if (item?.html?.trim()) return item.html;
+  if (item?.plain?.trim()) return `<p>${escapeHtml(item.plain.trim())}</p>`;
   const fallback = QUIZ_ALL_TEXT_FALLBACKS[key];
   return fallback?.trim() ? `<p>${escapeHtml(fallback)}</p>` : null;
 }

@@ -100,20 +100,13 @@ const OrderSuccess: React.FC = () => {
             </>
           ) : error ? (
             <>
-              <h1 className={styles.title} style={{ color: '#dc2626' }}>
+              <h1 className={`${styles.title} ${styles.titleError}`}>
                 Ошибка при обработке заказа
               </h1>
-              <p className={styles.subtitle} style={{ color: '#dc2626' }}>
-                {error}
-              </p>
+              <p className={`${styles.subtitle} ${styles.subtitleError}`}>{error}</p>
             </>
           ) : (
-            <>
-              <h1 className={styles.title}>Спасибо, ваш заказ принят.</h1>
-              <p className={styles.subtitle}>
-                Мы свяжемся с вами в ближайшее время для подтверждения заказа.
-              </p>
-            </>
+            <h1 className={styles.title}>Спасибо, ваш заказ принят.</h1>
           )}
 
           {!isCompleting && !error && (

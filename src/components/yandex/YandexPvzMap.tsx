@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader2, MapPin } from 'lucide-react';
+import { getYandexMapApiKey, YANDEX_MAP_KEY_ENV_HINT } from '@/lib/yandexMapApiKey';
 
 declare global {
     interface Window {
@@ -28,8 +29,7 @@ interface YandexPvzMapProps {
     loading?: boolean;
 }
 
-const YANDEX_MAP_API_KEY =
-    import.meta.env.VITE_PUBLIC_YANDEX_MAP_API_KEY || import.meta.env.PUBLIC_YANDEX_MAP_API_KEY || '';
+const YANDEX_MAP_API_KEY = getYandexMapApiKey();
 
 /** Карта пунктов Яндекс Доставки — по паттерну YandexCdekMap */
 const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
@@ -50,7 +50,7 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
         const loadYandexMaps = async () => {
             if (!YANDEX_MAP_API_KEY) {
                 setError(
-                    'Не указан API ключ Яндекс Карт. Проверьте VITE_PUBLIC_YANDEX_MAP_API_KEY в .env',
+                    `Не указан API ключ Яндекс Карт. Проверьте ${YANDEX_MAP_KEY_ENV_HINT}`,
                 );
                 setMapLoading(false);
                 return;

@@ -3,14 +3,18 @@
 
 .listItem {
   list-style: none;
+
+  &:last-child .orderLine {
+    padding-bottom: 0;
+    border-bottom: none;
+  }
 }
 
 .orderLine {
   @include mixins.flex(flex-start, flex-start, row, 10px);
   width: 100%;
-  padding: 12px;
-  background: #f6f5ef;
-  border-radius: 16px;
+  padding: 0 0 12px;
+  border-bottom: 1px solid rgba(110, 109, 103, 0.12);
   box-sizing: border-box;
 }
 
@@ -20,9 +24,9 @@
   width: 96px;
   height: 96px;
   @include mixins.flex(center, center);
-  background-color: #fff;
+  background-color: $bg-light;
   overflow: hidden;
-  border-radius: 12px;
+  border-radius: 0;
 
   @media (max-width: 768px) {
     width: 72px;
@@ -160,4 +164,13 @@
     width: 100%;
     font-size: 12px;
   }
+}
+
+.reviewPending {
+  margin-top: auto;
+  align-self: flex-start;
+  font-family: $font-onest, 'Avenir Next', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  color: #297230;
 }

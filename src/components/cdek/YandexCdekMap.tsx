@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Loader2, MapPin } from 'lucide-react';
+import { getYandexMapApiKey, YANDEX_MAP_KEY_ENV_HINT } from '@/lib/yandexMapApiKey';
 
 declare global {
   interface Window {
@@ -36,10 +37,7 @@ interface YandexCdekMapProps {
 
 // В Vite переменные с префиксом VITE_ доступны автоматически
 // Попробуем оба варианта для совместимости
-const YANDEX_MAP_API_KEY = 
-  import.meta.env.VITE_PUBLIC_YANDEX_MAP_API_KEY || 
-  import.meta.env.PUBLIC_YANDEX_MAP_API_KEY || 
-  '';
+const YANDEX_MAP_API_KEY = getYandexMapApiKey();
 
 const YandexCdekMap: React.FC<YandexCdekMapProps> = ({
   pvzList,
@@ -59,7 +57,7 @@ const YandexCdekMap: React.FC<YandexCdekMapProps> = ({
   useEffect(() => {
     const loadYandexMaps = async () => {
       if (!YANDEX_MAP_API_KEY) {
-        const errorMsg = 'Не указан API ключ Яндекс Карт. Проверьте переменную PUBLIC_YANDEX_MAP_API_KEY в .env';
+        const errorMsg = `Не указан API ключ Яндекс Карт. Проверьте ${YANDEX_MAP_KEY_ENV_HINT}`;
         setError(errorMsg);
         setMapLoading(false);
         return;

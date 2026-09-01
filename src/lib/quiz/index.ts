@@ -19,3 +19,4 @@ export {
   getQuizMedia,
   mergeQuizContent,
 } from './contentUtils';
+export { hasVisibleQuizResultBlocks, isQuizContentKeyConfigured } from './quizResultVisibility';

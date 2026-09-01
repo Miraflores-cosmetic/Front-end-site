@@ -232,29 +232,21 @@
         margin-left: auto;
 
         .priceOld {
-          position: relative;
           min-width: auto;
           height: 20px;
           font-family: 'Onest', sans-serif;
           font-style: normal;
-          font-weight: 600;
+          font-weight: 500;
           font-size: 16px;
           line-height: 20px;
           text-transform: uppercase;
           color: #6e6d67;
           margin: 0;
           white-space: nowrap;
-
-          &::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 0;
-            left: -4.5px;
-            top: 7px;
-            border: 1px solid #ff0808;
-            transform: rotate(-11.31deg);
-          }
+          text-decoration: line-through;
+          text-decoration-thickness: 1px;
+          text-underline-offset: 0;
+          text-decoration-color: rgba(110, 109, 103, 0.85);
         }
 
         .priceNew {

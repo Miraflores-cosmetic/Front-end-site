@@ -8,6 +8,8 @@ import { Button } from '@/components/button/Button';
 import { useQuizContent } from '@/contexts/QuizContentContext';
 import { useQuizState } from '@/hooks/useQuizState';
 import { buildFaceResult, isFaceQuizComplete, resolveFaceResultBlocks } from '@/lib/quiz';
+import { hasVisibleQuizResultBlocks } from '@/lib/quiz/quizResultVisibility';
+import { QuizResultEmptyNotice } from '@/components/quiz/QuizResultEmptyNotice/QuizResultEmptyNotice';
 import type { CompleteFaceQuizAnswers } from '@/lib/quiz/buildFaceResult';
 import { trackQuizEvent } from '@/lib/quiz/quizAnalytics';
 import { buildSavedQuizPayload } from '@/lib/quiz/savedQuizResult';
@@ -50,11 +52,15 @@ const QuizResultPage: React.FC = () => {
     return resolveFaceResultBlocks(result, content);
   }, [result, content]);
 
+  const hasVisibleBlocks = hasVisibleQuizResultBlocks(resolvedBlocks);
+
   const recoveredBlocks = useMemo(() => {
     if (!recoveredSaved) return [];
     const built = buildFaceResult(recoveredSaved.answers);
     return resolveFaceResultBlocks(built, content);
   }, [recoveredSaved, content]);
+
+  const hasVisibleRecoveredBlocks = hasVisibleQuizResultBlocks(recoveredBlocks);
 
   useEffect(() => {
     if (quizComplete) {
@@ -208,6 +214,7 @@ const QuizResultPage: React.FC = () => {
         <div className={styles.resultFallbackNotice}>
           Программа загружена из личного кабинета — ответы квиза в этой вкладке недоступны.
         </div>
+        {!hasVisibleRecoveredBlocks ? <QuizResultEmptyNotice variant="quiz" /> : null}
         <QuizResultStatic blocks={recoveredBlocks} content={content} />
       </QuizLayout>
     );
@@ -223,6 +230,7 @@ const QuizResultPage: React.FC = () => {
 
   return (
     <QuizLayout showBack={false}>
+      {!hasVisibleBlocks ? <QuizResultEmptyNotice variant="quiz" /> : null}
       <QuizResultPlayer
         blocks={resolvedBlocks}
         content={content}

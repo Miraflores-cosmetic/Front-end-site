@@ -68,7 +68,17 @@ export type JcosProductDetail = {
   purpose: string | null;
   shelfLife: string | null;
   extraHtml: string | null;
-  category: { id: string; name: string; slug: string } | null;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    parent?: {
+      id: string;
+      name: string;
+      slug: string;
+      parent?: { id: string; name: string; slug: string } | null;
+    } | null;
+  } | null;
   catalogTags?: Array<{ id: string; name: string; slug: string; sortOrder: number }>;
   images: JcosVariantImage[];
   variants: JcosVariant[];
@@ -266,7 +276,25 @@ export function adaptProductDetail(p: JcosProductDetail): ProductDetailNode {
     catalogTags: p.catalogTags ?? [],
     productType: { name: p.productType || '' },
     category: p.category
-      ? { id: p.category.id, name: p.category.name, slug: p.category.slug }
+      ? {
+          id: p.category.id,
+          name: p.category.name,
+          slug: p.category.slug,
+          parent: p.category.parent
+            ? {
+                id: p.category.parent.id,
+                name: p.category.parent.name,
+                slug: p.category.parent.slug,
+                parent: p.category.parent.parent
+                  ? {
+                      id: p.category.parent.parent.id,
+                      name: p.category.parent.parent.name,
+                      slug: p.category.parent.parent.slug,
+                    }
+                  : null,
+              }
+            : null,
+        }
       : { id: '', name: '', slug: '' },
     attributes: [],
     media,

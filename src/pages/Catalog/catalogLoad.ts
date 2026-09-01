@@ -11,6 +11,10 @@ import { searchCatalog } from '@/api/cmsApi';
 import { uploadsUrl } from '@/api/apiClient';
 import { mapProductNodeToBestSeller } from '@/utils/mapProductNodeToBestSeller';
 import type { BestSellersProduct } from '@/types/products';
+import {
+  findCategoryInTree,
+  findSubcategoryInRoot,
+} from '@/lib/categoryCatalogHref';
 import { CATALOG_PAGE_SIZE } from './catalogHref';
 
 export type CatalogCategoryNode = {
@@ -74,7 +78,14 @@ function mapCategories(
       slug: ch.slug,
       parentId: ch.parentId,
       imageUrl: ch.imageUrl ? uploadsUrl(ch.imageUrl) || ch.imageUrl : null,
-      children: [],
+      children: (ch.children ?? []).map((gr) => ({
+        id: gr.id,
+        name: gr.name,
+        slug: gr.slug,
+        parentId: gr.parentId,
+        imageUrl: gr.imageUrl ? uploadsUrl(gr.imageUrl) || gr.imageUrl : null,
+        children: [],
+      })),
     })),
   }));
 }
@@ -218,18 +229,16 @@ export async function loadCatalogPage(opts: {
     ? categories.find((c) => c.slug === resolvedCat) ?? null
     : null;
 
-  // /catalog/:slug — slug может быть подкатегорией или тегом
+  // /catalog/:slug — slug может быть подкатегорией (в т.ч. 3-го уровня) или тегом
   if (resolvedCat && !selectedRoot && !resolvedSub) {
-    for (const root of categories) {
-      const child = root.children.find((c) => c.slug === resolvedCat);
-      if (child) {
-        resolvedSub = child.slug;
-        resolvedCat = root.slug;
-        selectedRoot = root;
-        break;
+    const found = findCategoryInTree(categories, resolvedCat);
+    if (found) {
+      selectedRoot = found.root as CatalogCategoryNode;
+      if (found.leaf.slug !== found.root.slug) {
+        resolvedSub = found.leaf.slug;
+        resolvedCat = found.root.slug;
       }
-    }
-    if (!selectedRoot) {
+    } else {
       const asTag = tags.find((t) => t.slug === resolvedCat);
       if (asTag) {
         resolvedTag = asTag.slug;
@@ -241,7 +250,7 @@ export async function loadCatalogPage(opts: {
   if (resolvedCat && !selectedRoot) notice = 'unknown_cat';
   const selectedSub =
     selectedRoot && resolvedSub
-      ? selectedRoot.children.find((c) => c.slug === resolvedSub) ?? null
+      ? findSubcategoryInRoot(selectedRoot, resolvedSub)
       : null;
   if (!notice && resolvedSub && selectedRoot && !selectedSub) notice = 'unknown_sub';
   if (!notice && resolvedTag && !tags.some((t) => t.slug === resolvedTag)) {

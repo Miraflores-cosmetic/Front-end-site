@@ -1,12 +1,19 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { buildCategoryCatalogHref } from '@/lib/categoryCatalogHref';
 import styles from '../ProductDetail.module.scss';
 
 type Crumb = { label: string; to?: string };
 
+type CategoryCrumb = {
+  name: string;
+  slug: string;
+  parent?: { slug: string; parent?: { slug: string } | null } | null;
+};
+
 type ProductBreadcrumbsProps = {
   productName: string;
-  category?: { id: string; name: string; slug?: string } | null;
+  category?: CategoryCrumb | null;
 };
 
 export function ProductBreadcrumbs({ productName, category }: ProductBreadcrumbsProps) {
@@ -18,7 +25,7 @@ export function ProductBreadcrumbs({ productName, category }: ProductBreadcrumbs
   if (category?.name && category.slug) {
     crumbs.push({
       label: category.name,
-      to: `/catalog/${encodeURIComponent(category.slug)}`,
+      to: buildCategoryCatalogHref(category),
     });
   } else if (category?.name) {
     crumbs.push({ label: category.name });

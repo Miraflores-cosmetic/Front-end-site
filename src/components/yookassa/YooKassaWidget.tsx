@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import styles from './YooKassaWidget.module.scss';
+import { MIRAflores_YOOKASSA_CUSTOMIZATION } from './yookassaTheme';
 
 declare global {
   interface Window {
@@ -27,6 +29,7 @@ interface YooKassaWidgetProps {
   modal?: boolean;
   customization?: {
     modal?: boolean;
+    colors?: Record<string, string>;
     [key: string]: any;
   };
 }
@@ -45,7 +48,6 @@ export default function YooKassaWidget({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Callbacks через ref — не пересоздаём виджет на каждый re-render родителя.
   const onSuccessRef = useRef(onSuccess);
   const onErrorRef = useRef(onError);
   const onCloseRef = useRef(onClose);
@@ -138,12 +140,15 @@ export default function YooKassaWidget({
           },
         };
 
-        if (custom || modal) {
-          config.customization = {
-            modal: modal || custom?.modal || false,
-            ...custom,
-          };
-        }
+        config.customization = {
+          ...MIRAflores_YOOKASSA_CUSTOMIZATION,
+          modal: modal || custom?.modal || false,
+          ...custom,
+          colors: {
+            ...MIRAflores_YOOKASSA_CUSTOMIZATION.colors,
+            ...custom?.colors,
+          },
+        };
 
         if (!window.YooMoneyCheckoutWidget || typeof window.YooMoneyCheckoutWidget !== 'function') {
           throw new Error('YooMoneyCheckoutWidget не доступен или не является конструктором');
@@ -203,25 +208,13 @@ export default function YooKassaWidget({
         widgetRef.current = null;
       }
     };
-    // Только token/returnUrl/modal — не callbacks (через ref).
   }, [confirmationToken, returnUrl, modal]);
 
   if (error) {
     return (
-      <div
-        style={{
-          padding: '16px',
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-          background: '#f5f5f5',
-        }}
-      >
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ marginBottom: '8px', color: '#666' }}>
-            Не удалось загрузить виджет ЮKassa
-          </div>
-          <div style={{ fontSize: '12px', color: '#999' }}>{error}</div>
-        </div>
+      <div className={styles.errorBox}>
+        <p className={styles.errorTitle}>Не удалось загрузить форму оплаты</p>
+        <p className={styles.errorMessage}>{error}</p>
       </div>
     );
   }
@@ -231,35 +224,13 @@ export default function YooKassaWidget({
   }
 
   return (
-    <div style={{ marginTop: '16px' }}>
-      <div
-        ref={containerRef}
-        style={{
-          border: '1px solid #ddd',
-          borderRadius: '8px',
-          overflow: 'hidden',
-          background: 'white',
-          minHeight: '400px',
-          position: 'relative',
-        }}
-      >
-        {loading && (
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: 'rgba(255,255,255,0.8)',
-              zIndex: 10,
-            }}
-          >
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ marginBottom: '8px' }}>Загрузка формы оплаты ЮKassa...</div>
-            </div>
+    <div className={styles.root}>
+      <div ref={containerRef} className={styles.container}>
+        {loading ? (
+          <div className={styles.loadingOverlay}>
+            <p className={styles.loadingText}>Загрузка формы оплаты…</p>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   );

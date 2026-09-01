@@ -20,6 +20,16 @@ export type CreateProductReviewResult = {
 export async function createProductReview(
   input: ProductReviewCreateInput,
 ): Promise<CreateProductReviewResult> {
+  const files = [input.image1, input.image2].filter(Boolean) as File[];
+  for (const file of files) {
+    if (file.size > 5 * 1024 * 1024) {
+      throw new ApiError('Размер фото — максимум 5 МБ', 400);
+    }
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) {
+      throw new ApiError('Фото: только JPEG, PNG, WebP или GIF', 400);
+    }
+  }
+
   const created = await apiJson<{ id: string; rating: number; text: string }>('/reviews', 'POST', {
     productId: input.product,
     orderId: input.order,

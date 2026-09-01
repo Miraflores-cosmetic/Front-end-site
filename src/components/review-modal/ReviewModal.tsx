@@ -4,24 +4,41 @@ import styles from './ReviewModal.module.scss';
 import { createProductReview } from '@/graphql/queries/reviews.service';
 import { ApiError, getAccessToken } from '@/api/apiClient';
 import { useToast } from '@/components/toast/toast';
-import { TextField } from '@/components/text-field/TextField';
 import { focusablesIn, trapFocusKeydown } from '@/utils/focusTrap';
 import trashIcon from '@/assets/icons/trash.svg';
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MIN_TEXT_LEN = 10;
+const ALLOWED_IMAGE_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+]);
 
 interface ReviewModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: (productId: string) => void;
   productId?: string;
   orderId?: string;
   productName?: string;
 }
 
+function validateImageFile(file: File): string | null {
+  if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
+    return 'Фото: только JPEG, PNG, WebP или GIF';
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    return 'Размер фото — максимум 5 МБ';
+  }
+  return null;
+}
+
 export const ReviewModal: React.FC<ReviewModalProps> = ({
   isOpen,
   onClose,
+  onSuccess,
   productId,
   orderId,
   productName,
@@ -37,7 +54,26 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   const navigate = useNavigate();
   const titleId = useId();
   const dialogRef = useRef<HTMLDivElement>(null);
+  const fileInput1Ref = useRef<HTMLInputElement>(null);
+  const fileInput2Ref = useRef<HTMLInputElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
+
+  const trimmedLen = text.trim().length;
+  const canSubmit =
+    Boolean(productId) && rating >= 1 && rating <= 5 && trimmedLen >= MIN_TEXT_LEN && !loading;
+
+  const resetForm = () => {
+    setRating(0);
+    setText('');
+    setImage1(null);
+    setImage2(null);
+    if (preview1) URL.revokeObjectURL(preview1);
+    if (preview2) URL.revokeObjectURL(preview2);
+    setPreview1(null);
+    setPreview2(null);
+    if (fileInput1Ref.current) fileInput1Ref.current.value = '';
+    if (fileInput2Ref.current) fileInput2Ref.current.value = '';
+  };
 
   useEffect(() => {
     return () => {
@@ -45,6 +81,12 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
       if (preview2) URL.revokeObjectURL(preview2);
     };
   }, [preview1, preview2]);
+
+  useEffect(() => {
+    if (isOpen) return;
+    resetForm();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset only when closing
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -93,20 +135,27 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
     e.preventDefault();
 
     if (!productId) {
-      toast.error(
-        'Пожалуйста, выберите товар для отзыва. Перейдите в каталог и выберите товар, затем нажмите «Оставить отзыв»',
-      );
+      toast.error('Не удалось определить товар для отзыва');
       return;
     }
 
     if (rating < 1 || rating > 5) {
-      toast.error('Пожалуйста, выберите рейтинг от 1 до 5 звезд');
+      toast.error('Выберите оценку от 1 до 5');
       return;
     }
 
-    if (text.trim().length < MIN_TEXT_LEN) {
-      toast.error(`Текст отзыва должен содержать минимум ${MIN_TEXT_LEN} символов`);
+    if (trimmedLen < MIN_TEXT_LEN) {
+      toast.error(`Текст отзыва — минимум ${MIN_TEXT_LEN} символов`);
       return;
+    }
+
+    for (const file of [image1, image2]) {
+      if (!file) continue;
+      const err = validateImageFile(file);
+      if (err) {
+        toast.error(err);
+        return;
+      }
     }
 
     setLoading(true);
@@ -122,17 +171,13 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
 
       if (result.imagesError) {
         toast.error(
-          `Отзыв принят на модерацию, но фото не загрузились: ${result.imagesError}`,
+          `Отзыв отправлен на модерацию, но фото не загрузились: ${result.imagesError}`,
         );
       } else {
         toast.success('Отзыв отправлен на модерацию. Спасибо!');
       }
-      setRating(0);
-      setText('');
-      setImage1(null);
-      setImage2(null);
-      setPreview1(null);
-      setPreview2(null);
+      onSuccess?.(productId);
+      resetForm();
       onClose();
     } catch (error: unknown) {
       console.error('Error creating review:', error);
@@ -151,6 +196,7 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
         (msg.includes('уже оставляли') || msg.includes('уже оставили'))
       ) {
         toast.error('Вы уже оставляли отзыв на этот товар');
+        onSuccess?.(productId);
         onClose();
       } else {
         toast.error(msg || 'Ошибка при отправке отзыва');
@@ -161,18 +207,23 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
   };
 
   const handleImageChange = (index: 1 | 2, file: File | null) => {
-    if (file && file.size > MAX_IMAGE_BYTES) {
-      toast.error('Размер фото — максимум 5 МБ');
-      return;
+    if (file) {
+      const err = validateImageFile(file);
+      if (err) {
+        toast.error(err);
+        return;
+      }
     }
     if (index === 1) {
       if (preview1) URL.revokeObjectURL(preview1);
       setImage1(file);
       setPreview1(file ? URL.createObjectURL(file) : null);
+      if (fileInput1Ref.current) fileInput1Ref.current.value = '';
     } else {
       if (preview2) URL.revokeObjectURL(preview2);
       setImage2(file);
       setPreview2(file ? URL.createObjectURL(file) : null);
+      if (fileInput2Ref.current) fileInput2Ref.current.value = '';
     }
   };
 
@@ -188,9 +239,14 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         <div className={styles.header}>
-          <h2 id={titleId} className={styles.title}>
-            Оставить отзыв
-          </h2>
+          <div className={styles.titleBlock}>
+            <h2 id={titleId} className={styles.title}>
+              Оставить отзыв
+            </h2>
+            <p className={styles.subtitle}>
+              Оценка, текст и фото отправятся на модерацию перед публикацией
+            </p>
+          </div>
           <button
             type="button"
             className={styles.closeButton}
@@ -201,137 +257,133 @@ export const ReviewModal: React.FC<ReviewModalProps> = ({
           </button>
         </div>
 
-        {!productId ? (
-          <div className={styles.noProductMessage}>
-            <p>Для оставления отзыва необходимо выбрать товар.</p>
-            <p>
-              Перейдите в каталог, выберите товар и нажмите «Оставить отзыв» на странице
-              товара.
-            </p>
+        {productName ? <div className={styles.productName}>{productName}</div> : null}
+
+        <form onSubmit={handleSubmit} className={styles.form}>
+          <div className={styles.ratingSection}>
+            <span className={styles.fieldLabel} id={`${titleId}-rating`}>
+              Оценка
+            </span>
+            <div className={styles.stars} role="radiogroup" aria-labelledby={`${titleId}-rating`}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  className={`${styles.star} ${rating >= star ? styles.active : ''}`}
+                  onClick={() => setRating(star)}
+                  aria-label={`${star} из 5`}
+                  aria-pressed={rating === star}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
           </div>
-        ) : (
-          productName && <div className={styles.productName}>{productName}</div>
-        )}
 
-        {productId && (
-          <form onSubmit={handleSubmit} className={styles.form}>
-            <div className={styles.ratingSection}>
-              <span className={styles.label} id={`${titleId}-rating`}>
-                Оценка
-              </span>
-              <div className={styles.stars} role="group" aria-labelledby={`${titleId}-rating`}>
-                {[1, 2, 3, 4, 5].map((star) => (
-                  <button
-                    key={star}
-                    type="button"
-                    className={`${styles.star} ${rating >= star ? styles.active : ''}`}
-                    onClick={() => setRating(star)}
-                    aria-label={`${star} из 5`}
-                    aria-pressed={rating >= star}
-                  >
-                    ★
-                  </button>
-                ))}
-              </div>
+          <div className={styles.textSection}>
+            <label className={styles.fieldLabel} htmlFor={`${titleId}-text`}>
+              Текст отзыва
+            </label>
+            <textarea
+              id={`${titleId}-text`}
+              className={styles.textarea}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Расскажите о впечатлениях от продукта…"
+              rows={5}
+              maxLength={2000}
+            />
+            <div
+              className={`${styles.charCount} ${trimmedLen >= MIN_TEXT_LEN ? styles.charCountOk : ''}`}
+            >
+              {trimmedLen}/{MIN_TEXT_LEN} символов (минимум)
             </div>
+          </div>
 
-            <div className={styles.textSection}>
-              <TextField
-                label="Текст отзыва"
-                value={text}
-                onChange={(e) => setText(e.target.value)}
-              />
-              <div className={styles.charCount}>
-                {text.length}/{MIN_TEXT_LEN} (минимум {MIN_TEXT_LEN} символов)
-              </div>
-            </div>
-
-            <div className={styles.imagesSection}>
-              <label className={styles.label}>Фотографии (до 2 штук, максимум 5 МБ каждая)</label>
-              <div className={styles.imageInputs}>
-                <div className={styles.imageInputWrapper}>
-                  {!image1 ? (
-                    <label className={styles.fileLabel}>
-                      Выбрать фото 1
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleImageChange(1, e.target.files?.[0] || null)}
-                        className={styles.fileInput}
-                      />
-                    </label>
-                  ) : (
-                    <div className={styles.previewWrapper}>
-                      {preview1 && (
-                        <img src={preview1} alt="" className={styles.previewImage} />
-                      )}
-                      <div className={styles.fileInfo}>
-                        <span className={styles.fileName}>{image1.name}</span>
-                        <button
-                          type="button"
-                          className={styles.removeImageBtn}
-                          onClick={() => handleImageChange(1, null)}
-                          aria-label="Удалить фото 1"
-                        >
-                          <img src={trashIcon} alt="" />
-                        </button>
-                      </div>
+          <div className={styles.imagesSection}>
+            <span className={styles.fieldLabel}>Фото (необязательно, до 2)</span>
+            <div className={styles.imageGrid}>
+              <div className={styles.uploadSlot}>
+                {!image1 ? (
+                  <label className={styles.fileLabel}>
+                    + Добавить фото
+                    <input
+                      ref={fileInput1Ref}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={(e) => handleImageChange(1, e.target.files?.[0] || null)}
+                      className={styles.fileInput}
+                    />
+                  </label>
+                ) : (
+                  <div className={styles.previewWrapper}>
+                    {preview1 ? (
+                      <img src={preview1} alt="" className={styles.previewImage} />
+                    ) : null}
+                    <div className={styles.fileInfo}>
+                      <span className={styles.fileName}>{image1.name}</span>
+                      <button
+                        type="button"
+                        className={styles.removeImageBtn}
+                        onClick={() => handleImageChange(1, null)}
+                        aria-label="Удалить фото 1"
+                      >
+                        <img src={trashIcon} alt="" />
+                      </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
+              </div>
 
-                <div className={styles.imageInputWrapper}>
-                  {!image2 ? (
-                    <label className={styles.fileLabel}>
-                      Выбрать фото 2
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => handleImageChange(2, e.target.files?.[0] || null)}
-                        className={styles.fileInput}
-                      />
-                    </label>
-                  ) : (
-                    <div className={styles.previewWrapper}>
-                      {preview2 && (
-                        <img src={preview2} alt="" className={styles.previewImage} />
-                      )}
-                      <div className={styles.fileInfo}>
-                        <span className={styles.fileName}>{image2.name}</span>
-                        <button
-                          type="button"
-                          className={styles.removeImageBtn}
-                          onClick={() => handleImageChange(2, null)}
-                          aria-label="Удалить фото 2"
-                        >
-                          <img src={trashIcon} alt="" />
-                        </button>
-                      </div>
+              <div className={styles.uploadSlot}>
+                {!image2 ? (
+                  <label className={styles.fileLabel}>
+                    + Добавить фото
+                    <input
+                      ref={fileInput2Ref}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={(e) => handleImageChange(2, e.target.files?.[0] || null)}
+                      className={styles.fileInput}
+                    />
+                  </label>
+                ) : (
+                  <div className={styles.previewWrapper}>
+                    {preview2 ? (
+                      <img src={preview2} alt="" className={styles.previewImage} />
+                    ) : null}
+                    <div className={styles.fileInfo}>
+                      <span className={styles.fileName}>{image2.name}</span>
+                      <button
+                        type="button"
+                        className={styles.removeImageBtn}
+                        onClick={() => handleImageChange(2, null)}
+                        aria-label="Удалить фото 2"
+                      >
+                        <img src={trashIcon} alt="" />
+                      </button>
                     </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
+            <p className={styles.hint}>JPEG, PNG, WebP или GIF, до 5 МБ каждое</p>
+          </div>
 
-            <div className={styles.actions}>
-              <button
-                type="submit"
-                className={styles.submitButton}
-                disabled={loading || !productId || rating === 0 || text.trim().length < MIN_TEXT_LEN}
-              >
-                Отправить
-              </button>
-              <button
-                type="button"
-                className={styles.cancelButton}
-                onClick={onClose}
-                disabled={loading}
-              >
-                Отмена
-              </button>
-            </div>
-          </form>
-        )}
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.cancelButton}
+              onClick={onClose}
+              disabled={loading}
+            >
+              Отмена
+            </button>
+            <button type="submit" className={styles.submitButton} disabled={!canSubmit}>
+              {loading ? 'Отправка…' : 'Отправить на модерацию'}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

@@ -23,9 +23,10 @@ export function ProductBreadcrumbs({ productName, category }: ProductBreadcrumbs
   ];
 
   if (category?.name && category.slug) {
+    const slug = category.slug;
     crumbs.push({
       label: category.name,
-      to: buildCategoryCatalogHref(category),
+      to: buildCategoryCatalogHref({ slug, parent: category.parent }),
     });
   } else if (category?.name) {
     crumbs.push({ label: category.name });

@@ -1,45 +1,11 @@
 @use '@/style/variables.scss' as *;
 
 .about {
-  padding-top: 240px;
-  padding-right: 32px;
-  max-width: 1536px;
-  margin: 0 auto;
+  /* layout: HomeSection */
 
-  // Начальное состояние - скрыто для анимации
-  .title {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  }
-
-  .container,
-  .containerMobile {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  }
-
-  // Анимация применяется когда класс добавлен - все элементы появляются одновременно
-  &.sectionAnimated {
-    .title {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .container,
-    .containerMobile {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @media (max-width: 768px) {
-    padding-top: 0;
-    padding-right: 0;
-    margin-top: 0;
-    padding-bottom: 0;
-    margin-bottom: 100px;
+  @media (max-width: $viewport-mobile-max) {
+    /* иначе 100vw-breakout оставляет правый зазор из-за pad-end */
+    --home-section-pad-end: 0px;
   }
 
   .container {
@@ -68,16 +34,25 @@
   }
 
   .title {
-    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+    font-family: $font-oceanic;
     font-size: 64px;
     font-weight: 300;
     line-height: 1.2;
-    margin-bottom: 0;
+    margin: 0;
+    padding-right: 0;
+    min-width: 0;
+    flex: 1;
 
-    @media (max-width: 768px) {
-      margin-bottom: 16px;
-      padding-right: 0;
+    @media (max-width: $viewport-mobile-max) {
+      margin-bottom: 0;
+      font-size: 24px;
     }
+  }
+
+  .titleRow {
+    margin-bottom: 0;
+    flex-wrap: nowrap;
+    align-items: flex-start;
   }
 
   .textWrapper {
@@ -96,15 +71,21 @@
     }
   }
 
-  .tmobileTxtWrapper {
+  .mobileTextWrapper {
     margin-top: 20px;
+    max-width: 100%;
+    margin-left: 0;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
   }
 
   .text {
     font-size: 16px;
     font-weight: 400;
     line-height: 1.4;
-    color: #6e6d67;
+    color: $gray-6e;
   }
 
   .center {
@@ -112,30 +93,29 @@
 
     @media (max-width: $viewport-mobile-max) {
       width: 100vw;
-      max-width: none;
+      max-width: 100vw;
       margin-left: calc(50% - 50vw);
       margin-right: calc(50% - 50vw);
       box-sizing: border-box;
     }
 
-    .mainImage {
-      width: 100%;
-      height: auto;
-      border-radius: 6px;
-      object-fit: cover;
-    }
-
     .centerVideo {
-      width: 100%;
-      max-height: 424px;
+      width: 400px;
+      height: 400px;
+      max-width: 100%;
+      aspect-ratio: 1 / 1;
       display: block;
       object-fit: cover;
+      object-position: center;
       margin-left: 64px;
 
       @media (max-width: $viewport-mobile-max) {
         margin-left: 0;
+        margin-right: 0;
         width: 100%;
-        max-height: min(70vh, 480px);
+        max-width: none;
+        height: auto;
+        aspect-ratio: 1 / 1;
         border-radius: 0;
       }
     }
@@ -159,26 +139,6 @@
         top: auto;
       }
     }
-
-    .link {
-      margin-top: 15px;
-      font-weight: 600;
-      font-size: 14px;
-      text-transform: uppercase;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      cursor: pointer;
-
-      @media (max-width: 768px) {
-        margin-top: 12px;
-      }
-
-      &:after {
-        content: '○';
-        font-size: 16px;
-      }
-    }
   }
 }
 
@@ -188,10 +148,15 @@
   justify-content: space-between;
   height: 100%;
 
+  @media (max-width: $viewport-mobile-max) {
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+
   .leftTop {
     max-width: 345px;
     p {
-      color: #6e6d67;
+      color: $gray-6e;
     }
   }
 
@@ -199,7 +164,7 @@
     display: flex;
     align-items: flex-end;
     p {
-      color: #6e6d67;
+      color: $gray-6e;
       max-width: 261px;
       margin-left: auto;
     }
@@ -213,7 +178,7 @@
   .mobileBottom {
     display: flex;
     p {
-      color: #6e6d67;
+      color: $gray-6e;
     }
     img {
       object-fit: contain;
@@ -221,80 +186,6 @@
   }
 }
 
-.arrowToRoght {
-  width: 42px;
-  height: 42px;
-}
-
-.mobileArrowToRoght {
-  width: 42px;
-  height: 42px;
-}
-
-.more {
-  display: flex;
-  justify-content: end;
-  align-items: center;
-  gap: 10px;
-  a {
-    font-weight: $button-font-weight;
-    display: flex;
-    font-size: 16px;
-    align-items: center;
-    gap: 10px;
-    white-space: nowrap;
-    text-decoration: none;
-    color: black;
-    &:hover {
-      color: #297230;
-    }
-    p {
-      margin: 0;
-      font-weight: $button-font-weight;
-      font-size: 16px;
-    }
-    .arrowToRoght {
-      width: 42px;
-      height: 42px;
-    }
-    img {
-      width: 24px;
-      height: 24px;
-    }
-  }
-}
-
-.mobileMore {
-  display: flex;
-  justify-content: start;
-  align-items: center;
-  gap: 10px;
-  margin-top: 20px;
-  a {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    white-space: nowrap;
-    text-decoration: none;
-    color: black;
-    &:hover {
-      color: #297230;
-    }
-    p {
-      margin: 0;
-      font-weight: $button-font-weight;
-      font-size: 16px;
-    }
-    .mobileArrowToRoght {
-      width: 42px;
-      height: 42px;
-    }
-    img {
-      width: 24px;
-      height: 24px;
-    }
-  }
-}
 @media (max-width: 1265px) {
   .about .text {
     font-size: 15px;
@@ -315,24 +206,21 @@
 
 @media (max-width: 1050px) {
   .about .container {
-    gap: 10;
+    gap: 10px;
   }
 }
 
-  @media (max-width: 470px) {
-    .about .title {
-      font-size: 24px;
-    }
-
-    .about .containerMobile .center img {
-      width: 100%;
-      height: 405px;
-    }
-
-    .about .containerMobile .center .centerVideo {
-      width: 100%;
-      margin-left: 0;
-      height: auto;
-      max-height: min(70vh, 480px);
-    }
+@media (max-width: 470px) {
+  .about .title {
+    font-size: 24px;
   }
+
+  .about .containerMobile .center .centerVideo {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    aspect-ratio: 1 / 1;
+    margin-left: 0;
+    max-height: none;
+  }
+}

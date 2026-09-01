@@ -1,0 +1,389 @@
+@use '@/style/variables.scss' as *;
+@use '@/style/mixins.scss' as mixins;
+
+.accordion {
+  margin: 12px 0 20px;
+  font-family: $font-onest, 'Avenir Next', sans-serif;
+
+  .header {
+    width: 100%;
+    background: #f6f5ef;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+    padding: 14px 16px;
+    @include mixins.flex(space-between, center, row, 12px);
+    font-weight: 600;
+    text-align: left;
+    transition: background 0.15s ease;
+
+    &:active {
+      background: #f0eee6;
+    }
+
+    .headerLeft {
+      min-width: 0;
+      flex: 1;
+
+      .titleBlock {
+        @include mixins.flex(flex-start, baseline, row, 8px);
+        flex-wrap: wrap;
+      }
+
+      .title {
+        @include mixins.font(15px, 600);
+        letter-spacing: 0.02em;
+      }
+
+      .count {
+        @include mixins.font(12px, 400, #6e6d67);
+        white-space: nowrap;
+      }
+    }
+
+    .headerRight {
+      @include mixins.flex(flex-end, center, row, 10px);
+      flex-shrink: 0;
+
+      .priceRow {
+        @include mixins.flex(flex-end, center, row, 6px);
+      }
+
+      .priceOld {
+        @include mixins.price-old();
+        font-size: 12px;
+      }
+
+      .priceNew {
+        @include mixins.font(16px, 700);
+        margin: 0;
+        white-space: nowrap;
+      }
+
+      .arrow {
+        @include mixins.arrow(5px, #6e6d67);
+        flex-shrink: 0;
+        margin-top: -2px;
+
+        &.open {
+          transform: rotate(-135deg);
+          margin-top: 2px;
+        }
+      }
+    }
+  }
+
+  .content {
+    padding-top: 16px;
+    animation: fadeIn 0.3s ease;
+
+    .productList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      @include mixins.flex(flex-start, stretch, column, 14px);
+
+      .editCartBtn {
+        align-self: flex-end;
+        appearance: none;
+        margin: 0 0 2px;
+        padding: 0;
+        border: none;
+        background: none;
+        font-family: inherit;
+        font-size: 13px;
+        font-weight: 500;
+        letter-spacing: 0.02em;
+        color: #297230;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        cursor: pointer;
+
+        &:hover {
+          color: #000;
+        }
+      }
+
+      .productItem {
+        @include mixins.flex(flex-start, flex-start, row, 10px);
+        width: 100%;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(110, 109, 103, 0.12);
+
+        &:last-child {
+          padding-bottom: 0;
+          border-bottom: none;
+        }
+
+        .imageWrapper {
+          position: relative;
+          flex-shrink: 0;
+          width: 96px;
+          height: 96px;
+          @include mixins.flex(center, center);
+          background-color: #f6f5ef;
+          overflow: hidden;
+          border-radius: 0;
+
+          .image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+          }
+
+          .countWrapper {
+            position: absolute;
+            right: 4px;
+            top: 4px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            background-color: rgba(0, 0, 0, 0.55);
+            border-radius: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+
+            .count {
+              font-size: 10px;
+              color: white;
+              font-weight: 600;
+              margin: 0;
+              line-height: 1;
+            }
+          }
+        }
+
+        .productInfo {
+          @include mixins.flex(space-between, stretch, column);
+          flex: 1;
+          min-width: 0;
+          min-height: 96px;
+          padding: 2px 0 0;
+          gap: 6px;
+
+          .nameSize {
+            @include mixins.flex(flex-start, stretch, column, 2px);
+            min-width: 0;
+            flex: 1;
+
+            .name {
+              margin: 0;
+              font-family: $font-onest, 'Avenir Next', sans-serif;
+              font-size: 12px;
+              font-weight: 600;
+              line-height: 1.3;
+              letter-spacing: 0.01em;
+              text-transform: uppercase;
+              color: #000;
+              overflow-wrap: anywhere;
+              word-break: break-word;
+              display: -webkit-box;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+            }
+
+            .size {
+              margin: 0;
+              font-size: 11px;
+              font-weight: 400;
+              line-height: 1.3;
+              color: #6e6d67;
+            }
+          }
+
+          .priceBlock {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-top: auto;
+
+            .discount {
+              font-size: 12px;
+              font-weight: 500;
+              color: #297230;
+            }
+
+            .gift {
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              padding: 3px 8px;
+              border-radius: 100px;
+              background: #297230;
+              color: #fff;
+              font-size: 11px;
+              font-weight: 500;
+              letter-spacing: 0.02em;
+              line-height: 1.2;
+            }
+
+            .itemPriceRow {
+              display: flex;
+              align-items: baseline;
+              gap: 6px;
+              flex-wrap: wrap;
+            }
+
+            .itemPriceNew {
+              margin: 0;
+              font-size: 13px;
+              font-weight: 600;
+              line-height: 1.2;
+              white-space: nowrap;
+              color: #000;
+            }
+
+            .itemPriceOld {
+              @include mixins.price-old(#a3a3a3, #a3a3a3, 12px);
+              white-space: nowrap;
+            }
+          }
+        }
+      }
+    }
+
+    .addPromo {
+      margin-top: 16px;
+      width: 100%;
+      border: none;
+      padding: 0;
+      height: auto;
+      display: block;
+
+      .discountPromo {
+        margin-top: 10px;
+        padding: 0;
+        border-top: none;
+        color: #6e6d67;
+        font-size: 11px;
+        font-weight: 400;
+        line-height: 1.4;
+      }
+    }
+
+    .sectionSumDiscount {
+      @include mixins.flex(flex-start, stretch, column, 10px);
+      margin: 24px 0;
+
+      .sumWrapper {
+        @include mixins.flex(space-between, center);
+
+        .sum {
+          @include mixins.flex(flex-start, center, row, 10px);
+          @include mixins.font(14px, 600);
+        }
+
+        .price {
+          @include mixins.flex(flex-start, center, row, 10px);
+
+          .priceOld {
+            @include mixins.price-old(#a3a3a3, #a3a3a3, 14px);
+          }
+
+          .priceNew {
+            @include mixins.font(14px, 600);
+          }
+        }
+      }
+
+      .discountWrapper,
+      .promocodeWrapper {
+        @include mixins.flex(space-between, center);
+
+        .name {
+          @include mixins.font(13px, 500);
+        }
+
+        .value {
+          @include mixins.font(13px, 500, #ff4766);
+        }
+      }
+
+      .shippingWrapper {
+        @include mixins.flex(space-between, flex-start);
+
+        .shippingValueCol {
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
+          gap: 2px;
+        }
+
+        .shippingValue {
+          @include mixins.font(13px, 500);
+        }
+
+        .shippingValueMuted {
+          @include mixins.font(13px, 500, #a3a3a3);
+        }
+
+        .shippingValueError {
+          @include mixins.font(13px, 500, #ff4766);
+          text-align: right;
+          max-width: 220px;
+        }
+      }
+    }
+
+    .infoWrapper {
+      padding: 20px 0;
+      border-top: 1px solid #00000014;
+      @include mixins.flex(flex-start, flex-start, column);
+
+      .userWrapper {
+        @include mixins.flex(center, center, row, 10px);
+
+        .userInfo {
+          .userName {
+            @include mixins.font(13px, 500);
+          }
+
+          .userRole {
+            @include mixins.font(12px, 400, #6e6d67);
+          }
+        }
+      }
+
+      .textsWrapper {
+        margin-top: 12px;
+        @include mixins.flex(flex-start, flex-start, column, 12px);
+
+        .text {
+          @include mixins.font(13px, 400);
+
+          span {
+            color: #297230;
+          }
+        }
+
+        .dynamicContent {
+          p {
+            @include mixins.font(13px, 400);
+            margin-bottom: 12px;
+            margin-top: 0;
+
+            &:last-child {
+              margin-bottom: 0;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

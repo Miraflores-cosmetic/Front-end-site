@@ -1,308 +1,369 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './BasketDrawer.module.scss';
 import { AppDispatch, RootState } from '@/store/store';
-import promocodeIcon from '@/assets/icons/promocode.svg';
-import BasketCard from './basket-card/BascetCard';
+import BasketCard from './basket-card/BasketCard';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeDrawer } from '@/store/slices/drawerSlice';
 import { useNavigate } from 'react-router-dom';
 import { formatCurrency } from '@/helpers/helpers';
-import { createCheckoutApi, clearCart, applyVoucherCode, removeVoucherCode } from '@/store/slices/checkoutSlice';
-import { CHANNEL } from '@/graphql/client';
-import { useScreenMatch } from '@/hooks/useScreenMatch';
-import { getProgressBarCartModel } from '@/graphql/queries/pages.service';
+import { syncCartLines, applyVoucherCode, removeVoucherCode } from '@/store/slices/checkoutSlice';
 import { useToast } from '@/components/toast/toast';
-import { getApplicableGift } from '@/services/applicableGift.service';
-import { normalizeMediaUrl } from '@/utils/mediaUrl';
+import { TextField } from '@/components/text-field/TextField';
+import { useProgressBarCartModel } from '@/hooks/useProgressBarCartModel';
+import { useApplicableGift } from '@/hooks/useApplicableGift';
+
+function CloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden>
+      <path
+        d="M15 5L5 15M5 5l10 10"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 const BasketDrawer: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const [totalFromPrice, setTotalFromPrice] = React.useState(0);
-  const [totalToPrice, setTotalToPrice] = React.useState(0);
-  const [progressBar, setProgressBar] = useState({
-    contentText: 'до бесплатной доставки',
-    threshold: 15780,
-    successText: 'Бесплатная доставка!'
-  });
-  const isMobile = useScreenMatch();
-
-  const remainder = Math.max(0, progressBar.threshold - totalToPrice);
-  const progressPercent =
-    progressBar.threshold > 0 ? Math.min(100, (totalToPrice / progressBar.threshold) * 100) : 0;
-
-  const { lines, voucherCode, voucherDiscount } = useSelector((state: RootState) => state.checkout);
-  const { isAuth, email } = useSelector((state: RootState) => state.authSlice);
-
-  // Итоговая цена с учётом скидки от промокода
-  const finalPrice = Math.max(0, totalToPrice - (voucherDiscount || 0));
-
-  const [isPromoInputOpen, setIsPromoInputOpen] = useState(false);
-  const [promoCode, setPromoCode] = useState('');
-  const [isApplying, setIsApplying] = useState(false);
-  const [isOrdering, setIsOrdering] = useState(false);
-  const [giftLine, setGiftLine] = useState<{
-    variantId: string;
-    title: string;
-    thumbnail: string;
-    quantity: number;
-    price: number;
-    isGift: true;
-  } | null>(null);
   const toast = useToast();
+  const progressBar = useProgressBarCartModel();
 
-  useEffect(() => {
-    getProgressBarCartModel().then(setProgressBar).catch(() => { });
-  }, []);
+  const { lines, voucherCode, voucherDiscount, voucherKind } = useSelector(
+    (state: RootState) => state.checkout,
+  );
+  const activeDrawer = useSelector((state: RootState) => state.drawer.activeDrawer);
+  const meEmail = useSelector((state: RootState) => state.authSlice.me?.email);
+  const prevDrawerRef = useRef(activeDrawer);
 
-  useEffect(() => {
+  const { totalFromPrice, totalToPrice } = useMemo(() => {
     let totalFrom = 0;
     let totalTo = 0;
-
-    lines.forEach(item => {
-      const itemOldPrice = item.oldPrice && item.oldPrice > item.price ? item.oldPrice : item.price;
+    lines.forEach((item) => {
+      const itemOldPrice =
+        item.oldPrice && item.oldPrice > item.price ? item.oldPrice : item.price;
       totalFrom += itemOldPrice * item.quantity;
       totalTo += (item.price ?? 0) * item.quantity;
     });
-
-    setTotalFromPrice(totalFrom);
-    setTotalToPrice(totalTo);
+    return { totalFromPrice: totalFrom, totalToPrice: totalTo };
   }, [lines]);
+
+  const giftLine = useApplicableGift(totalToPrice);
+
+  const itemCount = lines.reduce((sum, l) => sum + (l.quantity || 0), 0);
+  const finalPrice = Math.max(0, totalToPrice - (voucherDiscount || 0));
+  const remainder = Math.max(0, progressBar.threshold - totalToPrice);
+  const progressPercent =
+    progressBar.threshold > 0
+      ? Math.min(100, (totalToPrice / progressBar.threshold) * 100)
+      : 0;
+  const progressReached = remainder <= 0;
+
+  const [promoCode, setPromoCode] = useState('');
+  const [promoError, setPromoError] = useState<string | undefined>();
+  const [isApplying, setIsApplying] = useState(false);
+  const [isOrdering, setIsOrdering] = useState(false);
 
   useEffect(() => {
-    let totalTo = 0;
-    lines.forEach(item => { totalTo += (item.price ?? 0) * item.quantity; });
-    if (totalTo < 5000) {
-      setGiftLine(null);
-      return;
-    }
-    getApplicableGift(totalTo, CHANNEL).then((res) => {
-      if (res.applicable && res.variantId && res.productName) {
-        setGiftLine({
-          variantId: res.variantId,
-          title: res.productName,
-          thumbnail: normalizeMediaUrl(res.thumbnailUrl || ''),
-          quantity: res.quantity ?? 1,
-          price: 0,
-          isGift: true,
-        });
-      } else {
-        setGiftLine(null);
+    setPromoCode(voucherCode || '');
+    setPromoError(undefined);
+  }, [voucherCode]);
+
+  /** Свежие цены/остаток при открытии корзины (clamp без toast — только removed). */
+  useEffect(() => {
+    const opened = activeDrawer === 'basket' && prevDrawerRef.current !== 'basket';
+    prevDrawerRef.current = activeDrawer;
+    if (!opened || lines.length === 0) return;
+
+    let cancelled = false;
+    void (async () => {
+      try {
+        const syncResult = await dispatch(syncCartLines()).unwrap();
+        if (cancelled) return;
+        const removed = syncResult.removed ?? [];
+        if (!removed.length) return;
+        const names = removed
+          .map((r) => ('name' in r ? r.name : undefined))
+          .filter(Boolean)
+          .slice(0, 3);
+        const oos = removed.some((r) => r.reason === 'oos');
+        toast.error(
+          names.length
+            ? `${oos ? 'Нет в наличии' : 'Недоступны'}: ${names.join(', ')}${
+                removed.length > names.length ? '…' : ''
+              }`
+            : `Убрано из корзины: ${removed.length} поз.`,
+        );
+      } catch {
+        /* тихо — пользователь увидит ошибку при «Оформить» */
       }
-    }).catch(() => {
-      setGiftLine(null);
-    });
-  }, [lines]);
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activeDrawer, dispatch, lines.length, toast]);
 
   const isCartEmpty = lines.length === 0;
-  // Гость может перейти на вход/регистрацию даже с пустой корзиной; оформление — только с товарами
-  const isOrderDisabled = isOrdering || (isAuth && isCartEmpty);
+  const isOrderDisabled = isOrdering || isCartEmpty;
+
+  const handleClose = () => dispatch(closeDrawer());
 
   const handleOrder = async () => {
     if (isOrderDisabled) return;
 
     setIsOrdering(true);
-    if (!isAuth) {
-      setIsOrdering(false);
-      dispatch(closeDrawer());
-      navigate('/sign-in');
-      return;
-    }
-
-    const adaptedLines = lines.map(line => {
-      return {
-        variantId: line.variantId,
-        quantity: line.quantity
-      };
-    });
-
     try {
-      await dispatch(
-        createCheckoutApi({
-          email: email,
-          channel: CHANNEL,
-          lines: adaptedLines
-        })
-      ).unwrap();
-
+      const syncResult = await dispatch(syncCartLines()).unwrap();
+      const removed = syncResult.removed ?? [];
+      if (removed.length) {
+        const names = removed
+          .map((r) => ('name' in r ? r.name : undefined))
+          .filter(Boolean)
+          .slice(0, 3);
+        const oos = removed.some((r) => r.reason === 'oos');
+        toast.error(
+          names.length
+            ? `${oos ? 'Нет в наличии' : 'Недоступны'}: ${names.join(', ')}${
+                removed.length > names.length ? '…' : ''
+              }`
+            : `Убрано из корзины: ${removed.length} поз. (нет в наличии)`,
+        );
+        setIsOrdering(false);
+        return;
+      }
+      if (!(syncResult.lines?.length > 0)) {
+        toast.error('Корзина пуста');
+        setIsOrdering(false);
+        return;
+      }
       setIsOrdering(false);
-      dispatch(closeDrawer());
+      handleClose();
       navigate('/order');
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsOrdering(false);
-      // rejectWithValue из RTK попадает в unwrap как error.payload, не в error.message
+      const err = error as { payload?: string | { message?: string }; message?: string };
       const payloadMsg =
-        typeof error?.payload === 'string'
-          ? error.payload
-          : typeof error?.payload?.message === 'string'
-            ? error.payload.message
+        typeof err?.payload === 'string'
+          ? err.payload
+          : typeof err?.payload?.message === 'string'
+            ? err.payload.message
             : '';
-      toast.error(payloadMsg || error?.message || 'Ошибка при оформлении заказа');
-    }
-  };
-
-  const handleClearCart = () => {
-    if (window.confirm('Вы уверены, что хотите очистить корзину?')) {
-      dispatch(clearCart());
-    }
-  };
-
-  const handleTogglePromoInput = () => {
-    if (voucherCode) {
-      dispatch(removeVoucherCode());
-      toast.success('Промокод удален');
-    } else {
-      setIsPromoInputOpen(!isPromoInputOpen);
+      toast.error(payloadMsg || err?.message || 'Не удалось обновить корзину');
     }
   };
 
   const handleApplyPromo = async () => {
-    if (!promoCode.trim()) {
-      toast.error('Введите промокод');
+    const code = promoCode.trim();
+    if (!code) {
+      setPromoError('Введите промокод или сертификат');
       return;
     }
-
+    const email = meEmail?.trim();
+    if (!email) {
+      setPromoError('Укажите email в профиле или на странице оформления');
+      return;
+    }
     if (isApplying) return;
-
     setIsApplying(true);
+    setPromoError(undefined);
     try {
-      await dispatch(applyVoucherCode(promoCode.trim())).unwrap();
-      setIsPromoInputOpen(false);
-      setPromoCode('');
-      toast.success('Промокод применен');
-    } catch (error: any) {
-      toast.error(error?.message || 'Ошибка при применении промокода');
+      const result = await dispatch(
+        applyVoucherCode({
+          code,
+          email,
+        }),
+      ).unwrap();
+      toast.success(
+        result.voucherKind === 'gift' ? 'Сертификат применён' : 'Промокод применён',
+      );
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : String(error);
+      setPromoError(msg || 'Ошибка при применении кода');
     } finally {
       setIsApplying(false);
     }
   };
 
-  const handlePromoKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      handleApplyPromo();
-    }
+  const handleClearPromo = () => {
+    dispatch(removeVoucherCode());
+    setPromoCode('');
+    setPromoError(undefined);
+    toast.success(voucherKind === 'gift' ? 'Сертификат удалён' : 'Промокод удалён');
   };
 
   return (
-    <div className={`${styles.drawer}`}>
-      <div className={styles.contentWrapper}>
-        <div className={styles.header}>
-          <p className={styles.title}>КОРЗИНА</p>
-          <button onClick={() => dispatch(closeDrawer())} className={styles.closeTxt}>
-            ЗАКРЫТЬ
+    <div className={styles.drawer}>
+      <header className={styles.header}>
+        <h2 className={styles.title}>
+          Корзина{itemCount > 0 ? ` (${itemCount})` : ''}
+        </h2>
+        <button
+          type="button"
+          className={styles.closeBtn}
+          onClick={handleClose}
+          aria-label="Закрыть"
+        >
+          <CloseIcon />
+        </button>
+      </header>
+
+      {isCartEmpty ? (
+        <div className={styles.empty}>
+          <p className={styles.emptyText}>Корзина пуста</p>
+          <button type="button" className={styles.continueBtn} onClick={handleClose}>
+            Продолжить покупки
           </button>
         </div>
-        <div className={styles.progresContainer}>
-          <p className={styles.progresText}>
-            {remainder <= 0
-              ? progressBar.successText
-              : `${formatCurrency(remainder)}₽ ${progressBar.contentText}`}
-          </p>
-          <div className={styles.progresTrack}>
-            <div className={styles.progresFill} style={{ width: `${progressPercent}%` }} />
+      ) : (
+        <>
+          <div className={styles.progressBlock} aria-live="polite">
+            <p className={styles.progressText}>
+              {progressReached
+                ? progressBar.successText
+                : `${formatCurrency(remainder)}₽ ${progressBar.contentText}`}
+            </p>
+            <div className={styles.progressTrack}>
+              <div
+                className={styles.progressFill}
+                style={{ width: `${progressPercent}%` }}
+              />
+            </div>
+            <p className={styles.progressNote}>
+              Бесплатно только до ПВЗ при сумме товаров от порога (без учёта промокода).
+              Курьер и другие способы — по тарифу при оформлении.
+            </p>
           </div>
-        </div>
 
-        <div className={styles.basketList}>
-          {lines.length > 0 ? (
-            <>
-              {lines.map((item, idx) => <BasketCard key={item.variantId} {...item} />)}
-              {giftLine && (
+          <ul className={styles.list} role="list">
+            {lines.map((item) => (
+              <li
+                key={item.variantId}
+                className={styles.listItem}
+              >
+                <BasketCard {...item} />
+              </li>
+            ))}
+            {giftLine ? (
+              <li key={`gift-${giftLine.variantId}`} className={styles.listItem}>
                 <BasketCard
-                  key={giftLine.variantId}
                   variantId={giftLine.variantId}
                   title={giftLine.title}
                   thumbnail={giftLine.thumbnail}
                   quantity={giftLine.quantity}
                   price={giftLine.price}
-                  isGift={true}
+                  isGift
                 />
-              )}
-            </>
-          ) : (
-            <p className={styles.sum}>Корзина пуста</p>
-          )}
+              </li>
+            ) : null}
+          </ul>
 
-          {/* Promo Code Section (scrolls with items) */}
-          <div className={styles.promoSection}>
-            <div className={styles.promoRow} onClick={handleTogglePromoInput}>
-              <img src={promocodeIcon} alt='promocode' className={styles.promoIcon} />
-              <span className={styles.promoText}>
-                {voucherCode ? 'Промокод применен' : 'Добавить промокод или сертификат'}
-              </span>
-              <span className={styles.promoPlus}>{voucherCode ? '−' : (isPromoInputOpen ? '−' : '+')}</span>
-            </div>
-
-            {isPromoInputOpen && !voucherCode && (
-              <div className={styles.promoInputWrapper}>
-                <input
-                  type="text"
+          <footer className={styles.footer}>
+            <div className={styles.promoRow}>
+              <div className={styles.promoField}>
+                <TextField
+                  label="Промокод или сертификат"
                   value={promoCode}
-                  onChange={(e) => setPromoCode(e.target.value)}
-                  onKeyPress={handlePromoKeyPress}
-                  placeholder="Введите промокод"
-                  className={styles.promoInput}
-                  disabled={isApplying}
+                  onChange={(e) => {
+                    setPromoCode(e.target.value);
+                    setPromoError(undefined);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      void handleApplyPromo();
+                    }
+                  }}
+                  error={promoError}
+                  autoComplete="off"
+                  spellCheck={false}
+                  disabled={Boolean(voucherCode) || isApplying}
                 />
+              </div>
+              {voucherCode ? (
                 <button
-                  onClick={handleApplyPromo}
-                  disabled={isApplying || !promoCode.trim()}
-                  className={styles.promoApplyBtn}
+                  type="button"
+                  className={styles.promoApply}
+                  onClick={handleClearPromo}
+                  disabled={isApplying}
                 >
-                  {isApplying ? '...' : 'Применить'}
+                  Сбросить
                 </button>
+              ) : (
+                <button
+                  type="button"
+                  className={styles.promoApply}
+                  onClick={() => void handleApplyPromo()}
+                  disabled={isApplying}
+                >
+                  {isApplying ? '…' : 'Применить'}
+                </button>
+              )}
+            </div>
+            <p className={styles.note} role="note">
+              Сертификат списывается только с товаров — доставку не покрывает. Бесплатная
+              доставка — только до ПВЗ при сумме товаров от порога.
+            </p>
+
+            {voucherDiscount > 0 || totalFromPrice > totalToPrice ? (
+              <div className={styles.totals}>
+                <div className={styles.totalsRow}>
+                  <span>Сумма</span>
+                  <span>
+                    {formatCurrency(totalFromPrice > totalToPrice ? totalFromPrice : totalToPrice)}₽
+                  </span>
+                </div>
+                {totalFromPrice > totalToPrice ? (
+                  <div className={styles.totalsRowMuted}>
+                    <span>Скидка</span>
+                    <span>−{formatCurrency(totalFromPrice - totalToPrice)}₽</span>
+                  </div>
+                ) : null}
+                {voucherDiscount > 0 ? (
+                  <div className={styles.totalsRowMuted}>
+                    <span>
+                      {voucherKind === 'gift' ? 'Сертификат' : 'Промокод'}
+                      {voucherCode ? ` (${voucherCode})` : ''}
+                    </span>
+                    <span>−{formatCurrency(voucherDiscount)}₽</span>
+                  </div>
+                ) : null}
+                <div className={styles.totalsRowStrong}>
+                  <span>Итого</span>
+                  <span>{formatCurrency(finalPrice)}₽</span>
+                </div>
+              </div>
+            ) : (
+              <div className={styles.subtotalRow}>
+                <span>Итого</span>
+                <span>{formatCurrency(finalPrice)}₽</span>
               </div>
             )}
 
-            {voucherCode && (
-              <p className={styles.appliedPromo}>{voucherCode}</p>
-            )}
-          </div>
-        </div>
-      </div>
-      <div className={styles.orderButtonContainer}>
-        <div className={styles.footerContent}>
-          <div className={styles.totalInfo}>
-            <div className={styles.priceRow}>
-              <span className={styles.mainPrice}>{formatCurrency(finalPrice)}₽</span>
-              {(totalFromPrice > finalPrice || voucherDiscount > 0) && (
-                <span className={styles.oldPrice}>{formatCurrency(totalToPrice)}₽</span>
-              )}
-            </div>
-            {voucherDiscount > 0 && (
-              <p className={styles.discountInfo}>Скидка по промокоду: -{formatCurrency(voucherDiscount)}₽</p>
-            )}
-            <p className={styles.itemCount}>
-              <span className={styles.desktopSumLabel}>Сумма • </span>
-              {lines.length + (giftLine ? 1 : 0)}{' '}
-              {lines.length + (giftLine ? 1 : 0) === 1
-                ? 'товар'
-                : (lines.length + (giftLine ? 1 : 0)) > 1 && (lines.length + (giftLine ? 1 : 0)) < 5
-                  ? 'товара'
-                  : 'товаров'}
-            </p>
-          </div>
+            <p className={styles.note}>Доставка рассчитывается при оформлении</p>
 
-          <div className={styles.actions}>
             <button
-              className={styles.orderButtonLeft}
-              onClick={handleOrder}
+              type="button"
+              className={styles.orderButton}
+              onClick={() => void handleOrder()}
               disabled={isOrderDisabled}
-              aria-disabled={isOrderDisabled}
               aria-busy={isOrdering}
             >
               {isOrdering ? (
                 <>
-                  <span className={styles.orderButtonLoader} aria-hidden="true" />
-                  <span>Загрузка</span>
+                  <span className={styles.orderButtonLoader} aria-hidden />
+                  <span>Обновляем…</span>
                 </>
               ) : (
-                <span>{isAuth ? 'Оформить заказ' : 'Войти'}</span>
+                <span>Оформить и оплатить</span>
               )}
             </button>
-          </div>
-        </div>
-      </div>
+          </footer>
+        </>
+      )}
     </div>
   );
 };

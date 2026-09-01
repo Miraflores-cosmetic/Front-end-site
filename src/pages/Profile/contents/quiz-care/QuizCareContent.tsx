@@ -1,13 +1,25 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/button/Button';
-import { fetchSavedQuizResult } from '@/graphql/queries/quizResult.service';
+import { fetchSavedQuizResult } from '@/services/quizResult.service';
 import { formatSavedQuizSummary } from '@/lib/quiz/formatQuizAnswersSummary';
 import type { SavedQuizResult } from '@/types/quizResult';
+import { TabId } from '@/pages/Profile/side-bar/SideBar';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
+import {
+  ProfileEmptyState,
+  ProfileLoadingState,
+  ProfileSection,
+} from '@/pages/Profile/components/ProfileSection';
 import styles from './QuizCareContent.module.scss';
 
-const QuizCareContent: React.FC = () => {
+interface QuizCareContentProps {
+  setOpenAccordion?: React.Dispatch<React.SetStateAction<TabId | null>>;
+}
+
+const QuizCareContent: React.FC<QuizCareContentProps> = ({ setOpenAccordion }) => {
   const navigate = useNavigate();
+  const isMobile = useScreenMatch();
   const [saved, setSaved] = useState<SavedQuizResult | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,38 +31,56 @@ const QuizCareContent: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    loadSaved();
+    void loadSaved();
   }, [loadSaved]);
 
   useEffect(() => {
     const onUpdated = () => {
-      loadSaved();
+      void loadSaved();
     };
     window.addEventListener('quizResultUpdated', onUpdated);
     return () => window.removeEventListener('quizResultUpdated', onUpdated);
   }, [loadSaved]);
 
   if (loading) {
-    return <div className={styles.loading}>Загрузка программы ухода...</div>;
+    return (
+      <ProfileSection
+        title="Мой уход"
+        isMobile={isMobile}
+        onClose={setOpenAccordion ? () => setOpenAccordion(null) : undefined}
+        className={styles.careContent}
+      >
+        <ProfileLoadingState message="Загрузка программы ухода..." />
+      </ProfileSection>
+    );
   }
 
   if (!saved) {
     return (
-      <article className={styles.careContent}>
-        <p className={styles.title}>Мой уход</p>
-        <p className={styles.empty}>
-          Вы ещё не проходили подбор ухода или результат не был сохранён в аккаунт.
-        </p>
-        <Button text="Пройти подбор ухода" onClick={() => navigate('/quiz')} />
-      </article>
+      <ProfileSection
+        title="Мой уход"
+        isMobile={isMobile}
+        onClose={setOpenAccordion ? () => setOpenAccordion(null) : undefined}
+        className={styles.careContent}
+      >
+        <ProfileEmptyState
+          message="Вы ещё не проходили подбор ухода или результат не был сохранён в аккаунт."
+          actionLabel="Пройти подбор ухода"
+          onAction={() => navigate('/quiz')}
+        />
+      </ProfileSection>
     );
   }
 
   const summary = formatSavedQuizSummary(saved);
 
   return (
-    <article className={styles.careContent}>
-      <p className={styles.title}>Мой уход</p>
+    <ProfileSection
+      title="Мой уход"
+      isMobile={isMobile}
+      onClose={setOpenAccordion ? () => setOpenAccordion(null) : undefined}
+      className={styles.careContent}
+    >
       <p className={styles.date}>Обновлено: {summary.completedAt}</p>
 
       <dl className={styles.summary}>
@@ -62,12 +92,12 @@ const QuizCareContent: React.FC = () => {
           <dt>SPF ежедневно</dt>
           <dd>{summary.spf}</dd>
         </div>
-        {summary.issues && (
+        {summary.issues ? (
           <div className={styles.row}>
             <dt>Проблемы кожи</dt>
             <dd>{summary.issues}</dd>
           </div>
-        )}
+        ) : null}
         <div className={styles.row}>
           <dt>Задачи ухода</dt>
           <dd>{summary.tasks}</dd>
@@ -84,7 +114,7 @@ const QuizCareContent: React.FC = () => {
           Пройти заново
         </button>
       </div>
-    </article>
+    </ProfileSection>
   );
 };
 

@@ -8,12 +8,21 @@ import { Button } from '@/components/button/Button';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { useQuizContent } from '@/contexts/QuizContentContext';
 import { getQuizHtml, getQuizMedia } from '@/lib/quiz/contentUtils';
+import { trackQuizEvent } from '@/lib/quiz/quizAnalytics';
 import { useQuizState } from '@/hooks/useQuizState';
 import styles from './Quiz.module.scss';
 
 type HairStep = 'cleansing' | 'care' | 'loading' | 'media1' | 'media2';
 
 const HAIR_STEPS: HairStep[] = ['cleansing', 'care', 'loading', 'media1', 'media2'];
+
+const HAIR_STEP_KEYS: Record<HairStep, string> = {
+  cleansing: 'hair_cleansing',
+  care: 'hair_care',
+  loading: 'hair_loading',
+  media1: 'hair_media1',
+  media2: 'hair_done',
+};
 
 const QuizHairPage: React.FC = () => {
   const navigate = useNavigate();
@@ -24,7 +33,23 @@ const QuizHairPage: React.FC = () => {
 
   useEffect(() => {
     setZone('hair');
+    trackQuizEvent({
+      type: 'zone_select',
+      zone: 'hair',
+      stepKey: 'zone',
+      once: true,
+      meta: { zone: 'hair' },
+    });
   }, [setZone]);
+
+  useEffect(() => {
+    trackQuizEvent({
+      type: 'step_view',
+      zone: 'hair',
+      stepKey: HAIR_STEP_KEYS[currentStep],
+      once: true,
+    });
+  }, [currentStep]);
 
   useEffect(() => {
     if (currentStep !== 'loading') return;
@@ -37,6 +62,11 @@ const QuizHairPage: React.FC = () => {
   }, [currentStep]);
 
   const handleNext = () => {
+    trackQuizEvent({
+      type: 'step_complete',
+      zone: 'hair',
+      stepKey: HAIR_STEP_KEYS[currentStep],
+    });
     if (stepIndex < HAIR_STEPS.length - 1) {
       setStepIndex((i) => i + 1);
     }
@@ -109,7 +139,18 @@ const QuizHairPage: React.FC = () => {
             <div className={styles.actions}>
               {currentStep === 'media2' ? (
                 <>
-                  <Button text="Перейти в каталог" onClick={() => navigate('/catalog/')} />
+                  <Button
+                    text="Перейти в каталог"
+                    onClick={() => {
+                      trackQuizEvent({
+                        type: 'quiz_complete',
+                        zone: 'hair',
+                        stepKey: 'hair_done',
+                        once: true,
+                      });
+                      navigate('/catalog');
+                    }}
+                  />
                   <button
                     type="button"
                     className={styles.secondaryLink}

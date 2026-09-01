@@ -6,35 +6,42 @@ export interface BestSellerEtap {
   id: string | number;
   title: string;
   name: string;
-  slug?: string; // slug этапа для фильтрации
+  slug?: string;
 }
 
 interface EtapsProps {
   items: BestSellerEtap[];
-  activeEtap?: string | null; // slug активного этапа
-  onEtapClick?: (etapSlug: string) => void; // обработчик клика на этап
+  activeEtap?: string | null;
+  onEtapClick?: (etapSlug: string) => void;
 }
 
 const BestSellerEtaps: React.FC<EtapsProps> = ({ items, activeEtap, onEtapClick }) => {
   return (
     <div className={styles.etapsWrapper}>
-      <div className={styles.etaps}>
+      <div className={styles.etaps} role="tablist" aria-label="Этапы ухода">
         {items.map((item, ind) => {
           const isActive = activeEtap === item.slug || (!activeEtap && ind === 1);
+          const canSelect = Boolean(item.slug && onEtapClick);
           return (
-            <div
+            <button
               key={item.id}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              disabled={!canSelect}
               className={isActive ? styles.etapActive : styles.etap}
-              onClick={() => item.slug && onEtapClick?.(item.slug)}
+              onClick={() => {
+                if (item.slug) onEtapClick?.(item.slug);
+              }}
             >
-              <div className={styles.etapTextWrapper}>
-                <p className={styles.etapTitle}>{item.title}</p>
-                <p className={styles.etapName}>{item.name}</p>
-              </div>
-              {ind !== items.length - 1 && (
-                <img src={line} alt='line icon' className={styles.check} />
-              )}
-            </div>
+              <span className={styles.etapTextWrapper}>
+                <span className={styles.etapTitle}>{item.title}</span>
+                <span className={styles.etapName}>{item.name}</span>
+              </span>
+              {ind !== items.length - 1 ? (
+                <img src={line} alt="" className={styles.check} aria-hidden />
+              ) : null}
+            </button>
           );
         })}
       </div>

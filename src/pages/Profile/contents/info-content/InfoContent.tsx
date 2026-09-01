@@ -1,14 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import styles from './InfoContent.module.scss';
-import DeliveryProfile from '@/components/delivary-profile/DeliveryProfile';
+import DeliveryProfile from '@/components/delivery-profile/DeliveryProfile';
 import { closeDrawer } from '@/store/slices/drawerSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import Bestsellers from '@/components/bestsellers/Bestsellers';
 import { RootState, AppDispatch } from '@/store/store';
 import { getMe } from '@/store/slices/authSlice';
-import { updateAccountWithMetadata, changePassword } from '@/graphql/queries/auth.service';
+import { updateBuyerProfile } from '@/api/authApi';
 import { useToast } from '@/components/toast/toast';
 import { translateAuthError } from '@/utils/translateAuthError';
+import { TextField } from '@/components/text-field/TextField';
+import ChangePasswordModal from '@/components/change-password-modal/ChangePasswordModal';
+
+function getDisplayPhone(me: RootState['authSlice']['me']): string {
+  if (!me) return '';
+  const defaultAddress = me.addresses?.find(
+    a => a.isDefaultBillingAddress || a.isDefaultShippingAddress,
+  );
+  return me.phone || defaultAddress?.phone || '';
+}
+
+function getDisplayBirthday(me: RootState['authSlice']['me']): string {
+  return me?.birthday || '';
+}
 
 const InfoContent: React.FC = () => {
   const { me } = useSelector((state: RootState) => state.authSlice);
@@ -23,54 +37,29 @@ const InfoContent: React.FC = () => {
     email: '',
     phone: '',
     birthday: '',
-    receiveGreetings: false
-  });
-  const [passwordData, setPasswordData] = useState({
-    oldPassword: '',
-    newPassword: '',
-    confirmPassword: ''
+    receiveGreetings: false,
   });
   const [savingProfile, setSavingProfile] = useState(false);
-  const [savingPassword, setSavingPassword] = useState(false);
-
-  // Извлекаем данные из metadata
-  const getMetadataValue = (key: string): string => {
-    if (!me?.metadata) return '';
-    const item = me.metadata.find(m => m.key === key);
-    return item?.value || '';
-  };
 
   useEffect(() => {
     if (me) {
-      // Телефон пробуем взять из адреса по умолчанию или из metadata
-      const defaultAddress = me.addresses?.find(a => a.isDefaultBillingAddress || a.isDefaultShippingAddress);
-      const phoneFromAddress = defaultAddress?.phone || '';
-      const phoneFromMeta = getMetadataValue('phone');
-
       setFormData({
         firstName: me.firstName || '',
         lastName: me.lastName || '',
         email: me.email || '',
-        phone: phoneFromMeta || phoneFromAddress || '',
-        birthday: getMetadataValue('birthday') || '',
-        receiveGreetings: getMetadataValue('receiveGreetings') === 'true'
+        phone: getDisplayPhone(me),
+        birthday: getDisplayBirthday(me),
+        receiveGreetings: me.marketingConsent === true,
       });
     }
   }, [me]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
-      [name]: type === 'checkbox' ? checked : value
-    });
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setPasswordData({
-      ...passwordData,
-      [e.target.name]: e.target.value
-    });
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
   const handleSave = async () => {
@@ -87,96 +76,57 @@ const InfoContent: React.FC = () => {
 
     setSavingProfile(true);
     try {
-      await updateAccountWithMetadata({
+      await updateBuyerProfile({
         firstName: formData.firstName.trim(),
         lastName: formData.lastName.trim(),
         phone: formData.phone.trim(),
-        birthday: formData.birthday.trim(),
-        receiveGreetings: formData.receiveGreetings
+        birthday: formData.birthday || null,
+        marketingConsent: formData.receiveGreetings,
       });
 
       await dispatch(getMe()).unwrap();
       setIsEditing(false);
       dispatch(closeDrawer());
       toast.success('Профиль успешно обновлен');
-    } catch (error: any) {
-      console.error('Update account error:', error);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : undefined;
       if (
-        error?.message?.includes('PermissionDenied') ||
-        error?.message?.includes('AUTHENTICATED_USER')
+        message?.includes('PermissionDenied') ||
+        message?.includes('AUTHENTICATED_USER')
       ) {
         toast.error('Ошибка авторизации. Пожалуйста, войдите в систему заново.');
         localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
         localStorage.removeItem('userId');
       } else {
-        toast.error(translateAuthError(error?.message) || 'Ошибка при обновлении профиля');
+        toast.error(translateAuthError(message) || 'Ошибка при обновлении профиля');
       }
     } finally {
       setSavingProfile(false);
     }
   };
 
-  const handlePasswordSave = async () => {
-    if (!passwordData.oldPassword || !passwordData.newPassword) {
-      toast.error('Заполните старый и новый пароль');
-      return;
-    }
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error('Пароли не совпадают');
-      return;
-    }
-    if (passwordData.newPassword.length < 8) {
-      toast.error('Пароль должен быть не менее 8 символов');
-      return;
-    }
-
-    setSavingPassword(true);
-    try {
-      await changePassword(passwordData.oldPassword, passwordData.newPassword);
-      setShowPasswordModal(false);
-      setPasswordData({ oldPassword: '', newPassword: '', confirmPassword: '' });
-      toast.success('Пароль успешно изменен');
-    } catch (error: any) {
-      console.error('Password change error:', error);
-      toast.error(translateAuthError(error?.message) || 'Ошибка при смене пароля');
-    } finally {
-      setSavingPassword(false);
-    }
-  };
-
   const handleCancel = () => {
     if (me) {
-      const defaultAddress = me.addresses?.find(a => a.isDefaultBillingAddress || a.isDefaultShippingAddress);
-      const phoneFromAddress = defaultAddress?.phone || '';
-      const phoneFromMeta = getMetadataValue('phone');
-
       setFormData({
         firstName: me.firstName || '',
         lastName: me.lastName || '',
         email: me.email || '',
-        phone: phoneFromMeta || phoneFromAddress || '',
-        birthday: getMetadataValue('birthday') || '',
-        receiveGreetings: getMetadataValue('receiveGreetings') === 'true'
+        phone: getDisplayPhone(me),
+        birthday: getDisplayBirthday(me),
+        receiveGreetings: me.marketingConsent === true,
       });
     }
     setIsEditing(false);
   };
 
-  const handleAddressSelect = () => {
-    // setAddress('Москва');
-  };
+  const phone = getDisplayPhone(me);
+  const birthday = getDisplayBirthday(me);
+  const receiveGreetings = me?.marketingConsent === true;
 
-  // Форматирование телефона для отображения
-  const formatPhone = (phone: string) => {
-    if (!phone) return 'Не указан';
-    return phone;
-  };
+  const formatPhone = (value: string) => (value ? value : 'Не указан');
 
-  // Форматирование даты для отображения
   const formatBirthday = (date: string) => {
     if (!date) return 'Не указана';
-    // Если формат YYYY-MM-DD, преобразуем в DD.MM.YYYY
     if (date.includes('-')) {
       const [year, month, day] = date.split('-');
       return `${day}.${month}.${year}`;
@@ -191,206 +141,142 @@ const InfoContent: React.FC = () => {
       </section>
 
       <section className={styles.infoAboutWrapper}>
-        <article className={styles.about}>
-          <p className={styles.aboutTitle}>Информация о вас</p>
-          {!isEditing && (
-            <button className={styles.changeBtn} onClick={() => setIsEditing(true)}>
-              <p>Изменить</p>
+        <header className={styles.aboutHeader}>
+          <div>
+            <p className={styles.aboutTitle}>Информация о вас</p>
+            <p className={styles.aboutHint}>Контакты и данные для заказов и поздравлений</p>
+          </div>
+          {!isEditing ? (
+            <button type="button" className={styles.changeBtn} onClick={() => setIsEditing(true)}>
+              Изменить
             </button>
-          )}
-          {isEditing && (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              <button className={styles.changeBtn} onClick={handleSave} disabled={savingProfile}>
-                <p>{savingProfile ? 'Сохранение...' : 'Сохранить'}</p>
+          ) : (
+            <div className={styles.editActions}>
+              <button
+                type="button"
+                className={styles.changeBtn}
+                onClick={() => void handleSave()}
+                disabled={savingProfile}
+              >
+                {savingProfile ? 'Сохранение...' : 'Сохранить'}
               </button>
-              <button className={styles.changeBtn} onClick={handleCancel}>
-                <p>Отмена</p>
+              <button type="button" className={styles.changeBtnSecondary} onClick={handleCancel}>
+                Отмена
               </button>
             </div>
           )}
-        </article>
+        </header>
 
         {isEditing ? (
           <article className={styles.aboutWrapper}>
             <div className={styles.formGrid}>
-              <div className={styles.wrapper}>
-                <p className={styles.name}>ФИО</p>
-                <div className={styles.nameInputs}>
-                  <input
-                    type='text'
-                    name='firstName'
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    className={styles.input}
-                    placeholder='Имя'
-                  />
-                  <input
-                    type='text'
-                    name='lastName'
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    className={styles.input}
-                    placeholder='Фамилия'
-                  />
-                </div>
-              </div>
-              <div className={styles.wrapper}>
-                <p className={styles.name}>Телефон</p>
-                <input
-                  type='tel'
-                  name='phone'
-                  value={formData.phone}
+              <div className={styles.nameInputs}>
+                <TextField
+                  label="Имя"
+                  name="firstName"
+                  value={formData.firstName}
                   onChange={handleChange}
-                  className={styles.input}
-                  placeholder='+7 (___) ___-__-__'
                 />
-              </div>
-              <div className={styles.wrapper}>
-                <p className={styles.name}>Email</p>
-                <input
-                  type='email'
-                  name='email'
-                  value={formData.email}
-                  className={styles.input}
-                  disabled
-                />
-              </div>
-              <div className={styles.wrapper}>
-                <p className={styles.name}>Дата рождения</p>
-                <input
-                  type='date'
-                  name='birthday'
-                  value={formData.birthday}
+                <TextField
+                  label="Фамилия"
+                  name="lastName"
+                  value={formData.lastName}
                   onChange={handleChange}
-                  className={styles.input}
                 />
               </div>
-              <div className={styles.wrapper}>
-                <label className={styles.checkboxLabel}>
-                  <input
-                    type='checkbox'
-                    name='receiveGreetings'
-                    checked={formData.receiveGreetings}
-                    onChange={handleChange}
-                  />
-                  <span>Получать поздравления</span>
-                </label>
-              </div>
+              <TextField
+                label="Email"
+                type="email"
+                name="email"
+                value={formData.email}
+                disabled
+              />
+              <TextField
+                label="Телефон"
+                type="tel"
+                name="phone"
+                value={formData.phone}
+                onChange={handleChange}
+                autoComplete="tel"
+              />
+              <TextField
+                label="Дата рождения"
+                type="date"
+                name="birthday"
+                value={formData.birthday}
+                onChange={handleChange}
+              />
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  name="receiveGreetings"
+                  checked={formData.receiveGreetings}
+                  onChange={handleChange}
+                />
+                Получать поздравления с днём рождения
+              </label>
             </div>
           </article>
         ) : (
           <article className={styles.aboutWrapper}>
-            <div className={styles.infoGrid}>
-              <div className={styles.wrapper}>
-                <p className={styles.name}>ФИО</p>
-                <p className={styles.value}>
+            <dl className={styles.infoGrid}>
+              <div className={styles.field}>
+                <dt className={styles.label}>ФИО</dt>
+                <dd className={styles.value}>
                   {me?.firstName || me?.lastName
                     ? `${me.firstName || ''} ${me.lastName || ''}`.trim()
                     : 'Не указано'}
-                </p>
+                </dd>
               </div>
-              <div className={styles.wrapper}>
-                <p className={styles.name}>Телефон</p>
-                <p className={styles.value}>{formatPhone(formData.phone)}</p>
+              <div className={styles.field}>
+                <dt className={styles.label}>Телефон</dt>
+                <dd className={styles.value}>{formatPhone(phone)}</dd>
               </div>
-              <div className={styles.wrapper}>
-                <p className={styles.name}>Email</p>
-                <p className={styles.value}>{me?.email || 'Не указано'}</p>
+              <div className={styles.field}>
+                <dt className={styles.label}>Email</dt>
+                <dd className={styles.value}>{me?.email || 'Не указано'}</dd>
               </div>
-              <div className={styles.wrapper}>
-                <p className={styles.name}>Пароль</p>
-                <p className={styles.value}>••••••••</p>
+              <div className={styles.field}>
+                <dt className={styles.label}>Пароль</dt>
+                <dd className={styles.valueRow}>
+                  <span className={styles.value}>••••••••</span>
+                  <button
+                    type="button"
+                    className={styles.inlineAction}
+                    onClick={() => setShowPasswordModal(true)}
+                  >
+                    Сменить
+                  </button>
+                </dd>
               </div>
-              <div className={styles.wrapper}>
-                <p className={styles.name}>Дата рождения</p>
-                <p className={styles.value}>{formatBirthday(formData.birthday)}</p>
+              <div className={styles.field}>
+                <dt className={styles.label}>Дата рождения</dt>
+                <dd className={styles.value}>{formatBirthday(birthday)}</dd>
               </div>
-              <div className={styles.wrapper}>
-                <p className={styles.name}>Получать поздравления?</p>
-                <p className={styles.value}>{formData.receiveGreetings ? 'Да' : 'Нет'}</p>
+              <div className={styles.field}>
+                <dt className={styles.label}>Получать поздравления?</dt>
+                <dd className={styles.value}>{receiveGreetings ? 'Да' : 'Нет'}</dd>
               </div>
-            </div>
-            <button
-              className={styles.passwordBtn}
-              onClick={() => setShowPasswordModal(true)}
-            >
-              Сменить пароль
-            </button>
+            </dl>
           </article>
         )}
       </section>
 
       <section className={styles.infoAddressWrapper}>
         <section>
-          <DeliveryProfile onSelectAddress={handleAddressSelect} />
+          <DeliveryProfile onSelectAddress={() => {}} />
         </section>
       </section>
-
-
 
       <section className={styles.infoSliderWrapper}>
         <p className={styles.title}>КОЕ-ЧТО НОВОЕ ДЛЯ ВАС</p>
         <Bestsellers isTitleHidden slidesToShow={2} isProfilePage />
       </section>
 
-      {/* Password Change Modal */}
-      {showPasswordModal && (
-        <div className={styles.modalOverlay} onClick={() => setShowPasswordModal(false)}>
-          <div className={styles.modal} onClick={e => e.stopPropagation()}>
-            <div className={styles.modalHeader}>
-              <h3>Сменить пароль</h3>
-              <button onClick={() => setShowPasswordModal(false)}>×</button>
-            </div>
-            <div className={styles.modalBody}>
-              <div className={styles.modalField}>
-                <label>Старый пароль</label>
-                <input
-                  type='password'
-                  name='oldPassword'
-                  value={passwordData.oldPassword}
-                  onChange={handlePasswordChange}
-                  placeholder='Введите старый пароль'
-                />
-              </div>
-              <div className={styles.modalField}>
-                <label>Новый пароль</label>
-                <input
-                  type='password'
-                  name='newPassword'
-                  value={passwordData.newPassword}
-                  onChange={handlePasswordChange}
-                  placeholder='Введите новый пароль'
-                />
-              </div>
-              <div className={styles.modalField}>
-                <label>Подтвердите пароль</label>
-                <input
-                  type='password'
-                  name='confirmPassword'
-                  value={passwordData.confirmPassword}
-                  onChange={handlePasswordChange}
-                  placeholder='Подтвердите новый пароль'
-                />
-              </div>
-            </div>
-            <div className={styles.modalFooter}>
-              <button
-                className={styles.saveBtn}
-                onClick={handlePasswordSave}
-                disabled={savingPassword}
-              >
-                {savingPassword ? 'Сохранение...' : 'Сохранить'}
-              </button>
-              <button
-                className={styles.cancelBtn}
-                onClick={() => setShowPasswordModal(false)}
-              >
-                Отмена
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ChangePasswordModal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
     </article>
   );
 };

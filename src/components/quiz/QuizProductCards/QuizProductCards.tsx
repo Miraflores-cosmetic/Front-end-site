@@ -50,7 +50,12 @@ export const QuizProductCards: React.FC<QuizProductCardsProps> = ({ slugs }) => 
     <div className={`${styles.grid} ${products.length === 1 ? styles.gridSingle : ''}`}>
       {products.map((product) => (
         <div key={product.slug} className={styles.cardSlot}>
-          <BestSellerProductCard product={product} loading={false} fluid={products.length > 1} />
+          <BestSellerProductCard
+            product={product}
+            loading={false}
+            fluid={products.length > 1}
+            compact={products.length > 1}
+          />
         </div>
       ))}
     </div>

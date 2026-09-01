@@ -1,4 +1,4 @@
-import { AVAILABILITY_COUNTRY_FOR_STOCK, CHANNEL, graphqlRequest } from '../client';
+import { getProductEdges, resolveCollectionSlug } from '@/api/catalogApi';
 
 export interface CollectionProduct {
   id: string;
@@ -6,43 +6,21 @@ export interface CollectionProduct {
   slug: string;
   description?: string;
   attributes?: Array<{
-    attribute: {
-      id: string;
-      name: string;
-      slug: string;
-    };
-    values: Array<{
-      name?: string;
-      slug?: string;
-      plainText?: string;
-      richText?: any;
-    }>;
+    attribute: { id: string; name: string; slug: string };
+    values: Array<{ name?: string; slug?: string; plainText?: string; richText?: any }>;
   }>;
-  thumbnail?: {
-    url: string;
-  };
-  media?: Array<{
-    url: string;
-  }>;
+  thumbnail?: { url: string };
+  media?: Array<{ url: string }>;
   defaultVariant?: {
     id: string;
     name: string;
+    quantityLimitPerCustomer?: number | null;
+    trackInventory?: boolean | null;
+    quantityAvailable?: number | null;
     pricing: {
-      price: {
-        gross: {
-          amount: number;
-        };
-      };
-      priceUndiscounted?: {
-        gross: {
-          amount: number;
-        };
-      };
-      discount?: {
-        gross: {
-          amount: number;
-        };
-      };
+      price: { gross: { amount: number } };
+      priceUndiscounted?: { gross: { amount: number } };
+      discount?: { gross: { amount: number } };
     };
   };
   productVariants?: {
@@ -50,43 +28,22 @@ export interface CollectionProduct {
       node: {
         id: string;
         name: string;
+        quantityLimitPerCustomer?: number | null;
+        trackInventory?: boolean | null;
+        quantityAvailable?: number | null;
         pricing: {
-          price: {
-            gross: {
-              amount: number;
-            };
-          };
-          priceUndiscounted?: {
-            gross: {
-              amount: number;
-            };
-          };
-          discount?: {
-            gross: {
-              amount: number;
-            };
-          };
+          price: { gross: { amount: number } };
+          priceUndiscounted?: { gross: { amount: number } };
+          discount?: { gross: { amount: number } };
         };
         attributes?: Array<{
-          attribute: {
-            id: string;
-            name: string;
-            slug: string;
-          };
-          values: Array<{
-            name?: string;
-            slug?: string;
-            plainText?: string;
-          }>;
+          attribute: { id: string; name: string; slug: string };
+          values: Array<{ name?: string; slug?: string; plainText?: string }>;
         }>;
       };
     }>;
   };
-  collections?: Array<{
-    id: string;
-    name: string;
-    slug: string;
-  }>;
+  collections?: Array<{ id: string; name: string; slug: string }>;
 }
 
 export interface Collection {
@@ -94,150 +51,24 @@ export interface Collection {
   name: string;
   slug: string;
   description?: string;
-  products: {
-    edges: Array<{
-      node: CollectionProduct;
-    }>;
-  };
+  products: { edges: Array<{ node: CollectionProduct }> };
 }
 
 export interface CollectionResponse {
   collection: Collection | null;
 }
 
-/**
- * Получить коллекцию по ID
- */
-export async function getCollectionById(id: string, first: number = 10): Promise<Collection | null> {
-  const query = `
-    query GetCollection($id: ID!, $channel: String!, $first: Int!, $availabilityCountry: CountryCode!) {
-      collection(id: $id, channel: $channel) {
-        id
-        name
-        slug
-        description
-        products(first: $first) {
-          edges {
-            node {
-              id
-              name
-              slug
-              description
-              productType { name }
-              attributes {
-                attribute {
-                  id
-                  name
-                  slug
-                }
-                values {
-                  name
-                  slug
-                  plainText
-                  richText
-                }
-              }
-              thumbnail {
-                url
-              }
-              media {
-                url
-              }
-              defaultVariant {
-                id
-                name
-                quantityLimitPerCustomer
-                trackInventory
-                quantityAvailable(countryCode: $availabilityCountry)
-                pricing {
-                  price {
-                    gross {
-                      amount
-                    }
-                  }
-                  priceUndiscounted {
-                    gross {
-                      amount
-                    }
-                  }
-                  discount {
-                    gross {
-                      amount
-                    }
-                  }
-                }
-              }
-              productVariants(first: 10) {
-                edges {
-                  node {
-                    id
-                    name
-                    quantityLimitPerCustomer
-                    trackInventory
-                    quantityAvailable(countryCode: $availabilityCountry)
-                    pricing {
-                      price {
-                        gross {
-                          amount
-                        }
-                      }
-                      priceUndiscounted {
-                        gross {
-                          amount
-                        }
-                      }
-                      discount {
-                        gross {
-                          amount
-                        }
-                      }
-                    }
-                    attributes {
-                      attribute {
-                        id
-                        name
-                        slug
-                      }
-                      values {
-                        name
-                        slug
-                        plainText
-                      }
-                    }
-                  }
-                }
-              }
-              collections {
-                id
-                name
-                slug
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  const variables = {
-    id,
-    channel: CHANNEL,
-    first,
-    availabilityCountry: AVAILABILITY_COUNTRY_FOR_STOCK
-  };
-  
-  try {
-    const data = await graphqlRequest<CollectionResponse>(query, variables);
-    
-    if (!data.collection || !data.collection.products) {
-      console.warn('[Sets] Collection not found or has no products');
-      return null;
-    }
-    
-    return data.collection;
-  } catch (error) {
-    console.error('[Sets] Error fetching collection:', error);
-    return null;
+export async function getCollectionById(id: string, first = 10): Promise<Collection | null> {
+  const slug = await resolveCollectionSlug(id);
+  if (!slug) return null;
+  const { edges } = await getProductEdges({ collection: slug, limit: first, page: 1 });
+  if (!edges.length) {
+    return { id, name: slug, slug, products: { edges: [] } };
   }
+  return {
+    id,
+    name: slug,
+    slug,
+    products: { edges: edges.map((e) => ({ node: e.node as unknown as CollectionProduct })) },
+  };
 }
-

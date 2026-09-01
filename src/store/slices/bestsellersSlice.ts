@@ -1,5 +1,5 @@
 import { BestSellersProduct, BestsellerConnection } from '@/types/products';
-import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
+import { extractProductCardDescription } from '@/utils/productCardDescription';
 import { createSlice, createAsyncThunk, SerializedError, AsyncThunkConfig } from '@reduxjs/toolkit';
 import { getBestsellerProducts } from '@/graphql/queries/products.service';
 
@@ -78,34 +78,14 @@ const bestsellerSlice = createSlice({
             }
           }
           
-          let description = '';
-          if (node.node.attributes && Array.isArray(node.node.attributes)) {
-            const descAttr = node.node.attributes.find((attr: any) => 
-              attr.attribute?.slug === 'opisanie-v-kartochke-tovara' || 
-              attr.attribute?.name?.toLowerCase().includes('описание') ||
-              attr.attribute?.name?.toLowerCase().includes('description')
-            );
-            if (descAttr?.values?.[0]?.plainText) {
-              description = descAttr.values[0].plainText;
-            } else if (descAttr?.values?.[0]?.name) {
-              description = descAttr.values[0].name;
-            }
-          }
-          
-          if (!description) {
-            try {
-              if (node.node.description) {
-                const parsed = typeof node.node.description === 'string' 
-                  ? JSON.parse(node.node.description) 
-                  : node.node.description;
-                description = parsed?.blocks?.[0]?.data?.text || '';
-              }
-            } catch (e) {
-              description = '';
-            }
-          }
-
-          description = sanitizeProductCardDescription(description, { preserveHtml: true });
+          let description = extractProductCardDescription(
+            {
+              attributes: node.node.attributes,
+              shortDescription: node.node.shortDescription,
+              description: node.node.description,
+            },
+            { preserveHtml: true },
+          );
           
           newBestSellers.push({
             id: variantId,

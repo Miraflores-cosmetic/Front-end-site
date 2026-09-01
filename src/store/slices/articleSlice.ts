@@ -1,7 +1,4 @@
 import {createAsyncThunk, createSlice, PayloadAction, SerializedError} from '@reduxjs/toolkit';
-import {ProductDetailNode} from "@/graphql/types/core.types";
-import {GetProductInput} from "@/types/productSlice";
-import {getSingleProduct} from "@/graphql/queries/products.service";
 import {ArticleNode, getSingleArticle} from "@/graphql/queries/articles.service";
 
 export interface Article {
@@ -18,17 +15,23 @@ export interface Article {
   previewImage: string | null;
   imageAuthor: string | null;
   content?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  ogImageUrl?: string | null;
+  canonicalPath?: string | null;
+  seoNoIndex?: boolean;
 }
 
 interface ArticleState {
   article: Article | null;
-  loading: boolean,
+  /** true до первого fetch, чтобы не мигать «не найдена» */
+  loading: boolean;
   error: SerializedError | null;
 }
 
 const initialState: ArticleState = {
   article: null,
-  loading: false,
+  loading: true,
   error: null,
 };
 
@@ -83,27 +86,50 @@ export function getArticleNodeSortTimestamp(node: ArticleNode): number {
 }
 
 export function mapArticleNodeToArticle(node: ArticleNode): Article {
-  const imageAttr = node.assignedAttributes.find(item => item.attribute.slug === 'kartinka');
-  const previewAttr = node.assignedAttributes.find(
-    item => item.attribute.slug === 'prevyu-stati'
+  const coverSlugs = new Set(['kartinka', 'prevyu-stati', 'cover']);
+  const coverAttrs = node.assignedAttributes.filter((item) =>
+    coverSlugs.has(item.attribute.slug),
   );
-  const authorAttr = node.assignedAttributes.find(item => item.attribute.slug === 'imya-avtora');
-  const authorPhotoAttr = node.assignedAttributes.find(item => item.attribute.slug === 'foto-avtora');
-  const authorRoleMeta = node.metadata?.find(m => m.key === 'authorRole')?.value;
+  const imageAttr =
+    coverAttrs.find((a) => a.attribute.slug === 'kartinka') ||
+    coverAttrs.find((a) => a.attribute.slug === 'cover') ||
+    coverAttrs[0];
+  const previewAttr =
+    coverAttrs.find((a) => a.attribute.slug === 'prevyu-stati') ||
+    coverAttrs.find((a) => a.attribute.slug === 'cover') ||
+    coverAttrs[0];
+  const authorAttr = node.assignedAttributes.find(
+    (item) => item.attribute.slug === 'imya-avtora',
+  );
+  const authorPhotoAttr = node.assignedAttributes.find(
+    (item) => item.attribute.slug === 'foto-avtora',
+  );
+  const authorRoleMeta = node.metadata?.find((m) => m.key === 'authorRole')?.value;
 
-  let previewText = '';
-  try {
-    const parsed = JSON.parse(node.content || '{}');
-    const firstBlock = parsed.blocks?.find((b: any) => b.type === 'paragraph');
-    previewText = htmlToText(firstBlock?.data?.text ?? '', 500);
-
-  } catch (e) {
-    previewText = '';
+  // 1) Nest excerpt  2) HTML/JSON body fallback
+  const excerptPlain = htmlToText((node.excerpt || '').trim(), 500);
+  let previewText = excerptPlain;
+  if (!previewText) {
+    const rawContent = node.content || '';
+    try {
+      const parsed = JSON.parse(rawContent);
+      if (parsed?.blocks && Array.isArray(parsed.blocks)) {
+        const firstBlock = parsed.blocks.find(
+          (b: { type?: string }) => b.type === 'paragraph',
+        );
+        previewText = htmlToText(firstBlock?.data?.text ?? '', 500);
+      } else {
+        previewText = htmlToText(rawContent, 500);
+      }
+    } catch {
+      previewText = htmlToText(rawContent, 500);
+    }
   }
 
   const fallbackDate = new Date(node.created).toLocaleDateString('ru-RU');
   const dateAttr = node.assignedAttributes.find(isArticleDateAttribute);
   const displayDate = formatArticleDisplayDate(dateAttr, fallbackDate);
+  const coverFallback = node.coverUrl?.trim() || null;
 
   return {
     id: node.id,
@@ -111,12 +137,23 @@ export function mapArticleNodeToArticle(node: ArticleNode): Article {
     date: displayDate,
     title: node.title,
     description: previewText,
-    author: authorAttr?.textValue ?? '',
-    authorRole:authorRoleMeta ?? '',
-    image: imageAttr?.fileValue?.url ?? null,
-    previewImage: previewAttr?.fileValue?.url ?? null,
+    author: authorAttr?.textValue?.trim() || node.authorName?.trim() || '',
+    authorRole: authorRoleMeta ?? '',
+    image:
+      imageAttr?.fileValue?.url ??
+      previewAttr?.fileValue?.url ??
+      coverFallback,
+    previewImage:
+      previewAttr?.fileValue?.url ??
+      imageAttr?.fileValue?.url ??
+      coverFallback,
     imageAuthor: authorPhotoAttr?.fileValue?.url ?? null,
     content: node.content ?? null,
+    metaTitle: node.metaTitle ?? null,
+    metaDescription: node.metaDescription ?? null,
+    ogImageUrl: node.ogImageUrl ?? null,
+    canonicalPath: node.canonicalPath ?? null,
+    seoNoIndex: Boolean(node.seoNoIndex),
   };
 }
 
@@ -131,6 +168,31 @@ export const fetchArticleBySlug = createAsyncThunk<Article, string>(
   }
 );
 
+/** /info/:slug → Nest CMS (privacy/terms/delivery), не blog. */
+export const fetchInfoPageBySlug = createAsyncThunk<Article, string>(
+  'article/fetchInfoBySlug',
+  async (slug: string) => {
+    const { getPageBySlug } = await import('@/graphql/queries/pages.service');
+    const page = await getPageBySlug(slug);
+    if (!page) {
+      throw new Error('Info page not found');
+    }
+    return {
+      id: page.id,
+      slug,
+      date: '',
+      title: page.title,
+      description: htmlToText(page.content || '', 200),
+      author: '',
+      authorRole: '',
+      image: null,
+      previewImage: null,
+      imageAuthor: null,
+      content: page.content ?? null,
+    };
+  },
+);
+
 const articleSlice = createSlice({
   name: 'articleSlice',
   initialState,
@@ -143,15 +205,18 @@ const articleSlice = createSlice({
     },
     clearArticle(state) {
       state.article = null;
-      state.loading = false;
+      state.loading = true;
       state.error = null;
     }
   } ,
   extraReducers: builder => {
     builder
-      .addCase(fetchArticleBySlug.pending, state => {
+      .addCase(fetchArticleBySlug.pending, (state, action) => {
         state.loading = true;
         state.error = null;
+        if (state.article?.slug !== action.meta.arg) {
+          state.article = null;
+        }
       })
       .addCase(fetchArticleBySlug.fulfilled, (state, action) => {
         state.article = action.payload;
@@ -159,6 +224,23 @@ const articleSlice = createSlice({
       })
       .addCase(fetchArticleBySlug.rejected, (state, action) => {
         state.loading = false;
+        state.article = null;
+        state.error = action.error;
+      })
+      .addCase(fetchInfoPageBySlug.pending, (state, action) => {
+        state.loading = true;
+        state.error = null;
+        if (state.article?.slug !== action.meta.arg) {
+          state.article = null;
+        }
+      })
+      .addCase(fetchInfoPageBySlug.fulfilled, (state, action) => {
+        state.article = action.payload;
+        state.loading = false;
+      })
+      .addCase(fetchInfoPageBySlug.rejected, (state, action) => {
+        state.loading = false;
+        state.article = null;
         state.error = action.error;
       });
   },

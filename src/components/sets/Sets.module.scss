@@ -5,82 +5,57 @@
   flex-direction: $direction;
   justify-content: $justify;
   align-items: $align;
-  max-width: 1536px;
-  margin: auto;
-}
-
-@mixin circle($size, $bg: #f6f5ef) {
-  width: $size;
-  height: $size;
-  background-color: $bg;
-  border-radius: 50%;
-  @include flex-center();
 }
 
 .setsContainer {
-  width: 100%;
-  padding-top: 200px;
-  padding-right: 32px;
-  max-width: 1536px;
-  margin: 0 auto;
   height: auto;
   display: flex;
   flex-direction: column;
+
   @media (max-width: $viewport-mobile-max) {
-    padding-top: 0;
-    padding-bottom: 100px;
-    margin-top: 0;
-    margin-bottom: 0;
-    padding-right: 0;
-    padding-left: 0;
-    width: 100%;
-    max-width: 100%;
-    box-sizing: border-box;
+    /* симметричные 16px от homeContainer — карточка на всю ширину колонки */
+    --home-section-pad-end: 0px;
   }
 
-  // Начальное состояние - скрыто для анимации
   .title {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
     font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
     text-transform: uppercase;
     font-weight: 300;
     font-size: 64px;
-    width: 100%;
+    line-height: 1.05;
+    margin: 0;
+    padding-right: 0;
+    min-width: 0;
     text-align: start;
-    margin-bottom: 48px;
+
     @media (max-width: $viewport-mobile-max) {
       font-size: 24px;
+    }
+  }
+
+  .titleRow {
+    margin-bottom: 48px;
+
+    @media (max-width: $viewport-mobile-max) {
       margin-bottom: 16px;
     }
   }
 
   .setsWrapper {
-    // Начальное состояние - скрыто для анимации
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
     align-items: stretch;
     width: 100%;
-    max-width: 1536px;
     margin: 0 auto;
     height: auto;
     gap: 20px;
-    padding-left: 0;
-    padding-right: 32px;
+    padding: 0;
     box-sizing: border-box;
 
     @media (max-width: $viewport-mobile-max) {
       flex-direction: column;
       align-items: stretch;
-      padding: 0;
-      margin: 0;
-      width: 100%;
-      max-width: 100%;
       gap: 24px;
     }
 
@@ -88,7 +63,7 @@
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      justify-content: space-between;
+      justify-content: flex-start;
       flex: 1;
       min-width: 0;
       align-self: stretch;
@@ -99,8 +74,9 @@
       }
 
       .leftTitle {
+        margin: 0;
         font-size: 16px;
-        color: #6e6d67;
+        color: $gray-6e;
         max-width: 346px;
         @media (max-width: $viewport-mobile-max) {
           font-size: 14px;
@@ -113,31 +89,10 @@
         }
       }
 
-      .moreWrapper {
-        @include flex-center(row, flex-start);
-        text-transform: uppercase;
-        gap: 10px;
-        width: 100%;
-        margin: 0;
-        margin-top: auto;
-        a {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          p {
-            font-weight: $button-font-weight;
-            font-size: 16px;
-            margin: 0;
-          }
-        }
-        img {
-          cursor: pointer;
-        }
-      }
-
       @media (max-width: 680px) {
         @include flex-center(column);
         gap: 12px;
+        align-items: flex-start;
       }
     }
 
@@ -152,37 +107,10 @@
         width: 100%;
         max-width: 100%;
         flex: none;
-      }
-    }
 
-    /* --- адаптив --- */
-    @media (max-width: 1024px) {
-      .center {
-        .image {
-          height: 380px;
-        }
-
-        .centerWrapper {
-          padding-top: 12px;
-
-          .centerTitleWrapper {
-            .centerTitle,
-            .centerPrice {
-              font-size: 15px;
-            }
-          }
-
-          .centerDesc {
-            font-size: 13px;
-          }
-        }
-      }
-    }
-
-    @media (max-width: $viewport-mobile-max) {
-      .center {
-        .image {
-          height: 340px;
+        > * {
+          width: 100% !important;
+          max-width: 100%;
         }
       }
     }
@@ -198,16 +126,12 @@
       padding-bottom: 86px;
 
       .rightWrapper {
-        @include circle(332px);
-
-        @media (max-width: 850px) {
-          width: 332px;
-          height: 332px;
-        }
-        @media (max-width: 700px) {
-          width: 300px;
-          height: 300px;
-        }
+        --set-circle: clamp(240px, 28vw, 332px);
+        width: var(--set-circle);
+        height: var(--set-circle);
+        background-color: $bg-light;
+        border-radius: 50%;
+        @include flex-center();
 
         img {
           width: 100%;
@@ -226,17 +150,72 @@
       }
     }
   }
+}
 
-  // Анимация применяется когда класс добавлен - все элементы появляются одновременно
-  &.sectionAnimated {
-    .title {
-      opacity: 1;
-      transform: translateY(0);
-    }
+.skeletonText {
+  width: 100%;
+  max-width: 320px;
+  height: 14px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #ebe8e1 0%, #f4f2ec 50%, #ebe8e1 100%);
+  background-size: 200% 100%;
+  animation: setsShimmer 1.2s ease-in-out infinite;
+}
 
-    .setsWrapper {
-      opacity: 1;
-      transform: translateY(0);
-    }
+.skeletonTextShort {
+  width: 70%;
+  max-width: 220px;
+  height: 14px;
+  margin-bottom: 10px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #ebe8e1 0%, #f4f2ec 50%, #ebe8e1 100%);
+  background-size: 200% 100%;
+  animation: setsShimmer 1.2s ease-in-out infinite;
+}
+
+.skeletonCard {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 1 / 1.25;
+  height: auto;
+  min-height: 280px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #ebe8e1 0%, #f4f2ec 50%, #ebe8e1 100%);
+  background-size: 200% 100%;
+  animation: setsShimmer 1.2s ease-in-out infinite;
+
+  @media (min-width: #{$viewport-mobile-max + 1}) {
+    width: min(100%, 280px);
+    aspect-ratio: auto;
+    height: 360px;
+    min-height: 0;
+  }
+}
+
+.skeletonCircle {
+  --set-circle: clamp(240px, 28vw, 332px);
+  width: var(--set-circle);
+  height: var(--set-circle);
+  border-radius: 50%;
+  background: linear-gradient(90deg, #ebe8e1 0%, #f4f2ec 50%, #ebe8e1 100%);
+  background-size: 200% 100%;
+  animation: setsShimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes setsShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonText,
+  .skeletonCard,
+  .skeletonCircle {
+    animation: none;
   }
 }

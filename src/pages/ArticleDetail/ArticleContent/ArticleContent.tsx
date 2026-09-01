@@ -1,4 +1,7 @@
-import React, {JSX} from 'react';
+import React, { useMemo } from 'react';
+import { editorJsToHtml } from '@/utils/editorJsParser';
+import { sanitizeCmsHtml } from '@/utils/sanitizeCmsHtml';
+import { uploadsUrl } from '@/api/apiClient';
 import styles from './ArticleContent.module.scss';
 
 interface Props {
@@ -6,87 +9,55 @@ interface Props {
   variant?: 'default' | 'info';
 }
 
-function renderListItems(items: any): React.ReactNode {
-  if (!Array.isArray(items)) return null;
-  return items.map((item, idx) => {
-    // Editor.js "list" tool чаще всего отдаёт массив строк (HTML/markdown уже преобразованы на бэке)
-    if (typeof item === 'string') {
-      return <li key={idx} dangerouslySetInnerHTML={{__html: item}} />;
-    }
-
-    // Поддержка для вложенных структур (на случай другого лист-плагина)
-    if (item && typeof item === 'object') {
-      const content = typeof item.content === 'string' ? item.content : '';
-      const children = renderListItems(item.items);
-      return (
-        <li key={idx}>
-          {content ? <span dangerouslySetInnerHTML={{__html: content}} /> : null}
-          {children ? <ul>{children}</ul> : null}
-        </li>
-      );
-    }
-
-    return null;
-  });
+/** Relative /uploads → публичный URL; img без loading → lazy. */
+function rewriteCmsMediaUrls(html: string): string {
+  let out = html.replace(
+    /(<img\b[^>]*\bsrc\s*=\s*)(["'])([^"']+)\2/gi,
+    (full, prefix: string, quote: string, src: string) => {
+      const next = uploadsUrl(src);
+      if (!next || next === src) return full;
+      return `${prefix}${quote}${next}${quote}`;
+    },
+  );
+  out = out.replace(/<img\b(?![^>]*\bloading=)/gi, '<img loading="lazy" decoding="async" ');
+  return out;
 }
 
-const ArticleContent: React.FC<Props> = ({ contentJson, variant = 'default' }) => {
-  if (!contentJson) return null;
-  let content;
+function looksLikeEditorJsJson(raw: string): boolean {
+  const t = raw.trim();
+  if (!t.startsWith('{') && !t.startsWith('[')) return false;
   try {
-    content = JSON.parse(contentJson);
+    const parsed = JSON.parse(t);
+    return Boolean(
+      parsed && typeof parsed === 'object' && Array.isArray(parsed.blocks),
+    );
   } catch {
-    return null;
+    return false;
   }
+}
 
+/**
+ * Dual-path как Order Info:
+ * HTML Nest → sanitize; Editor.js JSON → editorJsToHtml → sanitize.
+ * Никакого raw dangerouslySetInnerHTML без sanitizeCmsHtml.
+ */
+const ArticleContent: React.FC<Props> = ({ contentJson, variant = 'default' }) => {
   const rootClass = variant === 'info' ? styles.infoArticleContent : styles.articleContentRoot;
 
-  return (
-    <div className={rootClass}>
-      {content.blocks?.map((block: any) => {
-        switch (block.type) {
-          case 'header': {
-            const Tag = `h${block.data.level || 2}` as keyof JSX.IntrinsicElements;
-            return (
-              <Tag key={block.id} className={styles.titleTxt}
-                   dangerouslySetInnerHTML={{__html: block.data.text}}
-              />
-            );
-          }
+  const html = useMemo(() => {
+    if (!contentJson?.trim()) return '';
+    const raw = contentJson.trim();
+    const source = looksLikeEditorJsJson(raw) ? editorJsToHtml(raw) || '' : raw;
+    return rewriteCmsMediaUrls(sanitizeCmsHtml(source));
+  }, [contentJson]);
 
-          case 'paragraph':
-            return (
-              <p
-                key={block.id}
-                className={styles.paragraph}
-                dangerouslySetInnerHTML={{__html: block.data.text}}
-              />
-            );
-          case 'list': {
-            const isOrdered = block.data?.style === 'ordered';
-            const ListTag = (isOrdered ? 'ol' : 'ul') as keyof JSX.IntrinsicElements;
-            const items = renderListItems(block.data?.items);
-            if (!items) return null;
-            return (
-              <ListTag key={block.id}>
-                {items}
-              </ListTag>
-            );
-          }
-          case 'image':
-            return (
-              <div  key={block.id}  className={styles.imageWrapper}>
-                <img
-                  src={block.data.file?.url}
-                  alt={block.data.caption || ''}
-                />
-              </div>
-            );
-          default:
-            return null;
-        }
-      })}
-    </div>
+  if (!html) return null;
+
+  return (
+    <div
+      className={rootClass}
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 };
 

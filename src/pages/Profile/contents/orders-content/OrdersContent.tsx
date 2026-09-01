@@ -1,49 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styles from './OrdersContent.module.scss';
-import { AllOrders } from './components/AllOrders';
-import { ActiveOrders } from './components/ActiveOrders';
-import { Tabs } from './components/Tabs';
-import CardList from './components/card-list/CardList';
-import { ActiveOrder, AllOrdersStats, ProfileCardItem, TabType } from '../../types';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { TabId } from '../../side-bar/SideBar';
 import { getOrders } from '@/graphql/queries/orders.service';
 import { useToast } from '@/components/toast/toast';
 import { ReviewModal } from '@/components/review-modal/ReviewModal';
+import {
+  ProfileEmptyState,
+  ProfileLoadingState,
+  ProfileSection,
+} from '@/pages/Profile/components/ProfileSection';
+import {
+  countOrdersByTab,
+  orderMatchesTab,
+  type OrderFilterTab,
+} from '@/lib/orderStatusLabels';
+import { OrderTabs } from './components/OrderTabs';
+import { OrderGroup } from './components/OrderGroup';
 
-const ORDER_STATUS_LABELS: Record<string, string> = {
-  draft: 'Черновик',
-  unconfirmed: 'Не подтверждён',
-  unfulfilled: 'Не отгружен',
-  'partially fulfilled': 'Частично отгружен',
-  fulfilled: 'Отгружен',
-  partially_returned: 'Частично возвращён',
-  returned: 'Возвращён',
-  canceled: 'Отменён',
-  expired: 'Истёк',
-  DRAFT: 'Черновик',
-  UNCONFIRMED: 'Не подтверждён',
-  UNFULFILLED: 'Не отгружен',
-  PARTIALLY_FULFILLED: 'Частично отгружен',
-  FULFILLED: 'Отгружен',
-  PARTIALLY_RETURNED: 'Частично возвращён',
-  RETURNED: 'Возвращён',
-  CANCELED: 'Отменён',
-  EXPIRED: 'Истёк',
-  Draft: 'Черновик',
-  Unconfirmed: 'Не подтверждён',
-  Unfulfilled: 'Не отгружен',
-  'Partially fulfilled': 'Частично отгружен',
-  Fulfilled: 'Отгружен',
-  'Partially returned': 'Частично возвращён',
-  Returned: 'Возвращён',
-  Canceled: 'Отменён',
-  Expired: 'Истёк',
-};
-
-function getOrderStatusLabel(status: string | undefined): string {
-  if (!status) return '—';
-  return ORDER_STATUS_LABELS[status] ?? status;
+function isReviewableOrder(order: { status?: string; statusDisplay?: string }): boolean {
+  const raw = String(order.statusDisplay || order.status || '').toUpperCase();
+  return raw === 'PAID' || raw === 'PACKING' || raw === 'SHIPPED' || raw === 'DELIVERED';
 }
 
 interface OrdersContentProps {
@@ -51,12 +28,15 @@ interface OrdersContentProps {
 }
 
 const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
-  const [activeTab, setActiveTab] = useState<TabType>('active');
+  const [activeTab, setActiveTab] = useState<OrderFilterTab>('all');
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
-  const [selectedProductForReview, setSelectedProductForReview] = useState<{ id: string; name: string; orderId: string } | null>(null);
+  const [selectedProductForReview, setSelectedProductForReview] = useState<{
+    id: string;
+    name: string;
+    orderId: string;
+  } | null>(null);
   const isMobile = useScreenMatch();
   const toast = useToast();
 
@@ -67,27 +47,15 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
         const ordersData = await getOrders(50);
         const ordersList = ordersData.edges.map((edge: any) => edge.node);
         setOrders(ordersList);
-
-        // Устанавливаем первый активный заказ по умолчанию
-        const firstActive = ordersList.find((o: any) =>
-          o.status === 'UNFULFILLED' || o.status === 'PARTIALLY_FULFILLED'
-        );
-        if (firstActive) {
-          setSelectedOrder(firstActive);
-        } else if (ordersList.length > 0) {
-          setSelectedOrder(ordersList[0]);
-        }
       } catch (error: any) {
         console.error('Error loading orders:', error);
         const errorMessage = error?.message || '';
-        // Если токен истек, редирект на страницу входа
         if (
           errorMessage.includes('TokenExpired') ||
           errorMessage.includes('Signature has expired') ||
           errorMessage.includes('ExpiredSignatureError')
         ) {
           localStorage.removeItem('token');
-          localStorage.removeItem('refreshToken');
           localStorage.removeItem('userId');
           window.location.href = '/sign-in';
           return;
@@ -97,173 +65,64 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
         setLoading(false);
       }
     }
-    loadOrders();
-  }, []);
+    void loadOrders();
+  }, [toast]);
 
-  // Фильтруем заказы по статусу
-  // Активные заказы - только невыполненные (не FULFILLED и не CANCELED)
-  const activeOrders = orders.filter((o: any) =>
-    o.status === 'UNFULFILLED' || o.status === 'PARTIALLY_FULFILLED'
+  const counts = useMemo(() => countOrdersByTab(orders), [orders]);
+
+  const filteredOrders = useMemo(
+    () =>
+      orders.filter(order =>
+        orderMatchesTab(order.statusDisplay || order.status, activeTab),
+      ),
+    [orders, activeTab],
   );
-
-  // Все заказы - показываем все, включая выполненные
-  // (используем все заказы напрямую, без фильтрации)
-
-  // Вычисляем статистику
-  // Всегда вычисляем из lines, так как total.gross.amount в БД может быть неправильным
-  const totalAmount = orders.reduce((sum: number, o: any) => {
-    // Если есть lines, вычисляем сумму из товаров
-    if (o.lines && Array.isArray(o.lines) && o.lines.length > 0) {
-      const linesSum = o.lines.reduce((lineSum: number, line: any) => {
-        // Используем unitPrice * quantity для каждой строки
-        const unitPrice = parseFloat(line.unitPrice?.gross?.amount || 0);
-        const quantity = line.quantity || 0;
-        return lineSum + (unitPrice * quantity);
-      }, 0);
-      // Используем вычисленную сумму, если она больше 0
-      if (linesSum > 0) {
-        return sum + linesSum;
-      }
-    }
-
-    // Если нет lines или сумма равна 0, используем total.gross.amount
-    const orderTotal = parseFloat(o.total?.gross?.amount || 0);
-    return sum + orderTotal;
-  }, 0);
-
-  const allOrdersStats: AllOrdersStats = {
-    totalOrders: orders.length,
-    totalAmount: `${Math.round(totalAmount).toLocaleString('ru-RU')} ₽`
-  };
-
-  // Получаем данные для отображения
-  const displayOrder = activeTab === 'active' && activeOrders.length > 0
-    ? activeOrders[0]
-    : selectedOrder;
-
-  const activeOrder: ActiveOrder | null = displayOrder ? {
-    id: `№${displayOrder.number}`,
-    date: new Date(displayOrder.created).toLocaleDateString('ru-RU'),
-    amount: `${parseFloat(displayOrder.total?.gross?.amount || 0).toLocaleString('ru-RU')} ₽`,
-    status: getOrderStatusLabel(displayOrder.statusDisplay || displayOrder.status)
-  } : null;
 
   const handleReviewClick = (productId: string, productName: string, orderId: string) => {
     setSelectedProductForReview({ id: productId, name: productName, orderId });
     setReviewModalOpen(true);
   };
 
-  const handleCloseAccordion = () => {
-    if (setOpenAccordion) {
-      setOpenAccordion(null);
-    }
-  };
-
   return (
-    <article className={styles.ourOrdersContent}>
-      <header className={styles.ordersTitleWrapper}>
-        <p className={styles.ordersTitle}>{isMobile ? 'Заказы' : 'Ваши заказы'}</p>
-      </header>
-
+    <ProfileSection
+      title="Заказы"
+      desktopTitle="Ваши заказы"
+      isMobile={isMobile}
+      onClose={setOpenAccordion ? () => setOpenAccordion(null) : undefined}
+      className={styles.ourOrdersContent}
+    >
       {loading ? (
-        <div className={styles.loading}>Загрузка заказов...</div>
+        <ProfileLoadingState message="Загрузка заказов..." />
       ) : (
         <>
-          <section className={styles.tabsContainer}>
-            <div className={styles.ordersContainer}>
-              <Tabs activeTab={activeTab} onChange={setActiveTab} />
+          <OrderTabs activeTab={activeTab} counts={counts} onChange={setActiveTab} />
 
-              {activeTab === 'active' ? (
-                activeOrders.length > 0 && activeOrder ? (
-                  <ActiveOrders order={activeOrder} />
-                ) : (
-                  <div className={styles.emptyState}>Нет активных заказов</div>
-                )
-              ) : (
-                <AllOrders stats={allOrdersStats} />
-              )}
+          {filteredOrders.length === 0 ? (
+            <ProfileEmptyState
+              message={
+                orders.length === 0
+                  ? 'Заказов пока нет'
+                  : 'Нет заказов в этом статусе'
+              }
+              actionLabel={orders.length === 0 ? 'Перейти в каталог' : undefined}
+              actionHref={orders.length === 0 ? '/catalog' : undefined}
+            />
+          ) : (
+            <div className={styles.ordersList}>
+              {filteredOrders.map(order => (
+                <OrderGroup
+                  key={order.id}
+                  order={order}
+                  reviewable={isReviewableOrder(order)}
+                  onReview={handleReviewClick}
+                />
+              ))}
             </div>
-          </section>
-
-          <article className={styles.listContainer}>
-            {activeTab === 'active' ? (
-              displayOrder ? (
-                <>
-                  <p className={styles.activeText}>
-                    {displayOrder.lines?.length || 0} {displayOrder.lines?.length === 1 ? 'товар' : 'товаров'}
-                  </p>
-                  <CardList
-                    cartData={displayOrder.lines?.map((line: any, index: number) => {
-                      const unitAmount = line.unitPrice?.gross?.amount ?? 0;
-                      const qty = line.quantity ?? 1;
-                      return {
-                        id: index + 1,
-                        image: line.thumbnail?.url || line.variant?.product?.thumbnail?.url || '',
-                        alt: line.productName || '',
-                        name: line.productName || '',
-                        size: line.variantName || '',
-                        count: `${qty} шт.`,
-                        price: unitAmount * qty,
-                        isGift: false,
-                        productId: line.variant?.product?.id
-                      };
-                    }) || []}
-                    onReview={(pid, pname) => handleReviewClick(pid, pname, displayOrder.id)}
-                  />
-                </>
-              ) : (
-                <div className={styles.emptyState}>Нет товаров в заказе</div>
-              )
-            ) : (
-              <>
-                {orders.length > 0 ? (
-                  orders.map((order: any) => (
-                    <div key={order.id} className={styles.orderItem}>
-                      <div className={styles.allText}>
-                        <p>Заказ №{order.number}</p>
-                        <p>{new Date(order.created).toLocaleDateString('ru-RU', {
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}</p>
-                      </div>
-                      <CardList
-                        cartData={order.lines?.map((line: any, idx: number) => {
-                          const unitAmount = line.unitPrice?.gross?.amount ?? 0;
-                          const qty = line.quantity ?? 1;
-                          return {
-                            id: idx + 1,
-                            image: line.thumbnail?.url || line.variant?.product?.thumbnail?.url || '',
-                            alt: line.productName || '',
-                            name: line.productName || '',
-                            size: line.variantName || '',
-                            count: `${qty} шт.`,
-                            price: unitAmount * qty,
-                            isGift: false,
-                            productId: line.variant?.product?.id
-                          };
-                        }) || []}
-                        onReview={(pid, pname) => handleReviewClick(pid, pname, order.id)}
-                      />
-                    </div>
-                  ))
-                ) : (
-                  <div className={styles.emptyState}>Нет заказов</div>
-                )}
-              </>
-            )}
-          </article>
+          )}
         </>
       )}
 
-      {/* ✅ Close button */}
-      {isMobile && (
-        <p className={styles.closeBtn} onClick={handleCloseAccordion}>
-          Закрыть
-        </p>
-      )}
-
-      {selectedProductForReview && (
+      {selectedProductForReview ? (
         <ReviewModal
           isOpen={reviewModalOpen}
           onClose={() => {
@@ -274,8 +133,8 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
           productName={selectedProductForReview.name}
           orderId={selectedProductForReview.orderId}
         />
-      )}
-    </article>
+      ) : null}
+    </ProfileSection>
   );
 };
 

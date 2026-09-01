@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import styles from './Profile.module.scss';
-import Header from '@/components/Header/Header';
 import Sidebar, { TabId } from './side-bar/SideBar';
 import ProfileContent from './content-wrapper/ProfileContent';
 import InfoContent from './contents/info-content/InfoContent';
 import OrdersContent from './contents/orders-content/OrdersContent';
-import BonusContent from './contents/bonuses-content/BonusContent';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import InfoMobileContent from './contents/info-content/mobile-content/InfoMobileContent';
 import FavoritesContent from './contents/favorites-content/FavoritesContent';
@@ -17,7 +15,7 @@ import { getMe, logout, isAuthSessionInvalidMessage } from '@/store/slices/authS
 import { LogoutConfirmationModal } from '@/components/logout-confirmation-modal/LogoutConfirmationModal';
 import { VIEWPORT_MOBILE_MAX } from '@/constants/viewport';
 
-const VALID_PROFILE_TABS: TabId[] = ['info', 'orders', 'favorites', 'quiz', 'bonus'];
+const VALID_PROFILE_TABS: TabId[] = ['info', 'orders', 'favorites', 'quiz'];
 
 function parseProfileTab(tabParam: string | null): TabId {
   if (tabParam && VALID_PROFILE_TABS.includes(tabParam as TabId)) {
@@ -39,8 +37,9 @@ const ProfilePage: React.FC = () => {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/sign-in');
+    void dispatch(logout()).finally(() => {
+      navigate('/sign-in');
+    });
   };
 
   const confirmLogout = () => {
@@ -53,7 +52,6 @@ const ProfilePage: React.FC = () => {
     { id: 'orders' as TabId, label: 'ЗАКАЗЫ' },
     { id: 'favorites' as TabId, label: 'ИЗБРАННОЕ' },
     { id: 'quiz' as TabId, label: 'МОЙ УХОД' },
-    { id: 'bonus' as TabId, label: 'БОНУСНЫЙ СЧЕТ' },
     { id: 'logout' as TabId, label: 'ВЫЙТИ' },
   ];
 
@@ -62,18 +60,16 @@ const ProfilePage: React.FC = () => {
       switch (tab) {
         case 'info':
           return isMobile ? (
-            <InfoMobileContent setOpenAccordion={() => setOpenAccordion(null)} />
+            <InfoMobileContent setOpenAccordion={setOpenAccordion} />
           ) : (
             <InfoContent />
           );
         case 'orders':
-          return <OrdersContent setOpenAccordion={() => setOpenAccordion(null)} />;
+          return <OrdersContent setOpenAccordion={setOpenAccordion} />;
         case 'favorites':
-          return <FavoritesContent setOpenAccordion={() => setOpenAccordion(null)} />;
+          return <FavoritesContent setOpenAccordion={setOpenAccordion} />;
         case 'quiz':
-          return <QuizCareContent />;
-        case 'bonus':
-          return <BonusContent onCloseAccordion={() => setOpenAccordion(null)} />;
+          return <QuizCareContent setOpenAccordion={setOpenAccordion} />;
         case 'logout':
           return null;
         default:
@@ -100,7 +96,6 @@ const ProfilePage: React.FC = () => {
     [setSearchParams],
   );
 
-  // Синхронизация таба с URL (?tab=quiz сохраняется при refresh)
   useEffect(() => {
     const tab = parseProfileTab(searchParams.get('tab'));
     setActiveTab(tab);
@@ -111,12 +106,6 @@ const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const storedToken = localStorage.getItem('token');
-      if (!storedToken || storedToken === 'null' || storedToken === 'undefined') {
-        navigate('/sign-in');
-        return;
-      }
-
       if (isAuth && me) {
         return;
       }
@@ -126,30 +115,29 @@ const ProfilePage: React.FC = () => {
         if (!result) {
           navigate('/sign-in');
         }
-      } catch (error: any) {
-        const errorMessage = String(error?.message || error?.error?.message || '');
+      } catch (error: unknown) {
+        const errorMessage = String(
+          (error as { message?: string; error?: { message?: string } })?.message ||
+            (error as { error?: { message?: string } })?.error?.message ||
+            '',
+        );
         if (isAuthSessionInvalidMessage(errorMessage)) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('refreshToken');
-          localStorage.removeItem('userId');
-          window.location.href = '/sign-in';
+          navigate('/sign-in');
           return;
         }
         console.warn('[Profile] getMe не выполнен (не ошибка сессии):', errorMessage || error);
       }
     };
 
-    checkAuth();
-  }, []);
+    void checkAuth();
+  }, [dispatch, isAuth, me, navigate]);
 
   return (
     <>
-      <Header />
       <main className={styles.profileContainer}>
         <section className={styles.contentWrapper}>
           <div className={styles.profile}>
             <Sidebar
-              userName={me?.firstName || ''}
               menuItems={menuItems}
               activeTab={activeTab}
               setActiveTab={handleSetActiveTab}

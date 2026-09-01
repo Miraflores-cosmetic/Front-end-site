@@ -1,43 +1,10 @@
+@use '@/style/variables.scss' as *;
+
 .awardsContainer {
-  width: 100%;
-  padding-top: 240px;
-  padding-right: 32px;
-  padding-left: 0;
-  max-width: 1536px;
-  margin: 0 auto 240px auto;
+  /* ритм — HomeSection + homeContainer padding-bottom */
 
-  // Начальное состояние — скрыто для анимации
-  .titleWrapper {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  }
-
-  .content {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  }
-
-  // Анимация при появлении секции
-  &.sectionAnimated {
-    .titleWrapper {
-      opacity: 1 !important;
-      transform: translateY(0) !important;
-    }
-    .content {
-      opacity: 1 !important;
-      transform: translateY(0) !important;
-    }
-  }
-
-  @media (max-width: 768px) {
-    padding-top: 0;
-    padding-bottom: 100px;
-    margin-top: 0;
-    margin-bottom: 0;
-    padding-left: 0;
-    padding-right: 0;
+  @media (max-width: $viewport-mobile-max) {
+    --home-section-pad-end: 0px;
   }
 
   .titleWrapper {
@@ -55,12 +22,14 @@
       font-weight: 300;
       font-size: 64px;
       text-align: start;
+      margin: 0;
+      min-width: 0;
       @media (max-width: 768px) {
         font-size: 24px;
       }
     }
     .desc {
-      color: #297230;
+      color: $green-297;
       font-family: 'Avenir Next', sans-serif;
       font-size: 20px;
       font-style: normal;
@@ -91,7 +60,7 @@
           li {
             max-width: 345px;
             font-size: 16px;
-            color: #6e6d67;
+            color: $gray-6e;
             margin-bottom: 12px;
 
             &:last-of-type {
@@ -141,9 +110,19 @@
     .rightWrapper {
       display: flex;
       align-items: flex-start;
+
+      @media (max-width: $viewport-mobile-max) {
+        width: 100vw;
+        max-width: 100vw;
+        margin-left: calc(50% - 50vw);
+        margin-right: calc(50% - 50vw);
+        box-sizing: border-box;
+      }
+
       .bottomImageWrapper {
         width: 100%;
         height: auto;
+
         .awardImageMobile {
           display: block;
           width: 100%;

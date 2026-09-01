@@ -1,48 +1,68 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import styles from './ResetPassword.module.scss';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import siteLogo from '@/assets/icons/Logo-mira.svg';
 
 import { TextField } from '@/components/text-field/TextField';
 import { Button } from '@/components/button/Button';
-import { setPassword } from '@/graphql/queries/auth.service';
+import { setPassword } from '@/api/authApi';
 import { useToast } from '@/components/toast/toast';
-import { useDispatch } from 'react-redux';
-import { AppDispatch } from '@/store/store';
-import { resolvePostAuthRedirect } from '@/graphql/queries/quizResult.service';
+import {
+  PASSWORD_POLICY_HINT,
+  validatePasswordPolicy,
+} from '@/utils/passwordPolicy';
+import { useDocumentSeo } from '@/hooks/useDocumentSeo';
 
 const ResetPassword: React.FC = () => {
+  useDocumentSeo({
+    title: 'Новый пароль',
+    description: 'Установка нового пароля Miraflores',
+    canonicalPath: '/reset-password',
+    noIndex: true,
+  });
+
   const [newPassword, setNewPassword] = useState('');
-  const [repetedPassword, setRepetedPassword] = useState('');
+  const [repeatedPassword, setRepeatedPassword] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const toast = useToast();
-  const dispatch = useDispatch<AppDispatch>();
+  const missingTokenHandled = useRef(false);
 
-  const token = searchParams.get('token');
+  const token =
+    (searchParams.get('token') || searchParams.get('t') || '').trim() || null;
 
   useEffect(() => {
-    if (!token) {
-      toast.error('Неверная ссылка для сброса пароля');
-      navigate('/forgot-password');
-    }
+    if (token || missingTokenHandled.current) return;
+    missingTokenHandled.current = true;
+    toast.error('Неверная ссылка для сброса пароля');
+    navigate('/forgot-password');
   }, [token, navigate, toast]);
 
   const handleNavigatetoHome = () => navigate('/');
-  
-  const handleRequest = async () => {
+
+  const passwordRequirements = [
+    { text: 'Минимум 8 символов', met: newPassword.length >= 8 },
+    { text: 'Хотя бы одна буква', met: /[A-Za-zА-Яа-яЁё]/.test(newPassword) },
+    { text: 'Хотя бы одна цифра', met: /\d/.test(newPassword) },
+  ];
+
+  const handleRequest = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!newPassword.trim()) {
       toast.error('Введите новый пароль');
       return;
     }
 
-    if (newPassword.length < 8) {
-      toast.error('Пароль должен содержать минимум 8 символов');
+    const policyError = validatePasswordPolicy(newPassword);
+    if (policyError) {
+      setPasswordError(policyError);
+      toast.error(policyError);
       return;
     }
 
-    if (newPassword !== repetedPassword) {
+    if (newPassword !== repeatedPassword) {
       toast.error('Пароли не совпадают');
       return;
     }
@@ -54,27 +74,15 @@ const ResetPassword: React.FC = () => {
 
     setLoading(true);
     try {
-      const result = await setPassword(token, newPassword);
-      
-      if (result.token && result.user) {
-        // Сохраняем токены
-        localStorage.setItem('token', result.token);
-        if (result.refreshToken) {
-          localStorage.setItem('refreshToken', result.refreshToken);
-        }
-        
-        toast.success('Пароль успешно изменен!');
-        
-        // Автоматически входим пользователя
-        setTimeout(() => {
-          navigate(resolvePostAuthRedirect('/'));
-        }, 1500);
-      } else {
-        toast.error('Ошибка при сбросе пароля');
-      }
-    } catch (error: any) {
+      await setPassword(token, newPassword);
+      toast.success('Пароль успешно изменен! Войдите с новым паролем.');
+      setTimeout(() => {
+        navigate('/sign-in');
+      }, 1500);
+    } catch (error: unknown) {
       console.error('Error resetting password:', error);
-      toast.error(error?.message || 'Ошибка при сбросе пароля');
+      const msg = error instanceof Error ? error.message : 'Ошибка при сбросе пароля';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -88,31 +96,61 @@ const ResetPassword: React.FC = () => {
     <section className={styles.resetContainer}>
       <div className={styles.resetWrapper}>
         <div className={styles.imageWrapper}>
-          <img src={siteLogo} alt='Miraflores' className={styles.logo} onClick={handleNavigatetoHome} />
+          <button
+            type="button"
+            className={styles.logoButton}
+            onClick={handleNavigatetoHome}
+            aria-label="На главную"
+          >
+            <img src={siteLogo} alt="" className={styles.logo} />
+          </button>
         </div>
-        <h2 className={styles.title}>Придумайте пароль</h2>
+        <h1 className={styles.title}>Придумайте пароль</h1>
 
-        <div className={styles.textFieldWrapper}>
-          <TextField
-            label='Новый пароль'
-            type='password'
-            value={newPassword}
-            onChange={e => setNewPassword(e.target.value)}
-            disabled={loading}
+        <form onSubmit={(e) => void handleRequest(e)} noValidate>
+          <div className={styles.textFieldWrapper}>
+            <TextField
+              label="Новый пароль"
+              type="password"
+              autoComplete="new-password"
+              value={newPassword}
+              onChange={(e) => {
+                setNewPassword(e.target.value);
+                if (passwordError) setPasswordError(null);
+              }}
+              onBlur={() => setPasswordError(validatePasswordPolicy(newPassword))}
+              error={passwordError}
+              disabled={loading}
+            />
+            <p className={styles.hint}>{PASSWORD_POLICY_HINT}</p>
+            {newPassword.length > 0 && (
+              <div className={styles.passwordRequirements}>
+                {passwordRequirements.map((req, idx) => (
+                  <p
+                    key={idx}
+                    className={`${styles.requirement} ${req.met ? styles.met : styles.unmet}`}
+                  >
+                    <span className={styles.checkmark}>{req.met ? '✓' : '○'}</span>
+                    {req.text}
+                  </p>
+                ))}
+              </div>
+            )}
+            <TextField
+              label="Повторите пароль"
+              type="password"
+              autoComplete="new-password"
+              value={repeatedPassword}
+              onChange={(e) => setRepeatedPassword(e.target.value)}
+              disabled={loading}
+            />
+          </div>
+          <Button
+            type="submit"
+            text={loading ? 'Сохранение...' : 'Далее'}
+            disabled={loading || !newPassword.trim() || !repeatedPassword.trim()}
           />
-          <TextField
-            label='Повторите пароль'
-            type='password'
-            value={repetedPassword}
-            onChange={e => setRepetedPassword(e.target.value)}
-            disabled={loading}
-          />
-        </div>
-        <Button 
-          text={loading ? 'Сохранение...' : 'Далее'} 
-          onClick={handleRequest}
-          disabled={loading || !newPassword.trim() || !repetedPassword.trim()}
-        />
+        </form>
       </div>
     </section>
   );

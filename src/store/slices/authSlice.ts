@@ -1,8 +1,15 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import { signUpService, getToken, getMeInfo, updateAccount } from '@/graphql/queries/auth.service';
-import { migrateGuestFavoritesToUser } from '@/graphql/queries/favorites.service';
-import { tokenCreate } from '@/graphql/types/auth.types';
-import { AuthState, MeInfo, ResultType, SignUpArgs } from '@/types/auth'
+import {
+  signUpService,
+  getToken,
+  getMeInfo,
+  updateAccount,
+  revokeSession,
+} from '@/api/authApi';
+import { migrateGuestFavoritesToUser } from '@/services/favorites.service';
+import type { AuthTokenResult } from '@/types/auth';
+import { AuthState, MeInfo, ResultType, SignUpArgs } from '@/types/auth';
+import { clearAuthStorage } from '@/api/apiClient';
 
 /** Сеть / обрыв — не считаем сессию недействительной */
 function isTransientGetMeFailure(message: string): boolean {
@@ -26,68 +33,74 @@ export function isAuthSessionInvalidMessage(message: string): boolean {
   return (
     m.includes('TokenExpired') ||
     m.includes('PermissionDenied') ||
+    m.includes('Unauthorized') ||
+    m.includes('401') ||
     m.includes('Signature has expired') ||
     m.includes('ExpiredSignatureError') ||
-    m.includes('InvalidRefreshToken') ||
-    m.includes('Token refresh did not resolve') ||
+    m.includes('Сессия истекла') ||
+    m.includes('Неверный email или пароль') ||
     (m.includes('expired') &&
       (m.includes('Signature') || m.includes('token') || m.includes('Token')))
   );
 }
 
+function applyLoggedOut(state: AuthState) {
+  state.isAuth = false;
+  state.token = null;
+  state.me = null;
+  state.email = '';
+  state.signIn.success = false;
+  state.signUp.success = false;
+}
+
 export const sendSignUpData = createAsyncThunk<ResultType, SignUpArgs>(
   'auth/sendSignUpData',
-  async ({ email, pass }) => {
-    const result = await signUpService(email, pass);
-    return result;
-  }
+  async ({ email, password, consentMarketing }) => {
+    return signUpService(email, password, consentMarketing === true);
+  },
 );
 
-export const sendSignInData = createAsyncThunk<tokenCreate, SignUpArgs>(
+export const sendSignInData = createAsyncThunk<AuthTokenResult, SignUpArgs>(
   'auth/sendSignInData',
-  async ({ email, pass }) => {
-    const result = await getToken(email, pass);
-    return result;
-  }
+  async ({ email, password }) => getToken(email, password),
 );
 
-export const getMe = createAsyncThunk<MeInfo>(
-  'auth/getMe',
-  async () => {
-    const result = await getMeInfo();
-    if (result?.id) {
-      localStorage.setItem('userId', result.id);
-      await migrateGuestFavoritesToUser(result.id);
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new Event('favoritesUpdated'));
-      }
+export const getMe = createAsyncThunk<MeInfo>('auth/getMe', async () => {
+  const result = await getMeInfo();
+  if (result?.id) {
+    localStorage.setItem('userId', result.id);
+    await migrateGuestFavoritesToUser(result.id);
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('favoritesUpdated'));
     }
-    return result;
   }
-);
+  return result;
+});
+
+/** Revoke JWT на сервере + очистка local/session storage. */
+export const logout = createAsyncThunk('auth/logout', async () => {
+  await revokeSession();
+});
 
 export const updateAccountAction = createAsyncThunk<
   { firstName?: string; lastName?: string },
   { firstName?: string; lastName?: string }
->(
-  'auth/updateAccount',
-  async ({ firstName, lastName }, { rejectWithValue }) => {
-    try {
-      const result = await updateAccount(firstName, lastName);
-      if (!result) {
-        return rejectWithValue('Failed to update account');
-      }
-      return { 
-        firstName: result.firstName || undefined, 
-        lastName: result.lastName || undefined 
-      };
-    } catch (error: any) {
-      return rejectWithValue(error.message || 'Failed to update account');
+>('auth/updateAccount', async ({ firstName, lastName }, { rejectWithValue }) => {
+  try {
+    const result = await updateAccount(firstName, lastName);
+    if (!result) {
+      return rejectWithValue('Ошибка при обновлении аккаунта');
     }
+    return {
+      firstName: result.firstName || undefined,
+      lastName: result.lastName || undefined,
+    };
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Ошибка при обновлении аккаунта';
+    return rejectWithValue(msg);
   }
-);
+});
 
-// Восстанавливаем токен из localStorage при инициализации
 const getStoredToken = (): string | null => {
   if (typeof window === 'undefined') return null;
   const token = localStorage.getItem('token');
@@ -96,25 +109,24 @@ const getStoredToken = (): string | null => {
 
 const initialState: AuthState = {
   email: '',
-  pass: '',
   signUp: {
     agreeChecked: false,
     success: false,
     loadingStatus: false,
-    error: null
+    error: null,
   },
   signIn: {
     success: false,
     loadingStatus: false,
-    error: null
+    error: null,
   },
-  getMe:{
+  getMe: {
     loadingStatus: false,
-    error: null
+    error: null,
   },
   isAuth: !!getStoredToken(),
   token: getStoredToken(),
-  me: null
+  me: null,
 };
 
 const authSlice = createSlice({
@@ -123,9 +135,6 @@ const authSlice = createSlice({
   reducers: {
     setEmail(state, action: PayloadAction<string>) {
       state.email = action.payload;
-    },
-    setPass(state, action: PayloadAction<string>) {
-      state.pass = action.payload;
     },
     switchSignUpAgreement(state) {
       state.signUp.agreeChecked = !state.signUp.agreeChecked;
@@ -136,71 +145,56 @@ const authSlice = createSlice({
     setSignUpSuccess(state) {
       state.signUp.success = true;
     },
-    setFalseSignIiStatus(state) {
+    clearSignInSuccess(state) {
       state.signIn.success = false;
     },
-    /** Только сброс флага успеха — чтобы эффект после регистрации не срабатывал повторно */
+    clearSignInError(state) {
+      state.signIn.error = null;
+    },
     clearSignUpSuccessOnly(state) {
       state.signUp.success = false;
     },
     resetSignUp(state) {
-      // Сбрасываем данные регистрации для возможности начать заново
       state.email = '';
-      state.pass = '';
       state.signUp.success = false;
       state.signUp.error = null;
       state.signUp.agreeChecked = false;
-      // Очищаем email из localStorage
       localStorage.removeItem('email');
     },
-    logout(state) {
-      // Очищаем состояние
-      state.isAuth = false;
-      state.token = null;
-      state.me = null;
-      state.email = '';
-      state.pass = '';
-      state.signIn.success = false;
-      state.signUp.success = false;
-      // Очищаем localStorage
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
-      localStorage.removeItem('userId');
-    }
+    /** Только локальный сброс (токен уже невалиден / 401 handler). */
+    clearLocalSession(state) {
+      applyLoggedOut(state);
+      clearAuthStorage();
+    },
   },
-  extraReducers: builder => {
+  extraReducers: (builder) => {
     builder
-      .addCase(sendSignUpData.pending, state => {
+      .addCase(sendSignUpData.pending, (state) => {
         state.signUp.loadingStatus = true;
         state.signUp.error = null;
       })
       .addCase(sendSignUpData.fulfilled, (state, action) => {
-        state.signUp.success = true;
+        state.signUp.success = action.payload?.otpSent === true;
         state.signUp.loadingStatus = false;
         state.signUp.error = null;
-        // Сохраняем email в Redux state и localStorage для отправки письма подтверждения
-        // Email уже должен быть в state.email, но убеждаемся что он сохранен
-        if (state.email) {
-          localStorage.setItem('email', state.email);
-          // Email уже в state.email, так что просто сохраняем в localStorage
+        if (action.payload?.email) {
+          state.email = action.payload.email;
+          localStorage.setItem('email', action.payload.email);
         }
       })
       .addCase(sendSignUpData.rejected, (state, action) => {
         state.signUp.loadingStatus = false;
         state.signUp.error = action.error;
       })
-      .addCase(sendSignInData.pending, state => {
+      .addCase(sendSignInData.pending, (state) => {
         state.signIn.loadingStatus = true;
         state.signIn.error = null;
       })
       .addCase(sendSignInData.fulfilled, (state, action) => {
-        console.log(action.payload);
         state.signIn.success = true;
         state.isAuth = true;
         state.token = action.payload.token;
-        localStorage.setItem('token', action.payload.token ?? '');
-        localStorage.setItem('refreshToken', action.payload.refreshToken ?? '');
-        state.pass = '';
+        // JWT уже в LS через setAccessToken в getToken
         state.signIn.loadingStatus = false;
         state.signIn.error = null;
       })
@@ -208,7 +202,7 @@ const authSlice = createSlice({
         state.signIn.loadingStatus = false;
         state.signIn.error = action.error;
       })
-      .addCase(getMe.pending, state => {
+      .addCase(getMe.pending, (state) => {
         state.getMe.loadingStatus = true;
         state.getMe.error = null;
       })
@@ -216,7 +210,6 @@ const authSlice = createSlice({
         if (action.payload) {
           state.me = action.payload;
           state.isAuth = true;
-          // Убеждаемся, что токен сохранен в состоянии и в localStorage
           const storedToken = localStorage.getItem('token');
           if (storedToken && storedToken !== 'null' && storedToken !== 'undefined') {
             state.token = storedToken;
@@ -225,7 +218,6 @@ const authSlice = createSlice({
             localStorage.setItem('userId', action.payload.id);
           }
         } else {
-          // Если payload null, сбрасываем авторизацию
           state.isAuth = false;
           state.me = null;
           state.token = null;
@@ -238,23 +230,21 @@ const authSlice = createSlice({
         state.getMe.error = action.error;
 
         const msg = String(action.error?.message ?? '');
-        // Раньше любая ошибка (в т.ч. обрыв сети) очищала токены — мгновенный «выход» из ЛК
         if (!isAuthSessionInvalidMessage(msg)) {
           return;
         }
 
-        state.isAuth = false;
-        state.token = null;
-        state.me = null;
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('userId');
+        applyLoggedOut(state);
+        clearAuthStorage();
       })
-      .addCase(updateAccountAction.pending, state => {
-        // Можно добавить loading состояние если нужно
+      .addCase(logout.fulfilled, (state) => {
+        applyLoggedOut(state);
+      })
+      .addCase(logout.rejected, (state) => {
+        applyLoggedOut(state);
+        clearAuthStorage();
       })
       .addCase(updateAccountAction.fulfilled, (state, action) => {
-        // Обновляем данные пользователя если они есть
         if (state.me && action.payload) {
           if (action.payload.firstName !== undefined) {
             state.me.firstName = action.payload.firstName;
@@ -264,22 +254,21 @@ const authSlice = createSlice({
           }
         }
       })
-      .addCase(updateAccountAction.rejected, (state, action) => {
-        // Ошибка обрабатывается в компоненте через toast
+      .addCase(updateAccountAction.rejected, (_state, action) => {
         console.error('Update account rejected:', action.payload);
       });
-  }
+  },
 });
 
 export const {
   setEmail,
-  setPass,
   switchSignUpAgreement,
   setFalseSignUpAgreement,
-  setFalseSignIiStatus,
+  clearSignInSuccess,
+  clearSignInError,
   clearSignUpSuccessOnly,
   resetSignUp,
-  logout
+  clearLocalSession,
 } = authSlice.actions;
 
 export default authSlice.reducer;

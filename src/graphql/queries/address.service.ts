@@ -1,6 +1,19 @@
-import { graphqlRequest } from '../client';
+import {
+  createAddress as apiCreateAddress,
+  deleteAddress as apiDeleteAddress,
+  setDefaultAddress as apiSetDefault,
+  updateAddress as apiUpdateAddress,
+} from '@/api/accountApi';
 import { AddressInfo } from '@/types/auth';
 import { AddressMutationError, accountErrorsToFieldMap } from '@/graphql/addressMutationError';
+import {
+  AddressInput,
+  AddressTypeEnum,
+  AccountAddressCreateResponse,
+  Address,
+  AccountSetDefaultAddressPayload,
+  AccountSetDefaultAddressResponse,
+} from '../types/address.types';
 
 export interface AddressCreateInput {
   firstName: string;
@@ -13,312 +26,105 @@ export interface AddressCreateInput {
   streetAddress1: string;
   streetAddress2?: string;
   postalCode: string;
-  companyName: string;
+  apartment: string;
 }
 
-export interface AddressUpdateInput extends AddressCreateInput {}
-
-interface AddressCreateResponse {
-  accountAddressCreate: {
-    user: {
-      addresses: AddressInfo[];
-    } | null;
-    errors: Array<{
-      field?: string;
-      message: string;
-      code: string;
-    }>;
-  };
-}
-
-interface AddressUpdateResponse {
-  accountAddressUpdate: {
-    user: {
-      addresses: AddressInfo[];
-    } | null;
-    errors: Array<{
-      field?: string;
-      message: string;
-      code: string;
-    }>;
-  };
-}
-
-interface AddressDeleteResponse {
-  accountAddressDelete: {
-    user: {
-      addresses: AddressInfo[];
-    } | null;
-    errors: Array<{
-      field?: string;
-      message: string;
-      code: string;
-    }>;
-  };
-}
-
-interface SetDefaultAddressResponse {
-  accountSetDefaultAddress: {
-    user: {
-      addresses: AddressInfo[];
-    } | null;
-    errors: Array<{
-      field?: string;
-      message: string;
-      code: string;
-    }>;
-  };
-}
+export type AddressUpdateInput = AddressCreateInput;
 
 export async function createAddress(
   input: AddressCreateInput,
-  isDefaultShipping: boolean = false
+  isDefaultShipping = false,
 ): Promise<AddressInfo[]> {
-  const mutation = `
-    mutation CreateAddress(
-      $input: AddressInput!
-      $type: AddressTypeEnum!
-    ) {
-      accountAddressCreate(
-        input: $input
-        type: $type
-      ) {
-        user {
-          addresses {
-            city
-            cityArea
-            companyName
-            country {
-              code
-              country
-            }
-            countryArea
-            firstName
-            id
-            isDefaultBillingAddress
-            isDefaultShippingAddress
-            lastName
-            phone
-            postalCode
-            streetAddress1
-            streetAddress2
-          }
-        }
-        errors {
-          field
-          message
-          code
-        }
-      }
-    }
-  `;
+  try {
+    return await apiCreateAddress(
+      {
+        firstName: input.firstName,
+        lastName: input.lastName,
+        phone: input.phone,
+        city: input.city,
+        streetAddress1: input.streetAddress1,
+        streetAddress2: input.streetAddress2,
+        postalCode: input.postalCode,
+        apartment: input.apartment,
+        countryArea: input.countryArea,
+        cityArea: input.cityArea,
+      },
+      isDefaultShipping,
+    );
+  } catch (e: unknown) {
+    throw new AddressMutationError(e instanceof Error ? e.message : 'Ошибка создания адреса', {});
+  }
+}
 
-  const variables = {
-    input: {
+/** Saleor-shaped wrapper used by AddressDrawer. */
+export async function createAddressService(
+  addressInput: AddressInput,
+  type: AddressTypeEnum = AddressTypeEnum.SHIPPING,
+): Promise<Address> {
+  try {
+    const rows = await apiCreateAddress(
+      {
+        firstName: addressInput.firstName,
+        lastName: addressInput.lastName,
+        phone: addressInput.phone,
+        city: addressInput.city,
+        streetAddress1: addressInput.streetAddress1,
+        streetAddress2: addressInput.streetAddress2,
+        postalCode: addressInput.postalCode,
+        apartment: addressInput.apartment,
+        countryArea: addressInput.countryArea,
+        cityArea: addressInput.cityArea,
+      },
+      type === AddressTypeEnum.SHIPPING,
+    );
+    const created = rows[rows.length - 1];
+    if (!created) throw new Error('Address creation failed');
+    return created as unknown as Address;
+  } catch (e: unknown) {
+    if (e instanceof AddressMutationError) throw e;
+    throw new AddressMutationError(
+      e instanceof Error ? e.message : 'Ошибка создания адреса',
+      accountErrorsToFieldMap([]),
+    );
+  }
+}
+
+export async function updateAddress(id: string, input: AddressUpdateInput): Promise<AddressInfo[]> {
+  try {
+    return await apiUpdateAddress(id, {
       firstName: input.firstName,
       lastName: input.lastName,
       phone: input.phone,
-      country: input.country,
-      countryArea: input.countryArea,
       city: input.city,
-      cityArea: input.cityArea,
       streetAddress1: input.streetAddress1,
-      streetAddress2: input.streetAddress2 || '',
+      streetAddress2: input.streetAddress2,
       postalCode: input.postalCode,
-      companyName: input.companyName,
-    },
-    type: isDefaultShipping ? 'SHIPPING' : 'BILLING',
-  };
-
-  const result = await graphqlRequest<AddressCreateResponse>(mutation, variables);
-
-  const errors = result.accountAddressCreate.errors || [];
-
-  if (errors.length > 0) {
-    throw new AddressMutationError(
-      errors.map((e) => e.message).join(', '),
-      accountErrorsToFieldMap(errors),
-    );
+      apartment: input.apartment,
+      countryArea: input.countryArea,
+      cityArea: input.cityArea,
+    });
+  } catch (e: unknown) {
+    throw new AddressMutationError(e instanceof Error ? e.message : 'Ошибка обновления адреса', {});
   }
-
-  if (!result.accountAddressCreate.user) {
-    throw new Error('Address creation failed: No user data returned');
-  }
-
-  return result.accountAddressCreate.user.addresses;
-}
-
-export async function updateAddress(
-  id: string,
-  input: AddressUpdateInput
-): Promise<AddressInfo[]> {
-  const mutation = `
-    mutation UpdateAddress(
-      $id: ID!
-      $input: AddressInput!
-    ) {
-      accountAddressUpdate(
-        id: $id
-        input: $input
-      ) {
-        user {
-          addresses {
-            city
-            cityArea
-            companyName
-            country {
-              code
-              country
-            }
-            countryArea
-            firstName
-            id
-            isDefaultBillingAddress
-            isDefaultShippingAddress
-            lastName
-            phone
-            postalCode
-            streetAddress1
-            streetAddress2
-          }
-        }
-        errors {
-          field
-          message
-          code
-        }
-      }
-    }
-  `;
-
-  const variables = {
-    id,
-    input,
-  };
-
-  const result = await graphqlRequest<AddressUpdateResponse>(mutation, variables);
-
-  const errors = result.accountAddressUpdate.errors || [];
-
-  if (errors.length > 0) {
-    throw new AddressMutationError(
-      errors.map((e) => e.message).join(', '),
-      accountErrorsToFieldMap(errors),
-    );
-  }
-
-  if (!result.accountAddressUpdate.user) {
-    throw new Error('Address update failed: No user data returned');
-  }
-
-  return result.accountAddressUpdate.user.addresses;
 }
 
 export async function deleteAddress(id: string): Promise<AddressInfo[]> {
-  const mutation = `
-    mutation DeleteAddress($id: ID!) {
-      accountAddressDelete(id: $id) {
-        user {
-          addresses {
-            city
-            cityArea
-            companyName
-            country {
-              code
-              country
-            }
-            countryArea
-            firstName
-            id
-            isDefaultBillingAddress
-            isDefaultShippingAddress
-            lastName
-            phone
-            postalCode
-            streetAddress1
-            streetAddress2
-          }
-        }
-        errors {
-          field
-          message
-          code
-        }
-      }
-    }
-  `;
-
-  const variables = { id };
-
-  const result = await graphqlRequest<AddressDeleteResponse>(mutation, variables);
-
-  const errors = result.accountAddressDelete.errors || [];
-
-  if (errors.length > 0) {
-    throw new Error(
-      `Address deletion failed: ${errors.map((e) => e.message).join(', ')}`
-    );
-  }
-
-  if (!result.accountAddressDelete.user) {
-    throw new Error('Address deletion failed: No user data returned');
-  }
-
-  return result.accountAddressDelete.user.addresses;
+  return apiDeleteAddress(id);
 }
 
 export async function setDefaultAddress(
   id: string,
-  type: 'SHIPPING' | 'BILLING'
+  _type: 'SHIPPING' | 'BILLING' = 'SHIPPING',
 ): Promise<AddressInfo[]> {
-  const mutation = `
-    mutation SetDefaultAddress($id: ID!, $type: AddressTypeEnum!) {
-      accountSetDefaultAddress(id: $id, type: $type) {
-        user {
-          addresses {
-            city
-            cityArea
-            companyName
-            country {
-              code
-              country
-            }
-            countryArea
-            firstName
-            id
-            isDefaultBillingAddress
-            isDefaultShippingAddress
-            lastName
-            phone
-            postalCode
-            streetAddress1
-            streetAddress2
-          }
-        }
-        errors {
-          field
-          message
-          code
-        }
-      }
-    }
-  `;
-
-  const variables = { id, type };
-
-  const result = await graphqlRequest<SetDefaultAddressResponse>(mutation, variables);
-
-  const errors = result.accountSetDefaultAddress.errors || [];
-
-  if (errors.length > 0) {
-    throw new Error(
-      `Setting default address failed: ${errors.map((e) => e.message).join(', ')}`
-    );
-  }
-
-  if (!result.accountSetDefaultAddress.user) {
-    throw new Error('Setting default address failed: No user data returned');
-  }
-
-  return result.accountSetDefaultAddress.user.addresses;
+  return apiSetDefault(id);
 }
+
+export async function setDefaultAddressService(
+  addressId: string,
+  _type: AddressTypeEnum = AddressTypeEnum.SHIPPING,
+): Promise<AccountSetDefaultAddressPayload> {
+  await apiSetDefault(addressId);
+  return { user: { id: '' } } as AccountSetDefaultAddressPayload;
+}
+
+export type { AccountAddressCreateResponse, AccountSetDefaultAddressResponse };

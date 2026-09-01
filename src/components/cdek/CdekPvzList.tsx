@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { Search, MapPin, Clock, Phone, ChevronDown, Loader2, Map } from 'lucide-react';
 import YandexCdekMap from './YandexCdekMap';
 import { extractRuPostalCode } from '@/utils/extractRuPostalCode';
 import { normalizeCdekPvzFromApi } from '@/utils/normalizeCdekPvz';
+import styles from './CdekPvzList.module.scss';
 
 export interface CdekPvzInfo {
   id: string;
@@ -13,8 +13,10 @@ export interface CdekPvzInfo {
   workTime?: string;
   phone?: string;
   postalCode?: string;
-  /** Субъект РФ из справочника городов СДЭК (для поля области в Saleor) */
+  /** Субъект РФ из справочника городов СДЭК (для поля области) */
   region?: string;
+  lat?: number;
+  lon?: number;
   type: 'office' | 'pickup';
 }
 
@@ -63,6 +65,86 @@ const POPULAR_CITIES = [
   'Ростов-на-Дону',
 ];
 
+function IconPin({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M12 21s7-4.5 7-11a7 7 0 1 0-14 0c0 6.5 7 11 7 11z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+      />
+      <circle cx="12" cy="10" r="2.25" stroke="currentColor" strokeWidth="1.75" />
+    </svg>
+  );
+}
+
+function IconSearch({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="11" cy="11" r="6.5" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M16.5 16.5 21 21" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconClock({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.75" />
+      <path d="M12 8v4.5l3 1.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconPhone({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M8.5 4.5h3l1 4-2 1.5a11 11 0 0 0 5 5l1.5-2 4 1v3a2 2 0 0 1-2 2A14.5 14.5 0 0 1 4.5 6.5a2 2 0 0 1 2-2z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function IconMap({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M9 4.5 3.5 6.5v13L9 17.5l6 2 5.5-2v-13L15 6.5 9 4.5z"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinejoin="round"
+      />
+      <path d="M9 4.5v13M15 6.5v13" stroke="currentColor" strokeWidth="1.75" />
+    </svg>
+  );
+}
+
+function IconChevron({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function IconSpinner({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden>
+      <circle cx="12" cy="12" r="8" stroke="currentColor" strokeWidth="1.75" opacity="0.25" />
+      <path
+        d="M20 12a8 8 0 0 0-8-8"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 const CdekPvzList: React.FC<CdekPvzListProps> = ({
   onChoose,
   defaultCity = 'Москва',
@@ -71,11 +153,11 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
   const [cities, setCities] = useState<City[]>([]);
   const [citiesLoading, setCitiesLoading] = useState(true);
   const [citiesError, setCitiesError] = useState<string | null>(null);
-  
+
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [citySearchQuery, setCitySearchQuery] = useState('');
   const [showCityDropdown, setShowCityDropdown] = useState(false);
-  
+
   const [pvzList, setPvzList] = useState<Pvz[]>([]);
   const [pvzLoading, setPvzLoading] = useState(false);
   const [pvzSearchQuery, setPvzSearchQuery] = useState('');
@@ -85,90 +167,96 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
     setShowWidget(initialMode === 'map');
   }, [initialMode]);
 
-  // Загрузка списка городов
   useEffect(() => {
     const fetchCities = async () => {
       setCitiesLoading(true);
       setCitiesError(null);
-      
+
       try {
         const baseUrl = window.location.origin;
         const url = `${baseUrl}/api/cdek/service?method=location/cities&size=10000&country_codes=RU`;
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           setCitiesError(`Ошибка загрузки городов: ${response.status}`);
           throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
-        
+
         const data = await response.json();
         const citiesList: City[] = Array.isArray(data) ? data : (data.items || []);
-        
+
         if (citiesList.length === 0) {
           setCitiesError('Не удалось загрузить список городов');
           return;
         }
-        
-        const sortedCities = citiesList.sort((a, b) => 
-          a.city.localeCompare(b.city, 'ru')
+
+        const sortedCities = citiesList.sort((a, b) =>
+          a.city.localeCompare(b.city, 'ru'),
         );
-        
+
         setCities(sortedCities);
-        
-        const defaultCityData = sortedCities.find(
-          (c) => c.city.toLowerCase() === defaultCity.toLowerCase(),
-        );
-        
+
+        const needle = defaultCity.trim().toLowerCase();
+        const defaultCityData =
+          sortedCities.find((c) => c.city.toLowerCase() === needle) ||
+          sortedCities.find(
+            (c) =>
+              needle.length >= 3 &&
+              (c.city.toLowerCase().includes(needle) ||
+                needle.includes(c.city.toLowerCase())),
+          );
+
         if (defaultCityData) {
           setSelectedCity(defaultCityData);
         } else if (sortedCities.length > 0) {
-          const moscow = sortedCities.find(c => c.city === 'Москва');
+          const moscow = sortedCities.find((c) => c.city === 'Москва');
           const cityToSet = moscow || sortedCities[0];
           setSelectedCity(cityToSet);
         }
-      } catch (error: any) {
-        setCitiesError(error?.message || 'Ошибка загрузки городов');
+      } catch (error: unknown) {
+        const message =
+          error instanceof Error ? error.message : 'Ошибка загрузки городов';
+        setCitiesError(message);
       } finally {
         setCitiesLoading(false);
       }
     };
 
     fetchCities();
-  }, [defaultCity]); // Запускается при монтировании и при изменении defaultCity
+  }, [defaultCity]);
 
-  // Загрузка пунктов выдачи при выборе города
   useEffect(() => {
     if (!selectedCity) return;
 
     const fetchPvzList = async () => {
       setPvzLoading(true);
       setPvzList([]);
-      
+
       let pvz: Pvz[] = [];
-      
+
       try {
         const baseUrl = window.location.origin;
         let url = `${baseUrl}/api/cdek/service?action=offices&city_code=${selectedCity.code}&size=100`;
-        
+
         if (selectedCity.city_uuid) {
           url += `&city_uuid=${selectedCity.city_uuid}`;
         }
-        
+
         if (selectedCity.latitude && selectedCity.longitude) {
           url += `&latitude=${selectedCity.latitude}&longitude=${selectedCity.longitude}`;
         }
-        
+
         const response = await fetch(url);
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
-        
+
         const data = await response.json();
-        
+
         if (data.error) {
           throw new Error(data.error);
         }
@@ -176,7 +264,11 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
         const toPvzArray = (raw: unknown): Pvz[] => {
           let list: unknown[] = [];
           if (Array.isArray(raw)) list = raw;
-          else if (raw && typeof raw === 'object' && Array.isArray((raw as { items?: unknown[] }).items)) {
+          else if (
+            raw &&
+            typeof raw === 'object' &&
+            Array.isArray((raw as { items?: unknown[] }).items)
+          ) {
             list = (raw as { items: unknown[] }).items;
           }
           return list.map((item) => normalizeCdekPvzFromApi(item) as Pvz);
@@ -198,8 +290,7 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
         }
 
         setPvzList(pvz);
-        
-      } catch (error: any) {
+      } catch {
         setPvzList([]);
       } finally {
         setPvzLoading(false);
@@ -211,26 +302,27 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
 
   const filteredCities = useMemo(() => {
     if (!citySearchQuery.trim()) {
-      const popular = cities.filter(c => 
-        POPULAR_CITIES.some(p => c.city.toLowerCase() === p.toLowerCase())
+      const popular = cities.filter((c) =>
+        POPULAR_CITIES.some((p) => c.city.toLowerCase() === p.toLowerCase()),
       );
-      const others = cities.filter(c => 
-        !POPULAR_CITIES.some(p => c.city.toLowerCase() === p.toLowerCase())
+      const others = cities.filter(
+        (c) =>
+          !POPULAR_CITIES.some((p) => c.city.toLowerCase() === p.toLowerCase()),
       );
       return [...popular, ...others].slice(0, 50);
     }
-    
+
     const query = citySearchQuery.toLowerCase().trim();
     return cities
-      .filter(c => c.city.toLowerCase().includes(query))
+      .filter((c) => c.city.toLowerCase().includes(query))
       .slice(0, 50);
   }, [cities, citySearchQuery]);
 
   const filteredPvz = useMemo(() => {
     if (!pvzSearchQuery.trim()) return pvzList;
-    
+
     const query = pvzSearchQuery.toLowerCase();
-    return pvzList.filter(pvz => {
+    return pvzList.filter((pvz) => {
       const name = (pvz.name || '').toLowerCase();
       const address = (pvz.address || '').toLowerCase();
       return name.includes(query) || address.includes(query);
@@ -246,18 +338,21 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
   }, []);
 
   const resolvePvzPostal = useCallback((pvz: Pvz): string => {
-    const raw = pvz.postal_code != null && String(pvz.postal_code).trim() !== ''
-      ? String(pvz.postal_code).trim()
-      : '';
+    const raw =
+      pvz.postal_code != null && String(pvz.postal_code).trim() !== ''
+        ? String(pvz.postal_code).trim()
+        : '';
     if (raw) return raw;
     const addr = pvz.address || pvz.location?.address || '';
     return extractRuPostalCode(addr);
   }, []);
 
-  const handleMapSelect = useCallback(
-    (pvz: Pvz) => {
+  const buildPvzInfo = useCallback(
+    (pvz: Pvz): CdekPvzInfo => {
       const line = pvz.address || pvz.location?.address || '';
-      const pvzInfo: CdekPvzInfo = {
+      const lat = pvz.location?.latitude;
+      const lon = pvz.location?.longitude;
+      return {
         id: pvz.code,
         cityName: pvz.city || selectedCity?.city || '',
         cityCode: String(pvz.city_code || selectedCity?.code || ''),
@@ -267,34 +362,27 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
         phone: pvz.phone,
         postalCode: resolvePvzPostal(pvz),
         region: selectedCity?.region,
+        lat: typeof lat === 'number' && Number.isFinite(lat) ? lat : undefined,
+        lon: typeof lon === 'number' && Number.isFinite(lon) ? lon : undefined,
         type: 'office',
       };
-      onChoose(pvzInfo);
     },
-    [selectedCity, onChoose, resolvePvzPostal],
+    [selectedCity, resolvePvzPostal],
+  );
+
+  const handleMapSelect = useCallback(
+    (pvz: Pvz) => {
+      onChoose(buildPvzInfo(pvz));
+    },
+    [onChoose, buildPvzInfo],
   );
 
   const handlePvzSelect = useCallback(
     (pvz: Pvz) => {
       if (!pvz || !pvz.code) return;
-
-      const line = pvz.address || pvz.location?.address || '';
-      const pvzInfo: CdekPvzInfo = {
-        id: pvz.code,
-        cityName: pvz.city || selectedCity?.city || '',
-        cityCode: String(pvz.city_code || selectedCity?.code || ''),
-        address: line,
-        name: pvz.name || 'ПВЗ СДЭК',
-        workTime: pvz.work_time,
-        phone: pvz.phone,
-        postalCode: resolvePvzPostal(pvz),
-        region: selectedCity?.region,
-        type: 'office',
-      };
-
-      onChoose(pvzInfo);
+      onChoose(buildPvzInfo(pvz));
     },
-    [selectedCity, onChoose, resolvePvzPostal],
+    [onChoose, buildPvzInfo],
   );
 
   useEffect(() => {
@@ -304,133 +392,80 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
         setShowCityDropdown(false);
       }
     };
-    
+
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-      {/* Выбор города */}
-      <div className="city-dropdown-container" style={{ position: 'relative' }}>
-        <label style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <MapPin style={{ width: '16px', height: '16px' }} />
+    <div className={styles.root}>
+      <div className={`${styles.cityDropdown} city-dropdown-container`}>
+        <p className={styles.label}>
+          <IconPin className={styles.icon} />
           Город
-        </label>
-        
+        </p>
+
         {citiesLoading ? (
-          <div style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(0,0,0,0.5)' }}>
-            <Loader2 style={{ width: '16px', height: '16px', animation: 'spin 1s linear infinite' }} />
+          <div className={styles.statusBox}>
+            <IconSpinner className={styles.spin} />
             Загрузка городов...
           </div>
         ) : citiesError ? (
-          <div style={{ height: '48px', padding: '0 16px', borderRadius: '12px', border: '1px solid #fca5a5', background: '#fef2f2', display: 'flex', alignItems: 'center', fontSize: '14px', color: '#dc2626' }}>
-            {citiesError}
-          </div>
+          <div className={styles.statusBoxError}>{citiesError}</div>
         ) : (
-          <div style={{ position: 'relative' }}>
+          <div className={styles.cityDropdown}>
             <button
               type="button"
               onClick={() => setShowCityDropdown(!showCityDropdown)}
-              style={{
-                width: '100%',
-                height: '48px',
-                padding: '0 16px',
-                borderRadius: '12px',
-                border: '1px solid rgba(0,0,0,0.1)',
-                fontSize: '16px',
-                outline: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                background: 'white',
-                cursor: 'pointer',
-              }}
+              className={styles.cityTrigger}
             >
-              <span style={{ color: selectedCity ? 'black' : 'rgba(0,0,0,0.4)' }}>
+              <span
+                className={`${styles.cityTriggerText} ${
+                  selectedCity ? '' : styles.cityTriggerPlaceholder
+                }`}
+              >
                 {selectedCity?.city || 'Выберите город'}
               </span>
-              <ChevronDown style={{ width: '20px', height: '20px', color: 'rgba(0,0,0,0.4)', transform: showCityDropdown ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+              <IconChevron
+                className={`${styles.chevron} ${showCityDropdown ? styles.chevronOpen : ''}`}
+              />
             </button>
-            
+
             {showCityDropdown && (
-              <div style={{
-                position: 'absolute',
-                top: '100%',
-                left: 0,
-                right: 0,
-                zIndex: 50,
-                marginTop: '4px',
-                background: 'white',
-                border: '1px solid rgba(0,0,0,0.1)',
-                borderRadius: '12px',
-                boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                maxHeight: '320px',
-                overflow: 'hidden',
-              }}>
-                {/* Поиск города */}
-                <div style={{ padding: '8px', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                  <div style={{ position: 'relative' }}>
-                    <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '16px', height: '16px', color: 'rgba(0,0,0,0.4)' }} />
+              <div className={styles.dropdown}>
+                <div className={styles.dropdownSearch}>
+                  <div className={styles.searchWrap}>
+                    <IconSearch className={styles.searchIcon} />
                     <input
                       type="text"
                       value={citySearchQuery}
                       onChange={(e) => setCitySearchQuery(e.target.value)}
                       placeholder="Поиск города..."
-                      style={{
-                        width: '100%',
-                        height: '40px',
-                        paddingLeft: '36px',
-                        paddingRight: '16px',
-                        borderRadius: '8px',
-                        border: '1px solid rgba(0,0,0,0.1)',
-                        fontSize: '14px',
-                        outline: 'none',
-                      }}
+                      className={styles.searchInput}
                       autoFocus
                     />
                   </div>
                 </div>
-                
-                {/* Список городов */}
-                <div style={{ overflowY: 'auto', maxHeight: '240px' }}>
+
+                <div className={styles.dropdownList}>
                   {filteredCities.length === 0 ? (
-                    <div style={{ padding: '16px', textAlign: 'center', color: 'rgba(0,0,0,0.5)', fontSize: '14px' }}>
-                      Город не найден
-                    </div>
+                    <div className={styles.dropdownEmpty}>Город не найден</div>
                   ) : (
                     filteredCities.map((city) => (
                       <button
                         key={city.code}
                         type="button"
                         onClick={() => handleCitySelect(city)}
-                        style={{
-                          width: '100%',
-                          padding: '12px 16px',
-                          textAlign: 'left',
-                          background: selectedCity?.code === city.code ? 'rgba(0,0,0,0.05)' : 'transparent',
-                          fontWeight: selectedCity?.code === city.code ? 500 : 'normal',
-                          border: 'none',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                        }}
-                        onMouseEnter={(e) => {
-                          if (selectedCity?.code !== city.code) {
-                            e.currentTarget.style.background = 'rgba(0,0,0,0.05)';
-                          }
-                        }}
-                        onMouseLeave={(e) => {
-                          if (selectedCity?.code !== city.code) {
-                            e.currentTarget.style.background = 'transparent';
-                          }
-                        }}
+                        className={`${styles.dropdownItem} ${
+                          selectedCity?.code === city.code
+                            ? styles.dropdownItemActive
+                            : ''
+                        }`}
                       >
                         <span>{city.city}</span>
-                        {city.region && (
-                          <span style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)' }}>{city.region}</span>
-                        )}
+                        {city.region ? (
+                          <span className={styles.dropdownRegion}>{city.region}</span>
+                        ) : null}
                       </button>
                     ))
                   )}
@@ -441,53 +476,23 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
         )}
       </div>
 
-      {/* Пункты выдачи */}
       {selectedCity && (
         <>
-          {/* Переключатель режимов */}
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div className={styles.modeToggle}>
             <button
               type="button"
               onClick={() => setShowWidget(false)}
-              style={{
-                flex: 1,
-                height: '40px',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: 500,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                background: !showWidget ? '#000' : '#f3f4f6',
-                color: !showWidget ? 'white' : 'rgba(0,0,0,0.6)',
-                border: 'none',
-                cursor: 'pointer',
-              }}
+              className={`${styles.modeBtn} ${!showWidget ? styles.modeBtnActive : ''}`}
             >
-              <Search style={{ width: '16px', height: '16px' }} />
+              <IconSearch className={styles.icon} />
               Список
             </button>
             <button
               type="button"
               onClick={() => setShowWidget(true)}
-              style={{
-                flex: 1,
-                height: '40px',
-                borderRadius: '8px',
-                fontSize: '14px',
-                fontWeight: 500,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px',
-                background: showWidget ? '#000' : '#f3f4f6',
-                color: showWidget ? 'white' : 'rgba(0,0,0,0.6)',
-                border: 'none',
-                cursor: 'pointer',
-              }}
+              className={`${styles.modeBtn} ${showWidget ? styles.modeBtnActive : ''}`}
             >
-              <Map style={{ width: '16px', height: '16px' }} />
+              <IconMap className={styles.icon} />
               Карта
             </button>
           </div>
@@ -501,68 +506,47 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
             />
           ) : (
             <>
-              {/* Поиск ПВЗ */}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                <label style={{ fontSize: '14px', fontWeight: 500, marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Search style={{ width: '16px', height: '16px' }} />
+              <div className={styles.field}>
+                <p className={styles.label}>
+                  <IconSearch className={styles.icon} />
                   Поиск пункта выдачи
-                </label>
+                </p>
                 <input
                   type="text"
                   value={pvzSearchQuery}
                   onChange={(e) => setPvzSearchQuery(e.target.value)}
                   placeholder="Введите адрес или название ПВЗ"
-                  style={{
-                    height: '48px',
-                    padding: '0 16px',
-                    borderRadius: '12px',
-                    border: '1px solid rgba(0,0,0,0.1)',
-                    fontSize: '16px',
-                    outline: 'none',
-                  }}
+                  className={styles.textInput}
                 />
               </div>
 
-              {/* Список ПВЗ */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '320px', overflowY: 'auto' }}>
+              <div className={styles.pvzList}>
                 {pvzLoading ? (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', padding: '32px', color: 'rgba(0,0,0,0.6)' }}>
-                    <Loader2 className="animate-spin" style={{ width: '20px', height: '20px' }} />
+                  <div className={styles.pvzLoading}>
+                    <IconSpinner className={styles.spinLg} />
                     <span>Загрузка пунктов выдачи...</span>
                   </div>
                 ) : filteredPvz.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '32px', color: 'rgba(0,0,0,0.5)' }}>
-                    <MapPin style={{ width: '32px', height: '32px', margin: '0 auto 12px', color: 'rgba(0,0,0,0.2)' }} />
-                    <div style={{ fontWeight: 500, marginBottom: '4px' }}>Пункты выдачи не найдены</div>
-                    <div style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)', marginBottom: '12px' }}>
-                      {pvzSearchQuery 
-                        ? 'Попробуйте изменить поисковый запрос' 
+                  <div className={styles.pvzEmpty}>
+                    <IconPin className={styles.iconLg} />
+                    <div className={styles.pvzEmptyTitle}>Пункты выдачи не найдены</div>
+                    <div className={styles.pvzEmptyHint}>
+                      {pvzSearchQuery
+                        ? 'Попробуйте изменить поисковый запрос'
                         : `Попробуйте открыть карту для поиска ПВЗ в ${selectedCity.city}`}
                     </div>
                     <button
                       type="button"
                       onClick={() => setShowWidget(true)}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        padding: '8px 16px',
-                        background: '#16a34a',
-                        color: 'white',
-                        borderRadius: '8px',
-                        fontSize: '14px',
-                        fontWeight: 500,
-                        border: 'none',
-                        cursor: 'pointer',
-                      }}
+                      className={styles.mapCta}
                     >
-                      <Map style={{ width: '16px', height: '16px' }} />
+                      <IconMap className={styles.icon} />
                       Открыть карту СДЭК
                     </button>
                   </div>
                 ) : (
                   <>
-                    <div style={{ fontSize: '12px', color: 'rgba(0,0,0,0.4)', marginBottom: '4px' }}>
+                    <div className={styles.pvzCount}>
                       Найдено пунктов: {filteredPvz.length}
                     </div>
                     {filteredPvz.map((pvz) => (
@@ -570,45 +554,26 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
                         key={pvz.code}
                         type="button"
                         onClick={() => handlePvzSelect(pvz)}
-                        style={{
-                          textAlign: 'left',
-                          padding: '16px',
-                          border: '1px solid rgba(0,0,0,0.1)',
-                          borderRadius: '12px',
-                          cursor: 'pointer',
-                          background: 'white',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(0,0,0,0.3)';
-                          e.currentTarget.style.background = 'rgba(0,0,0,0.02)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = 'rgba(0,0,0,0.1)';
-                          e.currentTarget.style.background = 'white';
-                        }}
+                        className={styles.pvzCard}
                       >
-                        <div style={{ fontWeight: 600, marginBottom: '4px' }}>
-                          {pvz.name || 'ПВЗ СДЭК'}
-                        </div>
-                        
-                        <div style={{ fontSize: '14px', color: 'rgba(0,0,0,0.6)', marginBottom: '8px', display: 'flex', alignItems: 'start', gap: '6px' }}>
-                          <MapPin style={{ width: '14px', height: '14px', marginTop: '2px', flexShrink: 0 }} />
+                        <div className={styles.pvzName}>{pvz.name || 'ПВЗ СДЭК'}</div>
+                        <div className={styles.pvzAddress}>
+                          <IconPin className={styles.iconSm} />
                           {pvz.address || pvz.location?.address || 'Адрес не указан'}
                         </div>
-                        
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', fontSize: '12px', color: 'rgba(0,0,0,0.5)' }}>
-                          {pvz.work_time && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Clock style={{ width: '12px', height: '12px' }} />
+                        <div className={styles.pvzMeta}>
+                          {pvz.work_time ? (
+                            <div className={styles.pvzMetaItem}>
+                              <IconClock className={styles.iconXs} />
                               {pvz.work_time}
                             </div>
-                          )}
-                          {pvz.phone && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <Phone style={{ width: '12px', height: '12px' }} />
+                          ) : null}
+                          {pvz.phone ? (
+                            <div className={styles.pvzMetaItem}>
+                              <IconPhone className={styles.iconXs} />
                               {pvz.phone}
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       </button>
                     ))}

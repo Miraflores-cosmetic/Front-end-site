@@ -1,6 +1,7 @@
-import React, { useState, useCallback } from 'react';
-import styles from './BestSellerCard.module.scss';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import styles from './BestSellerCard.module.scss';
 import { BestSellersProduct } from '@/types/products';
 import { FavoriteButton } from '@/components/favorite-button/FavoriteButton';
 import AddToBasket from '@/components/add-tobasket-button/AddToBasket';
@@ -8,6 +9,11 @@ import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFal
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { isVariantOutOfStock } from '@/utils/stock';
 import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
+import { getVolumeFromVariant } from '@/utils/getVolumeFromVariant';
+import type { RootState } from '@/store/store';
+
+const IMAGE_PLACEHOLDER =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='332' height='332'%3E%3Crect width='100%25' height='100%25' fill='%23F6F5EF'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%236E6D67' font-family='Avenir Next' font-size='14'%3EИзображение%3C/text%3E%3C/svg%3E";
 
 const renderCardDescription = (description?: string | null) => {
   const normalized = sanitizeProductCardDescription(description, { preserveHtml: true });
@@ -23,86 +29,170 @@ const renderCardDescription = (description?: string | null) => {
   return <p className={styles.desc}>{normalized}</p>;
 };
 
-export const BestSellerProductCard: React.FC<{ 
-  product: BestSellersProduct; 
+function normalizeGallery(product: BestSellersProduct): string[] {
+  const fromImages = Array.isArray(product.images)
+    ? product.images.filter(Boolean)
+    : typeof product.images === 'string' && product.images
+      ? [product.images]
+      : [];
+  if (fromImages.length > 0) return fromImages;
+  return product.thumbnail ? [product.thumbnail] : [];
+}
+
+/** Mobile: объём / одна строка описания. */
+function mobileCardSubtitle(product: BestSellersProduct): string {
+  const size = product.size?.trim();
+  if (size) return size;
+  return sanitizeProductCardDescription(product.description, { preserveHtml: false });
+}
+
+type BestSellerProductCardProps = {
+  product: BestSellersProduct;
   loading: boolean;
-  /** Карточка растягивается на ширину контейнера (квиз, узкие колонки). */
   fluid?: boolean;
+  compact?: boolean;
   isDragging?: boolean;
   isDraggingRef?: React.MutableRefObject<boolean>;
-  /** Вызывается при переходе по ссылке на товар (например, закрыть меню) */
   onNavigate?: () => void;
-}> = ({
+};
+
+const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
   product,
   loading,
   fluid = false,
+  compact = false,
   isDragging = false,
   isDraggingRef,
-  onNavigate
+  onNavigate,
 }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  // Не рендерим hover-изображение, пока пользователь реально не навёл курсор:
-  // иначе браузер качает сразу 2 картинки на каждую карточку.
-  const [hasEverHovered, setHasEverHovered] = useState(false);
-  const [shouldBlockClick, setShouldBlockClick] = useState(false);
+  /** Sync with SCSS `@media (max-width: $viewport-mobile-max)`. */
   const isMobile = useScreenMatch();
+  const [shouldBlockClick, setShouldBlockClick] = useState(false);
+  const [galleryIndex, setGalleryIndex] = useState(0);
+  const [scrubbing, setScrubbing] = useState(false);
+  const [mediaHovered, setMediaHovered] = useState(false);
+  const [unlockedThrough, setUnlockedThrough] = useState(0);
+  const scrubMovedRef = useRef(false);
 
-  // Блокируем клик, если был драг
-  React.useEffect(() => {
+  const gallery = useMemo(() => normalizeGallery(product), [product]);
+  const galleryKey = gallery.join('\0');
+  const hasGallery = gallery.length > 1;
+  const mainImage = gallery[0] || '';
+  const mobileSubtitle = useMemo(
+    () => (isMobile ? mobileCardSubtitle(product) : ''),
+    [isMobile, product],
+  );
+
+  const activeVariantId =
+    product.id ||
+    (product.productVariants && product.productVariants.length > 0
+      ? product.productVariants[0].node.id
+      : null);
+
+  /** Примитив — карточка ре-рендерится только при смене qty своего variant. */
+  const cartQty = useSelector((state: RootState) => {
+    if (!activeVariantId) return 0;
+    return (
+      state.checkout.lines.find((item) => item.variantId === activeVariantId)?.quantity ?? 0
+    );
+  });
+  const inCart = cartQty > 0;
+
+  useEffect(() => {
+    setGalleryIndex(0);
+    setScrubbing(false);
+    setUnlockedThrough(0);
+  }, [galleryKey]);
+
+  useEffect(() => {
     if (isDragging) {
       setShouldBlockClick(true);
-      // Разрешаем клик через задержку после окончания драга
-      const timer = setTimeout(() => {
-        setShouldBlockClick(false);
-      }, 500);
+      const timer = setTimeout(() => setShouldBlockClick(false), 500);
       return () => clearTimeout(timer);
-    } else {
-      // Также проверяем через ref для большей надежности
-      const checkTimer = setInterval(() => {
-        if (isDraggingRef?.current) {
-          setShouldBlockClick(true);
-        } else if (!isDragging) {
-          setShouldBlockClick(false);
-        }
-      }, 50);
-      return () => clearInterval(checkTimer);
     }
+    const checkTimer = setInterval(() => {
+      if (isDraggingRef?.current) {
+        setShouldBlockClick(true);
+      } else if (!isDragging) {
+        setShouldBlockClick(false);
+      }
+    }, 50);
+    return () => clearInterval(checkTimer);
   }, [isDragging, isDraggingRef]);
 
-  // Функция для проверки, нужно ли блокировать клик
-  const shouldBlockNavigation = useCallback((e: React.MouseEvent) => {
-    // Проверяем через ref (более надежно)
-    if (isDraggingRef?.current) {
-      e.preventDefault();
-      e.stopPropagation();
-      return true;
-    }
-    // Проверяем через state
-    if (isDragging || shouldBlockClick) {
-      e.preventDefault();
-      e.stopPropagation();
-      return true;
-    }
-    return false;
-  }, [isDragging, shouldBlockClick, isDraggingRef]);
-  const mainImage =
-    (Array.isArray(product.images) && product.images.length > 0 && product.images[0]) || product.thumbnail;
-  
-  const hoverImage = Array.isArray(product.images) && product.images.length > 1 
-    ? product.images[1] 
-    : null;
-  
-  const formattedPrice = Math.round(product.price).toLocaleString('ru-RU');
-  const formattedOldPrice = product.oldPrice ? Math.round(product.oldPrice).toLocaleString('ru-RU') : null;
+  const shouldBlockNavigation = useCallback(
+    (e: React.MouseEvent) => {
+      if (isDraggingRef?.current || isDragging || shouldBlockClick) {
+        e.preventDefault();
+        e.stopPropagation();
+        return true;
+      }
+      return false;
+    },
+    [isDragging, shouldBlockClick, isDraggingRef],
+  );
 
-  const activeVariantId = product.id || (product.productVariants && product.productVariants.length > 0 
-    ? product.productVariants[0].node.id 
-    : null);
-  
-  // Получаем активный вариант для правильного размера
-  const activeVariant = product.productVariants && product.productVariants.length > 0
-    ? product.productVariants.find(v => v.node.id === product.id) || product.productVariants[0]
+  const scrubFromClientX = useCallback(
+    (clientX: number, el: HTMLElement) => {
+      if (gallery.length <= 1) return;
+      const rect = el.getBoundingClientRect();
+      if (rect.width <= 0) return;
+      const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+      const next = Math.min(gallery.length - 1, Math.floor(ratio * gallery.length));
+      setGalleryIndex(next);
+      setUnlockedThrough((prev) => Math.max(prev, next));
+    },
+    [gallery.length],
+  );
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!hasGallery || isMobile) return;
+      if (e.pointerType !== 'mouse' && e.buttons === 0) return;
+      if (e.pointerType !== 'mouse') scrubMovedRef.current = true;
+      setScrubbing(true);
+      scrubFromClientX(e.clientX, e.currentTarget);
+    },
+    [hasGallery, isMobile, scrubFromClientX],
+  );
+
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!hasGallery || isMobile) return;
+      scrubMovedRef.current = false;
+      if (e.pointerType !== 'mouse') {
+        setScrubbing(true);
+        scrubFromClientX(e.clientX, e.currentTarget);
+      }
+    },
+    [hasGallery, isMobile, scrubFromClientX],
+  );
+
+  const endScrub = useCallback(() => {
+    setScrubbing(false);
+    setGalleryIndex(0);
+  }, []);
+
+  const onMediaClick = (e: React.MouseEvent) => {
+    if (scrubMovedRef.current) {
+      e.preventDefault();
+      scrubMovedRef.current = false;
+      return;
+    }
+    if (shouldBlockNavigation(e)) return;
+    onNavigate?.();
+  };
+
+  const formattedPrice = Math.round(product.price).toLocaleString('ru-RU');
+  const formattedOldPrice = product.oldPrice
+    ? Math.round(product.oldPrice).toLocaleString('ru-RU')
     : null;
+
+  const activeVariant =
+    product.productVariants && product.productVariants.length > 0
+      ? product.productVariants.find((v) => v.node.id === product.id) ||
+        product.productVariants[0]
+      : null;
 
   const quantityLimitForCard =
     activeVariant?.node?.quantityLimitPerCustomer ?? product.quantityLimitPerCustomer ?? null;
@@ -112,71 +202,58 @@ export const BestSellerProductCard: React.FC<{
     | undefined;
   const outOfStock = isVariantOutOfStock({
     trackInventory: stockNode?.trackInventory ?? product.trackInventory,
-    quantityAvailable: stockNode?.quantityAvailable ?? product.quantityAvailable
+    quantityAvailable: stockNode?.quantityAvailable ?? product.quantityAvailable,
   });
 
-  const getVolumeFromVariant = (variant: any): string => {
-    if (!variant?.node?.attributes || !Array.isArray(variant.node.attributes)) {
-      return variant?.node?.name || '';
-    }
-    const volumeAttr = variant.node.attributes.find((attr: any) => 
-      attr.attribute?.slug === 'obem' || 
-      attr.attribute?.slug === 'volume' ||
-      attr.attribute?.name?.toLowerCase().includes('объем') ||
-      attr.attribute?.name?.toLowerCase().includes('volume')
-    );
-    if (volumeAttr?.values?.[0]?.name) {
-      return volumeAttr.values[0].name;
-    } else if (volumeAttr?.values?.[0]?.plainText) {
-      return volumeAttr.values[0].plainText;
-    }
-    return variant?.node?.name || '';
-  };
-
-  const volumes = product.productVariants && product.productVariants.length > 0
-    ? product.productVariants.map(variant => getVolumeFromVariant(variant)).filter(v => v)
-    : [];
-
-  const getVolumeRange = (): string => {
-    if (volumes.length === 0) return '';
-    if (volumes.length === 1) return volumes[0];
-    
-    const volumeNumbers = volumes.map(vol => {
-      const match = vol.match(/(\d+)/);
-      return match ? parseInt(match[1], 10) : 0;
-    }).filter(num => num > 0);
-    
-    if (volumeNumbers.length === 0) {
-      return `${volumes[0]}-${volumes[volumes.length - 1]}`;
-    }
-    
-    const min = Math.min(...volumeNumbers);
-    const max = Math.max(...volumeNumbers);
-    
-    const unitMatch = volumes[0].match(/\d+\s*([а-яa-z]+)/i);
-    const unit = unitMatch ? unitMatch[1] : 'мл';
-    
-    if (min === max) {
-      return volumes[0];
-    }
-    
-    return `${min}-${max} ${unit}`;
-  };
-
-  const volumeRange = getVolumeRange();
-
-  // Тип "ПОДАРОЧНЫЕ СЕРТИФИКАТЫ" — не показываем sizeRow (объёмы/варианты)
   const productTypeAttr = product.attributes?.find(
-    (a: any) => (a.attribute?.slug || '').toLowerCase() === 'product_type' || (a.attribute?.slug || '').toLowerCase() === 'tip-produkta'
+    (a: any) =>
+      (a.attribute?.slug || '').toLowerCase() === 'product_type' ||
+      (a.attribute?.slug || '').toLowerCase() === 'tip-produkta',
   );
-  const productTypeFromAttr = (productTypeAttr?.values?.[0]?.name || productTypeAttr?.values?.[0]?.plainText || '').trim().toUpperCase();
+  const productTypeFromAttr = (
+    productTypeAttr?.values?.[0]?.name ||
+    productTypeAttr?.values?.[0]?.plainText ||
+    ''
+  )
+    .trim()
+    .toUpperCase();
   const productTypeFromProduct = (product.productType?.name || '').trim().toUpperCase();
   const typeStr = productTypeFromAttr || productTypeFromProduct;
-  const isGiftCertificates = typeStr === 'ПОДАРОЧНЫЕ СЕРТИФИКАТЫ' || (typeStr.includes('ПОДАРОЧН') && typeStr.includes('СЕРТИФИКАТ'));
+  const isGiftCertificates =
+    typeStr === 'ПОДАРОЧНЫЕ СЕРТИФИКАТЫ' ||
+    (typeStr.includes('ПОДАРОЧН') && typeStr.includes('СЕРТИФИКАТ'));
+
+  const showDesktopAtc = !isMobile && (mediaHovered || inCart);
+  const hasSellablePrice = Number(product.price) > 0;
+
+  const addToBasketProps = {
+    defaultText: outOfStock ? 'НЕТ В НАЛИЧИИ' : 'В КОРЗИНУ',
+    hoverText: outOfStock ? 'НЕТ В НАЛИЧИИ' : 'В КОРЗИНУ',
+    activeVariantId,
+    title: product.title,
+    thumbnail: mainImage || '',
+    price: product.price,
+    oldPrice: product.oldPrice,
+    discount: product.discount,
+    size: activeVariant ? getVolumeFromVariant(activeVariant) : product.size || '',
+    slug: product.slug,
+    productId: product.id,
+    quantityLimitPerCustomer: quantityLimitForCard,
+    quantityAvailable: stockNode?.quantityAvailable ?? product.quantityAvailable ?? null,
+    trackInventory: stockNode?.trackInventory ?? product.trackInventory ?? null,
+    disabled: outOfStock,
+  };
 
   return (
     <div
-      className={`${styles.productCard} ${styles.card} ${fluid ? styles.fluid : ''}`}
+      className={[
+        styles.productCard,
+        styles.card,
+        fluid ? styles.fluid : '',
+        compact ? styles.compact : '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       {loading && (
         <div className={styles.skeleton} aria-hidden="true">
@@ -190,105 +267,146 @@ export const BestSellerProductCard: React.FC<{
       )}
       {!loading && (
         <>
-          <div 
+          <div
             className={styles.imageBox}
+            data-gallery={hasGallery || undefined}
+            data-scrubbing={scrubbing || undefined}
+            data-in-cart={inCart || undefined}
             onMouseEnter={() => {
-              if (isMobile) return;
-              setIsHovered(true);
-              setHasEverHovered(true);
+              if (!isMobile) setMediaHovered(true);
             }}
             onMouseLeave={() => {
-              if (isMobile) return;
-              setIsHovered(false);
+              if (!isMobile) setMediaHovered(false);
             }}
+            onPointerDown={!isMobile && hasGallery ? onPointerDown : undefined}
+            onPointerMove={!isMobile && hasGallery ? onPointerMove : undefined}
+            onPointerLeave={!isMobile && hasGallery ? endScrub : undefined}
+            onPointerCancel={!isMobile && hasGallery ? endScrub : undefined}
+            onPointerUp={
+              !isMobile && hasGallery ? () => setScrubbing(false) : undefined
+            }
           >
-            {isMobile && activeVariantId && (
+            {isMobile && activeVariantId ? (
               <FavoriteButton productId={activeVariantId} />
-            )}
+            ) : null}
+
             {product.discount && !outOfStock && (
               <span className={styles.discount}>-{product.discount}%</span>
             )}
 
-            {mainImage && (
-              <Link 
-                to={'/product/' + product.slug} 
+            {gallery.length > 0 && (
+              <Link
+                to={'/product/' + product.slug}
                 className={styles.imageLink}
-                onClick={(e) => {
-                  if (shouldBlockNavigation(e)) return;
-                  onNavigate?.();
-                }}
+                aria-label={product.title}
+                onClick={onMediaClick}
                 onMouseDown={(e) => {
-                  // Блокируем на mousedown тоже для большей надежности
                   if (isDraggingRef?.current || isDragging || shouldBlockClick) {
                     e.preventDefault();
                     e.stopPropagation();
                   }
                 }}
               >
-                <ImageWithFallback
-                  src={mainImage}
-                  alt={product.title}
-                  className={`${styles.productImage} ${styles.mainImage} ${isHovered && hoverImage ? styles.hidden : ''}`}
-                  placeholder="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='332' height='332'%3E%3Crect width='100%25' height='100%25' fill='%23F6F5EF'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%236E6D67' font-family='Avenir Next' font-size='14'%3EИзображение%3C/text%3E%3C/svg%3E"
-                />
-                {/* На мобилке hover-изображение не показываем и не грузим вообще */}
-                {!isMobile && hoverImage && hasEverHovered && (
-                  <ImageWithFallback
-                    src={hoverImage}
-                    alt={product.title}
-                    className={`${styles.productImage} ${styles.hoverImage} ${isHovered ? styles.visible : styles.hidden}`}
-                    placeholder="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='332' height='332'%3E%3Crect width='100%25' height='100%25' fill='%23F6F5EF'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%236E6D67' font-family='Avenir Next' font-size='14'%3EИзображение%3C/text%3E%3C/svg%3E"
-                  />
-                )}
+                {gallery.map((url, i) => {
+                  if (i > unlockedThrough && i !== galleryIndex) return null;
+                  const isActive = i === galleryIndex;
+                  const layerClass = !hasGallery
+                    ? styles.galleryImageSolo
+                    : isActive
+                      ? styles.galleryImageActive
+                      : styles.galleryImageIdle;
+                  return (
+                    <ImageWithFallback
+                      key={`${url}-${i}`}
+                      src={url}
+                      alt={isActive ? product.title : ''}
+                      className={`${styles.productImage} ${layerClass}`}
+                      placeholder={IMAGE_PLACEHOLDER}
+                    />
+                  );
+                })}
               </Link>
             )}
 
-            {product.productVariants && product.productVariants.length > 0 && !isGiftCertificates && (
-              <div className={`${styles.sizeRow} ${isHovered ? styles.sizeRowHidden : ''}`}>
-                {product.productVariants.map((variant, index) => {
-                  const volume = getVolumeFromVariant(variant);
-                  
-                  return (
+            {hasGallery ? (
+              <div
+                className={styles.gallerySegments}
+                role={isMobile ? 'tablist' : undefined}
+                aria-label={isMobile ? 'Фото товара' : undefined}
+                aria-hidden={isMobile ? undefined : true}
+              >
+                {gallery.map((_, i) =>
+                  isMobile ? (
                     <button
-                      key={variant.node.id || index}
-                      className={
-                        variant.node.id === product.id ? styles.sizePillActive : styles.sizePill
-                      }
-                    >
-                      {volume || `${index + 1}`}
-                    </button>
-                  );
-                })}
+                      key={i}
+                      type="button"
+                      role="tab"
+                      aria-selected={i === galleryIndex}
+                      aria-label={`Фото ${i + 1}`}
+                      className={styles.gallerySegment}
+                      data-active={i === galleryIndex || undefined}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setGalleryIndex(i);
+                        setUnlockedThrough((prev) => Math.max(prev, i));
+                      }}
+                    />
+                  ) : (
+                    <span
+                      key={i}
+                      className={styles.gallerySegment}
+                      data-active={i === galleryIndex || undefined}
+                    />
+                  ),
+                )}
               </div>
-            )}
+            ) : null}
 
-            {isHovered && (
-              <div className={styles.addToCardWrapper}>
-                <AddToBasket
-                  defaultText={outOfStock ? "НЕТ В НАЛИЧИИ" : "В КОРЗИНУ"}
-                  hoverText={outOfStock ? "НЕТ В НАЛИЧИИ" : "В КОРЗИНУ"}
-                  activeVariantId={activeVariantId}
-                  title={product.title}
-                  thumbnail={mainImage || ''}
-                  price={product.price}
-                  oldPrice={product.oldPrice}
-                  discount={product.discount}
-                  size={activeVariant ? getVolumeFromVariant(activeVariant) : (product.size || '')}
-                  slug={product.slug}
-                  productId={product.id}
-                  quantityLimitPerCustomer={quantityLimitForCard}
-                  quantityAvailable={stockNode?.quantityAvailable ?? product.quantityAvailable ?? null}
-                  trackInventory={stockNode?.trackInventory ?? product.trackInventory ?? null}
-                  disabled={outOfStock}
-                />
+            {!isMobile &&
+              product.productVariants &&
+              product.productVariants.length > 0 &&
+              !isGiftCertificates && (
+                <div
+                  className={`${styles.sizeRow} ${showDesktopAtc ? styles.sizeRowHidden : ''}`}
+                >
+                  {product.productVariants.map((variant, index) => {
+                    const volume = getVolumeFromVariant(variant);
+                    return (
+                      <button
+                        key={variant.node.id || index}
+                        type="button"
+                        className={
+                          variant.node.id === product.id
+                            ? styles.sizePillActive
+                            : styles.sizePill
+                        }
+                      >
+                        {volume || `${index + 1}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+            {hasSellablePrice && !isMobile && (
+              <div
+                className={`${styles.addToCardWrapper} ${showDesktopAtc ? '' : styles.addToCardHidden}`}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onPointerDown={(e) => e.stopPropagation()}
+              >
+                <AddToBasket {...addToBasketProps} />
               </div>
             )}
           </div>
 
           <div className={styles.info}>
             <div className={styles.titleRow}>
-              <Link 
-                to={'/product/' + product.slug} 
+              <Link
+                to={'/product/' + product.slug}
                 className={styles.titleLink}
                 title={product.title}
                 onClick={(e) => {
@@ -296,43 +414,49 @@ export const BestSellerProductCard: React.FC<{
                   onNavigate?.();
                 }}
                 onMouseDown={(e) => {
-                  // Блокируем на mousedown тоже для большей надежности
                   if (isDraggingRef?.current || isDragging || shouldBlockClick) {
                     e.preventDefault();
                     e.stopPropagation();
                   }
                 }}
               >
-                <p className={styles.title}>
-                  {product.title}
-                </p>
+                <p className={styles.title}>{product.title}</p>
               </Link>
               <div className={styles.priceWrapper}>
-                <span className={styles.price}>{formattedPrice}₽</span>
-                {formattedOldPrice && product.oldPrice && product.oldPrice > product.price && (
-                  <span className={styles.oldPrice}>{formattedOldPrice}₽</span>
+                {hasSellablePrice ? (
+                  <>
+                    <span className={styles.price}>{formattedPrice}₽</span>
+                    {formattedOldPrice &&
+                      product.oldPrice &&
+                      product.oldPrice > product.price && (
+                        <span className={styles.oldPrice}>{formattedOldPrice}₽</span>
+                      )}
+                  </>
+                ) : (
+                  <span className={styles.priceMuted}>цена в карточке</span>
                 )}
               </div>
             </div>
             {isMobile ? (
-              <AddToBasket
-                defaultText={outOfStock ? "НЕТ В НАЛИЧИИ" : "В КОРЗИНУ"}
-                hoverText={outOfStock ? "НЕТ В НАЛИЧИИ" : "В КОРЗИНУ"}
-                activeVariantId={activeVariantId}
-                title={product.title}
-                thumbnail={mainImage || ''}
-                price={product.price}
-                oldPrice={product.oldPrice}
-                discount={product.discount}
-                size={activeVariant ? getVolumeFromVariant(activeVariant) : (product.size || '')}
-                slug={product.slug}
-                productId={product.id}
-                variant="card"
-                quantityLimitPerCustomer={quantityLimitForCard}
-                quantityAvailable={stockNode?.quantityAvailable ?? product.quantityAvailable ?? null}
-                trackInventory={stockNode?.trackInventory ?? product.trackInventory ?? null}
-                disabled={outOfStock}
-              />
+              <>
+                {mobileSubtitle ? (
+                  <p className={styles.subtitle}>{mobileSubtitle}</p>
+                ) : null}
+                {hasSellablePrice ? (
+                  <AddToBasket {...addToBasketProps} variant="card" />
+                ) : (
+                  <Link
+                    to={'/product/' + product.slug}
+                    className={styles.openProductLink}
+                    onClick={(e) => {
+                      if (shouldBlockNavigation(e)) return;
+                      onNavigate?.();
+                    }}
+                  >
+                    Смотреть
+                  </Link>
+                )}
+              </>
             ) : (
               renderCardDescription(product.description)
             )}
@@ -342,3 +466,8 @@ export const BestSellerProductCard: React.FC<{
     </div>
   );
 };
+
+export const BestSellerProductCard = React.memo(BestSellerProductCardInner);
+
+/** Основная карточка товара (каталог, лента, избранное, квиз). */
+export const ProductCard = BestSellerProductCard;

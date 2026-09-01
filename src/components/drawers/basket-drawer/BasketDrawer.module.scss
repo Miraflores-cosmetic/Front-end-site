@@ -1,584 +1,321 @@
+@use '@/style/variables.scss' as *;
+
 .drawer {
   height: 100%;
-  width: 664px;
+  width: 100%;
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-
-  @media (max-width: 768px) {
-    width: 100%;
-  }
-
-  .contentWrapper {
-    width: 100%;
-    flex: 1;
-    /* Grow to fill available space */
-    min-height: 0;
-    /* Essential for nested flex scrolling */
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-
-    @media (min-width: 769px) {
-      padding: 0;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px 24px;
-      flex-shrink: 0;
-
-      @media (max-width: 768px) {
-        padding: 16px;
-      }
-
-      .title {
-        text-transform: uppercase;
-        font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-        font-weight: 300;
-        color: black;
-        font-size: 24px;
-        line-height: 1.2;
-
-        @media (max-width: 768px) {
-          font-size: 20px;
-        }
-
-        @media (max-width: 768px) {
-          font-size: 18px;
-          max-width: calc(100% - 80px);
-        }
-      }
-
-      .closeTxt {
-        text-transform: uppercase;
-        cursor: pointer;
-        color: black;
-        font-size: 14px;
-        border: none;
-        background-color: white;
-        padding: 8px 12px;
-        transition: opacity 0.2s;
-        flex-shrink: 0;
-
-        &:hover {
-          opacity: 0.7;
-        }
-
-        @media (max-width: 768px) {
-          font-size: 12px;
-          padding: 6px 10px;
-        }
-      }
-
-      .closeButton {
-        width: 40px;
-        height: 40px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        font-size: 32px;
-        color: black;
-        line-height: 1;
-        padding: 0;
-        transition: opacity 0.2s, transform 0.2s;
-        flex-shrink: 0;
-
-        &:hover {
-          opacity: 0.7;
-          transform: scale(1.1);
-        }
-
-        &:active {
-          transform: scale(0.95);
-        }
-
-        @media (max-width: 768px) {
-          width: 36px;
-          height: 36px;
-          font-size: 28px;
-        }
-      }
-    }
-
-    .progresContainer {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      padding: 12px 0 0;
-      flex-shrink: 0;
-
-      .progresText {
-        padding: 0 24px;
-        font-size: 15px;
-        font-weight: 500;
-        color: #297230;
-        white-space: nowrap;
-
-        @media (max-width: 768px) {
-          font-size: 13px;
-          padding: 0 16px;
-        }
-
-        @media (max-width: 768px) {
-          font-size: 12px;
-          padding: 0 16px;
-        }
-      }
-
-      .progresTrack {
-        width: 100%;
-        height: 36px;
-        background-color: #29723029;
-        overflow: hidden;
-        
-        @media (max-width: 768px) {
-          height: 28px;
-        }
-
-        .progresFill {
-          height: 100%;
-          background-color: #297230;
-          transition: width 0.3s ease;
-        }
-      }
-    }
-
-    .basketList {
-      width: 100%;
-      flex: 1;
-      margin-top: 34px;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      overflow-x: hidden;
-      padding: 0 24px 24px;
-      gap: 24px;
-
-      @media (max-width: 768px) {
-        margin-top: 24px;
-        padding: 0 16px 16px;
-        gap: 20px;
-        height: 100%;
-      }
-
-      &::-webkit-scrollbar {
-        width: 6px;
-      }
-
-      &::-webkit-scrollbar-track {
-        background: #f1f1f1;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 3px;
-
-        &:hover {
-          background: #555;
-        }
-      }
-    }
-
-    .promoSection {
-      padding: 16px 24px;
-      border-top: 1px solid #f0f0f0;
-
-      @media (max-width: 768px) {
-        padding: 0;
-        border: none;
-        margin-top: 24px;
-        margin-bottom: 12px;
-      }
-
-      .promoRow {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        cursor: pointer;
-        gap: 12px;
-        padding: 12px 16px;
-        border: 1px solid #e5e5e5;
-        border-radius: 8px;
-
-        @media (max-width: 768px) {
-          height: 50px;
-          background: #fff;
-          border: 0.5px solid rgba(0, 0, 0, 0.08);
-          border-radius: 0;
-          padding: 0;
-          gap: 20px;
-        }
-
-        .promoIcon {
-          width: 20px;
-          height: 20px;
-
-          @media (max-width: 768px) {
-            width: 18px;
-            height: 18px;
-          }
-        }
-
-        .promoText {
-          flex: 1;
-          font-size: 14px;
-          font-weight: 500;
-          color: #000;
-
-          @media (max-width: 768px) {
-            font-family: 'Avenir Next', sans-serif;
-            font-size: 13px;
-            line-height: 18px;
-            font-weight: 500;
-            color: #000000;
-            margin-left: 0;
-          }
-        }
-
-        .promoPlus {
-          font-size: 20px;
-          font-weight: 400;
-
-          @media (max-width: 768px) {
-            font-size: 16px;
-          }
-        }
-      }
-
-      .promoInputWrapper {
-        margin-top: 12px;
-        display: flex;
-        gap: 8px;
-        align-items: center;
-      }
-
-      .promoInput {
-        flex: 1;
-        padding: 10px 14px;
-        border: 1px solid #e5e5e5;
-        border-radius: 8px;
-        font-size: 14px;
-        font-family: inherit;
-
-        &:focus {
-          outline: none;
-          border-color: #000;
-        }
-
-        @media (max-width: 768px) {
-          border-radius: 0;
-          background: #fff;
-          border: 0.5px solid rgba(0, 0, 0, 0.08);
-        }
-      }
-
-      .promoApplyBtn {
-        padding: 10px 20px;
-        background: #000;
-        color: #fff;
-        border: none;
-        border-radius: 50px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.2s;
-
-        &:hover:not(:disabled) {
-          background: #333;
-        }
-
-        &:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        @media (max-width: 768px) {
-          border-radius: 0;
-        }
-      }
-
-      .appliedPromo {
-        margin-top: 8px;
-        font-size: 14px;
-        color: #297230;
-        font-weight: 500;
-      }
-    }
-  }
+  background: #fff;
+  color: #000;
+  font-family: $font-avenir;
 }
 
-.orderButtonContainer {
-  height: 127px;
-  min-height: 127px;
-  background-color: white;
-  padding: 16px 24px;
+.header {
   flex-shrink: 0;
-  border-top: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 20px 16px;
+  padding-top: max(20px, env(safe-area-inset-top, 0px));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.title {
+  margin: 0;
+  font-family: $font-oceanic;
+  font-size: 24px;
+  font-weight: 300;
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #000;
 
   @media (max-width: 768px) {
-    height: auto;
-    min-height: auto;
-    padding: 16px;
-    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
-  }
-
-  .footerContent {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    justify-content: space-between;
-
-    @media (max-width: 768px) {
-      display: grid;
-      grid-template-columns: 124px 1fr;
-      align-items: center;
-      gap: 12px;
-    }
-  }
-
-  .totalInfo {
-    display: flex;
-    flex-direction: row-reverse;
-    /* Count on Left, Price on Right for Desktop */
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-
-    @media (max-width: 768px) {
-      flex-direction: column;
-      align-items: flex-start;
-      width: 100%;
-      min-width: 124px;
-      gap: 2px;
-    }
-
-    .itemCount {
-      font-size: 16px;
-      color: black;
-      font-weight: 500;
-
-      /* "Summa" label styling */
-      .desktopSumLabel {
-        font-weight: 600;
-        margin-right: 4px;
-
-        @media (max-width: 768px) {
-          display: none;
-        }
-      }
-
-      @media (max-width: 768px) {
-        font-size: 12px;
-        color: #a3a3a3;
-        /* Gray for item count on mobile */
-        order: 2;
-        /* Price first, Count second */
-      }
-    }
-
-    .discountInfo {
-      font-size: 13px;
-      color: #297230;
-      font-weight: 500;
-      margin-top: 4px;
-
-      @media (max-width: 768px) {
-        font-size: 11px;
-      }
-    }
-
-    .priceRow {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-
-      @media (max-width: 768px) {
-        gap: 4px;
-        /* Fix gap between them as per context (was 8px) */
-        order: 1;
-      }
-
-      .mainPrice {
-        font-size: 20px;
-        font-weight: 600;
-        color: black;
-
-        @media (max-width: 768px) {
-          font-size: 16px;
-          /* Use style from Onest 14px bold if needed, but keeping 16px/14px logic? */
-          /* User image shows main price 13590 and old price 24800. size looks similar. */
-          /* But user provided CSS ONLY for .fromMobile (oldPrice). */
-        }
-      }
-
-      .oldPrice {
-        font-size: 16px;
-        color: #a3a3a3;
-        text-decoration: line-through;
-
-        @media (max-width: 768px) {
-          /* User provided exact CSS */
-          font-family: 'Onest', sans-serif;
-          font-size: 13px;
-          font-weight: 600;
-          line-height: 17px;
-          color: #6E6D67;
-          text-transform: uppercase;
-          text-decoration: none;
-          /* remove default strike */
-          position: relative;
-
-          &::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            width: 100%;
-            height: 1px;
-            background: #FF0808;
-            transform: rotate(-8.84deg);
-            /* Exact rotation */
-          }
-        }
-      }
-    }
-  }
-
-  .actions {
-    display: flex;
-    align-items: center;
-    width: 100%;
-    margin-top: auto;
-    /* Push to bottom on desktop */
-
-    @media (max-width: 768px) {
-      width: 100%;
-      margin-top: 0;
-    }
-
-    .orderButtonLeft {
-      width: 100%;
-      height: 48px;
-      background-color: black;
-      color: white;
-      border-radius: 50px;
-      border: none;
-      font-size: 16px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: opacity 0.2s;
-      white-space: nowrap;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-
-      &:hover {
-        opacity: 0.8;
-      }
-
-      &:disabled,
-      &[aria-disabled='true'] {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-
-      @media (max-width: 768px) {
-        height: 36px;
-        font-size: 13px;
-        line-height: 16px;
-        width: 100%;
-      }
-    }
-
-    .orderButtonLoader {
-      width: 14px;
-      height: 14px;
-      border: 2px solid rgba(255, 255, 255, 0.35);
-      border-top-color: #fff;
-      border-radius: 999px;
-      animation: orderButtonSpin 0.75s linear infinite;
-      flex: 0 0 auto;
-    }
-
-    .clearButton {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background-color: transparent;
-      /* Transparent on desktop? Old was transparent with img */
-      /* Mobile design shows BLACK CIRCLE with white icon. Desktop? */
-      /* Old desktop design: transparent background, black/white icon image */
-      /* New JSX uses clearButton with whiteBasketTrash icon for mobile? 
-               Wait, I used whiteBasketTrash in JSX.
-               If I want desktop to look like before (maybe black trash icon?), I should have kept blackBasketTrash for desktop.
-               I can use CSS to invert filter or just background color.
-               
-               Let's assume Desktop should keep clear button simple.
-               Mobile: Black circle.
-            */
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      padding: 0;
-
-      img {
-        width: 24px;
-        height: 24px;
-      }
-
-      @media (max-width: 768px) {
-        background-color: black;
-        width: 40px;
-        height: 40px;
-
-        img {
-          width: 16px;
-          height: 16px;
-          /* Icon is whiteBasketTrash, so it's white. fits on black bg. */
-        }
-      }
-
-      /* Desktop adjustment: If JSX uses white icon, it will be invisible on white background!
-                I need to handle this.
-                The old code imported 'blackBasketTrash'.
-                My new code imports 'whiteBasketTrash'.
-                I should probably use CSS variables or background-image, or just use filter: invert(1) on desktop if it's white?
-                Or bring back black icon?
-                
-                Actually, I can just use a background color on desktop too if that looks okay?
-                Or I can revert JSX to use conditional icon?
-                Conditionals in JSX are messy.
-                Better: Use CSS Mask or Filter.
-                If icon is white, `filter: invert(1)` makes it black.
-            */
-      @media (min-width: 769px) {
-        filter: invert(1);
-      }
-    }
+    font-size: 20px;
   }
 }
 
-.drawer-transition {
-  transition: transform 0.3s ease-in-out;
+.closeBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #000;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+
+  &:hover {
+    background: #f6f5ef;
+  }
 }
 
-.drawer-open {
-  transform: translateX(0);
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 20px;
+  padding: 28px 20px;
 }
 
-.drawer-closed {
-  transform: translateX(100%);
+.emptyText {
+  margin: 0;
+  font-family: $font-avenir;
+  font-size: 16px;
+  font-weight: 400;
+  color: #6e6d67;
+}
+
+.continueBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 22px;
+  border: none;
+  border-radius: 100px;
+  background: #000;
+  color: #fff;
+  font-family: $font-avenir;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.progressBlock {
+  flex-shrink: 0;
+  padding: 12px 20px 0;
+}
+
+.progressText {
+  margin: 0 0 8px;
+  font-family: $font-avenir;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #297230;
+}
+
+.progressNote {
+  margin: 8px 0 0;
+  font-family: $font-avenir;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.progressTrack {
+  /* на всю ширину модалки, не контейнера с padding */
+  width: calc(100% + 40px);
+  margin-left: -20px;
+  margin-right: -20px;
+  height: 28px;
+  background: rgba(41, 114, 48, 0.16);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #297230;
+  transition: width 0.3s ease;
+}
+
+.list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: 8px 0;
+  list-style: none;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+  }
+}
+
+.listItem {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &:last-child article {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+}
+
+.footer {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 20px 24px;
+  padding-bottom: max(24px, env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.promoRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+  margin-bottom: 4px;
+}
+
+.promoField {
+  min-width: 0;
+}
+
+.promoApply {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  margin: 0;
+  padding: 0 14px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: #000;
+  font-family: $font-avenir;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    opacity: 0.7;
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.subtotalRow,
+.totalsRowStrong {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: $font-avenir;
+  font-size: 15px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.totals {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.totalsRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: $font-avenir;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.totalsRowMuted {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  font-family: $font-avenir;
+  font-size: 13px;
+  font-weight: 400;
+  color: #6e6d67;
+  letter-spacing: 0.02em;
+}
+
+.note {
+  margin: 0;
+  font-family: $font-avenir;
+  font-size: 12px;
+  font-weight: 400;
+  color: #6e6d67;
+}
+
+.orderButton {
+  box-sizing: border-box;
+  width: 100%;
+  height: 48px;
+  min-height: 48px;
+  padding: 0 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid transparent;
+  border-radius: 100px;
+  background: #000;
+  color: #fff;
+  font-family: $font-onest, $font-avenir;
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  text-transform: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+
+  @media (max-width: 500px) {
+    font-size: 14px;
+  }
+
+  &:hover:not(:disabled) {
+    background: #fff;
+    border-color: #000;
+    color: #000;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.orderButtonLoader {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 999px;
+  animation: orderButtonSpin 0.75s linear infinite;
+  flex: 0 0 auto;
 }
 
 @keyframes orderButtonSpin {

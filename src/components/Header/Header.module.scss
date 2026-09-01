@@ -1,53 +1,21 @@
+@use '@/style/variables.scss' as *;
+
 .header {
   position: sticky;
   top: 0;
   z-index: 800;
-  background-color: white;
   width: 100%;
-  border-bottom: none;
-  transition: border-bottom 0.3s ease, z-index 0.3s ease;
-  --header-height: 72px; /* 18px padding * 2 + 36px logo height */
-  // Slide Down анимация
+  background-color: $white;
+  /* всегда 0.5px — иначе transition none→solid даёт вспышку чёрной полосы */
+  border-bottom: 0.5px solid transparent;
+  transition: border-color 0.3s ease, z-index 0.3s ease;
+  --header-height: 86px; /* 24px padding * 2 + ~38px logo */
   opacity: 0;
   transform: translateY(-100%);
   animation: slideDown 0.6s ease-out 0.1s forwards;
 
   &.scrolled {
-    border-bottom: 0.5px solid rgba(0, 0, 0, 0.3019607843);
-  }
-
-  .headerContent {
-    width: 100%;
-    max-width: 1536px;
-    margin: 0 auto;
-    padding: 18px 32px;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
-    align-items: center;
-    position: relative;
-    @media (max-width: 768px) {
-      padding: 14px 16px;
-      --header-height: 52px; /* 14px padding * 2 + 24px logo height */
-    }
-
-    // Левая часть в первой колонке
-    > :first-child {
-      grid-column: 1;
-      justify-self: start;
-    }
-
-    // Логотип в центре
-    .logo,
-    .logoMobile {
-      grid-column: 2;
-      justify-self: center;
-    }
-
-    // Правая часть в третьей колонке
-    > :last-child {
-      grid-column: 3;
-      justify-self: end;
-    }
+    border-bottom-color: rgba(0, 0, 0, 0.302);
   }
 }
 
@@ -62,31 +30,246 @@
   }
 }
 
-// Когда drawer открыт, header должен быть ниже drawer
 :global(body.drawer-open) .header {
   z-index: 799;
 }
 
-.logo img {
-  width: 178px;
-  height: 36px;
-  object-fit: contain;
+.inner {
+  width: 100%;
+  max-width: 1536px;
+  margin: 0 auto;
+  padding: 24px 32px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  column-gap: 16px;
+
+  /* Nav mobile = tablet and below (same as JS VIEWPORT_TABLET_MAX) */
+  @media (max-width: $viewport-tablet-max) {
+    padding: 24px 16px;
+    --header-height: 74px; /* 24px * 2 + ~26px mobile logo */
+  }
+}
+
+.left {
+  grid-column: 1;
+  justify-self: start;
+  min-width: 0;
+}
+
+.right {
+  grid-column: 3;
+  justify-self: end;
+  min-width: 0;
+}
+
+.logo,
+.logoMobile {
+  grid-column: 2;
+  justify-self: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
   cursor: pointer;
+  line-height: 0;
+  flex-shrink: 0;
+  /* не даём grid сжимать wordmark до загрузки CSS/картинки */
+  min-width: 0;
+}
+
+.logo img,
+.logoMobile img {
+  display: block;
+  height: auto;
+  max-width: 100%;
+  aspect-ratio: 3401 / 374;
+  object-fit: contain;
+  object-position: center;
+  flex-shrink: 0;
+}
+
+.logo img {
+  width: 186px;
 }
 
 .logoMobile img {
-  width: 118px;
-  height: 24px;
-  object-fit: contain;
-  cursor: pointer;
+  width: 124px;
+}
+
+/* ——— Left: categories / burger ——— */
+
+.navLeft {
   display: flex;
+  align-items: center;
+  gap: 40px;
+
+  a {
+    text-decoration: none;
+    color: $black;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover a {
+    opacity: 0.5;
+  }
+
+  a:hover {
+    opacity: 1;
+  }
+}
+
+.menuButton {
+  border: none;
+  background: transparent;
+  padding: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.burgerIcon {
+  /* две линии одинаковой толщины (2px) и длины */
+  --burger-line: 2px;
+  width: 22px;
+  height: 10px;
+  position: relative;
+  display: block;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: var(--burger-line);
+    background: $black;
+    border-radius: 1px;
+  }
+
+  &::before {
+    top: 0;
+  }
+
+  &::after {
+    bottom: 0;
+  }
+}
+
+/* ——— Right: account / cart / search / menu ——— */
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 40px;
+
+  a,
+  .basket,
+  .searchButton,
+  .menuLink {
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    text-decoration: none;
+    color: $black;
+    font-family: inherit;
+    font-size: 14px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+  }
+
+  &:hover a,
+  &:hover .basket,
+  &:hover .searchButton,
+  &:hover .menuLink {
+    opacity: 0.5;
+  }
+
+  a:hover,
+  .basket:hover,
+  .searchButton:hover,
+  .menuLink:hover {
+    opacity: 1;
+  }
+}
+
+.basket {
+  display: inline-flex;
+  align-items: center;
 }
 
 .cartCount {
-  background-color: #1abc9c;
-  color: white;
-  border-radius: 50%;
-  padding: 2px 6px;
-  font-size: 12px;
-  margin-left: 4px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 8px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background-color: $green-297;
+  color: $white;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  pointer-events: none;
+  animation: cartPop 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.basketMobile {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: $black;
+  font-family: inherit;
+  font-size: 14px;
+  text-transform: uppercase;
+  cursor: pointer;
+
+  .cartCount {
+    margin-left: 4px;
+  }
+}
+
+@keyframes cartPop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .header {
+    opacity: 1;
+    transform: none;
+    animation: none;
+    transition: none;
+  }
+
+  .navLeft a,
+  .navRight a,
+  .navRight .basket,
+  .navRight .searchButton,
+  .navRight .menuLink {
+    transition: none;
+  }
+
+  .cartCount {
+    animation: none;
+  }
 }

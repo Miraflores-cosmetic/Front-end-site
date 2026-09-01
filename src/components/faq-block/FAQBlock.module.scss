@@ -1,127 +1,99 @@
-.faqContainer {
-  width: 100%;
-  padding-top: 240px;
-  padding-right: 32px;
-  padding-left: 0;
-  max-width: 1536px;
-  margin: 0 auto;
-  /* Якорь #faq: хедер sticky + запас (в т.ч. Safari при нативном переходе по #) */
-  scroll-margin-top: 200px;
+@use '@/style/variables.scss' as *;
 
-  // Начальное состояние — скрыто для анимации
+.faqContainer {
+  /* layout: HomeSection */
+
+  @media (max-width: $viewport-mobile-max) {
+    --home-section-pad-end: 0px;
+  }
+}
+
+.title {
+  font-family: $font-oceanic;
+  text-transform: uppercase;
+  font-weight: $font-light;
+  font-size: 64px;
+  text-align: center;
+  color: $black;
+  margin: 0 0 40px;
+
+  @media (max-width: $viewport-mobile-max) {
+    font-size: 24px;
+    margin-bottom: 28px;
+  }
+}
+
+.faqContainerPage {
+  /* без Home gap; заголовок как /contacts — слева */
+  padding-top: 0;
+
   .faqContent {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    align-items: stretch;
+    max-width: none;
+    margin: 0;
   }
 
-  // Анимация при появлении секции
-  &.sectionAnimated {
-    .faqContent {
-      opacity: 1 !important;
-      transform: translateY(0) !important;
+  .title {
+    text-align: left;
+    margin-bottom: 40px;
+
+    @media (max-width: $viewport-mobile-max) {
+      margin-bottom: 16px;
     }
   }
 
-  @media (max-width: 768px) {
-    padding-top: 0;
-    padding-bottom: 100px;
-    margin-top: 0;
-    margin-bottom: 0;
-    scroll-margin-top: 160px;
+  .skeletonTitle {
+    margin-left: 0;
+  }
+}
+
+.statusMsg {
+  margin: 0 0 16px;
+  font-size: 16px;
+  color: $gray-6e;
+  text-align: center;
+}
+
+.retryBtn {
+  appearance: none;
+  border: 1px solid $black;
+  background: transparent;
+  color: $black;
+  padding: 10px 20px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+
+  &:hover {
+    color: $green-297;
+    border-color: $green-297;
   }
 }
 
 .faqContent {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 48px;
-  align-items: start;
-
-  @media (max-width: 1024px) {
-    grid-template-columns: 1fr;
-    gap: 40px;
-  }
-}
-
-.leftColumn {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  min-height: 860px;
-  overflow: hidden;
-
-  @media (max-width: 768px) {
-    display: none;
-  }
-}
-
-.imageWrapper {
-  position: relative;
+  align-items: center;
   width: 100%;
-  overflow: hidden;
-  flex: 1;
-  min-height: 0;
+  max-width: 720px;
+  margin: 0 auto;
 
-  @media (max-width: 1024px) {
-    height: 220px;
-    flex: none;
-  }
-}
-
-.staticImage {
-  display: none;
-}
-
-.images {
-  display: none;
-}
-
-.image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center bottom;
-}
-
-.rightColumn {
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-}
-
-.title {
-  font-family: "Oceanic", "Avenir Next", "Helvetica Neue", Arial, sans-serif;
-  text-transform: uppercase;
-  font-weight: 300;
-  font-size: 64px;
-  text-align: start;
-  color: #1a1a1a;
-  margin: 0;
-
-  @media (max-width: 768px) {
-    font-size: 24px;
+  @media (max-width: $viewport-mobile-max) {
+    max-width: none;
+    align-items: stretch;
   }
 }
 
 .faqList {
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .faqItem {
-  border-bottom: 1px solid #e0e0e0;
-  
-  &:last-child {
-    border-bottom: none;
-  }
+  border-bottom: 1px solid rgba(0, 0, 0, 0.12);
 }
 
 .question {
@@ -129,58 +101,117 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 0;
+  gap: 16px;
+  min-height: 56px;
+  padding: 16px 0;
   background: none;
   border: none;
   text-align: left;
   cursor: pointer;
+  color: $black;
   transition: color 0.2s;
-  
+
   &:hover {
-    color: #297230;
+    color: $green-297;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $black;
+    outline-offset: 2px;
   }
 }
 
 .questionText {
-  font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+  font-family: $font-avenir;
   text-transform: uppercase;
-  color: black;
-  font-weight: 500;
+  color: inherit;
+  font-weight: $font-medium;
   font-size: 16px;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
   flex: 1;
-  padding-right: 16px;
 }
 
-.arrow {
-  font-size: 20px;
-  color: #666;
+.chevron {
   flex-shrink: 0;
-  transition: transform 0.2s;
+  display: inline-flex;
+  color: inherit;
+  transition: transform 0.2s ease;
+}
+
+.chevronOpen {
+  transform: rotate(45deg);
 }
 
 .answer {
-  padding: 0 0 20px 0;
+  padding: 0 0 20px;
   font-size: 16px;
-  line-height: 1.6;
-  color: #666;
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out;
-  
-  &.expanded {
-    max-height: 1000px;
-    opacity: 1;
-    padding: 0 0 20px 0;
+  line-height: 1.55;
+  color: $gray-6e;
+
+  /* collapsed: HTML hidden — не в таб-порядке; без max-height, чтобы длинные ответы не резались */
+  &[hidden] {
+    display: none;
   }
-  
+
   :global {
     p {
-      margin: 0 0 12px 0;
-      
+      margin: 0 0 12px;
+
       &:last-child {
         margin-bottom: 0;
       }
     }
+
+    ul,
+    ol {
+      margin: 0 0 12px;
+      padding-left: 1.25em;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: underline;
+      text-underline-offset: 0.15em;
+    }
+  }
+}
+
+.skeletonTitle {
+  width: 120px;
+  height: 48px;
+  margin: 0 auto 40px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #ebe8e1 0%, #f4f2ec 50%, #ebe8e1 100%);
+  background-size: 200% 100%;
+  animation: faqShimmer 1.2s ease-in-out infinite;
+}
+
+.skeletonRow {
+  width: 100%;
+  height: 56px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: linear-gradient(90deg, #ebe8e1 0%, #f4f2ec 50%, #ebe8e1 100%);
+  background-size: 200% 100%;
+  animation: faqShimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes faqShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chevron {
+    transition: none;
+  }
+
+  .skeletonTitle,
+  .skeletonRow {
+    animation: none;
   }
 }

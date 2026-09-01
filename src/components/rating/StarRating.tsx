@@ -15,8 +15,11 @@ const StarRating: React.FC<StarRatingProps> = ({ rating, max = 5, text }) => {
   const isEmpty = rating === 0;
 
   return (
-    <div className={`${styles.wrapper} ${isEmpty ? styles.emptyState : ''}`}>
-      <div>
+    <div
+      className={`${styles.wrapper} ${isEmpty ? styles.emptyState : ''}`}
+      aria-label={text ? undefined : `Рейтинг ${rating} из ${max}`}
+    >
+      <div aria-hidden={Boolean(text) || undefined}>
         {Array.from({ length: max }).map((_, i) => {
           const isFull = i < fullStars;
           const isHalf = hasHalf && i === fullStars;
@@ -25,7 +28,7 @@ const StarRating: React.FC<StarRatingProps> = ({ rating, max = 5, text }) => {
           if (isFull) className = `${styles.star} ${styles.full}`;
           else if (isHalf) className = `${styles.star} ${styles.half}`;
 
-          return <img key={i} src={starIcon} alt='star' className={className} />;
+          return <img key={i} src={starIcon} alt="" className={className} />;
         })}
       </div>
       {text && <p>{text}</p>}

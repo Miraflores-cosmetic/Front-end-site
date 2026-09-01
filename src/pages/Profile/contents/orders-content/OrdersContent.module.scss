@@ -1,203 +1,206 @@
 .ourOrdersContent {
   display: flex;
   flex-direction: column;
-  gap: 40px;
+  gap: 32px;
+
   @media (max-width: 768px) {
-    margin-top: 24px;
     gap: 24px;
   }
-  .ordersTitleWrapper {
-    margin-bottom: 11px;
-    .ordersTitle {
-      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-      font-size: 36px;
-      font-weight: 300;
-      @media (max-width: 768px) {
-        font-size: 24px;
-        font-weight: 300;
-        line-height: 1.2;
-        padding-top: 24px;
-        border-top: 1px solid #6e6d6799;
-      }
-    }
+}
 
-    @media (max-width: 768px) {
-      margin-bottom: 0px;
-    }
+.statusTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid #6e6d6799;
+  padding-top: 24px;
+
+  @media (max-width: 768px) {
+    gap: 8px;
+    padding-top: 0;
+    border-top: none;
   }
-  .tabsContainer {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    padding: 40px 0;
-    border-top: 1px solid #6e6d6799;
-    border-bottom: 1px solid #6e6d6799;
-    @media (max-width: 768px) {
-      border-top: none;
-      padding: 0;
-      margin-top: 24px;
-    }
+}
 
-    .ordersContainer {
-      .tabs {
-        display: flex;
-        gap: 68px;
-        margin-bottom: 24px;
-        align-items: center;
-        @media (max-width: 1340px) {
-          gap: 50px;
-        }
-        @media (max-width: 1250px) {
-          gap: 40px;
-        }
+.statusTab {
+  appearance: none;
+  border: 1px solid rgba(110, 109, 103, 0.25);
+  border-radius: 100px;
+  background: transparent;
+  padding: 8px 14px;
+  font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6e6d67;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
 
-        @media (max-width: 768px) {
-          gap: 24px;
-          align-items: flex-start;
-          margin-bottom: 16px;
-        }
-
-        .tab {
-          background: none;
-          width: auto;
-          min-width: 157px;
-          border: none;
-          font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-          font-weight: 500;
-          font-size: 16px;
-          text-transform: uppercase;
-          color: #6e6d67;
-          cursor: pointer;
-          transition: color 0.3s;
-          text-align: start;
-          line-height: 1.3;
-          &.active {
-            color: black;
-            width: fit-content;
-            @media (max-width: 768px) {
-              padding-bottom: 24px;
-              width: auto;
-              flex: 1 1 0;
-            }
-          }
-        @media (max-width: 768px) {
-            font-size: 14px;
-            min-width: 0;
-            flex: 1 1 0;
-            text-align: left;
-          }
-        }
-      }
-
-      .orderRow {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 68px;
-        @media (max-width: 1340px) {
-          gap: 50px;
-        }
-        @media (max-width: 1250px) {
-          gap: 40px;
-        }
-
-      @media (max-width: 768px) {
-          gap: 16px;
-          flex-wrap: nowrap;
-          flex-direction: column;
-        }
-        .order {
-          width: 157px;
-          display: flex;
-          flex-direction: column;
-          gap: 4px;
-          .label {
-            font-size: 14px;
-            color: #6e6d67;
-            margin-bottom: 6px;
-            @media (max-width: 768px) {
-              font-size: 13px;
-            }
-          }
-
-          .value {
-            font-size: 15px;
-            font-weight: 500;
-            color: black;
-            @media (max-width: 768px) {
-              padding: 0 14px 0 0;
-            }
-          }
-        }
-      }
-    }
-  }
-  .listContainer {
-    display: flex;
-    flex-direction: column;
-    gap: 24px;
-    @media (max-width: 768px) {
-      gap: 16px;
-    }
-    .activeText {
-      color: #6e6d67;
-      font-size: 14px;
-      font-weight: 400px;
-    }
-    .orderItem {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid #6e6d6799;
-      &:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-      }
-      @media (max-width: 768px) {
-        gap: 12px;
-        padding-bottom: 16px;
-      }
-    }
-    .allText {
-      display: flex;
-      justify-content: space-between;
-      p {
-        color: #6e6d67;
-        font-size: 14px;
-        font-weight: 400px;
-      }
-    }
-  }
-  .addWrapper {
-    display: flex;
-    justify-content: end;
-    .addComment {
-      cursor: pointer;
-      width: 200px;
-      height: 40px;
-      border-radius: 50px;
-      background-color: black;
-      color: white;
-      border: none;
-      font-size: 15px;
-      font-weight: 500;
-      &:hover {
-        background-color: white;
-        border: 1px solid black;
-        color: black;
-      }
-    }
+  &:hover {
+    color: #000;
+    border-color: rgba(0, 0, 0, 0.35);
   }
 
-  .closeBtn {
-    cursor: pointer;
-    color: #6e6d67;
+  @media (max-width: 768px) {
     font-size: 13px;
-    font-weight: 500;
+    padding: 7px 12px;
+  }
+}
 
-    @media (max-width: 768px) {
-      margin-bottom: 24px;
-    }
+.statusTabActive {
+  color: #000;
+  border-color: #000;
+  background: #f6f5ef;
+}
+
+.tabCount {
+  margin-left: 4px;
+  font-size: 11px;
+  vertical-align: super;
+  font-weight: 500;
+  color: inherit;
+}
+
+.ordersList {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+
+  @media (max-width: 768px) {
+    gap: 24px;
+  }
+}
+
+.orderGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 32px;
+  border-bottom: 1px solid rgba(110, 109, 103, 0.35);
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  @media (max-width: 768px) {
+    padding-bottom: 24px;
+  }
+}
+
+.orderHead {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.orderDate {
+  margin: 0;
+  font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 20px;
+  font-weight: 300;
+  line-height: 1.2;
+  color: #000;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
+}
+
+.orderNumber {
+  margin: 6px 0 0;
+  font-size: 14px;
+  font-weight: 400;
+  color: #6e6d67;
+}
+
+.orderTracking {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #6e6d67;
+}
+
+.orderTrackingLink {
+  color: inherit;
+  font-weight: 500;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  &:hover {
+    color: #000;
+  }
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.35;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.badgeAwaiting {
+  background: #fff6e5;
+  color: #8a5a00;
+}
+
+.badgeSuccess {
+  background: #e6f4ea;
+  color: #1e6b2f;
+}
+
+.badgePacking {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.badgeShipped {
+  background: #e8f0fe;
+  color: #1a56b0;
+}
+
+.badgeCancelled {
+  background: #f3f3f3;
+  color: #6b6b6b;
+}
+
+.badgeRefunded {
+  background: #fce8e6;
+  color: #b3261e;
+}
+
+.badgeDefault {
+  background: #f6f5ef;
+  color: #6e6d67;
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.orderTotal {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 4px 0 0;
+  padding-top: 4px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #000;
+
+  span:last-child {
+    font-weight: 600;
   }
 }

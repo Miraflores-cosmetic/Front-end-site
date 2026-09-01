@@ -9,63 +9,90 @@ export interface CartItem {
   name: string;
   size: string;
   count: string;
+  quantity?: number;
   price?: number;
   isGift?: boolean;
   productId?: string;
 }
 
 function formatPrice(amount: number): string {
-  return `${Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')}₽`;
+  return `${Math.round(amount).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ')} ₽`;
 }
 
 interface OrderCartListProps {
   cartData: CartItem[];
   onReview?: (productId: string, productName: string) => void;
+  asListItems?: boolean;
 }
 
-const CardList: React.FC<OrderCartListProps> = ({ cartData, onReview }) => {
+function OrderLineItem({
+  item,
+  onReview,
+}: {
+  item: CartItem;
+  onReview?: (productId: string, productName: string) => void;
+}) {
+  const qty = item.quantity ?? (parseInt(item.count, 10) || 1);
+
+  return (
+    <div className={styles.orderLine}>
+      <div className={styles.imageWrapper}>
+        {qty > 1 ? (
+          <div className={styles.countWrapper}>
+            <span className={styles.count}>{qty}</span>
+          </div>
+        ) : null}
+        <ImageWithFallback
+          src={item.image}
+          alt={item.alt}
+          className={styles.image}
+        />
+      </div>
+
+      <div className={styles.lineBody}>
+        <div className={styles.lineTop}>
+          <p className={styles.name}>{item.name}</p>
+          {!item.isGift && item.price != null ? (
+            <p className={styles.linePrice}>{formatPrice(item.price)}</p>
+          ) : null}
+        </div>
+        {item.size ? <p className={styles.meta}>{item.size}</p> : null}
+        {item.isGift ? (
+          <span className={styles.giftChip}>Подарок</span>
+        ) : (
+          <p className={styles.meta}>{item.count}</p>
+        )}
+        {onReview && item.productId && !item.isGift ? (
+          <button
+            type="button"
+            className={styles.reviewButton}
+            onClick={() => onReview(item.productId!, item.name)}
+          >
+            Оставить отзыв
+          </button>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+const CardList: React.FC<OrderCartListProps> = ({ cartData, onReview, asListItems }) => {
+  if (asListItems) {
+    return (
+      <>
+        {cartData.map(item => (
+          <li key={item.id} className={styles.listItem}>
+            <OrderLineItem item={item} onReview={onReview} />
+          </li>
+        ))}
+      </>
+    );
+  }
+
   return (
     <>
       {cartData.map(item => (
-        <div className={styles.orderCart} key={item.id}>
-          <figure className={styles.cartImageWrapper}>
-            <ImageWithFallback
-              src={item.image}
-              alt={item.alt}
-              className={styles.kremImage}
-            />
-          </figure>
-
-          <div className={styles.cardInfoWrapper}>
-            <div className={styles.top}>
-              <div className={styles.texts}>
-                <p className={styles.name}>{item.name}</p>
-                <p className={styles.size}>{item.size}</p>
-              </div>
-            </div>
-
-            <div className={styles.bottom}>
-              <p className={styles.count}>{item.count}</p>
-
-              {item.isGift ? (
-                <div className={styles.surprise}>Подарок</div>
-              ) : (
-                <div className={styles.price}>
-                  {item.price != null ? formatPrice(item.price) : '—'}
-                </div>
-              )}
-            </div>
-
-            {onReview && item.productId && !item.isGift && (
-              <button
-                className={styles.reviewButton}
-                onClick={() => onReview(item.productId!, item.name)}
-              >
-                Оставить отзыв
-              </button>
-            )}
-          </div>
-        </div>
+        <OrderLineItem key={item.id} item={item} onReview={onReview} />
       ))}
     </>
   );

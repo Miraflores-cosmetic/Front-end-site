@@ -1,20 +1,26 @@
 .wrapper {
   display: flex;
   flex-direction: row;
-  align-items: flex-start;
-  padding: 0px;
-  gap: 4px;
+  align-items: stretch;
+  padding: 0;
+  gap: 0;
   width: 100%;
 }
 
 
 .productPageWrapper {
-  // На странице товара кнопка на всю ширину, без gap
-  gap: 0;
   width: 100%;
-  max-width: 100%; // Ограничиваем максимальную ширину
-  min-width: 0; // Разрешаем сжатие
+  max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
+  align-items: stretch;
+  gap: 8px;
+
+  .mainBtn,
+  .stepper {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 .cardWrapper {
@@ -63,16 +69,16 @@
   height: 40px;
   padding: 8px 16px;
   width: 100%;
-  max-width: 100%; // Ограничиваем максимальную ширину
-  min-width: 0; // Разрешаем сжатие
-  box-sizing: border-box; // Учитываем padding в ширине
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   border-radius: 100px;
   background: #000;
   color: #FFFFFF;
   border: none;
-  overflow: hidden; // Предотвращаем выход содержимого за пределы
-  text-overflow: ellipsis; // Обрезаем текст если он слишком длинный
-  white-space: nowrap; // Не переносим текст на новую строку
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
   &:hover:not(:disabled) {
     background-color: #333;
@@ -80,15 +86,17 @@
 }
 
 .cardBtn {
-  height: 32px;
-  padding: 6px 10px;
+  height: 34px;
+  min-height: 34px;
+  padding: 8px 12px;
   width: 100%;
   background: #ffffff;
   color: #000000;
   border: 1px solid #000000;
-  border-radius: 0;
-  font-size: 13px;
+  border-radius: 100px;
+  font-size: 12px;
   line-height: 16px;
+  box-sizing: border-box;
 
   &:hover:not(:disabled) {
     background-color: #000000;
@@ -123,21 +131,22 @@
 }
 
 .stepperCard {
-  height: 32px;
+  height: 34px;
+  min-height: 34px;
   background: #ffffff;
   color: #000000;
   border: 1px solid #000000;
-  border-radius: 0;
+  border-radius: 100px;
 }
 
 .stepperBtnCard {
-  flex: 0 0 36px;
-  width: 36px;
-  font-size: 18px;
+  flex: 0 0 34px;
+  width: 34px;
+  font-size: 16px;
 }
 
 .stepperCard .stepperCount {
-  font-size: 13px;
+  font-size: 12px;
   line-height: 16px;
 }
 
@@ -181,7 +190,6 @@
   height: 54px;
   color: black;
   border-radius: 0;
-  /* Убираем скругление */
   cursor: pointer;
   display: flex;
   justify-content: center;
@@ -189,72 +197,60 @@
   gap: 24px;
 }
 
+.actionsDivider {
+  display: none;
+}
+
 .favoriteWrapper {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 54px;
-  height: 54px;
-  background: #FFFFFF;
-  border: none;
-  /* Убрали бордер */
   flex-shrink: 0;
-  position: relative;
+  box-sizing: border-box;
+}
 
-  // Черный фон для обёртки, когда избранное активно
-  &:has([class*="active"]) {
-    background: #000000;
+.homeWrapper {
+  gap: 4px;
+
+  .favoriteWrapper {
+    width: 54px;
+    height: 54px;
+    background: #fff;
+    position: relative;
+    transition: background-color 0.2s ease;
+
+    :global(img) {
+      width: 20px !important;
+      height: 20px !important;
+    }
+
+    /* как раньше на карточке: hover / лайк → чёрный фон, белая иконка */
+    &:hover,
+    &:has([aria-pressed='true']) {
+      background: #000;
+
+      :global(img) {
+        filter: brightness(0) invert(1);
+      }
+    }
   }
 }
 
-.favoriteButtonInBasket {
-  position: static !important;
-  width: 100% !important;
-  height: 100% !important;
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  transition: background-color 0.2s ease, color 0.2s ease !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  top: auto !important;
-  right: auto !important;
-  left: auto !important;
-  bottom: auto !important;
-  z-index: 1 !important;
+.productPageWrapper .favoriteWrapper {
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 100px;
+  overflow: hidden;
+  background: #000;
 
-  &:hover {
-    transform: none !important;
-    background: #000000 !important;
-
-    img {
-      filter: brightness(0) invert(1) !important;
-    }
-  }
-
-  &.active,
-  &[class*="active"] {
-    background: #000000 !important;
-
-    &:hover {
-      background: #000000 !important;
-      opacity: 0.8 !important;
-    }
-
-    img {
-      filter: brightness(0) invert(1) !important;
-    }
-  }
-
-  img {
+  :global(img) {
     width: 20px !important;
     height: 20px !important;
-    transition: filter 0.2s ease !important;
-    display: block !important;
-    margin: 0 !important;
-    object-fit: contain !important;
+    filter: brightness(0) invert(1);
   }
+}
+
+.productPageWrapper .favoriteWrapper:has([aria-pressed='true']) {
+  background: #ff0808;
 }

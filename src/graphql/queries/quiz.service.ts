@@ -1,25 +1,10 @@
-import { getPageBySlug, type PageNode } from '@/graphql/queries/pages.service';
-import { QUIZ_PAGE_SLUG } from '@/config/quizContent';
+import { getQuizContent } from '@/api/settingsApi';
 import {
-  attributeSlugToContentKey,
   buildContentItemFromParts,
   mergeQuizContent,
   parseApiContentPayload,
 } from '@/lib/quiz/contentUtils';
 import type { QuizContentMap } from '@/types/quizContent';
-
-interface ApiQuizContentResponse {
-  success: boolean;
-  source?: 'cms' | 'fallback';
-  content?: Record<
-    string,
-    {
-      plain?: string | null;
-      richText?: unknown;
-      mediaUrl?: string | null;
-    }
-  >;
-}
 
 type QuizContentLoadResult = {
   content: QuizContentMap;
@@ -30,61 +15,34 @@ let cachedContent: QuizContentMap | null = null;
 let cachedSource: QuizContentLoadResult['source'] = 'fallback';
 let loadPromise: Promise<QuizContentLoadResult> | null = null;
 
-function parsePageAttributes(page: PageNode): QuizContentMap {
-  const map: QuizContentMap = {};
-
-  for (const attr of page.assignedAttributes ?? []) {
-    const key = attributeSlugToContentKey(attr.attribute.slug);
-    const item = buildContentItemFromParts({
-      plain: typeof attr.textValue === 'string' ? attr.textValue : null,
-      richText: attr.richTextValue,
-      mediaUrl: attr.fileValue?.url ?? attr.value?.url ?? null,
-    });
-    if (item) map[key] = item;
-  }
-
-  return map;
-}
-
 async function fetchQuizContentFromApi(): Promise<QuizContentMap | null> {
   try {
-    const res = await fetch('/api/quiz/content/');
-    if (!res.ok) return null;
-
-    const json = (await res.json()) as ApiQuizContentResponse;
-    if (!json.success || !json.content) return null;
-
-    const parsed = parseApiContentPayload(json.content);
+    const json = await getQuizContent();
+    if (!json.content) return null;
+    const mapped: Record<string, { plain?: string | null; richText?: unknown; mediaUrl?: string | null }> = {};
+    for (const [key, val] of Object.entries(json.content)) {
+      mapped[key] = {
+        plain: val.plain,
+        richText: val.html || undefined,
+        mediaUrl: val.mediaUrl,
+      };
+    }
+    const parsed = parseApiContentPayload(mapped);
     return Object.keys(parsed).length > 0 ? parsed : null;
   } catch {
     return null;
   }
 }
 
-async function fetchQuizContentFromGraphql(): Promise<QuizContentMap | null> {
-  try {
-    const page = await getPageBySlug(QUIZ_PAGE_SLUG);
-    if (!page?.isPublished) return null;
-    return parsePageAttributes(page);
-  } catch {
-    return null;
-  }
-}
-
 export async function loadQuizContent(): Promise<QuizContentLoadResult> {
-  if (cachedContent) {
-    return { content: cachedContent, source: cachedSource };
-  }
-
+  if (cachedContent) return { content: cachedContent, source: cachedSource };
   if (loadPromise) return loadPromise;
 
   loadPromise = (async () => {
     const fromApi = await fetchQuizContentFromApi();
-    const fromGraphql = fromApi ? null : await fetchQuizContentFromGraphql();
-    const cmsMap = fromApi ?? fromGraphql ?? {};
-    const hasCms = Object.keys(cmsMap).length > 0;
+    const hasCms = Boolean(fromApi && Object.keys(fromApi).length > 0);
+    const cmsMap = fromApi ?? {};
     const { content, source } = mergeQuizContent(cmsMap, hasCms ? 'cms' : 'fallback');
-
     cachedContent = content;
     cachedSource = source;
     return { content, source };

@@ -1,41 +1,28 @@
 /**
- * Переводит известные сообщения об ошибках авторизации/учётки с английского на русский.
- * Сообщения приходят из Saleor GraphQL (tokenCreate, accountRegister и т.п.).
+ * Переводит известные EN / HTTP-сообщения auth API на русский.
+ * Сообщения, уже на русском, проходят без изменений.
  */
 const AUTH_ERROR_MAP: Record<string, string> = {
-  // Вход (tokenCreate / create_token.py)
-  'Please, enter valid credentials': 'Введите правильный email и пароль',
-  'Account needs to be confirmed via email.': 'Подтвердите аккаунт по ссылке из письма',
-  'Account inactive.': 'Аккаунт деактивирован',
-  "Can't identify requester IP address.": 'Не удалось определить адрес. Попробуйте позже.',
-  'Email and password are required': 'Введите email и пароль',
-
-  // Регистрация и прочее
-  'User with this Email already exists.': 'Пользователь с таким email уже зарегистрирован',
-
-  // Обновление профиля (authSlice)
-  'Failed to update account': 'Ошибка при обновлении аккаунта',
-
-  // Сетевые ошибки
+  'Invalid credentials': 'Неверный email или пароль',
+  Unauthorized: 'Сессия истекла, войдите снова',
   'Network request failed': 'Проблема с подключением. Проверьте интернет',
   'Failed to fetch': 'Не удалось подключиться к серверу',
-  'Timeout': 'Превышено время ожидания. Попробуйте позже',
-  'Invalid email format': 'Неверный формат email адреса',
-  'Password too weak': 'Пароль слишком простой',
-  'Проблема с подключением. Проверьте интернет': 'Проблема с подключением. Проверьте интернет',
+  Timeout: 'Превышено время ожидания. Попробуйте позже',
+  'Too Many Requests': 'Слишком много попыток. Попробуйте позже.',
 };
 
-/** Проверка по подстроке (для длинных и динамических сообщений). */
-const AUTH_ERROR_PATTERNS: Array<{ test: RegExp | ((s: string) => boolean); text: string }> = [
+const AUTH_ERROR_PATTERNS: Array<{ test: RegExp; text: string }> = [
   {
-    test: (s) =>
-      /Logging has been suspended|too many.*attempts|logging attempts/i.test(s) ||
-      /LOGIN_ATTEMPT_DELAYED/i.test(s),
-    text: 'Слишком много попыток входа. Вход временно заблокирован. Попробуйте позже.',
+    test: /too many|throttl|rate.?limit|429/i,
+    text: 'Слишком много попыток. Попробуйте позже.',
   },
   {
-    test: (s) => /already exists|already registered|unique/i.test(s) && /email|user/i.test(s),
+    test: /already exists|already registered/i,
     text: 'Пользователь с таким email уже зарегистрирован',
+  },
+  {
+    test: /session expired|token.?version|jwt expired|invalid.?token/i,
+    text: 'Сессия истекла, войдите снова',
   },
 ];
 
@@ -47,7 +34,7 @@ export function translateAuthError(message: string | undefined): string {
   if (mapped) return mapped;
 
   for (const { test, text } of AUTH_ERROR_PATTERNS) {
-    if (typeof test === 'function' ? test(trimmed) : test.test(trimmed)) return text;
+    if (test.test(trimmed)) return text;
   }
 
   return trimmed;

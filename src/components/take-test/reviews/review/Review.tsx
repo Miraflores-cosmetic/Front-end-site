@@ -30,9 +30,9 @@ export const Review: React.FC<ReviewProps> = ({
     <div className={`${styles.review} ${wideContent ? styles.reviewsWide : ''}`}>
       {hasImages && (
         <div className={styles.images}>
-          {images.map((img, i) => (
+          {images.map((img) => (
             <ImageWithFallback
-              key={i}
+              key={img}
               src={normalizeMediaUrl(img)}
               alt={title}
               className={styles.reviewImage}
@@ -53,7 +53,7 @@ export const Review: React.FC<ReviewProps> = ({
       </div>
       <div className={styles.content}>
         <h3 className={styles.title}>{title}</h3>
-        <p className={styles.subtitle}>{subtitle}</p>
+        {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
         <p className={styles.text}>{text}</p>
         <p className={styles.date}>{date}</p>
       </div>

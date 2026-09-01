@@ -1,32 +1,31 @@
-import {configureStore} from '@reduxjs/toolkit';
+import { configureStore } from '@reduxjs/toolkit';
 import drawerReducer from './slices/drawerSlice';
-import bestSellerSlice from './slices/bestSellerSlice';
 import bestsellerSlice from './slices/bestsellersSlice';
 import articleSlice from './slices/articleSlice';
 import articlesSlice from './slices/articlesSlice';
-import cartSlice from './slices/cartSlice';
 import authSlice from './slices/authSlice';
 import checkoutSlice from './slices/checkoutSlice';
-import searchSlice from '@/store/slices/searchSlice';
-import navSlice from '@/store/slices/navSlice'
-import productSlice from '@/store/slices/productSlice'
-import categorySlice from '@/store/slices/categorySlice'
+import navSlice from '@/store/slices/navSlice';
+import productSlice from '@/store/slices/productSlice';
+import categorySlice from '@/store/slices/categorySlice';
+import menuFeaturedSlice from '@/store/slices/menuFeaturedSlice';
+import { checkoutListenerMiddleware } from './checkoutListenerMiddleware';
 
 export const store = configureStore({
   reducer: {
     drawer: drawerReducer,
-    bestSellerSlice: bestSellerSlice,
     articleSlice: articleSlice,
     articlesSlice: articlesSlice,
-    cartSlice: cartSlice,
     authSlice: authSlice,
     bestsellerSlice: bestsellerSlice,
     checkout: checkoutSlice,
-    search: searchSlice,
     nav: navSlice,
     product: productSlice,
-    category: categorySlice
-  }
+    category: categorySlice,
+    menuFeatured: menuFeaturedSlice,
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().prepend(checkoutListenerMiddleware.middleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

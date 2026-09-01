@@ -1,136 +1,103 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import styles from '../right-part/OrderRightPart.module.scss';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { useOrderCheckoutOptional } from '../OrderCheckoutContext';
 
 const SumDiscount = () => {
-  const { lines } = useSelector((state: RootState) => state.checkout);
-  const { voucherCode, voucherDiscount } = useSelector((state: RootState) => state.checkout);
+  const { voucherCode, voucherKind } = useSelector((state: RootState) => state.checkout);
   const orderCheckout = useOrderCheckoutOptional();
-
-  const calculations = useMemo(() => {
-    if (!lines || lines.length === 0) {
-      return {
-        totalItems: 0,
-        totalPrice: 0,
-        totalOldPrice: 0,
-        totalDiscount: 0,
-        voucherDiscountAmount: voucherDiscount || 0,
-        shippingRub: null as number | null,
-        shippingLoading: false,
-        shippingError: null as string | null,
-        hasPayableLines: false,
-        addressSelected: false,
-        freePvzShippingApplied: false,
-        finalPrice: 0,
-      };
-    }
-
-    let totalPrice = 0;
-    let totalOldPrice = 0;
-    let totalItems = 0;
-
-    lines.forEach((line: any) => {
-      const quantity = line.quantity || 0;
-      const price = line.price || 0;
-      const oldPrice = line.oldPrice || 0;
-
-      totalItems += quantity;
-      totalPrice += price * quantity;
-      totalOldPrice += (oldPrice > price ? oldPrice : price) * quantity;
-    });
-
-    const totalDiscount = totalOldPrice - totalPrice;
-    const voucherDiscountAmount = voucherDiscount || 0;
-    const hasPayableLines = lines.some((line: any) => !line.isGift);
-    const shippingRub = orderCheckout?.cdekShippingRub ?? null;
-    const shippingLoading = orderCheckout?.cdekShippingLoading ?? false;
-    const shippingError = orderCheckout?.cdekShippingError ?? null;
-    const addressSelected = Boolean(orderCheckout?.selectedAddress);
-    const freePvzShippingApplied = orderCheckout?.freePvzShippingApplied ?? false;
-
-    const shippingIncluded =
-      hasPayableLines && !shippingLoading && shippingRub != null && !shippingError;
-    const shippingAmount = shippingIncluded ? shippingRub : 0;
-
-    const finalPrice = Math.max(0, totalPrice - voucherDiscountAmount + shippingAmount);
-
-    return {
-      totalItems,
-      totalPrice,
-      totalOldPrice,
-      totalDiscount,
-      voucherDiscountAmount,
-      shippingRub,
-      shippingLoading,
-      shippingError,
-      hasPayableLines,
-      addressSelected,
-      freePvzShippingApplied,
-      finalPrice,
-    };
-  }, [lines, voucherDiscount, orderCheckout]);
+  const payable = orderCheckout?.payable;
 
   const formatPrice = (price: number) => {
     return Math.round(price).toLocaleString('ru-RU');
   };
 
+  if (!payable) {
+    return (
+      <section className={styles.sectionSumDiscount}>
+        <div className={styles.sumWrapper}>
+          <p className={styles.sum}>Товары</p>
+          <div className={styles.price}>
+            <p className={styles.priceNew}>0₽</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const shippingPending = payable.hasPayableLines && payable.payableTotal == null;
+  const displayTotal = shippingPending ? payable.goodsTotal : (payable.payableTotal ?? payable.goodsTotal);
+  const sumLabel = shippingPending ? 'Товары' : 'К оплате';
+
   return (
     <section className={styles.sectionSumDiscount}>
       <div className={styles.sumWrapper}>
-        <p className={styles.sum}>Сумма • {calculations.totalItems} {calculations.totalItems === 1 ? 'товар' : calculations.totalItems < 5 ? 'товара' : 'товаров'}</p>
+        <p className={styles.sum}>
+          {sumLabel} • {payable.totalItems}{' '}
+          {payable.totalItems === 1
+            ? 'товар'
+            : payable.totalItems < 5
+              ? 'товара'
+              : 'товаров'}
+        </p>
         <div className={styles.price}>
-          <p className={styles.priceNew}>{formatPrice(calculations.finalPrice)}₽</p>
-          {calculations.totalOldPrice > calculations.finalPrice && (
-            <p className={styles.priceOld}>{formatPrice(calculations.totalOldPrice)}₽</p>
+          <p className={styles.priceNew}>{formatPrice(displayTotal)}₽</p>
+          {payable.totalOldPrice > displayTotal && (
+            <p className={styles.priceOld}>{formatPrice(payable.totalOldPrice)}₽</p>
           )}
         </div>
       </div>
-      {calculations.totalDiscount > 0 && (
+      {payable.catalogDiscount > 0 && (
         <div className={styles.discountWrapper}>
           <p className={styles.name}>Скидка</p>
-          <p className={styles.value}>-{formatPrice(calculations.totalDiscount)}₽</p>
+          <p className={styles.value}>-{formatPrice(payable.catalogDiscount)}₽</p>
         </div>
       )}
-      {voucherCode && calculations.voucherDiscountAmount > 0 && (
+      {voucherCode && payable.voucherDiscount > 0 && (
         <div className={styles.promocodeWrapper}>
-          <p className={styles.name}>Промокод</p>
-          <p className={styles.value}>-{formatPrice(calculations.voucherDiscountAmount)}₽</p>
+          <p className={styles.name}>{voucherKind === 'gift' ? 'Сертификат' : 'Промокод'}</p>
+          <p className={styles.value}>-{formatPrice(payable.voucherDiscount)}₽</p>
         </div>
       )}
-      {calculations.hasPayableLines && (
+      {payable.hasPayableLines && (
         <div className={styles.shippingWrapper}>
           <p className={styles.name}>Доставка</p>
           <div className={styles.shippingValueCol}>
-            {calculations.shippingLoading && (
+            {orderCheckout?.cdekShippingLoading && (
               <p className={styles.shippingValueMuted}>Расчёт…</p>
             )}
-            {!calculations.shippingLoading && calculations.shippingError && (
-              <p className={styles.shippingValueError}>{calculations.shippingError}</p>
+            {!orderCheckout?.cdekShippingLoading && orderCheckout?.cdekShippingError && (
+              <p className={styles.shippingValueError}>{orderCheckout.cdekShippingError}</p>
             )}
-            {!calculations.shippingLoading &&
-              !calculations.shippingError &&
-              calculations.shippingRub != null && (
+            {!orderCheckout?.cdekShippingLoading &&
+              !orderCheckout?.cdekShippingError &&
+              payable.shippingRub != null && (
                 <p className={styles.shippingValue}>
-                  {calculations.freePvzShippingApplied || calculations.shippingRub === 0
+                  {orderCheckout?.freePvzShippingApplied || payable.shippingRub === 0
                     ? 'бесплатно'
-                    : `${formatPrice(calculations.shippingRub)}₽`}
+                    : `${formatPrice(payable.shippingRub)}₽`}
                 </p>
               )}
-            {!calculations.shippingLoading &&
-              !calculations.shippingError &&
-              calculations.shippingRub == null &&
-              !calculations.addressSelected && (
+            {!orderCheckout?.cdekShippingLoading &&
+              !orderCheckout?.cdekShippingError &&
+              payable.shippingRub == null &&
+              !orderCheckout?.selectedAddress && (
                 <p className={styles.shippingValueMuted}>Выберите адрес</p>
               )}
-            {!calculations.shippingLoading &&
-              !calculations.shippingError &&
-              calculations.shippingRub == null &&
-              calculations.addressSelected && (
+            {!orderCheckout?.cdekShippingLoading &&
+              !orderCheckout?.cdekShippingError &&
+              payable.shippingRub == null &&
+              orderCheckout?.selectedAddress && (
                 <p className={styles.shippingValueMuted}>—</p>
               )}
           </div>
+        </div>
+      )}
+      {shippingPending && (
+        <div className={styles.shippingWrapper}>
+          <p className={styles.name}>К оплате</p>
+          <p className={styles.shippingValueMuted}>после расчёта доставки</p>
         </div>
       )}
     </section>

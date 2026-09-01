@@ -18,41 +18,111 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    padding-top: 40px;
-    border-top: 1px solid #6e6d6799;
+    gap: 20px;
+    padding: 32px;
+    border: 1px solid rgba(110, 109, 103, 0.25);
+    border-radius: 16px;
+    background: #faf9f5;
 
-    .about {
-      .aboutTitle {
-        font-size: 16px;
-        font-weight: 500;
-        text-transform: uppercase;
-      }
+    @media (max-width: 768px) {
+      padding: 20px 16px;
+    }
+
+    .aboutHeader {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .aboutTitle {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 500;
+      text-transform: uppercase;
+    }
+
+    .aboutHint {
+      margin: 6px 0 0;
+      font-size: 13px;
+      line-height: 1.4;
+      color: #6e6d67;
+    }
+
+    .editActions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
     }
 
     .aboutWrapper {
-      margin-top: 16px;
-
       .infoGrid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 24px 60px;
-
-        @media (max-width: 1200px) {
-          grid-template-columns: repeat(2, 1fr);
-          gap: 24px 40px;
-        }
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 40px;
+        margin: 0;
 
         @media (max-width: 768px) {
           grid-template-columns: 1fr;
-          gap: 20px;
+          gap: 16px;
         }
+      }
+
+      .field {
+        margin: 0;
+        min-width: 0;
+      }
+
+      .label {
+        margin: 0 0 4px;
+        color: #6e6d67;
+        font-size: 13px;
+        font-weight: 400;
+      }
+
+      .value {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 1.4;
+        color: #000;
+      }
+
+      .valueRow {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 0;
+      }
+
+      .inlineAction {
+        appearance: none;
+        border: none;
+        background: none;
+        padding: 0;
+        font-size: 13px;
+        font-weight: 500;
+        text-decoration: underline;
+        text-transform: uppercase;
+        color: #6e6d67;
+        cursor: pointer;
+        font-family: inherit;
+
+        &:hover {
+          color: #000;
+        }
+      }
+
+      .readOnlyNote {
+        display: none;
       }
 
       .formGrid {
         display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 20px 40px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px 24px;
 
         @media (max-width: 768px) {
           grid-template-columns: 1fr;
@@ -61,11 +131,23 @@
       }
 
       .nameInputs {
-        display: flex;
-        gap: 12px;
+        display: contents;
+      }
 
-        @media (max-width: 480px) {
-          flex-direction: column;
+      .checkboxLabel {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1.4;
+        grid-column: 1 / -1;
+
+        input[type='checkbox'] {
+          margin-top: 2px;
+          width: 18px;
+          height: 18px;
+          flex-shrink: 0;
         }
       }
 
@@ -73,12 +155,6 @@
         color: #6e6d67;
         font-size: 14px;
         margin-bottom: 4px;
-        display: block;
-      }
-
-      .value {
-        font-size: 15px;
-        font-weight: 500;
         display: block;
       }
 
@@ -128,157 +204,26 @@
       }
 
       .passwordBtn {
-        margin-top: 24px;
-        padding: 10px 20px;
-        background: transparent;
-        border: 1px solid #000;
-        border-radius: 50px;
-        font-size: 14px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-
-        &:hover {
-          background: #000;
-          color: #fff;
-        }
+        display: none;
       }
     }
 
     .changeBtn {
+      appearance: none;
       cursor: pointer;
-      position: relative;
-      z-index: 10;
       background: transparent;
-      padding: 4px 0;
-      border: none;
-      margin-left: 0;
-
-      p {
-        font-size: 16px;
-        font-weight: 500;
-        text-decoration: underline;
-        text-transform: uppercase;
-        color: #6e6d67;
-        margin: 0;
-        white-space: nowrap;
-      }
-
-      &:hover p {
-        color: #000;
-      }
-
-      &:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-      }
-    }
-  }
-
-  // Password Modal
-  .modalOverlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-  }
-
-  .modal {
-    background: white;
-    border-radius: 12px;
-    width: 100%;
-    max-width: 420px;
-    margin: 20px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-  }
-
-  .modalHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    border-bottom: 1px solid #e0e0e0;
-
-    h3 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 500;
-    }
-
-    button {
-      background: none;
-      border: none;
-      font-size: 28px;
-      cursor: pointer;
-      color: #666;
       padding: 0;
-      line-height: 1;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: underline;
+      text-transform: uppercase;
+      color: #6e6d67;
+      font-family: inherit;
+      white-space: nowrap;
 
       &:hover {
         color: #000;
-      }
-    }
-  }
-
-  .modalBody {
-    padding: 24px;
-
-    .modalField {
-      margin-bottom: 16px;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-
-      label {
-        display: block;
-        font-size: 14px;
-        color: #666;
-        margin-bottom: 6px;
-      }
-
-      input {
-        width: 100%;
-        padding: 12px 14px;
-        border: 1px solid #e0e0e0;
-        border-radius: 6px;
-        font-size: 15px;
-        box-sizing: border-box;
-        transition: border-color 0.2s;
-
-        &:focus {
-          outline: none;
-          border-color: #000;
-        }
-      }
-    }
-  }
-
-  .modalFooter {
-    display: flex;
-    gap: 12px;
-    padding: 16px 24px 24px;
-
-    .saveBtn {
-      flex: 1;
-      padding: 12px;
-      background: #000;
-      color: #fff;
-      border: none;
-      border-radius: 50px;
-      font-size: 15px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: background 0.2s;
-
-      &:hover:not(:disabled) {
-        background: #333;
       }
 
       &:disabled {
@@ -287,19 +232,20 @@
       }
     }
 
-    .cancelBtn {
-      flex: 1;
-      padding: 12px;
-      background: transparent;
-      color: #000;
-      border: 1px solid #e0e0e0;
-      border-radius: 50px;
-      font-size: 15px;
+    .changeBtnSecondary {
+      appearance: none;
       cursor: pointer;
-      transition: all 0.2s;
+      background: transparent;
+      padding: 0;
+      border: none;
+      font-size: 14px;
+      font-weight: 500;
+      color: #6e6d67;
+      font-family: inherit;
+      white-space: nowrap;
 
       &:hover {
-        border-color: #000;
+        color: #000;
       }
     }
   }
@@ -316,43 +262,6 @@
         font-weight: 500;
         text-transform: uppercase;
       }
-    }
-  }
-
-  .infoBotWrapper {
-    padding-top: 40px;
-    border-top: 1px solid #6e6d6799;
-
-    .telegramBot {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      text-decoration: none;
-      color: inherit;
-      cursor: pointer;
-      transition: opacity 0.2s;
-
-      &:hover {
-        opacity: 0.7;
-      }
-
-      .telegramIcon {
-        width: 20px;
-        height: 20px;
-      }
-
-      .telegramBotText {
-        font-size: 16px;
-        font-weight: 500;
-        text-transform: uppercase;
-      }
-    }
-
-    .telegramBotTextSuccess {
-      color: #297230;
-      font-size: 15px;
-      font-weight: 500;
-      margin-top: 24px;
     }
   }
 

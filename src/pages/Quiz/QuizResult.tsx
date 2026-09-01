@@ -9,12 +9,13 @@ import { useQuizContent } from '@/contexts/QuizContentContext';
 import { useQuizState } from '@/hooks/useQuizState';
 import { buildFaceResult, isFaceQuizComplete, resolveFaceResultBlocks } from '@/lib/quiz';
 import type { CompleteFaceQuizAnswers } from '@/lib/quiz/buildFaceResult';
+import { trackQuizEvent } from '@/lib/quiz/quizAnalytics';
 import { buildSavedQuizPayload } from '@/lib/quiz/savedQuizResult';
 import {
   fetchSavedQuizResult,
   saveQuizResult,
-  setAuthReturnUrl,
-} from '@/graphql/queries/quizResult.service';
+} from '@/services/quizResult.service';
+import { setAuthReturnUrl } from '@/utils/authRedirect';
 import { scrollPageToTopAfterLayout } from '@/utils/scrollPageToTop';
 import { useToast } from '@/components/toast/toast';
 import type { SavedQuizResult } from '@/types/quizResult';
@@ -121,6 +122,29 @@ const QuizResultPage: React.FC = () => {
   useEffect(() => {
     scrollPageToTopAfterLayout();
   }, []);
+
+  useEffect(() => {
+    if (resultSource !== 'session' || !result) return;
+    const blockKeys = result.blocks.flatMap((b) => b.texts);
+    trackQuizEvent({
+      type: 'step_view',
+      zone: 'face',
+      stepKey: 'result',
+      once: true,
+    });
+    trackQuizEvent({
+      type: 'quiz_complete',
+      zone: 'face',
+      stepKey: 'result',
+      once: true,
+      meta: {
+        blockKeys,
+        skin_age: faceAnswers.skin_age,
+        spf: faceAnswers.spf,
+        swelling: faceAnswers.swelling,
+      },
+    });
+  }, [resultSource, result, faceAnswers.skin_age, faceAnswers.spf, faceAnswers.swelling]);
 
   useEffect(() => {
     if (isAuth && result && resultSource === 'session') {

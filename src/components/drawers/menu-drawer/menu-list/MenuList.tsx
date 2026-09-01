@@ -1,6 +1,5 @@
 import React from 'react';
 import styles from './MenuList.module.scss';
-import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { closeDrawer } from '@/store/slices/drawerSlice';
 import AppLink from '@/components/AppLink/AppLink';
@@ -12,60 +11,68 @@ type MenuItem = {
 
 type MenuListProps = {
   title: string;
-  link: string;
+  /** Если задан — заголовок секции это Link (Каталог → /catalog/). */
+  titleHref?: string;
   items: MenuItem[];
   withColor?: boolean;
+  loading?: boolean;
 };
 
-const MenuList: React.FC<MenuListProps> = ({ title, items, withColor, link }) => {
-  const navigate = useNavigate();
+const MenuList: React.FC<MenuListProps> = ({
+  title,
+  titleHref,
+  items,
+  withColor,
+  loading,
+}) => {
   const dispatch = useDispatch();
 
   const handleCloseDrawer = () => {
     dispatch(closeDrawer());
   };
 
-  const handletoCatalog = () => {
-    handleCloseDrawer();
-    if (link) {
-      // Если link это путь к каталогу или другой странице
-      if (link === 'category') {
-        navigate('/catalog/');
-      } else if (link === 'about') {
-        navigate('/about');
-      } else {
-        navigate(`/${link}`);
-      }
-    }
-  };
-
-  const isTitleClickable = Boolean(link);
-
   return (
     <div className={styles.menu}>
-      <div
-        className={`${styles.titleWrapper} ${isTitleClickable ? styles.titleWrapperClickable : ''}`}
-        role={isTitleClickable ? 'button' : undefined}
-        tabIndex={isTitleClickable ? 0 : undefined}
-        onClick={isTitleClickable ? handletoCatalog : undefined}
-        onKeyDown={isTitleClickable ? (e) => e.key === 'Enter' && handletoCatalog() : undefined}
-      >
-        <p className={`${styles.menuTitle} ${withColor ? styles.withColor : ''}`}>{title}</p>
+      <div className={styles.titleWrapper}>
+        {titleHref ? (
+          <AppLink
+            to={titleHref}
+            className={`${styles.menuTitle} ${styles.menuTitleLink} ${withColor ? styles.withColor : ''}`}
+            onClick={handleCloseDrawer}
+          >
+            {title}
+          </AppLink>
+        ) : (
+          <p className={`${styles.menuTitle} ${withColor ? styles.withColor : ''}`}>{title}</p>
+        )}
       </div>
       <ul className={styles.menuList}>
-        {items.map((item, index) => (
-          <li key={index} className={styles.menuItem}>
-            {item.href.startsWith('http') || item.href.startsWith('mailto') || item.href.startsWith('tel') ? (
-              <a href={item.href} onClick={handleCloseDrawer} target={item.href.startsWith('http') ? '_blank' : undefined} rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}>
-                {item.label}
-              </a>
-            ) : (
-              <AppLink to={item.href} onClick={handleCloseDrawer}>
-                {item.label}
-              </AppLink>
-            )}
+        {loading ? (
+          <li className={styles.menuItemMuted} aria-busy="true">
+            Загрузка…
           </li>
-        ))}
+        ) : null}
+        {!loading &&
+          items.map((item) => (
+            <li key={`${item.href}-${item.label}`} className={styles.menuItem}>
+              {item.href.startsWith('http') ||
+              item.href.startsWith('mailto') ||
+              item.href.startsWith('tel') ? (
+                <a
+                  href={item.href}
+                  onClick={handleCloseDrawer}
+                  target={item.href.startsWith('http') ? '_blank' : undefined}
+                  rel={item.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <AppLink to={item.href} onClick={handleCloseDrawer}>
+                  {item.label}
+                </AppLink>
+              )}
+            </li>
+          ))}
       </ul>
     </div>
   );

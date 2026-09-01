@@ -1,0 +1,53 @@
+@use '@/style/variables.scss' as *;
+
+/* Как Win-Win Recommendations: title + ВСЕ в одной строке, близко */
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+}
+
+.link {
+  flex-shrink: 0;
+  margin: 0;
+  margin-top: -4px;
+  padding: 0;
+  font-family: $font-avenir;
+  font-size: inherit;
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 0.12em;
+  color: $green-297;
+  white-space: nowrap;
+  transition: opacity 0.2s ease;
+
+  &:hover {
+    opacity: 0.8;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $green-297;
+    outline-offset: 4px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+@media (max-width: $viewport-mobile-max) {
+  .titleRow {
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .link {
+    margin-top: -6px;
+    font-size: 14px;
+  }
+}

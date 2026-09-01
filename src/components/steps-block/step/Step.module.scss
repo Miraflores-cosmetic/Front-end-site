@@ -1,213 +1,149 @@
 @use '@/style/variables.scss' as *;
 
 .step {
-  position: relative;
-  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  height: auto;
   overflow: hidden;
-  width: 280px;
-  height: 320px;
-  border-radius: 0;
-  background-color: #fff;
-  transition:
-    width 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    height 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-    box-shadow 0.4s ease,
-    transform 0.4s ease;
-  //box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  transform-origin: center top;
-  flex-shrink: 0;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
 
   @media (max-width: $viewport-mobile-max) {
-    display: flex;
-    flex-direction: column;
-    width: 220px;
-    min-width: 220px;
-    height: auto;
-    max-height: none;
+    /* ~78–82vw: крупнее, следующий этап выглядывает за край */
+    width: min(300px, 82vw);
+    min-width: min(300px, 82vw);
     overflow: visible;
-  }
-
-  &:hover {
-    width: 500px; /* карточка становится шире */
-    height: 640px; /* карточка выше */
-    //box-shadow: 0 16px 45px rgba(0, 0, 0, 0.18);
-    z-index: 10;
-    
-    @media (max-width: $viewport-mobile-max) {
-      width: 220px;
-      height: auto;
-    }
-  }
-
-  .stepWrapper {
-    position: relative;
-    width: 100%;
-    height: 320px;
-    overflow: hidden;
-    border-radius: 0;
-    transition: height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-
-    .stepEtap {
-      position: absolute;
-      top: 0;
-      left: 0;
-      height: 43px;
-      background: #297230;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding-left: 10px;
-      padding-right: 10px;
-      font-family: 'Avenir Next', sans-serif;
-      font-style: normal;
-      font-weight: 500;
-      font-size: 14px;
-      line-height: 19px;
-      color: #FFFFFF;
-      z-index: 2;
-    }
-
-    .stepImage {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      border-radius:  0;
-      transition:
-        transform 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-        width 0.6s cubic-bezier(0.22, 1, 0.36, 1),
-        height 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-    }
-  }
-
-  @media (max-width: $viewport-mobile-max) {
-    .stepWrapper {
-      height: 200px;
-      flex-shrink: 0;
-    }
-  }
-
-  &:hover .stepWrapper {
-    height: 480px;
-
-    .stepImage {
-      width: 480px;
-      height: 480px;
-      transform: scale(1.03);
-      margin: 0 auto;
-    }
-
-    @media (max-width: $viewport-mobile-max) {
-      height: 200px;
-
-      .stepImage {
-        width: 100%;
-        height: 100%;
-        transform: none;
-        margin: 0;
-      }
-    }
-  }
-
-  .textContent {
-    opacity: 0;
-    transform: translateY(30px);
-    transition:
-      opacity 0.5s ease 0.25s,
-      transform 0.6s ease 0.25s;
-    padding: 24px 20px 28px 0px;
-    background-color: #fff;
-    border-radius: 0 0 12px 12px;
-
-    .textTitle {
-      font-size: 18px;
-      font-weight: 600;
-      text-transform: uppercase;
-      margin-bottom: 8px;
-      color: #000;
-    }
-
-    .textDesc {
-      font-size: 15px;
-      font-weight: 400;
-      color: #444;
-      line-height: 1.6;
-    }
-
-    @media (max-width: $viewport-mobile-max) {
-      opacity: 1;
-      transform: none;
-      padding: 10px 0 0;
-      border-radius: 0;
-      flex: 1;
-      min-height: 0;
-
-      .textTitle {
-        font-size: 14px;
-        margin-bottom: 6px;
-      }
-
-      .textDesc {
-        font-size: 13px;
-        line-height: 1.5;
-      }
-    }
-  }
-
-  &:hover .textContent {
-    opacity: 1;
-    transform: translateY(0);
-  }
-
-  &.active {
-    width: 500px; /* карточка становится шире */
-    height: 640px; /* карточка выше */
-    z-index: 10;
-
-    .stepWrapper {
-      height: 480px;
-
-      .stepImage {
-        width: 480px;
-        height: 480px;
-        transform: scale(1.03);
-        margin: 0 auto;
-      }
-    }
-
-    .textContent {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    @media (max-width: $viewport-mobile-max) {
-      width: 220px;
-      height: auto;
-      z-index: 1;
-
-      .stepWrapper {
-        height: 200px;
-
-        .stepImage {
-          width: 100%;
-          height: 100%;
-          transform: none;
-          margin: 0;
-        }
-      }
-
-      .textContent {
-        opacity: 1;
-        transform: none;
-      }
-    }
+    scroll-snap-align: start;
   }
 }
 
-/* контейнер карточек */
-.stepsGrid {
-  display: flex;
-  align-items: flex-start;
-  gap: 24px;
-  flex-wrap: wrap;
+.media {
   position: relative;
+  flex: 0 0 auto;
+  width: 280px;
+  height: 280px;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  transition:
+    width 0.4s ease,
+    height 0.4s ease;
+
+  @media (max-width: $viewport-mobile-max) {
+    width: min(300px, 82vw);
+    height: min(300px, 82vw);
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.badge {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 43px;
+  padding: 0 10px;
+  background: $green-297;
+  font-family: 'Avenir Next', sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 19px;
+  color: #fff;
+}
+
+.image,
+.imagePlaceholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagePlaceholder {
+  background: #e8e6e0;
+}
+
+.text {
+  flex: 0 0 auto;
+  width: 100%;
+  max-width: 480px;
+  padding: 20px 12px 0 0;
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+  transition:
+    opacity 0.45s ease 0.15s,
+    transform 0.5s ease 0.15s;
+
+  @media (max-width: $viewport-mobile-max) {
+    max-width: none;
+    padding: 10px 0 0;
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    transition: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.step:hover .text,
+.step:focus-visible .text,
+.step.active .text {
+  @media (min-width: #{$viewport-mobile-max + 1}) {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+  }
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #000;
+
+  @media (max-width: $viewport-mobile-max) {
+    margin-bottom: 6px;
+    font-size: 16px;
+  }
+}
+
+.desc {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: $gray-6e;
+
+  @media (max-width: $viewport-mobile-max) {
+    font-size: 14px;
+  }
+}
+
+.step.active {
+  @media (min-width: #{$viewport-mobile-max + 1}) {
+    .media {
+      width: 480px;
+      height: 480px;
+      margin-inline: auto;
+    }
+
+    .text {
+      margin-inline: auto;
+    }
+  }
 }

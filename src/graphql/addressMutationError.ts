@@ -1,4 +1,4 @@
-import type { AddressInput } from '@/graphql/types/adress.types';
+import type { AddressInput } from '@/graphql/types/address.types';
 
 export type AddressFormFieldKey = keyof AddressInput;
 
@@ -23,7 +23,7 @@ const SALEOR_FIELD_TO_FORM: Record<string, AddressFormFieldKey> = {
     firstName: 'firstName',
     lastName: 'lastName',
     phone: 'phone',
-    companyName: 'companyName',
+    companyName: 'apartment',
     postal_code: 'postalCode',
     street_address_1: 'streetAddress1',
     street_address_2: 'streetAddress2',
@@ -31,7 +31,8 @@ const SALEOR_FIELD_TO_FORM: Record<string, AddressFormFieldKey> = {
     country_area: 'countryArea',
     first_name: 'firstName',
     last_name: 'lastName',
-    company_name: 'companyName',
+    company_name: 'apartment',
+    apartment: 'apartment',
 };
 
 function normalizeErrorField(field: string | null | undefined | string[]): string | null {

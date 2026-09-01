@@ -1,4 +1,4 @@
-import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
+import { extractProductCardDescription } from '@/utils/productCardDescription';
 import type { BestSellersProduct } from '@/types/products';
 
 /** Маппинг узла Saleor Product → карточка каталога. */
@@ -37,28 +37,7 @@ export function mapProductNodeToBestSeller(productNode: any): BestSellersProduct
       oldPrice = undefined;
     }
   }
-  let description = '';
-  if (productNode.attributes && Array.isArray(productNode.attributes)) {
-    const descAttr = productNode.attributes.find((attr: any) =>
-      attr.attribute?.slug === 'opisanie-v-kartochke-tovara' ||
-      attr.attribute?.name?.toLowerCase().includes('описание') ||
-      attr.attribute?.name?.toLowerCase().includes('description'),
-    );
-    if (descAttr?.values?.[0]?.plainText) description = descAttr.values[0].plainText;
-    else if (descAttr?.values?.[0]?.name) description = descAttr.values[0].name;
-  }
-  if (!description && productNode.description) {
-    try {
-      const parsed =
-        typeof productNode.description === 'string'
-          ? JSON.parse(productNode.description)
-          : productNode.description;
-      description = parsed?.blocks?.[0]?.data?.text || '';
-    } catch {
-      description = '';
-    }
-  }
-  description = sanitizeProductCardDescription(description, { preserveHtml: true });
+  let description = extractProductCardDescription(productNode, { preserveHtml: true });
   let productVariants: any[] = [];
   if (Array.isArray(productNode.productVariants)) {
     productVariants = productNode.productVariants;

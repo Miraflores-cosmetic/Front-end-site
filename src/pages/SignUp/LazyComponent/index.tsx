@@ -2,60 +2,74 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from '../SignUp.module.scss';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import siteLogo from '@/assets/icons/Logo-mira.svg';
 import { TextField } from '@/components/text-field/TextField';
 import { Button } from '@/components/button/Button';
 import goBackIcon from '@/assets/icons/go-back.svg';
-import { Eye, EyeClosed } from 'lucide-react';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
 import {
   setEmail,
-  setPass,
   switchSignUpAgreement,
   setFalseSignUpAgreement,
   sendSignUpData,
-  sendSignInData,
-  clearSignUpSuccessOnly
+  clearSignUpSuccessOnly,
+  getMe,
 } from '@/store/slices/authSlice';
 import { useToast } from '@/components/toast/toast';
 import { translateAuthError } from '@/utils/translateAuthError';
-import { peekAuthReturnUrl, resolvePostAuthRedirect } from '@/graphql/queries/quizResult.service';
+import { resolvePostAuthRedirect } from '@/utils/authRedirect';
+import {
+  PASSWORD_POLICY_HINT,
+  validatePasswordPolicy,
+} from '@/utils/passwordPolicy';
+import {
+  completeRegistrationWithPassword,
+  peekCompletionToken,
+} from '@/api/authApi';
+import { useDocumentSeo } from '@/hooks/useDocumentSeo';
 
-// Email validation function
 const validateEmail = (email: string): boolean => {
   if (!email || !email.trim()) return false;
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email.trim());
-};
-
-// Password validation function
-const validatePassword = (password: string): { valid: boolean; errors: string[] } => {
-  const errors: string[] = [];
-  if (password.length < 8) {
-    errors.push('Минимум 8 символов');
-  }
-  return { valid: errors.length === 0, errors };
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 };
 
 const LazyComponent: React.FC = () => {
-  const [isPasswordShowed, setIsPasswordShowed] = useState<boolean>(false);
+  useDocumentSeo({
+    title: 'Регистрация',
+    description: 'Регистрация в Miraflores',
+    canonicalPath: '/sign-up',
+    noIndex: true,
+  });
+
+  const [pass, setPass] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [emailTouched, setEmailTouched] = useState<boolean>(false);
-  const [passwordTouched, setPasswordTouched] = useState<boolean>(false);
-  
+  const [emailTouched, setEmailTouched] = useState(false);
+  const [passwordTouched, setPasswordTouched] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [consentMarketing, setConsentMarketing] = useState(false);
+  const [resumeMode, setResumeMode] = useState(
+    () => typeof window !== 'undefined' && !!peekCompletionToken(),
+  );
+
   const toast = useToast();
-  const { email, pass, signUp, isAuth } = useSelector((state: RootState) => state.authSlice);
+  const { email, signUp, isAuth } = useSelector((state: RootState) => state.authSlice);
 
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromState = (location.state as { from?: string } | null) ?? null;
 
   useEffect(() => {
     dispatch(setFalseSignUpAgreement());
     if (isAuth) {
-      navigate(resolvePostAuthRedirect('/'));
+      navigate(resolvePostAuthRedirect('/', fromState));
+    }
+    if (resumeMode && !email.trim()) {
+      const stored = (localStorage.getItem('email') || '').trim();
+      if (stored) dispatch(setEmail(stored));
     }
   }, []);
 
@@ -67,14 +81,11 @@ const LazyComponent: React.FC = () => {
       navigate('/');
     }
   };
-  const handleSignIn = () => navigate('/sign-in');
-  const handleConfirmEmail = () => navigate('/email-confirmation');
 
-  // Email validation handlers
   const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     dispatch(setEmail(value));
-    
+
     if (emailTouched || value.length > 0) {
       if (value && !validateEmail(value)) {
         setEmailError('Введите корректный email адрес');
@@ -93,44 +104,77 @@ const LazyComponent: React.FC = () => {
     }
   };
 
-  // Password validation handlers
   const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    dispatch(setPass(value));
-    
+    setPass(value);
+
     if (passwordTouched || value.length > 0) {
-      const validation = validatePassword(value);
-      if (!validation.valid) {
-        setPasswordError(validation.errors[0]);
-      } else {
-        setPasswordError(null);
-      }
+      setPasswordError(validatePasswordPolicy(value));
     }
   };
 
   const handlePasswordBlur = () => {
     setPasswordTouched(true);
-    const validation = validatePassword(pass);
-    if (!validation.valid) {
-      setPasswordError(validation.errors[0]);
-    } else {
-      setPasswordError(null);
+    setPasswordError(validatePasswordPolicy(pass));
+  };
+
+  const passwordRequirements = [
+    { text: 'Минимум 8 символов', met: pass.length >= 8 },
+    { text: 'Хотя бы одна буква', met: /[A-Za-zА-Яа-яЁё]/.test(pass) },
+    { text: 'Хотя бы одна цифра', met: /\d/.test(pass) },
+  ];
+
+  const handleCompleteResume = async () => {
+    const policyError = validatePasswordPolicy(pass);
+    const resumeEmail =
+      email.trim() ||
+      (typeof window !== 'undefined' ? (localStorage.getItem('email') || '').trim() : '');
+    if (!validateEmail(resumeEmail)) {
+      setEmailTouched(true);
+      setEmailError('Введите корректный email адрес');
+      setResumeMode(false);
+      toast.error('Email не найден. Начните регистрацию заново.');
+      return;
+    }
+    if (policyError) {
+      setPasswordTouched(true);
+      setPasswordError(policyError);
+      return;
+    }
+    if (!peekCompletionToken()) {
+      setResumeMode(false);
+      toast.error('Сессия регистрации истекла. Запросите код снова.');
+      return;
+    }
+
+    setCompleting(true);
+    try {
+      const result = await completeRegistrationWithPassword(resumeEmail, pass);
+      if (result.token) {
+        // JWT уже в LS через setAccessToken в completeRegistrationWithPassword
+        localStorage.removeItem('email');
+      }
+      await dispatch(getMe());
+      toast.success('Регистрация завершена');
+      navigate(resolvePostAuthRedirect('/', fromState));
+    } catch (error: unknown) {
+      const msg =
+        error instanceof Error ? error.message : 'Не удалось завершить регистрацию';
+      toast.error(translateAuthError(msg));
+    } finally {
+      setCompleting(false);
     }
   };
 
-  // Password requirements
-  const passwordRequirements = [
-    { text: 'Минимум 8 символов', met: pass.length >= 8 },
-    { text: 'Заглавная буква (рекомендуется)', met: /[A-Z]/.test(pass) },
-    { text: 'Строчная буква (рекомендуется)', met: /[a-z]/.test(pass) },
-    { text: 'Цифра (рекомендуется)', met: /[0-9]/.test(pass) },
-  ];
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (resumeMode) {
+      await handleCompleteResume();
+      return;
+    }
 
-  // Handle form submission
-  const handleSubmit = () => {
-    // Validate before submission
     const emailValid = validateEmail(email);
-    const passwordValid = validatePassword(pass).valid;
+    const policyError = validatePasswordPolicy(pass);
 
     if (!emailValid) {
       setEmailTouched(true);
@@ -138,58 +182,56 @@ const LazyComponent: React.FC = () => {
       return;
     }
 
-    if (!passwordValid) {
+    if (policyError) {
       setPasswordTouched(true);
-      const validation = validatePassword(pass);
-      setPasswordError(validation.errors[0]);
+      setPasswordError(policyError);
       return;
     }
 
-    dispatch(sendSignUpData({ email, pass }));
-  };
+    if (!signUp.agreeChecked) {
+      toast.warning('Нужно согласие с офертой и политикой конфиденциальности');
+      return;
+    }
 
-  useEffect(() => {
-    if (!signUp.success) return;
+    try {
+      const result = await dispatch(
+        sendSignUpData({ email, password: pass, consentMarketing }),
+      ).unwrap();
+      dispatch(clearSignUpSuccessOnly());
+      setPass('');
 
-    // Сразу сбрасываем флаг, иначе при повторных рендерах / Strict Mode эффект
-    // снова вызывает автологин и показывает несколько toast подряд.
-    dispatch(clearSignUpSuccessOnly());
-
-    dispatch(sendSignInData({ email, pass }))
-      .unwrap()
-      .then(() => {
-        toast.success('Успешно зарегистрирован!');
-        if (peekAuthReturnUrl()) {
-          return;
-        }
-        setTimeout(() => handleConfirmEmail(), 1500);
-      })
-      .catch(() => {
-        toast.success('Успешно зарегистрирован!');
-        if (peekAuthReturnUrl()) {
-          return;
-        }
-        setTimeout(() => handleConfirmEmail(), 1500);
-      });
-    // toast из контекста — новый объект на каждом рендере, не кладём в deps
-  }, [signUp.success, email, pass, dispatch]);
-
-  useEffect(() => {
-    if (signUp.error) {
-      const errorMessage = translateAuthError(signUp.error.message);
-      toast.error(errorMessage);
-      
-      // Handle case when user already exists - show warning with suggestion
-      if (errorMessage.includes('уже зарегистрирован') || signUp.error.message?.includes('already exists')) {
-        // User can click on "Войти" link in the UI to navigate to sign in
+      if (result?.otpSent) {
+        toast.success('Код отправлен на email — подтвердите регистрацию');
+        setTimeout(() => navigate('/email-confirmation', { state: fromState }), 400);
+      } else {
+        toast.warning(
+          result?.message ||
+            'Если аккаунт уже есть — войдите. Иначе проверьте почту или попробуйте позже.',
+        );
       }
-      
-      // Log error in dev mode
+    } catch (error: unknown) {
+      const msg =
+        error instanceof Error
+          ? error.message
+          : String((error as { message?: string })?.message ?? '');
+      toast.error(translateAuthError(msg));
       if (import.meta.env.DEV) {
-        console.error('SignUp error:', signUp.error);
+        console.error('SignUp error:', error);
       }
     }
-  }, [signUp.error]);
+  };
+
+  const busy = signUp.loadingStatus || completing;
+  const resumeEmailForSubmit =
+    email.trim() ||
+    (typeof window !== 'undefined' ? (localStorage.getItem('email') || '').trim() : '');
+  const canSubmit =
+    !busy &&
+    !emailError &&
+    !passwordError &&
+    validateEmail(resumeMode ? resumeEmailForSubmit : email) &&
+    !validatePasswordPolicy(pass) &&
+    (resumeMode || signUp.agreeChecked);
 
   return (
     <div className={styles.signUpWrapper}>
@@ -202,88 +244,158 @@ const LazyComponent: React.FC = () => {
         >
           <img src={goBackIcon} alt="" aria-hidden />
         </button>
-        <img src={siteLogo} alt='Miraflores' className={styles.logo} onClick={handleNavigatetoHome} />
-      </div>
-      
-      {/* Progress indicator */}
-      <div className={styles.progressBar}>
-        <div className={`${styles.step} ${styles.active}`}>
-          <span className={styles.stepNumber}>1</span>
-          <span className={styles.stepText}>Регистрация</span>
-        </div>
-        <div className={styles.step}>
-          <span className={styles.stepNumber}>2</span>
-          <span className={styles.stepText}>Подтверждение email</span>
-        </div>
+        <button
+          type="button"
+          className={styles.logoButton}
+          onClick={handleNavigatetoHome}
+          aria-label="На главную"
+        >
+          <img src={siteLogo} alt="" className={styles.logo} />
+        </button>
       </div>
 
-      <h2 className={styles.title}>Регистрация </h2>
-      <p className={styles.login}>
-        Уже есть аккаунт? <span onClick={handleSignIn}>Войти</span>
-      </p>
-      <div className={styles.textFieldWrapper}>
-        <TextField 
-          label='Email' 
-          value={email} 
-          onChange={handleEmailChange}
-          onBlur={handleEmailBlur}
-          error={emailError}
-        />
-        <div className={styles.password_container}>
+      {!resumeMode ? (
+        <div className={styles.progressBar}>
+          <div className={`${styles.step} ${styles.active}`}>
+            <span className={styles.stepNumber}>1</span>
+            <span className={styles.stepText}>Регистрация</span>
+          </div>
+          <div className={styles.step}>
+            <span className={styles.stepNumber}>2</span>
+            <span className={styles.stepText}>Подтверждение email</span>
+          </div>
+        </div>
+      ) : (
+        <div className={styles.progressBar}>
+          <div className={styles.step}>
+            <span className={styles.stepNumber}>1</span>
+            <span className={styles.stepText}>Email</span>
+          </div>
+          <div className={styles.step}>
+            <span className={styles.stepNumber}>2</span>
+            <span className={styles.stepText}>Код</span>
+          </div>
+          <div className={`${styles.step} ${styles.active}`}>
+            <span className={styles.stepNumber}>3</span>
+            <span className={styles.stepText}>Пароль</span>
+          </div>
+        </div>
+      )}
+
+      <h1 className={styles.title}>
+        {resumeMode ? 'Шаг 3 · задайте пароль' : 'Регистрация'}
+      </h1>
+      {resumeMode ? (
+        <p className={styles.resumeBanner}>
+          Email подтверждён
+          {email ? (
+            <>
+              {' '}
+              (<strong>{email}</strong>)
+            </>
+          ) : null}
+          . Страница обновилась — пароль не сохраняется в браузере, введите его ещё раз,
+          чтобы завершить регистрацию.
+        </p>
+      ) : (
+        <p className={styles.login}>
+          Уже есть аккаунт?{' '}
+          <Link to="/sign-in" className={styles.inlineLink}>
+            Войти
+          </Link>
+        </p>
+      )}
+
+      <form className={styles.form} onSubmit={(e) => void handleSubmit(e)} noValidate>
+        <div className={styles.textFieldWrapper}>
+          {!resumeMode && (
+            <TextField
+              label="Email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={handleEmailChange}
+              onBlur={handleEmailBlur}
+              error={emailError}
+            />
+          )}
           <TextField
-            label='Пароль'
-            type={isPasswordShowed ? 'text' : 'password'}
+            label="Пароль"
+            type="password"
+            autoComplete="new-password"
             value={pass}
             onChange={handlePasswordChange}
             onBlur={handlePasswordBlur}
             error={passwordError}
+            autoFocus={resumeMode}
           />
-          <div
-            className={styles.password_eye}
-            onClick={() => setIsPasswordShowed(!isPasswordShowed)}
-          >
-            {isPasswordShowed ? <Eye /> : <EyeClosed />}
-          </div>
+          <p className={styles.login}>{PASSWORD_POLICY_HINT}</p>
+
+          {pass.length > 0 && (
+            <div className={styles.passwordRequirements}>
+              {passwordRequirements.map((req, idx) => (
+                <p
+                  key={idx}
+                  className={`${styles.requirement} ${req.met ? styles.met : styles.unmet}`}
+                >
+                  <span className={styles.checkmark}>{req.met ? '✓' : '○'}</span>
+                  {req.text}
+                </p>
+              ))}
+            </div>
+          )}
         </div>
-        
-        {/* Password requirements */}
-        {pass.length > 0 && (
-          <div className={styles.passwordRequirements}>
-            {passwordRequirements.map((req, idx) => (
-              <p 
-                key={idx} 
-                className={`${styles.requirement} ${req.met ? styles.met : styles.unmet}`}
-              >
-                <span className={styles.checkmark}>{req.met ? '✓' : '○'}</span>
-                {req.text}
-              </p>
-            ))}
-          </div>
+
+        {!resumeMode && (
+          <>
+            <div className={styles.agrrementWrapper}>
+              <input
+                id="signup-agree-personal"
+                type="checkbox"
+                className={styles.checkbox}
+                checked={signUp.agreeChecked}
+                onChange={() => dispatch(switchSignUpAgreement())}
+              />
+              <label htmlFor="signup-agree-personal" className={styles.agreementTxt}>
+                Нажимая на кнопку «Далее», я соглашаюсь с условиями{' '}
+                <Link to="/info/oferta-i-usloviia-polzovaniia" className={styles.agreementLink}>
+                  Публичной оферты
+                </Link>{' '}
+                и выражаю своё согласие на обработку моих персональных данных в соответствии с{' '}
+                <Link to="/info/politika-konfidentsialnosti" className={styles.agreementLink}>
+                  Политикой конфиденциальности
+                </Link>
+              </label>
+            </div>
+            <div className={styles.agrrementWrapper}>
+              <input
+                id="signup-agree-marketing"
+                type="checkbox"
+                className={styles.checkbox}
+                checked={consentMarketing}
+                onChange={(e) => setConsentMarketing(e.target.checked)}
+              />
+              <label htmlFor="signup-agree-marketing" className={styles.agreementTxt}>
+                Хочу получать новости и спецпредложения на email (необязательно)
+              </label>
+            </div>
+          </>
         )}
-      </div>
-      <div className={styles.agrrementWrapper}>
-        <input
-          type='checkbox'
-          className={styles.checkbox}
-          checked={signUp.agreeChecked}
-          onChange={e => dispatch(switchSignUpAgreement())}
+
+        <Button
+          type="submit"
+          text={
+            busy
+              ? resumeMode
+                ? 'Создание...'
+                : 'Регистрация...'
+              : resumeMode
+                ? 'Создать аккаунт'
+                : 'Далее'
+          }
+          disabled={!canSubmit}
         />
-        <p className={styles.agreementTxt}>
-          Нажимая на кнопку «Далее», я соглашаюсь с условиями{' '}
-          <Link to='/info/oferta-i-usloviia-polzovaniia' className={styles.agreementLink}>
-            Публичной оферты
-          </Link>{' '}
-          и выражаю своё согласие на обработку моих персональных данных в соответствии с{' '}
-          <Link to='/info/politika-konfidentsialnosti' className={styles.agreementLink}>
-            Политикой конфиденциальности
-          </Link>
-        </p>
-      </div>
-      <Button
-        text={signUp.loadingStatus ? 'Регистрация...' : 'Далее'}
-        onClick={handleSubmit}
-        disabled={!signUp.agreeChecked || signUp.loadingStatus || !!emailError || !!passwordError}
-      />
+      </form>
     </div>
   );
 };

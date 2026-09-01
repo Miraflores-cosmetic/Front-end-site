@@ -61,77 +61,37 @@ export default defineConfig({
   server: {
     port: 5173,
     open: true,
-    // Proxy GraphQL requests to the backend during development to avoid CORS issues.
-    // In development set VITE_GRAPHQL_URL to '/graphql' so the client calls the same origin
-    // and the dev server forwards requests to the real backend.
+    /**
+     * Фаза 4: только Админ панель 2.0
+     * - Nest API :3001
+     * - Next BFF (CDEK/Yandex) :3010
+     */
     proxy: {
-      '/graphql': {
-        target: 'https://miraflores-shop.com',
+      '/api/v1': {
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
-        secure: true
+        secure: false,
       },
-      '/api/checkout': {
-        target: 'https://miraflores-shop.com',
+      '/uploads': {
+        target: 'http://127.0.0.1:3001',
         changeOrigin: true,
-        secure: true,
+        secure: false,
       },
       '/api/cdek': {
-        target: 'http://localhost:3001',
+        target: 'http://127.0.0.1:3010',
         changeOrigin: true,
-        secure: false
-      },
-      '/api/yandex': {
-        target: 'http://localhost:3001',
-        changeOrigin: true,
-        secure: false
+        secure: false,
       },
       '/api/yandex-delivery': {
-        target: 'http://localhost:3001',
+        target: 'http://127.0.0.1:3010',
         changeOrigin: true,
         secure: false,
       },
-      '/api/yookassa': {
-        target: 'http://localhost:3002',
+      '/api/yandex': {
+        target: 'http://127.0.0.1:3010',
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api\/yookassa/, '') // Remove /api/yookassa prefix
       },
-      '/voucher': { // Proxy for voucher validation
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false
-      },
-      '/auth': { // Proxy for auth endpoints
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false
-      },
-      '/api/products': { // Proxy for products by care stage endpoint
-        target: 'https://miraflores-shop.com',
-        changeOrigin: true,
-        secure: true
-      },
-      '/api/steps': { // Proxy for steps endpoint
-        target: 'https://miraflores-shop.com',
-        changeOrigin: true,
-        secure: true
-      },
-      '/api/quiz': {
-        target: 'https://miraflores-shop.com',
-        changeOrigin: true,
-        secure: true
-      },
-      '/api/favorites': { // Proxy for favorites endpoint
-        target: 'https://miraflores-shop.com',
-        changeOrigin: true,
-        secure: true,
-        rewrite: (path) => path.replace(/^\/api\/favorites$/, '/api/favorites/') // Добавляем trailing slash для сервера
-      },
-      '/checkout': { // Proxy for checkout endpoints (alternative path)
-        target: 'http://localhost:8000',
-        changeOrigin: true,
-        secure: false
-      }
     }
   }
 });

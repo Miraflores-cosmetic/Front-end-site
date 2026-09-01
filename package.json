@@ -4,8 +4,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -n \"cdek,yookassa,vite\" -c \"blue,yellow,green\" \"npm run cdek-proxy\" \"npm run yookassa-api\" \"vite\"",
-    "dev:all": "concurrently -n \"cdek,yookassa,vite\" -c \"blue,yellow,green\" \"npm run cdek-proxy\" \"npm run yookassa-api\" \"vite\"",
+    "dev": "vite",
+    "dev:legacy-proxies": "concurrently -n \"cdek,yookassa,vite\" -c \"blue,yellow,green\" \"npm run cdek-proxy\" \"npm run yookassa-api\" \"vite\"",
+    "dev:all": "vite",
     "build": "tsc -b && vite build",
     "build:optimize": "tsc -b && vite build --mode production",
     "preview": "vite preview",
@@ -24,6 +25,7 @@
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.9.0",
+    "animejs": "^4.5.0",
     "axios": "^1.13.1",
     "classnames": "^2.5.1",
     "cors": "^2.8.5",

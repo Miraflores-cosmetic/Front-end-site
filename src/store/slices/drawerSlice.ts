@@ -7,7 +7,6 @@ type DrawerType =
   | 'menu'
   | 'profile'
   | 'about'
-  | 'add-comment'
   | 'search'
   | null;
 

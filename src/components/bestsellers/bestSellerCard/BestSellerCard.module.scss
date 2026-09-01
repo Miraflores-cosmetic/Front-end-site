@@ -1,3 +1,5 @@
+@use '@/style/variables.scss' as *;
+
 // Родительский класс для карточки товара - все стили применяются только внутри этого класса
 .productCard {
   display: flex;
@@ -9,7 +11,7 @@
   height: 540px;
   box-sizing: border-box;
 
-  @media (max-width: 768px) {
+  @media (max-width: $viewport-mobile-max) {
     width: 100%;
     height: auto;
   }
@@ -21,7 +23,7 @@
     width: 432px;
     min-height: 540px;
 
-    @media (max-width: 768px) {
+    @media (max-width: $viewport-mobile-max) {
       width: 100%;
     }
   }
@@ -39,7 +41,7 @@
     background-size: 200% 100%;
     animation: skeletonShimmer 1.2s ease-in-out infinite;
 
-    @media (max-width: 768px) {
+    @media (max-width: $viewport-mobile-max) {
       width: 100%;
       aspect-ratio: 1 / 1;
       height: auto;
@@ -116,8 +118,9 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    touch-action: pan-y;
 
-    @media (max-width: 768px) {
+    @media (max-width: $viewport-mobile-max) {
       width: 100%;
       height: auto;
       aspect-ratio: 1 / 1;
@@ -125,14 +128,24 @@
 
     .addToCardWrapper {
       position: absolute;
-      bottom: 5px; /* Выше вариантов товара */
+      bottom: 5px;
       left: 0;
       right: 0;
       display: flex;
       justify-content: center;
       align-items: center;
       padding: 0 5px;
-      z-index: 6; /* Выше вариантов */
+      z-index: 6;
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.2s ease, visibility 0.2s ease;
+    }
+
+    .addToCardHidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
     }
 
     .imageLink {
@@ -143,66 +156,100 @@
       position: relative;
     }
 
-    img {
-      width: 442px;
-      height: 452px;
-      max-width: 100%;
-      max-height: 100%;
-      object-fit: cover;
-      display: block;
-      margin: 0;
-      transition: opacity 0.3s ease;
-
-      @media (max-width: 768px) {
-        width: 100%;
-        height: 100%;
-        aspect-ratio: auto;
-      }
-    }
-
+    img,
     .productImage {
-      width: 442px;
-      height: 452px;
+      width: 100%;
+      height: 100%;
       max-width: 100%;
       max-height: 100%;
       object-fit: cover;
       display: block;
       margin: 0;
-      transition: opacity 0.3s ease;
-
-      @media (max-width: 768px) {
-        width: 100%;
-        height: 100%;
-        aspect-ratio: auto;
-      }
     }
 
-    .mainImage {
-      position: relative;
-      z-index: 1;
-      
-      &.hidden {
-        opacity: 0;
-        position: absolute;
-        top: 0;
-        left: 0;
-      }
-    }
-
-    .hoverImage {
+    .galleryImageActive,
+    .galleryImageIdle {
       position: absolute;
-      top: 0;
-      left: 0;
-      z-index: 2;
+      inset: 0;
+      transition: opacity 0.12s ease;
+    }
+
+    .galleryImageSolo {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .galleryImageActive {
+      opacity: 1;
+      z-index: 1;
+    }
+
+    .galleryImageIdle {
       opacity: 0;
-      transition: opacity 0.3s ease;
-      
-      &.visible {
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .gallerySegments {
+      position: absolute;
+      left: 8px;
+      bottom: 48px;
+      z-index: 4;
+      display: flex;
+      gap: 3px;
+      width: min(72px, 36%);
+      opacity: 0;
+      transition: opacity 0.15s ease;
+      pointer-events: none;
+
+      @media (max-width: $viewport-mobile-max) {
+        bottom: 8px;
+        width: min(96px, 48%);
+        gap: 4px;
+        pointer-events: auto;
+      }
+    }
+
+    &[data-gallery]:hover .gallerySegments,
+    &[data-gallery][data-scrubbing] .gallerySegments,
+    &[data-in-cart] .gallerySegments {
+      opacity: 1;
+    }
+
+    @media (hover: none) {
+      &[data-gallery] .gallerySegments {
         opacity: 1;
       }
-      
-      &.hidden {
-        opacity: 0;
+    }
+
+    .gallerySegment {
+      flex: 1 1 0;
+      height: 1.5px;
+      min-height: 1.5px;
+      padding: 0;
+      border: none;
+      border-radius: 1px;
+      background: rgba(0, 0, 0, 0.18);
+      appearance: none;
+      cursor: default;
+
+      &[data-active] {
+        background: rgba(0, 0, 0, 0.72);
+      }
+
+      @media (max-width: $viewport-mobile-max) {
+        /* hit-area выше тонкой полоски */
+        height: 12px;
+        min-height: 12px;
+        padding: 5px 0;
+        background-clip: content-box;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+
+        &[data-active] {
+          background-clip: content-box;
+        }
       }
     }
 
@@ -224,7 +271,7 @@
       color: #FFFFFF;
       z-index: 2;
 
-      @media (max-width: 768px) {
+      @media (max-width: $viewport-mobile-max) {
         height: 28px;
         width: auto;
         min-width: 44px;
@@ -282,18 +329,6 @@
       background: rgba(0, 0, 0, 0.18);
       min-width: 57px;
     }
-
-    // Мобилка: компактные варианты/объёмы
-    @media (max-width: 768px) {
-      .sizePill,
-      .sizePillActive {
-        height: 28px;
-        padding: 6px 8px;
-        min-width: 44px;
-        font-size: 12px;
-        line-height: 16px;
-      }
-    }
   }
 
   .info {
@@ -305,7 +340,7 @@
     width: 432px;
     box-sizing: border-box;
 
-    @media (max-width: 768px) {
+    @media (max-width: $viewport-mobile-max) {
       width: 100%;
     }
 
@@ -319,7 +354,7 @@
       width: 100%;
       height: 44px;
 
-      @media (max-width: 768px) {
+      @media (max-width: $viewport-mobile-max) {
         flex-direction: column;
         align-items: flex-start;
         height: auto;
@@ -369,36 +404,28 @@
         white-space: nowrap;
         margin-left: auto;
 
-        @media (max-width: 768px) {
+        @media (max-width: $viewport-mobile-max) {
           margin-left: 0;
           justify-content: flex-start;
           margin-top: 4px;
         }
 
         .oldPrice {
-          position: relative;
           min-width: auto;
           height: 20px;
           font-family: 'Onest', sans-serif;
           font-style: normal;
-          font-weight: 600;
+          font-weight: 500;
           font-size: 16px;
           line-height: 20px;
           text-transform: uppercase;
-          color: #6E6D67;
+          color: #6e6d67;
           margin: 0;
           white-space: nowrap;
-
-          &::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 0;
-            left: 0;
-            top: 4.5px;
-            border: 1px solid #FF0808;
-            transform: rotate(-11.31deg);
-          }
+          text-decoration: line-through;
+          text-decoration-thickness: 1px;
+          text-underline-offset: 0;
+          text-decoration-color: rgba(110, 109, 103, 0.85);
         }
 
         .price {
@@ -412,6 +439,16 @@
           text-transform: uppercase;
           color: #000000;
           margin: 0;
+          white-space: nowrap;
+        }
+
+        .priceMuted {
+          font-family: 'Avenir Next', sans-serif;
+          font-size: 13px;
+          line-height: 17px;
+          font-weight: 400;
+          color: #6e6d67;
+          text-transform: none;
           white-space: nowrap;
         }
 
@@ -464,6 +501,47 @@
       }
     }
 
+    .subtitle {
+      width: 100%;
+      margin: 0;
+      font-family: 'Avenir Next', sans-serif;
+      font-style: normal;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 16px;
+      color: #6e6d67;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .openProductLink {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 34px;
+      min-height: 34px;
+      padding: 8px 12px;
+      box-sizing: border-box;
+      border: 1px solid #000;
+      border-radius: 100px;
+      background: #fff;
+      color: #000;
+      font-family: 'Avenir Next', sans-serif;
+      font-size: 12px;
+      line-height: 16px;
+      font-weight: 500;
+      text-transform: uppercase;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+
+      &:hover {
+        background: #000;
+        color: #fff;
+      }
+    }
+
     .volume {
       width: 100%;
       max-width: 287px;
@@ -481,7 +559,7 @@
 }
 
 // Мобилка: уменьшаем типографику карточки (в 2 колонки)
-@media (max-width: 768px) {
+@media (max-width: $viewport-mobile-max) {
   .productCard {
     gap: 12px;
 
@@ -512,6 +590,11 @@
         line-height: 16px;
         min-height: 32px;
       }
+
+      .subtitle {
+        font-size: 12px;
+        line-height: 15px;
+      }
     }
   }
 }
@@ -521,7 +604,7 @@
   @extend .productCard;
 }
 
-// Узкий контейнер (квиз и др.): карточка занимает 100% ячейки сетки
+// Растягивание на ширину ячейки (лента, квиз) — без смены типографики main-карточки
 .fluid {
   width: 100%;
   height: auto;
@@ -545,7 +628,18 @@
 
   .info {
     width: 100%;
+  }
 
+  img,
+  .productImage {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// Узкие колонки (квиз): компактная типографика
+.compact {
+  .info {
     .titleRow {
       flex-direction: column;
       align-items: flex-start;
@@ -569,11 +663,5 @@
       line-height: 16px;
       min-height: auto;
     }
-  }
-
-  img,
-  .productImage {
-    width: 100%;
-    height: 100%;
   }
 }

@@ -1,28 +1,20 @@
-// src/components/toast/toast.tsx
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, AlertCircle, X } from 'lucide-react';
-import styles from './toast.module.scss'; // <- CSS module import
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import styles from './toast.module.scss';
 
 type ToastType = 'success' | 'error' | 'warning';
-
-interface ToastData {
-  id: string;
-  type: ToastType;
-  message: string;
-}
 
 interface ToastContextType {
   success: (message: string) => void;
   error: (message: string) => void;
   warning: (message: string) => void;
-}
-
-interface ToastProps {
-  id: string;
-  type: ToastType;
-  message: string;
-  onClose: (id: string) => void;
 }
 
 interface ToastProviderProps {
@@ -39,76 +31,59 @@ export const useToast = (): ToastContextType => {
   return context;
 };
 
-const Toast: React.FC<ToastProps> = ({ id, type, message, onClose }) => {
-  const icons: Record<ToastType, ReactNode> = {
-    success: <CheckCircle className={styles.toast__icon_svg} />,
-    error: <XCircle className={styles.toast__icon_svg} />,
-    warning: <AlertCircle className={styles.toast__icon_svg} />
-  };
-
-  const typeClass: Record<ToastType, string> = {
-    success: styles['toast--success'],
-    error: styles['toast--error'],
-    warning: styles['toast--warning']
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      onClose(id);
-    }, 5000);
-    return () => clearTimeout(timer);
-  }, [id, onClose]);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: -50, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      exit={{ opacity: 0, x: 300, scale: 0.8 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-      className={`${styles.toast} ${typeClass[type]}`}
-    >
-      <div className={styles.toast__icon}>{icons[type]}</div>
-      <p className={styles.toast__message}>{message}</p>
-      <button
-        onClick={() => onClose(id)}
-        className={styles.toast__close}
-        aria-label="Close notification"
-      >
-        <X className={styles.toast__close_icon}/>
-      </button>
-    </motion.div>
-  );
-};
+const DEFAULT_DURATION_MS = 2800;
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
-  const [toasts, setToasts] = useState<ToastData[]>([]);
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState('');
+  const [toastType, setToastType] = useState<ToastType>('success');
+  const [durationMs, setDurationMs] = useState(DEFAULT_DURATION_MS);
+  const [animKey, setAnimKey] = useState(0);
 
-  const addToast = (type: ToastType, message: string): void => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
-    setToasts(prev => [...prev, { id, type, message }]);
-  };
+  const show = useCallback((type: ToastType, next: string, nextDuration = DEFAULT_DURATION_MS) => {
+    setToastType(type);
+    setMessage(next);
+    setDurationMs(nextDuration);
+    setAnimKey((k) => k + 1);
+    setOpen(true);
+  }, []);
 
-  const removeToast = (id: string): void => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
-  };
+  useEffect(() => {
+    if (!open) return;
+    const t = window.setTimeout(() => setOpen(false), durationMs);
+    return () => window.clearTimeout(t);
+  }, [open, message, durationMs, animKey]);
 
-  const toast: ToastContextType = {
-    success: (message: string) => addToast('success', message),
-    error: (message: string) => addToast('error', message),
-    warning: (message: string) => addToast('warning', message)
-  };
+  const toast = useMemo<ToastContextType>(
+    () => ({
+      success: (message: string) => show('success', message),
+      error: (message: string) => show('error', message),
+      warning: (message: string) => show('warning', message),
+    }),
+    [show],
+  );
 
   return (
     <ToastContext.Provider value={toast}>
       {children}
-      <div className={styles.toastContainer}>
-        <AnimatePresence mode="popLayout">
-          {toasts.map(t => (
-            <Toast key={t.id} {...t} onClose={removeToast} />
-          ))}
-        </AnimatePresence>
-      </div>
+      {open ? (
+        <div
+          key={animKey}
+          className={[
+            styles.toast,
+            toastType === 'error' ? styles.toastError : '',
+            toastType === 'warning' ? styles.toastWarning : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          role="status"
+          aria-live="polite"
+        >
+          {message}
+        </div>
+      ) : null}
     </ToastContext.Provider>
   );
 };
+
 export default ToastProvider;

@@ -1,0 +1,853 @@
+@use '@/style/variables.scss' as *;
+
+.productLoader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  width: 100%;
+}
+
+@keyframes pdpSkeletonShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.skeleton {
+  width: 100%;
+  max-width: $page-max-width;
+  margin: 0 auto;
+  padding: 24px 32px 48px;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    padding: 24px 16px calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.skeletonBreadcrumbs {
+  margin-bottom: 20px;
+  max-width: 240px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 12px;
+    max-width: 180px;
+  }
+}
+
+.skeletonMain {
+  display: flex;
+  align-items: stretch;
+  gap: 32px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 24px;
+  }
+}
+
+.skeletonTitleMobile {
+  display: none;
+
+  @media (max-width: 768px) {
+    display: block;
+    order: -1;
+    height: 28px;
+    width: 88%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #f3f1eb 0%, #eae7df 40%, #f3f1eb 80%);
+    background-size: 200% 100%;
+    animation: pdpSkeletonShimmer 1.2s ease-in-out infinite;
+  }
+}
+
+.skeletonMedia {
+  flex: 0 0 calc((100% - 32px) / 2);
+  width: calc((100% - 32px) / 2);
+  aspect-ratio: 1;
+  border-radius: 0;
+  background: linear-gradient(90deg, #f3f1eb 0%, #eae7df 40%, #f3f1eb 80%);
+  background-size: 200% 100%;
+  animation: pdpSkeletonShimmer 1.2s ease-in-out infinite;
+
+  @media (max-width: 768px) {
+    flex: 0 0 100%;
+    width: 100%;
+  }
+}
+
+.skeletonInfo {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 4px;
+}
+
+.skeletonTitle,
+.skeletonLine,
+.skeletonLineShort,
+.skeletonPrice,
+.skeletonTabs,
+.skeletonCta {
+  display: block;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #f3f1eb 0%, #eae7df 40%, #f3f1eb 80%);
+  background-size: 200% 100%;
+  animation: pdpSkeletonShimmer 1.2s ease-in-out infinite;
+}
+
+.skeletonTitle {
+  height: 48px;
+  width: 78%;
+  margin-bottom: 8px;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+.skeletonLine {
+  height: 14px;
+  width: 100%;
+}
+
+.skeletonLineShort {
+  height: 14px;
+  width: 62%;
+}
+
+.skeletonPrice {
+  height: 28px;
+  width: 120px;
+  margin-top: 4px;
+
+  @media (max-width: 768px) {
+    margin-top: 0;
+    order: -2;
+  }
+}
+
+.skeletonTabs {
+  height: 44px;
+  width: 70%;
+  margin-top: 8px;
+
+  @media (max-width: 768px) {
+    order: -1;
+  }
+}
+
+.skeletonCta {
+  height: 44px;
+  width: 100%;
+  max-width: 360px;
+  margin-top: 8px;
+  border-radius: 100px;
+
+  @media (max-width: 768px) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeletonTitleMobile,
+  .skeletonMedia,
+  .skeletonTitle,
+  .skeletonLine,
+  .skeletonLineShort,
+  .skeletonPrice,
+  .skeletonTabs,
+  .skeletonCta {
+    animation: none;
+  }
+}
+
+.productNotFound {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  min-height: 50vh;
+  max-width: $page-max-width;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+  box-sizing: border-box;
+  gap: 16px;
+
+  @media (max-width: 768px) {
+    padding: 40px 16px 120px;
+  }
+}
+
+.productNotFoundTitle {
+  margin: 0;
+  font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 36px;
+  font-weight: 300;
+  line-height: 1.15;
+  text-transform: uppercase;
+  color: #000;
+
+  @media (max-width: 768px) {
+    font-size: 24px;
+  }
+}
+
+.productNotFoundText {
+  margin: 0;
+  max-width: 36em;
+  font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: #6e6d67;
+}
+
+.productNotFoundActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.productNotFoundPrimary,
+.productNotFoundSecondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 20px;
+  border-radius: 100px;
+  font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.productNotFoundPrimary {
+  background: #000;
+  color: #fff;
+
+  &:hover {
+    background: #333;
+  }
+}
+
+.productNotFoundSecondary {
+  background: #fff;
+  color: #000;
+  border: 1px solid #000;
+
+  &:hover {
+    background: #000;
+    color: #fff;
+  }
+}
+
+.bestSellerContainer {
+  padding: 0;
+  min-height: 100vh;
+  background-color: $white;
+  /* visible: лента бестселлеров bleed’ит к краю viewport (clip резал strip) */
+  overflow-x: visible;
+
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE 10+ */
+  max-width: 100%;
+  margin: 0;
+}
+
+.productMain {
+  --page-max-width: #{$page-max-width};
+  max-width: var(--page-max-width);
+  margin: 0 auto;
+  padding: 24px 32px 0;
+
+  @media (max-width: 768px) {
+    /* sticky ATC + safe-area; footer clearance via --pdp-sticky-clearance */
+    padding: 24px 16px calc(72px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.breadcrumbs {
+  margin: 0 0 20px;
+
+  @media (max-width: 768px) {
+    margin-bottom: 12px;
+  }
+}
+
+.breadcrumbsList {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.breadcrumbItem {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+  font-size: 13px;
+  line-height: 1.3;
+  color: #6e6d67;
+}
+
+.breadcrumbLink {
+  color: #6e6d67;
+  text-decoration: none;
+  white-space: nowrap;
+
+  &:hover {
+    color: #297230;
+  }
+}
+
+.breadcrumbCurrent {
+  color: #000;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(48vw, 320px);
+}
+
+.breadcrumbSep {
+  margin: 0 8px;
+  color: #6e6d6799;
+}
+
+.purchaseBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  margin-top: 0;
+
+  @media (max-width: 768px) {
+    gap: 12px;
+  }
+}
+
+.purchasePrice {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.purchasePriceMain {
+  font-size: 24px;
+  font-weight: 600;
+  color: #000;
+
+  @media (max-width: 768px) {
+    font-family: 'Onest', 'Avenir Next', sans-serif;
+    font-size: 18px;
+    line-height: 22px;
+  }
+}
+
+.purchasePriceOld {
+  font-size: 18px;
+  color: #6e6d67b3;
+  text-decoration: line-through;
+
+  @media (max-width: 768px) {
+    font-size: 14px;
+  }
+}
+
+.purchaseOutOfStock {
+  font-size: 20px;
+  font-weight: 600;
+  color: #6e6d67;
+
+  @media (max-width: 768px) {
+    font-size: 16px;
+  }
+}
+
+.bestSellerContainer {
+  .bestSellerInfo {
+    width: 100%;
+    padding: 0;
+    display: flex;
+    align-items: stretch;
+    gap: 32px;
+    box-sizing: border-box;
+    position: relative;
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    // Заголовок для мобилки - виден только на мобилке
+    .titleMobile {
+      display: none;
+      
+      @media (max-width: 768px) {
+        display: block;
+        color: #000;
+        font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+        font-size: 24px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: normal;
+        text-transform: uppercase;
+        text-align: start;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        word-break: break-word;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        margin: 0 0 16px;
+        order: -1;
+      }
+    }
+    
+    .imagePart {
+      flex: 0 0 calc((100% - 32px) / 2);
+      width: calc((100% - 32px) / 2);
+      min-width: 0;
+      max-width: calc((100% - 32px) / 2);
+      padding: 0;
+      box-sizing: border-box;
+      position: relative;
+      aspect-ratio: 1;
+      overflow: hidden;
+      @media (max-width: 768px) {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+        aspect-ratio: 1;
+      }
+      
+      .imageWrapper {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        animation: slideInFade 0.6s ease-out;
+
+        @media (prefers-reduced-motion: reduce) {
+          animation: none;
+        }
+      }
+      
+      @keyframes slideInFade {
+        0% {
+          opacity: 0;
+          transform: scale(0.95) translateY(10px);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+      
+      .discount {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 54px;
+        height: 43px;
+        background: #297230;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-family: 'Avenir Next', sans-serif;
+        font-style: normal;
+        font-weight: 500;
+        font-size: 14px;
+        line-height: 19px;
+        color: #FFFFFF;
+        z-index: 2;
+
+        @media (max-width: 768px) {
+          height: 28px;
+          width: auto;
+          min-width: 44px;
+          padding: 6px 8px;
+          font-size: 12px;
+          line-height: 16px;
+        }
+      }
+      
+      :global {
+        .heroSlider {
+          width: 100%;
+          height: 100%;
+          max-width: 100%;
+          margin: 0;
+        }
+        .heroSlider .slick-list,
+        .heroSlider .slick-track,
+        .heroSlider .slick-slide,
+        .heroSlider .slick-slide > div {
+          height: 100%;
+        }
+      }
+      img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+    }
+    .infoPart {
+      flex: 0 0 calc((100% - 32px) / 2); // Правильный расчет с учетом gap: (100% - gap) / 2
+      width: calc((100% - 32px) / 2);
+      min-width: 0;
+      min-height: 0;
+      max-width: calc((100% - 32px) / 2); // Ограничиваем максимальную ширину с учетом gap
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 24px;
+      box-sizing: border-box;
+      overflow-x: clip;
+      overflow-y: visible;
+      align-self: stretch;
+      @media (max-width: 768px) {
+        flex: 0 0 100%;
+        width: 100%;
+        max-width: 100%;
+        gap: 20px;
+        justify-content: flex-start;
+      }
+
+      /* Desktop: title/reviews → desc → purchase (внизу). Mobile: DOM order = purchase до desc. */
+      @media (min-width: 769px) {
+        .infoTop {
+          order: 1;
+        }
+        .infoBottom {
+          order: 2;
+          flex: 1 1 auto;
+        }
+        .purchaseBlock {
+          order: 3;
+          margin-top: auto;
+          padding-top: 24px;
+        }
+      }
+
+      .infoTop,
+      .infoBottom {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        overflow-x: clip;
+        overflow-y: visible;
+        
+        > *:not(.desc) {
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+        }
+      }
+
+      .infoTop {
+        .title {
+          color: #000;
+          font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+          font-size: 48px;
+          font-style: normal;
+          font-weight: 300;
+          line-height: normal;
+          text-transform: uppercase;
+          text-align: start;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          word-break: break-word;
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+          margin: 0;
+          
+          @media (max-width: 768px) {
+            display: none;
+          }
+        }
+
+        .reviewsLink {
+          display: inline-flex;
+          align-items: center;
+          text-decoration: none;
+          color: inherit;
+          cursor: pointer;
+
+          :global([class*='wrapper']) {
+            align-items: center;
+          }
+
+          @media (max-width: 768px) {
+            :global([class*='wrapper']) {
+              gap: 12px;
+            }
+
+            :global([class*='wrapper']) p {
+              font-size: 14px;
+              line-height: 20px;
+              color: #6e6d67;
+            }
+
+            :global([class*='star']) {
+              width: 16px;
+              height: 16px;
+            }
+          }
+        }
+
+        .productMetaBlock {
+          display: flex;
+          flex-direction: column;
+          gap: 0;
+          color: #6e6d67;
+        }
+
+        .productMetaLine {
+          color: #6e6d67 !important;
+          font-size: 16px !important;
+          line-height: 1.5 !important;
+          word-wrap: break-word;
+          overflow-wrap: break-word;
+          margin: 0;
+
+          @media (max-width: 768px) {
+            font-size: 14px !important;
+            line-height: 1.6 !important;
+          }
+        }
+      }
+
+      .infoBottom {
+        // Стили для описания - без ограничений по высоте
+        .desc,
+        p.desc {
+          color: #6e6d67 !important;
+          font-size: 16px !important;
+          word-wrap: break-word !important;
+          overflow-wrap: break-word !important;
+          word-break: break-word !important;
+          max-width: 100% !important;
+          min-width: 0 !important;
+          box-sizing: border-box !important;
+          overflow: visible !important;
+          overflow-x: visible !important;
+          overflow-y: visible !important;
+          text-overflow: clip !important;
+          display: block !important;
+          -webkit-line-clamp: unset !important;
+          line-clamp: unset !important;
+          -webkit-box-orient: unset !important;
+          max-height: none !important;
+          height: auto !important;
+          white-space: normal !important;
+          line-height: 1.5 !important;
+
+          @media (max-width: 768px) {
+            font-size: 14px !important;
+            line-height: 1.6 !important;
+          }
+        }
+      }
+
+      .purchaseBlock {
+        :global {
+          .sizeTabs,
+          .wrapper {
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+            overflow-x: clip;
+          }
+        }
+      }
+      .bottomWrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 32px;
+        width: 100%;
+        max-width: 100%;
+        min-width: 0; // Разрешаем сжатие
+        box-sizing: border-box;
+        overflow-x: clip;
+        overflow-y: visible;
+        position: relative;
+        top: -6px;
+        
+        // Добавляем margin-top для блока этапов на странице товара
+        > :first-child {
+          margin-top: 40px;
+
+          @media (max-width: 768px) {
+            margin-top: 24px;
+          }
+        }
+        
+        // Ограничиваем ширину всех дочерних элементов
+        > * {
+          max-width: 100%;
+          min-width: 0;
+          box-sizing: border-box;
+          overflow-x: clip;
+
+          @media (max-width: 768px) {
+            /* Иначе горизонтальные ленты (Etaps и т.д.) не получают свайп внутри clip */
+            overflow-x: visible;
+          }
+        }
+        
+        // Ограничиваем компоненты внутри
+        :global {
+          .sizeTabs,
+          .etaps,
+          .addToBasket {
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+          }
+        }
+      }
+    }
+  }
+}
+
+.stickyBar {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .stickyBar {
+    display: block;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1200;
+    background: #fff;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .stickyBarInner {
+    display: grid;
+    grid-template-columns: minmax(108px, 130px) 1fr;
+    align-items: center;
+    gap: 12px;
+    max-width: 1536px;
+    margin: 0 auto;
+  }
+
+  .stickyMeta {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .stickyVolume {
+    font-family: 'Onest', 'Avenir Next', sans-serif;
+    font-size: 12px;
+    line-height: 16px;
+    font-weight: 500;
+    color: #6e6d67;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .stickyPrice {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    white-space: nowrap;
+  }
+
+  .stickyPriceMain {
+    font-family: 'Onest', 'Avenir Next', sans-serif;
+    font-size: 16px;
+    line-height: 20px;
+    font-weight: 600;
+    color: #000;
+  }
+
+  .stickyPriceOld {
+    font-family: 'Onest', 'Avenir Next', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    color: #6e6d67;
+    text-decoration: line-through;
+  }
+
+  .stickyPriceOutOfStock {
+    font-family: 'Onest', 'Avenir Next', sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    font-weight: 600;
+    color: #6e6d67;
+  }
+
+  /* Кнопка в липкой панели — ≥44px hit target */
+  .stickyBar :global([class*='productPageWrapper']) {
+    width: 100%;
+  }
+
+  .stickyBar :global([class*='mainBtn'][class*='productPageBtn']) {
+    height: 44px;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 15px;
+    line-height: 20px;
+  }
+
+  .stickyBar :global([class*='stepperProduct']) {
+    height: 44px;
+    min-height: 44px;
+  }
+
+  .stickyBar :global([class*='stepperCount']) {
+    font-size: 15px;
+    line-height: 20px;
+  }
+
+  .stickyBar :global([class*='favoriteWrapper']) {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    min-height: 44px;
+  }
+}
+
+// Секции на странице товара (BestSellerTabs, BestSellerEtaps) — отступы задаёт .productMain
+.productSections {
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    min-width: 0;
+  }
+}

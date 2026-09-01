@@ -10,7 +10,7 @@ import {
 } from '@/store/slices/checkoutSlice';
 import { RootState } from '@/store/store';
 import { FavoriteButton } from '@/components/favorite-button/FavoriteButton';
-import { isAtOrOverLineLimit, maxQuantityForVariantLine } from '@/utils/checkoutLineLimits';
+import { isAtOrOverLineLimit, effectiveLineQuantityCap } from '@/utils/checkoutLineLimits';
 import { isVariantOutOfStock } from '@/utils/stock';
 
 interface AddToCartButtonProps {
@@ -18,6 +18,7 @@ interface AddToCartButtonProps {
   hoverText?: string;
   activeText?: string;
   activeVariantId: string | null;
+  shadeId?: string | null;
   title: string;
   thumbnail: string;
   price: number;
@@ -28,7 +29,7 @@ interface AddToCartButtonProps {
   disabled?: boolean;
   productId?: string;
   variant?: 'home' | 'product' | 'card';
-  /** Лимит с варианта (Saleor); влияет на + и добавление */
+  /** Лимит с варианта (каталог); влияет на + и добавление */
   quantityLimitPerCustomer?: number | null;
   quantityAvailable?: number | null;
   trackInventory?: boolean | null;
@@ -39,6 +40,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   hoverText = 'Добавить в корзину',
   activeText = 'Добавлено',
   activeVariantId,
+  shadeId = null,
   title,
   thumbnail,
   price,
@@ -57,15 +59,16 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
 
   const dispatch = useDispatch();
   const toast = useToast();
-
   const cartItem = useSelector((state: RootState) =>
-    state.checkout.lines.find(item => item.variantId === activeVariantId)
+    state.checkout.lines.find((item) => item.variantId === activeVariantId),
   );
 
   const count = cartItem?.quantity || 0;
   const limitSrc = cartItem?.quantityLimitPerCustomer ?? quantityLimitPerCustomer;
-  const maxQ = maxQuantityForVariantLine(limitSrc);
+  const availSrc = cartItem?.quantityAvailable ?? quantityAvailable;
+  const maxQ = effectiveLineQuantityCap(limitSrc, availSrc);
   const atLimit = count > 0 && count >= maxQ;
+  const lineKey = activeVariantId ? { variantId: activeVariantId } : null;
 
   const lineOutOfStock = isVariantOutOfStock({
     trackInventory: cartItem?.trackInventory ?? trackInventory,
@@ -73,7 +76,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   });
 
   const handleAdd = () => {
-    if (disabled || !activeVariantId) return;
+    if (disabled || !activeVariantId || !lineKey) return;
 
     if (lineOutOfStock) {
       toast.error('Нет в наличии');
@@ -105,18 +108,18 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
       toast.error('Достигнуто максимальное количество для заказа');
       return;
     }
-    dispatch(increaseQuantity(activeVariantId));
+    dispatch(increaseQuantity(lineKey));
     toast.success('Количество увеличено');
   };
 
   const handleRemove = () => {
-    if (!activeVariantId) return;
+    if (!lineKey) return;
 
     if (count > 1) {
-      dispatch(decreaseQuantity(activeVariantId));
+      dispatch(decreaseQuantity(lineKey));
       toast.success('Количество уменьшено');
     } else {
-      dispatch(removeItemFromCart(activeVariantId));
+      dispatch(removeItemFromCart(lineKey));
       toast.success('Товар удален из корзины');
     }
   };
@@ -175,7 +178,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
               isCard ? styles.stepperBtnCard : ''
             ].filter(Boolean).join(' ')}
             onClick={handleAdd}
-            disabled={disabled || isAtOrOverLineLimit(count, limitSrc) || lineOutOfStock}
+            disabled={disabled || isAtOrOverLineLimit(count, limitSrc, availSrc) || lineOutOfStock}
             aria-label='Увеличить количество'
           >
             +
@@ -183,11 +186,11 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
         </div>
       )}
 
-      {productId && variant === 'home' && (
+      {productId && variant !== 'card' ? (
         <div className={styles.favoriteWrapper}>
-          <FavoriteButton productId={productId} className={styles.favoriteButtonInBasket} />
+          <FavoriteButton productId={productId} variant="inline" />
         </div>
-      )}
+      ) : null}
     </div>
   );
 };

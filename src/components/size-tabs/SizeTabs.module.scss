@@ -3,127 +3,123 @@
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  overflow-x: hidden; // Предотвращаем выход за пределы
+  overflow-x: hidden;
 
   @media (max-width: 768px) {
-    margin-top: 32px;
+    margin-top: 0;
   }
 }
 
 .tabs {
+  --tabs-indicator-x: 0px;
+  --tabs-indicator-w: 0px;
+
+  position: relative;
   display: flex;
-  gap: 40px;
-  margin-bottom: 8px;
-  border-bottom: 1px solid #6e6d67b3;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 28px;
+  margin-bottom: 0;
+  padding: 0 0 12px;
+  border-bottom: 1px solid rgba(110, 109, 103, 0.35);
   width: 100%;
   max-width: 100%;
   min-width: 0;
   box-sizing: border-box;
-  overflow-x: auto; // Разрешаем горизонтальный скролл если табы не помещаются
+  overflow-x: auto;
   overflow-y: hidden;
-  
-  // Скрываем scrollbar
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE 10+ */
-  
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
   &::-webkit-scrollbar {
-    display: none; /* Chrome, Safari */
+    display: none;
   }
 
   @media (max-width: 768px) {
-    gap: 12px;
-    margin-bottom: 10px;
-    padding: 0 4px;
-    /* подсказка, что табы можно скроллить */
-    mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 14px), transparent);
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 14px, #000 calc(100% - 14px), transparent);
+    gap: 20px;
+    padding: 0 4px 10px;
+  }
+}
+
+.tabsIndicator {
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  height: 2px;
+  width: var(--tabs-indicator-w);
+  transform: translate3d(var(--tabs-indicator-x), 0, 0);
+  background: #000;
+  border-radius: 0;
+  transition: transform 600ms ease, width 600ms ease;
+  pointer-events: none;
+  backface-visibility: hidden;
+  z-index: 1;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 }
 
 .tab {
+  appearance: none;
+  margin: 0;
   background: none;
   border: none;
-  font-size: 16px;
-  color: #6e6d67b3;
-  padding-bottom: 15px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.25;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.45);
+  padding: 12px 0;
+  min-height: 44px;
   cursor: pointer;
   position: relative;
+  z-index: 2;
   user-select: none;
-  transition: color 0.25s ease;
+  transition: color 0.2s ease, opacity 0.2s ease;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
 
-  &:hover:not(.active) {
-    color: #297230;
+  &:hover:not(.tabOutOfStock) {
+    color: #000;
+    opacity: 1;
   }
 
   &.active {
-    color: black;
-    font-weight: 500;
+    color: #000;
+  }
 
-    &::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      left: 0;
-      width: 100%;
-      height: 1px;
-      background: black;
+  &.tabOutOfStock {
+    color: rgba(110, 109, 103, 0.45);
+    cursor: not-allowed;
+
+    .tabVolume {
+      text-decoration: line-through;
+      text-decoration-thickness: 1px;
+    }
+
+    &.active {
+      color: #6e6d67;
     }
   }
 
   @media (max-width: 768px) {
-    font-size: 18px;
-    padding-bottom: 12px;
-    /* плотнее, чтобы кликабельность была очевиднее */
-    letter-spacing: 0.2px;
-  }
-}
-
-.info {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.price {
-  font-size: 24px;
-  font-weight: 600;
-  color: #000;
-
-  @media (max-width: 768px) {
-    font-family: 'Onest', 'Avenir Next', sans-serif;
-    font-size: 16px;
-    line-height: 20px;
-  }
-}
-
-.oldPrice {
-  font-size: 20px;
-  color: #6e6d67b3;
-  text-decoration: line-through;
-
-  @media (max-width: 768px) {
     font-size: 14px;
-    line-height: 20px;
   }
 }
 
-.outOfStockLabel {
-  font-size: 24px;
-  font-weight: 600;
-  color: #6e6d67;
-
-  @media (max-width: 768px) {
-    font-family: 'Onest', 'Avenir Next', sans-serif;
-    font-size: 16px;
-    line-height: 20px;
-  }
-}
-
-.discount {
-  background-color: #297230;
-  color: white;
-  padding: 2px 6px;
-  font-size: 14px;
+.tabOosHint {
+  font-size: 11px;
   font-weight: 500;
+  letter-spacing: 0.02em;
+  text-transform: lowercase;
+  color: #6e6d67;
+  text-decoration: none;
 }

@@ -1,5 +1,6 @@
 import { getCartTextPage } from '@/graphql/queries/pages.service';
 import { editorJsToHtml } from '@/utils/editorJsParser';
+import { sanitizeCmsHtml } from '@/utils/sanitizeCmsHtml';
 import { useEffect, useState } from 'react';
 import styles from '../right-part/OrderRightPart.module.scss';
 import userImage from '@/assets/images/userImage.webp';
@@ -13,11 +14,13 @@ const InfoContent = () => {
         // Если контент - строка (JSON), парсим
         try {
           const parsed = typeof page.content === 'string' ? JSON.parse(page.content) : page.content;
-          const html = editorJsToHtml(parsed);
+          const html = sanitizeCmsHtml(editorJsToHtml(parsed));
           setContent(html);
         } catch (e) {
           // Если не JSON, используем как есть (если это просто текст)
-          setContent(typeof page.content === 'string' ? page.content : '');
+          setContent(
+            typeof page.content === 'string' ? sanitizeCmsHtml(page.content) : '',
+          );
         }
       }
     });

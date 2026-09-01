@@ -9,6 +9,102 @@
   @media (max-width: 768px) {
     gap: 12px;
   }
+
+  /* Nest HTML body (не Editor.js blocks) */
+  :global(p) {
+    font-size: 20px;
+    line-height: 32px;
+    margin: 0;
+    color: #2c2c2c;
+
+    @media (max-width: 768px) {
+      font-size: 16px;
+      line-height: 26px;
+    }
+  }
+
+  :global(h1),
+  :global(h2),
+  :global(h3),
+  :global(h4),
+  :global(h5),
+  :global(h6) {
+    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 300;
+    margin: 0;
+    color: #1a1a1a;
+  }
+
+  :global(h1) {
+    font-size: 40px;
+    line-height: 48px;
+    @media (max-width: 768px) {
+      font-size: 28px;
+      line-height: 30px;
+    }
+  }
+  :global(h2) {
+    font-size: 32px;
+    line-height: 40px;
+    @media (max-width: 768px) {
+      font-size: 22px;
+      line-height: 28px;
+    }
+  }
+  :global(h3) {
+    font-size: 26px;
+    line-height: 34px;
+    @media (max-width: 768px) {
+      font-size: 20px;
+      line-height: 26px;
+    }
+  }
+  :global(h4) {
+    font-size: 20px;
+    line-height: 28px;
+  }
+
+  :global(figure) {
+    border-radius: 12px;
+    max-width: 768px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  :global(figure img),
+  :global(img) {
+    border-radius: 12px;
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  :global(figcaption) {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #6e6d67;
+    text-align: center;
+  }
+
+  :global(ul),
+  :global(ol) {
+    margin: 0;
+    padding-left: 1.35em;
+    font-size: 20px;
+    line-height: 32px;
+    color: #2c2c2c;
+    @media (max-width: 768px) {
+      font-size: 16px;
+      line-height: 26px;
+    }
+  }
+
+  :global(blockquote) {
+    margin: 0;
+    padding: 0.5em 0 0.5em 1rem;
+    border-left: 3px solid #297230;
+    color: #4a4a48;
+  }
 }
 
 /* Info-страницы (/info/*): иерархия ниже заголовка страницы (24px на мобилке) */

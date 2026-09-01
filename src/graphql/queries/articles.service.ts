@@ -1,34 +1,11 @@
-import { graphqlRequest } from '../client';
+import { getBlogPost, listBlogPosts } from '@/api/cmsApi';
+import { uploadsUrl } from '@/api/apiClient';
 
-let cachedArticlePageTypeId: string | null = null;
-
-// ===== Типы =====
-export interface PageTypeNode {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-export interface PageTypesResponse {
-  pageTypes: {
-    edges: {
-      node: PageTypeNode;
-    }[];
-  };
-}
 export interface ArticleAssignedAttribute {
-  attribute: {
-    id: string;
-    slug: string;
-    name: string;
-  };
-  fileValue?: {
-    url: string;
-  };
+  attribute: { id: string; slug: string; name: string };
+  fileValue?: { url: string };
   textValue?: string;
-  /** AssignedDateAttribute */
   dateValue?: string | null;
-  /** AssignedDateTimeAttribute */
   dateTimeValue?: string | null;
 }
 
@@ -38,144 +15,114 @@ export interface ArticleNode {
   title: string;
   created: string;
   content?: string | null;
+  /** Прямой URL обложки */
+  coverUrl?: string | null;
+  /** Nest author.displayName */
+  authorName?: string | null;
+  /** Лида API — приоритет для карточек / meta description */
+  excerpt?: string | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  ogImageUrl?: string | null;
+  canonicalPath?: string | null;
+  seoNoIndex?: boolean;
   assignedAttributes: ArticleAssignedAttribute[];
-  metadata?: {
-    key: string;
-    value: string;
-  }[];
-}
-
-export interface ArticlesConnection {
-  pages: {
-    edges: {
-      node: ArticleNode;
-    }[];
-    totalCount: number;
-  };
+  metadata?: { key: string; value: string }[];
 }
 
 export interface SingleArticleConnection {
   page: ArticleNode | null;
 }
 
-// ============================================
-// ================ Запросы ===================
-// ============================================
+const COVER_ATTR_SLUGS = ['kartinka', 'prevyu-stati', 'cover'] as const;
 
-async function getCachedArticlePageTypeId(): Promise<string | null> {
-  if (cachedArticlePageTypeId) {
-    return cachedArticlePageTypeId;
-  }
+function mapPostToArticle(row: {
+  id: string;
+  slug: string;
+  title: string;
+  excerpt?: string | null;
+  bodyHtml?: string;
+  body?: string;
+  coverImageUrl?: string | null;
+  coverUrl?: string | null;
+  publishedAt?: string | null;
+  author?: { id?: string; displayName?: string | null } | null;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  ogImageUrl?: string | null;
+  canonicalPath?: string | null;
+  seoNoIndex?: boolean;
+}): ArticleNode {
+  const attrs: ArticleAssignedAttribute[] = [];
+  // cmsApi уже прогоняет coverImageUrl через uploadsUrl — не дублируем.
+  const coverResolved =
+    row.coverImageUrl?.trim() ||
+    (row.coverUrl?.trim()
+      ? uploadsUrl(row.coverUrl.trim()) || row.coverUrl.trim()
+      : null) ||
+    null;
 
-  const id = await getArticlePageTypeId();
-  cachedArticlePageTypeId = id;
-  return id;
-}
-
-export async function getArticlePageTypeId(): Promise<string | null> {
-
-  const query = `
-     query GetPageTypes($first: Int!) {
-      pageTypes(first: $first) {
-        edges {
-          node {
-            id
-            name
-            slug
-          }
-        }
-      }
-    }
-  `;
-  const variables = { first: 50 };
-  const data = await graphqlRequest<PageTypesResponse>(query,variables);
-  const articlesType = data.pageTypes.edges.find(e => e.node.name ==="Cтатьи");
-  return articlesType?.node.id ?? null;
-}
-
-const PAGE_ASSIGNED_ATTRIBUTES_BODY = `
-  assignedAttributes {
-    attribute {
-      id
-      slug
-      name
-    }
-    ... on AssignedFileAttribute {
-      fileValue: value {
-        url
-      }
-    }
-    ... on AssignedPlainTextAttribute {
-      textValue: value
-    }
-    ... on AssignedDateAttribute {
-      dateValue: value
-    }
-    ... on AssignedDateTimeAttribute {
-      dateTimeValue: value
+  if (coverResolved) {
+    for (const slug of COVER_ATTR_SLUGS) {
+      attrs.push({
+        attribute: { id: slug, slug, name: 'Обложка' },
+        fileValue: { url: coverResolved },
+      });
     }
   }
-`;
-
-// 🔹 1. Получить все статьи (pages)
-export async function getAllArticles(first: number): Promise<ArticleNode[]> {
-  const pageTypeId = await getCachedArticlePageTypeId();
-
-  if (!pageTypeId) {
-    return [];
+  const authorName = row.author?.displayName?.trim() || null;
+  if (authorName) {
+    attrs.push({
+      attribute: { id: 'imya-avtora', slug: 'imya-avtora', name: 'Автор' },
+      textValue: authorName,
+    });
   }
-
-  const query = `
-   query GetAllArticles($first: Int!, $pageTypeIds: [ID!]) {
-      pages(
-      first: $first
-      filter: { pageTypes: $pageTypeIds }
-      ) {
-        edges {
-          node {
-            id
-            slug
-            title
-            created
-            content
-            ${PAGE_ASSIGNED_ATTRIBUTES_BODY}
-            metadata {
-              key
-              value
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  const variables = { first, pageTypeIds: [pageTypeId]};
-
-  const data = await graphqlRequest<ArticlesConnection>(query, variables);
-  return data.pages.edges.map(e => e.node);
+  if (row.publishedAt) {
+    attrs.push({
+      attribute: { id: 'date', slug: 'date', name: 'Дата' },
+      dateValue: row.publishedAt,
+      dateTimeValue: row.publishedAt,
+    });
+  }
+  const excerpt = (row.excerpt ?? '').trim() || null;
+  const body = (row.bodyHtml ?? row.body ?? '').trim();
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    created: row.publishedAt || new Date().toISOString(),
+    content: body || excerpt,
+    excerpt,
+    coverUrl: coverResolved,
+    authorName,
+    metaTitle: row.metaTitle ?? null,
+    metaDescription: row.metaDescription ?? null,
+    ogImageUrl: row.ogImageUrl ?? null,
+    canonicalPath: row.canonicalPath ?? null,
+    seoNoIndex: Boolean(row.seoNoIndex),
+    assignedAttributes: attrs,
+  };
 }
 
-// 🔹 2. Получить одну статью по slug
+export async function getAllArticles(first = 100): Promise<{
+  items: ArticleNode[];
+  total: number;
+}> {
+  const limit = Math.min(Math.max(1, first), 100);
+  const res = await listBlogPosts({ limit, page: 1 });
+  return {
+    items: res.items.map((item) => mapPostToArticle(item)),
+    total: res.total ?? res.items.length,
+  };
+}
+
 export async function getSingleArticle(slug: string): Promise<ArticleNode | null> {
-  const query = `
-    query GetSingleArticle($slug: String!) {
-      page(slug: $slug) {
-        id
-        slug
-        title
-        created
-        content
-        ${PAGE_ASSIGNED_ATTRIBUTES_BODY}
-        metadata {
-          key
-          value
-        }
-      }
-    }
-  `;
+  return getArticleBySlug(slug);
+}
 
-  const variables = { slug };
-
-  const data = await graphqlRequest<SingleArticleConnection>(query, variables);
-  return data.page ?? null;
+export async function getArticleBySlug(
+  slug: string,
+): Promise<SingleArticleConnection['page']> {
+  const row = await getBlogPost(slug);
+  return row ? mapPostToArticle(row) : null;
 }

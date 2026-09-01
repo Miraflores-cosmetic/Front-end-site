@@ -1,7 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
-import { addToFavorites, removeFromFavorites, isFavorite } from '@/graphql/queries/favorites.service';
+import {
+  addToFavorites,
+  removeFromFavorites,
+  hydrateFavoriteIds,
+  isFavoriteSync,
+  subscribeFavoriteIds,
+} from '@/services/favorites.service';
 import { useToast } from '@/components/toast/toast';
 import { getMe } from '@/store/slices/authSlice';
 import heartIcon from '@/assets/icons/heart.svg';
@@ -11,29 +17,34 @@ import styles from './FavoriteButton.module.scss';
 interface FavoriteButtonProps {
   productId: string;
   className?: string;
+  /** overlay — на карточке; inline — рядом с ATC */
+  variant?: 'overlay' | 'inline';
 }
 
-export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ productId, className }) => {
-  const [favorite, setFavorite] = useState(false);
+export const FavoriteButton: React.FC<FavoriteButtonProps> = ({
+  productId,
+  className,
+  variant = 'overlay',
+}) => {
+  const [favorite, setFavorite] = useState(() => isFavoriteSync(productId));
   const [loading, setLoading] = useState(false);
   const { isAuth } = useSelector((state: RootState) => state.authSlice);
   const dispatch = useDispatch<AppDispatch>();
   const toast = useToast();
 
   useEffect(() => {
-    if (isAuth && productId) {
-      checkFavorite();
+    if (!isAuth || !productId) {
+      setFavorite(false);
+      return;
     }
-  }, [isAuth, productId]);
 
-  const checkFavorite = async () => {
-    try {
-      const result = await isFavorite(productId);
-      setFavorite(result);
-    } catch (error) {
-      console.error('Error checking favorite:', error);
-    }
-  };
+    setFavorite(isFavoriteSync(productId));
+    void hydrateFavoriteIds();
+
+    return subscribeFavoriteIds(() => {
+      setFavorite(isFavoriteSync(productId));
+    });
+  }, [isAuth, productId]);
 
   const handleToggle = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -47,24 +58,22 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ productId, class
     if (loading) return;
 
     setLoading(true);
+    const next = !favorite;
+    setFavorite(next);
     try {
-      if (favorite) {
+      if (!next) {
         await removeFromFavorites(productId);
-        setFavorite(false);
         toast.success('Товар удален из избранного');
       } else {
         await addToFavorites(productId);
-        setFavorite(true);
         toast.success('Товар добавлен в избранное');
       }
-      // Обновляем данные пользователя (не ждём результата, чтобы не блокировать UI)
-      dispatch(getMe()).catch(err => {
+      dispatch(getMe()).catch((err) => {
         console.error('Error updating user data:', err);
-        // Не показываем ошибку пользователю, так как основная операция успешна
       });
-      // Отправляем событие обновления избранного для обновления списка в профиле
       window.dispatchEvent(new Event('favoritesUpdated'));
     } catch (error: any) {
+      setFavorite(!next);
       console.error('Error toggling favorite:', error);
       toast.error(error?.message || 'Ошибка при изменении избранного');
     } finally {
@@ -72,18 +81,25 @@ export const FavoriteButton: React.FC<FavoriteButtonProps> = ({ productId, class
     }
   };
 
+  const iconSrc = favorite ? heartRedIcon : heartIcon;
+
   return (
     <button
-      className={`${styles.favoriteButton} ${className || ''} ${favorite ? styles.active : ''}`}
+      type="button"
+      className={[
+        styles.favoriteButton,
+        variant === 'inline' ? styles.inline : styles.overlay,
+        favorite ? styles.active : '',
+        className || '',
+      ]
+        .filter(Boolean)
+        .join(' ')}
       onClick={handleToggle}
       disabled={loading}
       aria-label={favorite ? 'Удалить из избранного' : 'Добавить в избранное'}
+      aria-pressed={favorite}
     >
-      <img
-        src={favorite ? heartRedIcon : heartIcon}
-        alt={favorite ? 'В избранном' : 'Добавить в избранное'}
-      />
+      <img src={iconSrc} alt="" aria-hidden />
     </button>
   );
 };
-

@@ -17,19 +17,25 @@
 
   @media (max-width: 768px) {
     width: 100%;
-  }
-
-  @media (max-width: 768px) {
-    padding: 24px 0;
+    padding: 0 0 calc(32px + env(safe-area-inset-bottom, 0px));
   }
 
   .mobileHeaderContainer {
-    margin-bottom: 14px;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin: 0 -16px 8px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(110, 109, 103, 0.18);
 
     .mobileHeader {
-      display: flex;
+      display: grid;
+      grid-template-columns: 40px 1fr 40px;
       align-items: center;
-      gap: 12px;
+      min-height: 40px;
 
       .goBackBtn {
         display: inline-flex;
@@ -41,17 +47,47 @@
         background: transparent;
         padding: 0;
         cursor: pointer;
+        border-radius: 50%;
+        transition: background 0.15s ease;
+
+        &:active {
+          background: rgba(0, 0, 0, 0.04);
+        }
+
+        .goBackMobile {
+          width: 20px;
+          height: 20px;
+          display: block;
+        }
       }
 
       .logoWrapper {
-        width: 100%;
         display: flex;
         justify-content: center;
+        align-items: center;
+        min-width: 0;
+
+        a {
+          display: inline-flex;
+          line-height: 0;
+          flex-shrink: 0;
+        }
 
         .Miraflores_logo {
-          width: 118px;
-          height: 24px;
+          display: block;
+          width: 128px;
+          height: auto;
+          max-width: 100%;
+          aspect-ratio: 3401 / 374;
+          object-fit: contain;
+          object-position: center;
+          flex-shrink: 0;
         }
+      }
+
+      .headerSpacer {
+        width: 40px;
+        height: 40px;
       }
     }
   }
@@ -61,6 +97,8 @@
     top: 38px;
     left: 0;
     padding-left: 32px;
+    border: none;
+    background: transparent;
     cursor: pointer;
     transition: opacity 0.2s;
 
@@ -90,6 +128,77 @@
     margin-top: 40px;
   }
 
+  .commentWrapper {
+    margin-top: 40px;
+  }
+
+  .commentField {
+    --floating-field-focus: #{$green-297};
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 72px;
+    border: none;
+    border-bottom: 0.7px solid rgba(0, 0, 0, 0.2);
+    background: transparent;
+    transition: border-color 0.18s ease;
+  }
+
+  .commentFieldFocused {
+    border-bottom-color: var(--floating-field-focus, #297c3b);
+  }
+
+  .commentFieldActive .commentLabel,
+  .commentFieldFocused .commentLabel {
+    top: 4px;
+    transform: translateY(0);
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .commentFieldFocused .commentLabel {
+    color: var(--floating-field-focus, #297c3b);
+  }
+
+  .commentLabel {
+    position: absolute;
+    left: 0;
+    top: 18px;
+    margin: 0;
+    font-family: $font-onest;
+    font-size: 14px;
+    font-weight: 350;
+    line-height: 1.2;
+    color: $gray-6e;
+    pointer-events: none;
+    transform-origin: left center;
+    transition:
+      top 0.18s ease,
+      transform 0.18s ease,
+      font-size 0.18s ease,
+      color 0.18s ease;
+  }
+
+  .commentTextarea {
+    display: block;
+    width: 100%;
+    margin: 0;
+    padding: 22px 0 10px;
+    border: none;
+    outline: none;
+    resize: vertical;
+    min-height: 72px;
+    background: transparent;
+    font-family: $font-onest;
+    font-size: 15px;
+    font-weight: 350;
+    line-height: 1.4;
+    color: $black;
+    box-sizing: border-box;
+  }
+
   .checkWrapper {
     display: flex;
     justify-content: start;
@@ -104,6 +213,23 @@
     display: flex;
     flex-direction: column;
     gap: 24px;
+
+    @media (max-width: 768px) {
+      position: sticky;
+      bottom: 0;
+      z-index: 15;
+      margin-top: 16px;
+      margin-left: -16px;
+      margin-right: -16px;
+      width: calc(100% + 32px);
+      padding: 12px 16px calc(12px + env(safe-area-inset-bottom, 0px));
+      background: rgba(255, 255, 255, 0.96);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border-top: 1px solid rgba(110, 109, 103, 0.18);
+      box-sizing: border-box;
+      gap: 12px;
+    }
 
     .orderButton {
       width: 100%;
@@ -126,7 +252,14 @@
       color: $gray-6e;
 
       @media (max-width: 768px) {
-        font-size: 13px;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: underline;
+        text-underline-offset: 2px;
       }
 
       span {

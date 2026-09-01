@@ -15,6 +15,7 @@ import {
 import { useQuizContent } from '@/contexts/QuizContentContext';
 import { getQuizPlain } from '@/lib/quiz/contentUtils';
 import { getFaceStepGuardRedirect } from '@/lib/quiz/faceStepGuard';
+import { trackQuizEvent } from '@/lib/quiz/quizAnalytics';
 import { useQuizState } from '@/hooks/useQuizState';
 import {
   FACE_STEPS,
@@ -80,6 +81,15 @@ const QuizFacePage: React.FC = () => {
     }
   }, [currentStep, faceAnswers, location.pathname, navigate]);
 
+  useEffect(() => {
+    trackQuizEvent({
+      type: 'step_view',
+      zone: 'face',
+      stepKey: currentStep,
+      once: true,
+    });
+  }, [currentStep]);
+
   const questionText = useMemo(() => {
     const keyMap: Record<FaceStep, string> = {
       age: 'face_q_age',
@@ -95,21 +105,45 @@ const QuizFacePage: React.FC = () => {
   const handleAgeSelect = (key: string, id: SkinAge) => {
     setSelectedAgeKey(key);
     updateFace({ skin_age: id });
+    trackQuizEvent({
+      type: 'step_complete',
+      zone: 'face',
+      stepKey: 'age',
+      meta: { skin_age: id },
+    });
     navigate(getNextRoute('age'));
   };
 
   const handleSpfSelect = (id: Spf) => {
     updateFace({ spf: id });
+    trackQuizEvent({
+      type: 'step_complete',
+      zone: 'face',
+      stepKey: 'spf',
+      meta: { spf: id },
+    });
     navigate(getNextRoute('spf'));
   };
 
   const handleSwellingSelect = (id: Swelling) => {
     updateFace({ swelling: id });
+    trackQuizEvent({
+      type: 'step_complete',
+      zone: 'face',
+      stepKey: 'swelling',
+      meta: { swelling: id },
+    });
     navigate(getNextRoute('swelling'));
   };
 
   const handlePhotoNext = () => {
     updateFace({ selfie_count: photos.length });
+    trackQuizEvent({
+      type: 'step_complete',
+      zone: 'face',
+      stepKey: 'photo',
+      meta: { selfie_count: photos.length },
+    });
     navigate('/quiz/face/result');
   };
 
@@ -146,7 +180,15 @@ const QuizFacePage: React.FC = () => {
             options={SKIN_ISSUE_OPTIONS}
             selected={faceAnswers.skin_issues}
             onChange={(skin_issues) => updateFace({ skin_issues })}
-            onConfirm={() => navigate(getNextRoute('issues'))}
+            onConfirm={() => {
+              trackQuizEvent({
+                type: 'step_complete',
+                zone: 'face',
+                stepKey: 'issues',
+                meta: { skin_issues: faceAnswers.skin_issues },
+              });
+              navigate(getNextRoute('issues'));
+            }}
           />
         );
 
@@ -156,7 +198,15 @@ const QuizFacePage: React.FC = () => {
             options={SKIN_TASK_OPTIONS}
             selected={faceAnswers.skin_tasks}
             onChange={(skin_tasks) => updateFace({ skin_tasks })}
-            onConfirm={() => navigate(getNextRoute('tasks'))}
+            onConfirm={() => {
+              trackQuizEvent({
+                type: 'step_complete',
+                zone: 'face',
+                stepKey: 'tasks',
+                meta: { skin_tasks: faceAnswers.skin_tasks },
+              });
+              navigate(getNextRoute('tasks'));
+            }}
           />
         );
 

@@ -1,12 +1,10 @@
 import React, { useEffect } from 'react';
 import styles from './Articles.module.scss';
-import Header from '@/components/Header/Header';
-import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footer-img.png';
 import { ArticleCard } from './ArticleCard/ArticleCard';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
-import { fetchArticles } from '@/store/slices/articlesSlice';
+import { fetchArticles, shouldRefetchArticles } from '@/store/slices/articlesSlice';
+import { useDocumentSeo } from '@/hooks/useDocumentSeo';
 
 const SKELETON_COUNT = 4;
 
@@ -28,7 +26,16 @@ const ArticlesSkeleton: React.FC = () => (
 
 const Articles: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const { items: articles, loading, error } = useSelector((s: RootState) => s.articlesSlice);
+  const articlesState = useSelector((s: RootState) => s.articlesSlice);
+  const { items: articles, loading, error } = articlesState;
+
+  useDocumentSeo({
+    title: 'Статьи',
+    description:
+      'Полезные статьи о ботанической косметике с меристемными экстрактами — блог Miraflores.',
+    canonicalPath: '/articles',
+    ogType: 'website',
+  });
 
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -37,24 +44,25 @@ const Articles: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (articles.length === 0) {
-      dispatch(fetchArticles(20));
+    if (shouldRefetchArticles(articlesState)) {
+      void dispatch(fetchArticles(100));
     }
-  }, [dispatch, articles.length]);
+  }, [dispatch, articlesState.fetchedAt, articlesState.items.length, articlesState.loading]);
 
   const handleRetry = () => {
-    dispatch(fetchArticles(20));
+    void dispatch(fetchArticles(100));
   };
+
+  const showEmpty = !loading && !error && articles.length === 0;
 
   return (
     <>
-      <Header />
       <main className={styles.articlesContainer}>
         <section className={styles.titleContainer}>
           <h1 className={styles.title}>Будь в курсе с Мирафлорес</h1>
-          <p className={styles.desc}>ботаническая косметика c меристемными экстрактами</p>
+          <p className={styles.desc}>ботаническая косметика с меристемными экстрактами</p>
         </section>
-        {loading && <ArticlesSkeleton />}
+        {loading && articles.length === 0 && <ArticlesSkeleton />}
         {error && !loading && (
           <div className={styles.listError} role="alert">
             <p>Не удалось загрузить статьи. Проверьте соединение и попробуйте снова.</p>
@@ -63,14 +71,18 @@ const Articles: React.FC = () => {
             </button>
           </div>
         )}
-        {!loading && !error && (
+        {showEmpty ? (
+          <div className={styles.emptyState} role="status">
+            <p>Пока нет опубликованных статей.</p>
+          </div>
+        ) : null}
+        {!error && articles.length > 0 ? (
           <section className={styles.articlesWrapper}>
             {articles.map((item, index) => (
               <ArticleCard key={item.id} article={item} reverse={index % 2 !== 0} />
             ))}
           </section>
-        )}
-        <Footer footerImage={footerImage} />
+        ) : null}
       </main>
     </>
   );

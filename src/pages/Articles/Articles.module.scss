@@ -152,6 +152,20 @@
     color: #6e6d67;
   }
 
+  .emptyState {
+    margin: 48px auto 120px;
+    max-width: 420px;
+    padding: 0 8px;
+    text-align: center;
+    font-size: 16px;
+    line-height: 24px;
+    color: #6e6d67;
+
+    p {
+      margin: 0;
+    }
+  }
+
   .retryBtn {
     margin-top: 16px;
     padding: 12px 28px;

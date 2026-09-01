@@ -1,18 +1,19 @@
 @use '@/style/variables.scss' as *;
 
 .profileContainer {
+  --page-max-width: #{$page-max-width};
   width: 100%;
   /* как Category faceContainer */
   padding: 24px 32px 0;
   min-height: 100vh;
   background-color: $white;
-  overflow-x: clip;
+  overflow-x: visible;
   margin-bottom: 24px;
   box-sizing: border-box;
 
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
-  max-width: 1536px;
+  max-width: var(--page-max-width);
   margin: 0 auto;
 
   @media (max-width: 768px) {

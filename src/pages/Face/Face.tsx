@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import styles from './Face.module.scss';
-import Header from '@/components/Header/Header';
-import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footer-img.png';
 import TabBar from '@/components/tab-bar/TabBar';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -142,7 +139,6 @@ const FacePage: React.FC = () => {
 
   return (
     <article className={styles.faceContainer}>
-      <Header />
       <p className={styles.title}>Лицо</p>
       <TabBar
         tabs={['КРЕМ', 'МАСЛО', 'ТОНИК-ЭССЕНЦИЯ']}
@@ -187,7 +183,6 @@ const FacePage: React.FC = () => {
           </article>
         </section>
       )}
-      <Footer footerImage={footerImage} />
     </article>
   );
 };

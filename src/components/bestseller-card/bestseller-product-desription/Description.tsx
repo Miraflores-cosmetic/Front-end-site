@@ -4,6 +4,7 @@ import ProductDetails, {
   DetailItem
 } from '@/components/bestseller-card/best-product-detail/ProductDetails';
 import { editorJsToHtml } from '@/utils/editorJsParser';
+import { sanitizeCmsHtml } from '@/utils/sanitizeCmsHtml';
 import styles from './Description.module.scss';
 
 interface DescriptionProps {
@@ -53,25 +54,21 @@ const Description: React.FC<DescriptionProps> = ({ description, details }) => {
   // Преобразуем описание в HTML, если это EditorJS формат или markdown
   const getDescriptionHtml = () => {
     if (!description) return '';
-    
-    // Если описание уже содержит HTML теги, возвращаем как есть
+
+    let html = '';
     if (description.includes('<') && description.includes('>')) {
-      return description;
-    }
-    
-    // Проверяем, является ли описание JSON (EditorJS формат)
-    if (typeof description === 'string' && description.trim().startsWith('{')) {
+      html = description;
+    } else if (typeof description === 'string' && description.trim().startsWith('{')) {
       try {
         const parsed = JSON.parse(description);
-        return editorJsToHtml(parsed);
-      } catch (e) {
-        // Если не JSON, обрабатываем как обычный текст с markdown
-        return normalizeTextToHtml(description);
+        html = editorJsToHtml(parsed);
+      } catch {
+        html = normalizeTextToHtml(description);
       }
+    } else {
+      html = normalizeTextToHtml(description);
     }
-    
-    // Если это обычный текст, обрабатываем markdown и переносы строк
-    return normalizeTextToHtml(description);
+    return sanitizeCmsHtml(html);
   };
 
   return (

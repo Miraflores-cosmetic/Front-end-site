@@ -7,15 +7,27 @@ export interface NavMenuItem {
     id: string;
     slug: string;
     backgroundImage: {
-              url: string
-     }
+      url: string;
+    };
   };
 }
 
+export type NavCatalogTag = {
+  id: string;
+  name: string;
+  slug: string;
+  title?: string | null;
+  description?: string | null;
+  coverImageUrl?: string | null;
+};
+
 export interface navSliceState {
   items: NavMenuItem[];
+  tags: NavCatalogTag[];
   loading: boolean;
+  tagsLoading: boolean;
   error: SerializedError | null;
+  tagsError: SerializedError | null;
 }
 
 interface NavMenuRespEdges {

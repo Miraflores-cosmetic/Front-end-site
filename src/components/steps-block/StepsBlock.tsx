@@ -1,225 +1,179 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import styles from './StepsBlock.module.scss';
-import shablon1 from '@/assets/images/shablon1.webp';
-import shablon2 from '@/assets/images/shablon2.webp';
-import shablon3 from '@/assets/images/shablon3.webp';
-import shablon4 from '@/assets/images/shablon4.webp';
-import etap1 from '@/assets/images/etap1.webp';
-import etap2 from '@/assets/images/etap2.webp';
-import etap3 from '@/assets/images/etap3.webp';
-import etap4 from '@/assets/images/etap4.webp';
 import Step from './step/Step';
-import { getAllSteps, StepData } from '@/graphql/queries/pages.service';
-import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
+import { uploadsUrl } from '@/api/apiClient';
+import { getCatalogTags } from '@/store/slices/navSlice';
+import type { AppDispatch, RootState } from '@/store/store';
+import type { StepData } from '@/graphql/queries/pages.service';
+import { HomeSection } from '@/components/home-section/HomeSection';
 
-// Дефолтные шаги для fallback
-const defaultSteps = [
-  {
-    id: 1,
-    title: 'Очищение',
-    description:
-      'Самое важное выбирать хороший составы для очищения. Наши продукты мягко удаляют загрязнения, не вызывая чувства стянутости.',
-    image: shablon1,
-    hoverImage: etap1
-  },
-  {
-    id: 2,
-    title: 'Энзимный мусс для умывания',
-    description: 'Энзимы риса + фруктовые энзимы и фруктовые кислоты',
-    image: shablon2,
-    hoverImage: etap2
-  },
-  {
-    id: 3,
-    title: 'Цветочный мист',
-    description: 'Мист для мягкой и сияющей кожи с экстрактом розы',
-    image: shablon3,
-    hoverImage: etap3
-  },
-  {
-    id: 4,
-    title: 'Цветочный мист',
-    description: 'Мист для мягкой и сияющей кожи с экстрактом розы',
-    image: shablon4,
-    hoverImage: etap4
-  }
-];
+const SKELETON_COUNT = 4;
+const STEPS_LIMIT = 4;
+
+function StepsSkeleton() {
+  return (
+    <div className={styles.carousel} aria-hidden>
+      <ul className={`${styles.list} ${styles.skeletonList}`}>
+        {Array.from({ length: SKELETON_COUNT }, (_, i) => (
+          <li key={i} className={styles.item}>
+            <div className={styles.skeletonCard}>
+              <div className={styles.skeletonMedia} />
+              <div className={styles.skeletonText}>
+                <div className={styles.skeletonTitle} />
+                <div className={styles.skeletonDesc} />
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export default function StepsBlock() {
-  const [activeIndex, setActiveIndex] = useState<number | null>(0); // Первый шаг активен по умолчанию на десктопе
-  const [steps, setSteps] = useState<StepData[]>(defaultSteps);
-  const [loading, setLoading] = useState(true);
-  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
+  const dispatch = useDispatch<AppDispatch>();
+  const tags = useSelector((s: RootState) => s.nav.tags);
+  const tagsLoading = useSelector((s: RootState) => s.nav.tagsLoading);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [mobileIndex, setMobileIndex] = useState(0);
+  const [atEnd, setAtEnd] = useState(false);
+  const listRef = useRef<HTMLUListElement>(null);
 
   useEffect(() => {
-    const fetchSteps = async () => {
-      try {
-        setLoading(true);
-        console.log('[StepsBlock] Fetching steps...');
-        const stepsData = await getAllSteps();
-        console.log('[StepsBlock] Received steps data:', stepsData);
-        console.log('[StepsBlock] Steps count:', stepsData?.length || 0);
-        
-        if (stepsData && stepsData.length > 0) {
-          // Преобразуем данные из API в формат компонента
-          // Используем ТОЛЬКО данные из API, без fallback на моки
-          const formattedSteps = stepsData.map((step) => {
-            const formatted = {
-              id: step.id,
-              title: step.title,
-              description: step.description,
-              image: step.image || '', // Без fallback на моки
-              hoverImage: step.hoverImage || undefined // Без fallback на моки
-            };
-            console.log(`[StepsBlock] Step ${formatted.id}:`, {
-              title: formatted.title,
-              hasImage: !!step.image,
-              image: step.image,
-              hasHoverImage: !!step.hoverImage,
-              hoverImage: step.hoverImage
-            });
-            return formatted;
-          });
-          console.log('[StepsBlock] Setting formatted steps:', formattedSteps);
-          setSteps(formattedSteps);
-        } else {
-          console.warn('[StepsBlock] No steps data received, using default steps');
-          // Если данных нет, используем дефолтные
-          setSteps(defaultSteps);
-        }
-      } catch (err) {
-        console.error('[StepsBlock] Error fetching steps:', err);
-        // При ошибке используем дефолтные шаги
-        setSteps(defaultSteps);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (tags.length === 0 && !tagsLoading) {
+      void dispatch(getCatalogTags());
+    }
+  }, [dispatch, tags.length, tagsLoading]);
 
-    fetchSteps();
+  const steps: StepData[] = useMemo(
+    () =>
+      tags.slice(0, STEPS_LIMIT).map((tag, idx) => ({
+        id: tag.id || idx + 1,
+        slug: tag.slug,
+        title: tag.title?.trim() || tag.name,
+        description: tag.description?.trim() || '',
+        image: tag.coverImageUrl
+          ? uploadsUrl(tag.coverImageUrl) || tag.coverImageUrl
+          : undefined,
+      })),
+    [tags],
+  );
+
+  const loading = tagsLoading && steps.length === 0;
+
+  const syncMobileScroll = useCallback(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const maxScroll = el.scrollWidth - el.clientWidth;
+    setAtEnd(maxScroll <= 4 || el.scrollLeft >= maxScroll - 8);
+
+    const cards = el.querySelectorAll<HTMLElement>('[data-step-card]');
+    if (!cards.length) return;
+    const mid = el.scrollLeft + el.clientWidth * 0.35;
+    let best = 0;
+    let bestDist = Infinity;
+    cards.forEach((card, i) => {
+      const left = card.offsetLeft;
+      const dist = Math.abs(left - mid);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    });
+    setMobileIndex(best);
   }, []);
 
-  // Intersection Observer для запуска анимации при скролле к секции
   useEffect(() => {
-    // Ждем пока загрузка завершится и DOM готов
-    if (loading || isSectionLoaded) return;
-
-    // Небольшая задержка для обеспечения готовности DOM
-    const setupObserver = () => {
-      if (!sectionRef.current || isSectionLoaded) return;
-
-      // Проверяем, видна ли секция сразу при загрузке
-      const checkVisibility = () => {
-        if (sectionRef.current) {
-          const rect = sectionRef.current.getBoundingClientRect();
-          const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
-          return isVisible;
-        }
-        return false;
-      };
-
-      // Проверяем сразу
-      if (checkVisibility()) {
-        setIsSectionLoaded(true);
-        return;
-      }
-
-      // Небольшая задержка для повторной проверки (на случай если DOM еще не готов)
-      const timer = setTimeout(() => {
-        if (checkVisibility()) {
-          setIsSectionLoaded(true);
-          return;
-        }
-      }, 100);
-
-      // Создаем Intersection Observer
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            // Если секция видна в viewport, запускаем анимацию
-            if (entry.isIntersecting && !isSectionLoaded) {
-              setIsSectionLoaded(true);
-            }
-          });
-        },
-        {
-          // Запускаем анимацию когда секция видна на 20%
-          threshold: 0.2,
-          // Небольшой отступ сверху для более раннего запуска
-          rootMargin: '0px 0px -100px 0px'
-        }
-      );
-
-      if (sectionRef.current) {
-        observer.observe(sectionRef.current);
-      }
-
-      return () => {
-        clearTimeout(timer);
-        if (sectionRef.current) {
-          observer.unobserve(sectionRef.current);
-        }
-      };
-    };
-
-    // Небольшая задержка для обеспечения готовности DOM после загрузки
-    const timer = setTimeout(setupObserver, 50);
-
+    const el = listRef.current;
+    if (!el || loading) return;
+    syncMobileScroll();
+    el.addEventListener('scroll', syncMobileScroll, { passive: true });
+    window.addEventListener('resize', syncMobileScroll);
     return () => {
-      clearTimeout(timer);
+      el.removeEventListener('scroll', syncMobileScroll);
+      window.removeEventListener('resize', syncMobileScroll);
     };
-  }, [loading, isSectionLoaded]);
+  }, [loading, steps.length, syncMobileScroll]);
 
-  if (loading) {
-    return <SpinnerLoader />;
-  }
+  const scrollToCard = (index: number) => {
+    const el = listRef.current;
+    if (!el) return;
+    const card = el.querySelectorAll<HTMLElement>('[data-step-card]')[index];
+    if (!card) return;
+    el.scrollTo({ left: card.offsetLeft, behavior: 'smooth' });
+  };
+
+  if (!loading && steps.length === 0) return null;
 
   return (
-    <section 
-      ref={sectionRef}
-      className={`${styles.stepsContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`} 
-      id="steps-block"
-    >
-      <div className={styles.headerWrrapper}>
-        <p className={styles.title}>каждый шаг усиливает предыдущий</p>
-        <div className={styles.descriptionWrapper}>
-          <p className={styles.desc}>
-            Знали ли вы, что даже самое эффективное средство не сработает, если кожа неправильно очищена.
-            Агрессивное умывание всего за минуту может нарушить защитный барьер и сделать кожу уязвимой
-          </p>
-        </div>
-      </div>
-      <div 
-        className={styles.stepsWrapper}
-        onMouseLeave={() => setActiveIndex(0)}
-      >
-        {steps.map((product, index) => (
-          <div
-            key={product.id || index}
-            className={`${styles.stepWrapper} ${
-              activeIndex === index ? styles.active : activeIndex !== null ? styles.inactive : ''
-            }`}
-            onMouseEnter={() => setActiveIndex(index)}
-            onTouchStart={() => {
-              if (activeIndex === index) {
-                setActiveIndex(null);
-              } else {
-                setActiveIndex(index);
-              }
-            }}
+    <HomeSection id="steps-block" className={styles.section} anchor>
+      <header className={styles.header}>
+        <h2 className={styles.heading}>каждый шаг усиливает предыдущий</h2>
+        <p className={styles.lead}>
+          Знали ли вы, что даже самое эффективное средство не сработает, если кожа неправильно
+          очищена. Агрессивное умывание всего за минуту может нарушить защитный барьер и сделать
+          кожу уязвимой
+        </p>
+      </header>
+
+      {loading ? (
+        <StepsSkeleton />
+      ) : (
+        <div className={styles.carousel}>
+          <ul
+            ref={listRef}
+            className={styles.list}
+            onMouseLeave={() => setActiveIndex(0)}
           >
-            <Step
-              etap={index + 1}
-              image={product.image}
-              hoverImage={product.hoverImage}
-              title={product.title}
-              description={product.description}
-              isActive={activeIndex === index}
-            />
+            {steps.map((step, index) => {
+              const isActive = activeIndex === index;
+              return (
+                <li
+                  key={step.id}
+                  className={`${styles.item} ${isActive ? styles.itemActive : ''}`}
+                  data-step-card
+                  onMouseEnter={() => setActiveIndex(index)}
+                  onFocus={() => setActiveIndex(index)}
+                >
+                  <Step
+                    etap={index + 1}
+                    image={step.image || ''}
+                    title={step.title}
+                    description={step.description}
+                    href={`/catalog/${step.slug}`}
+                    isActive={isActive}
+                  />
+                </li>
+              );
+            })}
+          </ul>
+
+          {!atEnd ? <div className={styles.peek} aria-hidden /> : null}
+
+          <div className={styles.mobileChrome}>
+            <div
+              className={styles.dots}
+              role="tablist"
+              aria-label="Этапы ухода"
+            >
+              {steps.map((step, index) => (
+                <button
+                  key={step.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={mobileIndex === index}
+                  aria-label={`Этап ${index + 1}`}
+                  className={
+                    mobileIndex === index ? styles.dotActive : styles.dot
+                  }
+                  onClick={() => scrollToCard(index)}
+                />
+              ))}
+            </div>
           </div>
-        ))}
-      </div>
-    </section>
+        </div>
+      )}
+    </HomeSection>
   );
 }

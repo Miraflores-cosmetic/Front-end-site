@@ -1,0 +1,84 @@
+@use '@/style/variables.scss' as *;
+
+.page {
+  width: 100%;
+  max-width: $page-max-width;
+  margin: 0 auto;
+  padding: 48px 32px 80px;
+  box-sizing: border-box;
+
+  @media (max-width: $viewport-tablet-max) {
+    padding: 32px 16px 64px;
+  }
+}
+
+.content {
+  max-width: 920px;
+}
+
+.title {
+  margin: 0 0 24px;
+  font-family: $font-avenir;
+  font-size: 28px;
+  font-weight: $font-medium;
+  color: $black;
+}
+
+.sectionTitle {
+  margin: 32px 0 16px;
+  font-family: $font-avenir;
+  font-size: 18px;
+  font-weight: $font-medium;
+  color: $black;
+}
+
+.text {
+  margin: 0 0 16px;
+  font-family: $font-avenir;
+  font-size: 16px;
+  line-height: 1.55;
+  color: $gray-6e;
+
+  a {
+    color: $green-297;
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+  }
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+  margin: 0 0 8px;
+}
+
+.table {
+  width: 100%;
+  min-width: 640px;
+  border-collapse: collapse;
+  font-family: $font-avenir;
+  font-size: 13px;
+  line-height: 1.4;
+  color: $gray-6e;
+
+  th,
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    text-align: left;
+    vertical-align: top;
+  }
+
+  th {
+    font-weight: $font-medium;
+    color: $black;
+    white-space: nowrap;
+  }
+}
+
+.meta {
+  margin: 24px 0 0;
+  font-family: $font-avenir;
+  font-size: 13px;
+  color: $gray-a3;
+}

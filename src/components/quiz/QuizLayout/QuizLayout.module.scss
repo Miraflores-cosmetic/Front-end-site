@@ -15,15 +15,6 @@
   @media (max-width: $viewport-mobile-max) {
     padding: 24px 16px 0;
   }
-
-  > :global(footer) {
-    width: 100%;
-    margin-top: 80px;
-
-    @media (max-width: $viewport-mobile-max) {
-      margin-top: 64px;
-    }
-  }
 }
 
 .container {

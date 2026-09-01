@@ -1,53 +1,11 @@
 @use '@/style/variables.scss' as *;
 
 .gratitudeContainer {
-  width: 100%;
-  padding-top: 240px;
-  padding-right: 32px;
-  max-width: 1536px;
-  margin: 0 auto;
+  /* layout: HomeSection */
 
-  // Начальное состояние — скрыто для анимации
-  .titleWrapper {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  }
-
-  .content {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  }
-
-  .moreWrapper {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  }
-
-  // Анимация при появлении секции
-  &.sectionAnimated {
-    .titleWrapper {
-      opacity: 1 !important;
-      transform: translateY(0) !important;
-    }
-    .content {
-      opacity: 1 !important;
-      transform: translateY(0) !important;
-    }
-    .moreWrapper {
-      opacity: 1 !important;
-      transform: translateY(0) !important;
-    }
-  }
-
-  @media (max-width: 768px) {
-    padding-top: 0;
-    padding-bottom: 100px;
-    margin-top: 0;
-    margin-bottom: 0;
-    padding-right: 0;
+  @media (max-width: $viewport-mobile-max) {
+    /* лента уходит к правому краю экрана (как steps / bestsellers) */
+    --home-section-pad-end: 0px;
   }
 
   .titleWrapper {
@@ -55,24 +13,36 @@
     display: flex;
     flex-direction: column;
     margin-bottom: 16px;
-
     justify-content: space-between;
     align-items: start;
     gap: 16px;
+
+    .titleRow {
+      width: 100%;
+    }
+
     .title {
-      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+      font-family: $font-oceanic;
       text-transform: uppercase;
       font-weight: 300;
       font-size: 64px;
       text-align: start;
-      margin-bottom: 16px;
-      @media (max-width: 768px) {
+      margin: 0;
+      padding-right: 0;
+      min-width: 0;
+
+      @media (max-width: $viewport-mobile-max) {
         font-size: 24px;
-        margin-bottom: 0px;
       }
     }
+
+    .moreBelow {
+      margin-top: -8px;
+      align-self: flex-start;
+    }
+
     .desc {
-      color: #6e6d67;
+      color: $gray-6e;
       margin-bottom: 0;
     }
 
@@ -80,223 +50,294 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
-      
+
       :global {
         p {
           margin: 0;
-          color: #6e6d67;
+          color: $gray-6e;
           font-size: 16px;
           line-height: 1.6;
         }
       }
     }
   }
+
   .content {
     width: 100%;
     padding-top: 80px;
-    
-    @media (max-width: 1100px) {
+
+    @media (max-width: $viewport-mobile-max) {
+      padding-top: 24px;
+    }
+  }
+
+  .desktopLayout {
+    @media (max-width: $viewport-mobile-max) {
+      display: none;
+    }
+  }
+
+  .gratitudeImageWrapper {
+    margin-bottom: 54px;
+    width: 100%;
+  }
+
+  .gratitudeWrapper {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .gratitude {
+    width: 25%;
+    margin: 0;
+    text-align: center;
+    font-family: $font-avenir;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.25;
+    color: $black;
+
+    @media (max-width: $viewport-mobile-max) {
+      width: 100%;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+  }
+
+  .priceFrom {
+    font-weight: 400;
+    font-size: 0.85em;
+    letter-spacing: 0.04em;
+    text-transform: lowercase;
+    color: $gray-6e;
+  }
+
+  .priceSum {
+    font-family: $font-oceanic;
+    font-weight: 300;
+    font-size: 1.15em;
+    letter-spacing: 0.01em;
+    color: $green-297;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .gratitudeLine {
+    width: 100%;
+    display: block;
+  }
+
+  .gratitudeImages {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 20px;
+  }
+
+  .mobileTrack {
+    display: none;
+
+    @media (max-width: $viewport-mobile-max) {
       display: flex;
-      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      width: calc(100% + 16px);
+      margin-right: -16px;
       overflow-x: auto;
       overflow-y: hidden;
-      scroll-behavior: smooth;
+      scroll-snap-type: x mandatory;
+      scroll-padding-inline-end: 16px;
       -webkit-overflow-scrolling: touch;
-      padding-bottom: 20px;
-      padding-right: 32px;
-      margin-right: -32px;
+      overscroll-behavior-x: contain;
+      scrollbar-width: none;
+      padding-inline-end: 16px;
+      touch-action: pan-x pan-y;
+
       &::-webkit-scrollbar {
         display: none;
-      }
-      scrollbar-width: none;
-      width: calc(100% + 32px);
-    }
-    
-    @media (max-width: $viewport-mobile-max) {
-      padding-top: 48px;
-      padding-right: 12px;
-      margin-right: -12px;
-      width: calc(100% + 12px);
-    }
-    
-    .gratitudeImageWrapper {
-      margin-bottom: 54px;
-      width: 100%;
-      flex-shrink: 0;
-      
-      @media (max-width: 1100px) {
-        width: 1100px;
-      }
-      
-      @media (max-width: 768px) {
-        width: 700px;
-        margin-bottom: 20px;
-      }
-      
-      .gratitudeWrapper {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        
-        @media (max-width: 768px) {
-          gap: 20px;
-        }
-        
-        .gratitude {
-          width: 25%;
-          text-align: center;
-          font-size: 16px;
-          font-weight: 600;
-          flex-shrink: 0;
-          
-          @media (max-width: 768px) {
-            width: auto;
-            min-width: 150px;
-          }
-        }
-      }
-      
-      .gratitudeLine {
-        width: 100%;
-      }
-    }
-
-    .gratitudeImages {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      flex-shrink: 0;
-      
-      @media (max-width: 1100px) {
-        width: 1100px;
-        gap: 20px;
-      }
-      
-      @media (max-width: 768px) {
-        width: 700px;
-        gap: 16px;
-      }
-      
-      @media (max-width: 768px) {
-        gap: 12px;
-      }
-      .imageBlock {
-        //    width: 450px;
-        // height: 450px;
-        width: 355px;
-        height: 355px;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-shrink: 0;
-        overflow: hidden;
-
-        // @media (max-width: 1900px) {
-        //   width: 400px;
-        //   height: 400px;
-        // }
-
-        // @media (max-width: 1720px) {
-        //   width: 370px;
-        //   height: 370px;
-        // }
-
-        @media (max-width: 1590px) {
-          width: 350px;
-          height: 350px;
-        }
-        @media (max-width: 1500px) {
-          width: 325px;
-          height: 325px;
-        }
-        @media (max-width: 1440px) {
-          width: 300px;
-          height: 300px;
-        }
-
-        @media (max-width: 1300px) {
-          width: 280px;
-          height: 280px;
-        }
-        @media (max-width: 1220px) {
-          width: 250px;
-          height: 250px;
-        }
-        @media (max-width: 1100px) {
-          width: 230px;
-          min-width: 230px;
-          height: 230px;
-        }
-        @media (max-width: $viewport-mobile-max) {
-          width: 161px;
-          min-width: 161px;
-          max-width: 161px;
-          height: 161px;
-          aspect-ratio: 1;
-        }
-
-        .imageLink {
-          display: block;
-          width: 100%;
-          height: 100%;
-          border-radius: 50%;
-          overflow: hidden;
-          -webkit-tap-highlight-color: transparent;
-          touch-action: manipulation;
-          text-decoration: none;
-        }
-
-        .kremImage,
-        img {
-          width: 100%;
-          height: 100%;
-          max-width: none;
-          object-fit: cover;
-          border-radius: 50%;
-          display: block;
-          flex-shrink: 0;
-          pointer-events: none;
-          user-select: none;
-          -webkit-user-drag: none;
-        }
-
-        .placeholderImage {
-          width: 100%;
-          height: 100%;
-          background: #F6F5EF;
-          border-radius: 50%;
-          pointer-events: none;
-        }
       }
     }
   }
 
-  .moreWrapper {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-    gap: 10px;
-    text-transform: uppercase;
-    margin-top: 64px;
-    a {
+  .mobileSlide {
+    flex: 0 0 auto;
+    width: min(200px, 58vw);
+    scroll-snap-align: start;
+  }
+
+  .mobileChrome {
+    display: none;
+
+    @media (max-width: $viewport-mobile-max) {
       display: flex;
       align-items: center;
-      gap: 10px;
+      justify-content: center;
+      margin-top: 16px;
+      padding-right: 16px;
+    }
+  }
+
+  .dots {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .dot,
+  .dotActive {
+    box-sizing: content-box;
+    width: 8px;
+    height: 8px;
+    padding: 18px;
+    margin: -18px;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    background-clip: content-box;
+    background-color: rgba(0, 0, 0, 0.18);
+    transition: background-color 0.2s ease, transform 0.2s ease;
+  }
+
+  .dotActive {
+    background-color: $green-297;
+    transform: scale(1.15);
+  }
+
+  .imageBlock {
+    --gift-circle: clamp(161px, 22vw, 355px);
+    width: var(--gift-circle);
+    height: var(--gift-circle);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+    overflow: hidden;
+
+    @media (max-width: $viewport-mobile-max) {
+      --gift-circle: min(200px, 58vw);
+      width: var(--gift-circle);
+      height: var(--gift-circle);
+      max-width: 100%;
+    }
+
+    .imageLink {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      overflow: hidden;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
       text-decoration: none;
-      color: #000;
-      &:hover {
-        color: #297230;
-      }
-      p {
-        font-weight: $button-font-weight;
-        font-size: 16px;
-        margin: 0;
+
+      &:hover .circleCaption,
+      &:focus-visible .circleCaption {
+        opacity: 1;
+        transform: translateY(0);
       }
     }
+
+    .circleCaption {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      box-sizing: border-box;
+      min-height: 42%;
+      padding: 28% 10% 12%;
+      background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.55) 0%,
+        rgba(0, 0, 0, 0.2) 55%,
+        rgba(0, 0, 0, 0) 100%
+      );
+      opacity: 0;
+      transform: translateY(6px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      pointer-events: none;
+
+      @media (max-width: $viewport-mobile-max) {
+        display: none;
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        transition: none;
+        transform: none;
+      }
+    }
+
+    .circleCaptionText {
+      max-width: 10em;
+      color: #fff;
+      font-family: $font-avenir;
+      font-size: clamp(11px, 1.1vw, 14px);
+      font-weight: 500;
+      line-height: 1.25;
+      text-align: center;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      overflow: hidden;
+    }
+
+    .kremImage,
     img {
-      cursor: pointer;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      object-fit: cover;
+      border-radius: 50%;
+      display: block;
+      flex-shrink: 0;
+      pointer-events: none;
+      user-select: none;
+      -webkit-user-drag: none;
     }
+
+    .placeholderImage {
+      width: 100%;
+      height: 100%;
+      background: #f6f5ef;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+  }
+}
+
+.skeletonCircle {
+  --gift-circle: clamp(161px, 22vw, 355px);
+  width: var(--gift-circle);
+  height: var(--gift-circle);
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(90deg, #ebe8e1 0%, #f4f2ec 50%, #ebe8e1 100%);
+  background-size: 200% 100%;
+  animation: gratitudeShimmer 1.2s ease-in-out infinite;
+
+  @media (max-width: $viewport-mobile-max) {
+    --gift-circle: min(200px, 58vw);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+@keyframes gratitudeShimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
   }
 }

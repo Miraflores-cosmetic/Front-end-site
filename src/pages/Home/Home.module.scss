@@ -1,37 +1,15 @@
 @use '@/style/variables.scss' as *;
 
-.preHeaderTxt {
-  width: 100%;
-  background-color: black;
-  color: #fffcf2;
-  height: 27px;
-  font-size: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  // Slide Down анимация с задержкой (появляется последним)
-  opacity: 0;
-  transform: translateY(-100%);
-  animation: slideDown 0.5s ease-out 0.3s forwards;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-100%);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 .homeContainer {
-  max-width: 1536px;
+  --page-max-width: #{$page-max-width};
+  /* единый ритм секций и отступ до футера */
+  --home-section-gap: 240px;
+  max-width: var(--page-max-width);
   margin: 0 auto;
-  padding: 0 0 0 32px;
+  padding: 0 0 var(--home-section-gap) 32px;
   background-color: $white;
-  overflow-x: clip;
+  /* visible: лента бестселлеров может выходить к правому краю viewport */
+  overflow-x: visible;
 
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
@@ -40,6 +18,7 @@
 /* Мобилка: как category / product — 16px по бокам */
 @media (max-width: $viewport-mobile-max) {
   .homeContainer {
-    padding: 0 16px 0;
+    --home-section-gap: 100px;
+    padding: 0 16px var(--home-section-gap);
   }
 }

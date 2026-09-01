@@ -1,24 +1,34 @@
 import React, { InputHTMLAttributes } from 'react';
-import styles from './Input.module.scss';
+import { TextField } from '../TextField';
 
 interface CustomInputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   value?: string;
-  error?: boolean;
+  error?: boolean | string;
   required?: boolean;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-const Input: React.FC<CustomInputProps> = ({ label, value, onChange, error, required, ...props }) => {
+/** Обёртка над TextField (Jcos FloatingTextField) для checkout и форм. */
+const Input: React.FC<CustomInputProps> = ({
+  label,
+  value,
+  onChange,
+  error,
+  required,
+  placeholder,
+  ...props
+}) => {
   return (
-    <div className={`${styles.inputWrapper} ${error ? styles.error : ''}`}>
-      {label && (
-        <label className={styles.label}>
-          {label} {required && <span className={styles.asterisk}>*</span>}
-        </label>
-      )}
-      <input className={styles.input} value={value} onChange={onChange} {...props} />
-    </div>
+    <TextField
+      label={label}
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      error={error}
+      required={required}
+      {...props}
+    />
   );
 };
 

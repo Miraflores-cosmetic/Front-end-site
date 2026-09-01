@@ -38,7 +38,7 @@ export const QuizEndFaceCareFooter: React.FC<QuizEndFaceCareFooterProps> = ({
 
       {showNaboryButton && (
         <div className={styles.naboryButton}>
-          <Button text="Смотреть наборы" onClick={() => navigate('/category/nabory')} />
+          <Button text="Смотреть наборы" onClick={() => navigate('/catalog/nabory')} />
         </div>
       )}
     </div>

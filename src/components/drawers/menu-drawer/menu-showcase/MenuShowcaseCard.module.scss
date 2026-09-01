@@ -1,0 +1,120 @@
+@use '@/style/variables.scss' as *;
+
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+  max-width: 432px;
+}
+
+.media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background: #f6f5ef;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.titleRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-family: 'Onest', 'Avenir Next', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: $black;
+  text-decoration: none;
+  flex: 1;
+  min-width: 0;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.priceWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.price,
+.oldPrice {
+  font-family: 'Onest', 'Avenir Next', sans-serif;
+  font-size: 16px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.price {
+  color: $black;
+}
+
+.oldPrice {
+  color: rgba(0, 0, 0, 0.45);
+  text-decoration: line-through;
+}
+
+.desc {
+  margin: 0;
+  font-family: 'Avenir Next', sans-serif;
+  font-size: 14px;
+  line-height: 1.35;
+  color: #6e6d67;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.skeletonShimmer {
+  background: linear-gradient(110deg, #e8e6e1 25%, #f0eeea 37%, #e8e6e1 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.skeletonLine {
+  height: 16px;
+  width: 78%;
+  border-radius: 4px;
+  background: linear-gradient(110deg, #e8e6e1 25%, #f0eeea 37%, #e8e6e1 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s ease-in-out infinite;
+}
+
+.skeletonLineShort {
+  width: 42%;
+  height: 14px;
+  margin-top: 4px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}

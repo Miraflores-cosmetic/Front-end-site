@@ -1,3 +1,5 @@
+@use '@/style/variables.scss' as *;
+
 .menu {
   display: flex;
   flex-direction: column;
@@ -12,28 +14,30 @@
     display: flex;
     gap: 24px;
 
-    &.titleWrapperClickable {
-      cursor: pointer;
-      transition: opacity 0s;
+    .menuTitle {
+      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+      font-weight: 300;
+      font-size: 36px;
+      text-transform: uppercase;
+      margin: 0;
+
+      @media (max-width: $viewport-tablet-max) {
+        font-size: 24px;
+      }
+    }
+
+    .menuTitleLink {
+      color: inherit;
+      text-decoration: none;
+      display: inline-block;
 
       &:hover {
         opacity: 0.8;
       }
     }
 
-    .menuTitle {
-      font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-      font-weight: 300;
-      font-size: 36px;
-      text-transform: uppercase;
-
-      @media (max-width: 768px) {
-        font-size: 24px;
-      }
-    }
-
     .withColor {
-      color: #297230;
+      color: $green-297;
       text-transform: uppercase;
     }
   }
@@ -75,7 +79,7 @@
     .mobileBtn {
       width: 100%;
       height: 35px;
-      background-color: #297230;
+      background-color: $green-297;
       border-radius: 100px;
       border: none;
       color: white;
@@ -87,7 +91,7 @@
       text-decoration: none;
       cursor: pointer;
       transition: background-color 0.2s ease;
-      
+
       &:hover {
         background-color: #1f5a24;
       }
@@ -115,7 +119,7 @@
         text-decoration: none;
         font-size: 14px;
 
-        @media (max-width: 768px) {
+        @media (max-width: $viewport-tablet-max) {
           font-size: 16px;
         }
 
@@ -123,6 +127,15 @@
           text-decoration: underline;
         }
       }
+    }
+
+    .menuItemMuted {
+      font-family: 'Onest', 'Avenir Next', sans-serif;
+      font-weight: 300;
+      font-size: 14px;
+      text-transform: uppercase;
+      color: rgba(0, 0, 0, 0.45);
+      pointer-events: none;
     }
   }
 }

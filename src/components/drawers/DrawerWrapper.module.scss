@@ -3,9 +3,23 @@
   -ms-overflow-style: none;
   display: flex;
   justify-content: center;
+
   @media (max-width: 768px) {
     overflow-y: auto;
   }
+
+  /* Desktop-меню — на всю ширину экрана */
+  &:global(.menu-drawer) {
+    width: 100%;
+    max-width: none;
+    justify-content: stretch;
+    height: 100%;
+  }
+}
+
+:global(nav.EZDrawer__container.menu-drawer) {
+  width: 100% !important;
+  max-width: 100vw !important;
 }
 
 // z-index задаётся пропом zIndex у Drawer (оверлей + панель), иначе оверлей остаётся 100 и оказывается под хедером

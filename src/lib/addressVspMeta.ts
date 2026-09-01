@@ -1,8 +1,8 @@
 /**
- * Метаданные доставки во `streetAddress2`: первая строка `__VSP:...__`, далее — человекочитаемое описание (как для СДЭК).
+ * Метаданные доставки во `streetAddress2`: первая строка `__VSP:...__`, далее — человекочитаемое описание.
  */
 
-export type VspCarrier = 'yandex';
+export type VspCarrier = 'yandex' | 'cdek';
 
 export type VspDropoff = 'pvz' | 'courier';
 
@@ -10,10 +10,11 @@ export interface VspAddressMeta {
     carrier: VspCarrier;
     lon: string;
     lat: string;
-    /** id строки пункта из pickup-points/list (для совпадения с картой) */
+    /** id пункта: Яндекс UUID / код ПВЗ СДЭК */
     pvz: string;
     /**
-     * point_id для Cargo / yandex_point_id для Platform калькулятора (часто operator id вместо UUID).
+     * Яндекс: point_id для Cargo.
+     * СДЭК: код города (city_code) для калькулятора.
      */
     cid: string;
     dropoff: VspDropoff;
@@ -41,6 +42,16 @@ function tailAfterMetaLine(full: string, metaLine: string): string {
     return rest;
 }
 
+function decodeMetaValue(raw: string): string {
+    let v = raw;
+    try {
+        if (v) v = decodeURIComponent(v);
+    } catch {
+        /* noop */
+    }
+    return v;
+}
+
 export function parseVspAddressMeta(streetAddress2: string | null | undefined): VspAddressMeta | null {
     const line = parseFirstLine(streetAddress2);
     if (!line.startsWith(`${VSP_META_PREFIX}carrier=`)) return null;
@@ -55,26 +66,14 @@ export function parseVspAddressMeta(streetAddress2: string | null | undefined): 
         if (v.endsWith('__')) v = v.slice(0, -2);
         kv[k] = v;
     }
-    if (kv.carrier !== 'yandex') return null;
+    if (kv.carrier !== 'yandex' && kv.carrier !== 'cdek') return null;
     const dropoff = kv.dropoff === 'courier' ? 'courier' : 'pvz';
-    let pvzDecoded = kv.pvz || '';
-    let cidDecoded = kv.cid || '';
-    try {
-        if (pvzDecoded) pvzDecoded = decodeURIComponent(pvzDecoded);
-    } catch {
-        /* noop */
-    }
-    try {
-        if (cidDecoded) cidDecoded = decodeURIComponent(cidDecoded);
-    } catch {
-        /* noop */
-    }
     return {
-        carrier: 'yandex',
+        carrier: kv.carrier,
         lon: kv.lon || '',
         lat: kv.lat || '',
-        pvz: pvzDecoded,
-        cid: cidDecoded,
+        pvz: decodeMetaValue(kv.pvz || ''),
+        cid: decodeMetaValue(kv.cid || ''),
         dropoff,
     };
 }
@@ -89,12 +88,30 @@ export function buildVspMetaLine(meta: VspAddressMeta): string {
     return `${VSP_META_PREFIX}carrier=${carrier}|lon=${lon}|lat=${lat}|pvz=${encodeURIComponent(pvz)}|dropoff=${dropoff}${cidPart}__`;
 }
 
-export function buildStreetAddress2WithMeta(meta: VspAddressMeta, tail: string): string {
+export function buildStreetAddress2WithMeta(
+    meta: VspAddressMeta,
+    tail: string,
+    maxLen = 500,
+): string {
     const first = buildVspMetaLine(meta);
+    // Никогда не режем meta mid-line — иначе parseVspAddressMeta ломается.
+    if (first.length >= maxLen) return first;
     const comment = tail.trim();
-    if (!comment) return first.slice(0, 256);
-    const combined = `${first}\n${comment}`;
-    return combined.length <= 256 ? combined : combined.slice(0, 256);
+    if (!comment) return first;
+    const budget = maxLen - first.length - 1; // \n
+    if (budget <= 0) return first;
+    const clipped = comment.length <= budget ? comment : comment.slice(0, budget);
+    return `${first}\n${clipped}`;
+}
+
+/** Код ПВЗ для Order.shippingAddress.pvzCode (СДЭК code / Яндекс point id). */
+export function extractPvzCodeFromStreet2(
+    streetAddress2: string | null | undefined,
+): string | undefined {
+    const meta = parseVspAddressMeta(streetAddress2);
+    if (!meta || meta.dropoff !== 'pvz') return undefined;
+    const code = (meta.carrier === 'yandex' ? meta.cid || meta.pvz : meta.pvz).trim();
+    return code || undefined;
 }
 
 /** Освобождённое от меты первой строкой человекочитаемое содержимое */

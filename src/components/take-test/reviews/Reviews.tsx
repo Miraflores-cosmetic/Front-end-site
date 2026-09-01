@@ -1,15 +1,17 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import styles from './Reviews.module.scss';
-import img1 from '@/assets/images/etap3.webp';
-import img2 from '@/assets/images/etap2.webp';
-import ArrowToRight from '@/assets/icons/ArrowToRight.svg';
 import { Review } from './review/Review';
-import { Link, useNavigate } from 'react-router-dom';
-import { getAllPublishedReviews } from '@/graphql/queries/reviewsAll.service';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
+import {
+  getLatestPublishedReviews,
+  getProductPublishedReviews,
+  getPublishedReviewsPage,
+  type PublishedReview,
+} from '@/graphql/queries/reviewsAll.service';
+import MoreLink, { SectionTitleRow } from '@/components/MoreLink/MoreLink';
+import { HomeSection } from '@/components/home-section/HomeSection';
 
 interface ReviewData {
+  id: string;
   images: string[];
   title: string;
   subtitle: string;
@@ -18,114 +20,95 @@ interface ReviewData {
   date: string;
 }
 
+const PAGE_SIZE = 20;
+const PREVIEW_LIMIT = 3;
+
+function mapReview(r: PublishedReview): ReviewData {
+  const reviewPhotos = [r.image1, r.image2].filter(Boolean) as string[];
+  const productThumb = r.product.thumbnail ? [r.product.thumbnail] : [];
+  return {
+    id: r.id,
+    images: reviewPhotos.length > 0 ? reviewPhotos : productThumb,
+    title: r.product.name,
+    subtitle: r.authorName?.trim() || '',
+    text: r.text,
+    rating: r.rating,
+    date: r.createdAt
+      ? new Date(r.createdAt).toLocaleDateString('ru-RU', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+      : '',
+  };
+}
+
 export const Reviews: React.FC<{
   variant?: 'preview' | 'page';
   productSlug?: string;
 }> = ({ variant = 'preview', productSlug }) => {
   const [reviews, setReviews] = useState<ReviewData[]>([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
-  const { isAuth } = useSelector((state: RootState) => state.authSlice);
-  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const showAll = variant === 'page';
+  const HeadingTag = showAll ? 'h1' : 'h2';
 
-  useEffect(() => {
-    async function loadReviews() {
+  const loadPage = useCallback(
+    async (nextPage: number, append: boolean) => {
+      if (showAll) {
+        if (append) setLoadingMore(true);
+        else setLoading(true);
+        try {
+          const data = productSlug
+            ? await getProductPublishedReviews(productSlug, nextPage, PAGE_SIZE)
+            : await getPublishedReviewsPage(nextPage, PAGE_SIZE);
+          const mapped = data.items.map(mapReview);
+          setReviews((prev) => (append ? [...prev, ...mapped] : mapped));
+          setTotal(data.total);
+          setPage(data.page);
+        } catch (error) {
+          console.error('Error loading reviews:', error);
+          if (!append) setReviews([]);
+        } finally {
+          setLoading(false);
+          setLoadingMore(false);
+        }
+        return;
+      }
+
       setLoading(true);
       try {
-        const data = await getAllPublishedReviews();
-        const filtered = productSlug
-          ? data.filter((r) => r.product.slug === productSlug)
-          : data;
-
-        const mapped = filtered.map((r) => ({
-          images: [r.image1, r.image2].filter(Boolean) as string[],
-          title: r.product.name,
-          subtitle: '',
-          text: r.text,
-          rating: r.rating,
-          date: new Date(r.createdAt).toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })
-        }));
-
-        setReviews(showAll ? mapped : mapped.slice(0, 3));
+        const data = await getLatestPublishedReviews(PREVIEW_LIMIT);
+        setReviews(data.map(mapReview));
+        setTotal(data.length);
       } catch (error) {
         console.error('Error loading reviews:', error);
+        setReviews([]);
       } finally {
         setLoading(false);
       }
-    }
-    loadReviews();
-  }, [showAll, productSlug]);
+    },
+    [showAll, productSlug],
+  );
 
-  // Intersection Observer для запуска анимации при скролле к секции
   useEffect(() => {
-    if (isSectionLoaded) return;
+    void loadPage(1, false);
+  }, [loadPage]);
 
-    const setup = () => {
-      if (!sectionRef.current) return null;
-
-      const checkVisibility = () => {
-        const rect = sectionRef.current!.getBoundingClientRect();
-        return rect.top < window.innerHeight && rect.bottom > 0;
-      };
-
-      if (checkVisibility()) {
-        setIsSectionLoaded(true);
-        return null;
-      }
-
-      const observer = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) if (e.isIntersecting) setIsSectionLoaded(true);
-        },
-        { threshold: 0.2, rootMargin: '0px 0px -100px 0px' }
-      );
-      observer.observe(sectionRef.current);
-      return () => { sectionRef.current && observer.unobserve(sectionRef.current); };
-    };
-
-    let off = setup();
-    if (off) return off;
-    const id = setTimeout(() => { off = setup(); }, 120);
-    return () => { clearTimeout(id); off?.(); };
-  }, [isSectionLoaded]);
-
-  const handleLeaveReviewClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    
-    // Проверяем авторизацию через токен (на случай, если Redux еще не обновился)
-    const token = localStorage.getItem('token');
-    const isAuthenticated = isAuth || (token && token !== 'null' && token !== 'undefined');
-    
-    if (isAuthenticated) {
-      // Если авторизован - ведем в раздел заказов профиля
-      navigate('/profile?tab=orders');
-    } else {
-      // Если не авторизован - ведем на страницу авторизации
-      navigate('/sign-in');
-    }
-  };
+  const hasMore = showAll && reviews.length < total;
 
   return (
-    <section
-      ref={sectionRef}
-      className={`${styles.reviewsContainer} ${isSectionLoaded ? styles.sectionAnimated : ''} ${showAll ? styles.reviewsContainerPage : ''}`}
+    <HomeSection
+      className={`${styles.reviewsContainer} ${showAll ? styles.reviewsContainerPage : ''}`}
+      flush={showAll}
     >
       <div className={styles.titleWrapper}>
-        <p className={styles.title}>Отзывы</p>
-        <Link 
-          to="#" 
-          onClick={handleLeaveReviewClick}
-          className={styles.setReview}
-        >
-          <p>оставить отзыв</p>
-          <img src={ArrowToRight} alt='' />
-        </Link>
+        <SectionTitleRow className={styles.titleRow}>
+          <HeadingTag className={styles.title}>Отзывы</HeadingTag>
+          {!showAll ? <MoreLink to="/reviews/" /> : null}
+        </SectionTitleRow>
       </div>
 
       <div className={styles.reviewsWrapper}>
@@ -144,26 +127,27 @@ export const Reviews: React.FC<{
               ))}
             </>
           ) : reviews.length > 0 ? (
-            reviews.map((review, index) => (
-              <Review key={index} {...review} wideContent />
+            reviews.map((review) => (
+              <Review key={review.id} {...review} wideContent />
             ))
           ) : (
-            <p className={styles.noReviews}>Пока нет отзывов </p>
+            <p className={styles.noReviews}>Пока нет отзывов</p>
           )}
+
+          {hasMore ? (
+            <div className={styles.loadMoreWrap}>
+              <button
+                type="button"
+                className={styles.loadMoreBtn}
+                disabled={loadingMore}
+                onClick={() => void loadPage(page + 1, true)}
+              >
+                {loadingMore ? 'Загрузка…' : 'Показать ещё'}
+              </button>
+            </div>
+          ) : null}
         </div>
       </div>
-
-      {!showAll && (
-        <Link
-          to='/reviews/'
-          className={styles.allWrapper}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <p>ВСЕ ОТЗЫВЫ</p>
-          <img src={ArrowToRight} alt='' />
-        </Link>
-      )}
-    </section>
+    </HomeSection>
   );
 };

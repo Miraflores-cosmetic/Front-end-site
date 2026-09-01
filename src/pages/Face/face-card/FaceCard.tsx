@@ -4,9 +4,7 @@ import gift from '@/assets/icons/gift.svg';
 import sun from '@/assets/icons/sun.svg';
 import moon from '@/assets/icons/moon.svg';
 import whiteGift from '@/assets/icons/whiteGift.webp';
-import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { addItemToCart } from '@/store/slices/checkoutSlice';
+import { useToast } from '@/components/toast/toast';
 
 interface Product {
   id: number | string;
@@ -21,25 +19,17 @@ interface Product {
   hoverImage: string;
 }
 
+/**
+ * Демо-карточка /face: фейковые id 1..n. Не пишем в корзину —
+ * sync удалил бы их как missing и портил бы реальные позиции.
+ */
 export const FaceCard: React.FC<{ product: Product }> = ({ product }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isHoveredGift, setIsHoveredGift] = useState(false);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
+  const toast = useToast();
 
   const handleAddToCart = () => {
-    dispatch(
-      addItemToCart({
-        variantId: String(product.id),
-        quantity: 1,
-        title: product.title,
-        thumbnail: product.image,
-        price: product.price,
-        oldPrice: product.oldPrice ?? null,
-        discount: product.discount ?? null,
-        size: product.label ?? '50 мл'
-      })
-    );
+    toast.warning('Демо-карточка — товары лица скоро в каталоге');
   };
 
   return (
@@ -65,7 +55,7 @@ export const FaceCard: React.FC<{ product: Product }> = ({ product }) => {
 
         {isHovered && (
           <div className={styles.addToCardWrapper}>
-            <button className={styles.addToCart} onClick={handleAddToCart}>
+            <button type="button" className={styles.addToCart} onClick={handleAddToCart}>
               Добавить в корзину
             </button>
             <div
@@ -78,8 +68,8 @@ export const FaceCard: React.FC<{ product: Product }> = ({ product }) => {
           </div>
         )}
         <div className={styles.sizeWrapperContent}>
-          <button className={styles.size50}>50 мл</button>
-          <button className={styles.size100}>100 мл</button>
+          <button type="button" className={styles.size50}>50 мл</button>
+          <button type="button" className={styles.size100}>100 мл</button>
         </div>
       </div>
       <div className={styles.info}>

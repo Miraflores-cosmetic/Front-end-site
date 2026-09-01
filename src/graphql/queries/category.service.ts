@@ -1,262 +1,131 @@
-import { AVAILABILITY_COUNTRY_FOR_STOCK, CHANNEL, graphqlRequest } from '../client';
-import { CategoryConnection, SingleCategoryConnection } from '../types/category';
+import { fetchCatalogTags, fetchCategories, getProductEdges } from '@/api/catalogApi';
+import { uploadsUrl } from '@/api/apiClient';
+import type { CategoryConnection, SingleCategoryConnection } from '../types/category';
 
-/** ID атрибута sortOrder для сортировки товаров в категории (dashboard/attributes) */
-const SORT_ORDER_ATTRIBUTE_ID = 'QXR0cmlidXRlOjEwMA==';
+function findCategoryInTree(
+  items: Awaited<ReturnType<typeof fetchCategories>>['items'],
+  slug: string,
+): { id: string; name: string; slug: string } | null {
+  for (const root of items) {
+    if (root.slug === slug) return root;
+    for (const ch of root.children ?? []) {
+      if (ch.slug === slug) return ch;
+    }
+  }
+  return null;
+}
 
 export async function getAllCategory(first: number): Promise<CategoryConnection['categories']> {
-  const query = `
-    query Category($first: Int!) {
-      categories(first: $first) {
-        edges {
-          node {
-            id
-            description
-            name
-            slug
-            parent {
-              name
-              id
-              slug
-            }
-          }
-        }
-        totalCount
-      }
+  const { items } = await fetchCategories();
+  const flat: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    parent?: { id: string; name: string; slug: string } | null;
+  }> = [];
+  for (const root of items) {
+    flat.push({
+      id: root.id,
+      name: root.name,
+      slug: root.slug,
+      parent: root.parentId ? { id: root.parentId, name: '', slug: '' } : null,
+    });
+    for (const ch of root.children ?? []) {
+      flat.push({
+        id: ch.id,
+        name: ch.name,
+        slug: ch.slug,
+        parent: { id: root.id, name: root.name, slug: root.slug },
+      });
     }
-  `;
-
-  const variables = { first };
-  const data = await graphqlRequest<CategoryConnection>(query, variables);
-  return data.categories;
+  }
+  return {
+    edges: flat.slice(0, first).map((node) => ({ node: { ...node, description: '' } })),
+    totalCount: flat.length,
+    categories: {
+      edges: flat.slice(0, first).map((node) => ({ node: { ...node, description: '' } })),
+      totalCount: flat.length,
+    },
+  } as unknown as CategoryConnection['categories'];
 }
 
 export async function getAllCategorMenu(): Promise<any[]> {
-  const query = `
-    query getAllCategory {
-      categories(first: 50, level: 0) {
-        edges {
-          node {
-            id
-            name
-            slug
-            backgroundImage {
-              url
-            }
-            parent {
-              id
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  const data = await graphqlRequest<CategoryConnection>(query);
-
-  // Оставляем только корневые (parent === null)
-  return data.categories.edges.map((e: any) => e.node).filter((cat: any) => !cat.parent);
+  const { items } = await fetchCategories();
+  return items.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    backgroundImage: c.imageUrl ? { url: uploadsUrl(c.imageUrl) } : null,
+    parent: c.parentId ? { id: c.parentId } : null,
+  }));
 }
+
+/** Каталог по slug категории или контекстного тега (/category/:slug). */
+async function categoryWithProducts(slug: string, first: number, after?: string | null) {
+  const page = after ? parseInt(after, 10) || 1 : 1;
+  const { items: categories } = await fetchCategories();
+  const category = findCategoryInTree(categories, slug);
+
+  let name = category?.name ?? slug;
+  let description = '';
+  let edges: Awaited<ReturnType<typeof getProductEdges>>['edges'] = [];
+  let total = 0;
+
+  if (category) {
+    const res = await getProductEdges({ category: slug, limit: first, page });
+    edges = res.edges;
+    total = res.total;
+  } else {
+    const { items: tags } = await fetchCatalogTags();
+    const tag = tags.find((t) => t.slug === slug);
+    if (tag) {
+      name = tag.title?.trim() || tag.name;
+      description = tag.description?.trim() || '';
+      const res = await getProductEdges({ tag: slug, limit: first, page });
+      edges = res.edges;
+      total = res.total;
+    }
+  }
+
+  return {
+    id: category?.id ?? slug,
+    name,
+    description,
+    slug,
+    products: {
+      pageInfo: {
+        hasNextPage: page * first < total,
+        endCursor: String(page + 1),
+      },
+      totalCount: total,
+      edges,
+    },
+  };
+}
+
 export async function getSingleCategory(
   first: number,
-  slug: string
+  slug: string,
 ): Promise<SingleCategoryConnection['category']> {
-  const query = `
-    query getSingleCategory($slug: String!, $channel: String!, $first: Int!) {
-      category(slug: $slug) {
-        id
-        description
-        metadata {
-          key
-          value
-        }
-        name
-        products(channel: $channel, first: $first, where: { isPublished: true, isVisibleInListing: true }) {
-          pageInfo {
-            hasNextPage
-            hasPreviousPage
-          }
-          totalCount
-          edges {
-            node {
-              id
-              name
-              slug
-              description
-              isAvailableForPurchase
-              media {
-                alt
-                url
-              }
-              pricing {
-                discount {
-                  gross {
-                    fractionalAmount
-                    amount
-                    currency
-                  }
-                }
-              }
-              thumbnail {
-                alt
-                url
-              }
-              weight {
-                unit
-                value
-              }
-              category {
-                name
-                slug
-              }
-            }
-          }
-        }
-        slug
-      }
-    }
-  `;
-
-  const variables = { channel: CHANNEL, slug, first };
-  const data = await graphqlRequest<SingleCategoryConnection>(query, variables);
-  return data.category;
+  const category = await categoryWithProducts(slug, first);
+  return category as unknown as SingleCategoryConnection['category'];
 }
-
 
 export async function getCategoryBySlug(
   first: number,
   categorySlug: string,
-  after?: string | null
+  after?: string | null,
 ): Promise<SingleCategoryConnection['category']> {
-  const query = `
-    query getProductsByCategorySlug(
-      $categorySlug: String!,
-      $channel: String,
-      $first: Int,
-      $after: String,
-      $sortBy: ProductOrder,
-      $availabilityCountry: CountryCode!
-    ) {
-      category(slug: $categorySlug) {
-        id
-        name
-        description
-        products(first: $first, after: $after, channel: $channel, where: { isPublished: true, isVisibleInListing: true }, sortBy: $sortBy) {
-          pageInfo {
-            hasNextPage
-            endCursor
-          }
-          edges {
-            node {
-              id
-              slug
-              name
-              description
-              productType { name }
-              attributes {
-                attribute {
-                  id
-                  name
-                  slug
-                }
-                values {
-                  name
-                  slug
-                  plainText
-                  richText
-                }
-              }
-              thumbnail { url }
-              media { url }
-              defaultVariant {
-                id
-                name
-                quantityLimitPerCustomer
-                trackInventory
-                quantityAvailable(countryCode: $availabilityCountry)
-                pricing {
-                  price {
-                    gross { amount }
-                  }
-                  priceUndiscounted {
-                    gross { amount }
-                  }
-                  discount {
-                    gross { amount }
-                  }
-                }
-              }
-              collections { id name slug }
-              productVariants(first: 2) {
-                edges {
-                  node {
-                    id
-                    sku
-                    name
-                    quantityLimitPerCustomer
-                    trackInventory
-                    quantityAvailable(countryCode: $availabilityCountry)
-                    attributes {
-                      attribute {
-                        id
-                        name
-                        slug
-                      }
-                      values {
-                        name
-                        slug
-                        plainText
-                      }
-                    }
-                    pricing {
-                      discount { gross { amount currency } }
-                      price { gross { amount currency } }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  `;
-
-  const variables = {
-    channel: CHANNEL,
-    categorySlug,
-    first,
-    after: after ?? null,
-    sortBy: { direction: 'ASC', attributeId: SORT_ORDER_ATTRIBUTE_ID },
-    availabilityCountry: AVAILABILITY_COUNTRY_FOR_STOCK
-  };
-  const data = await graphqlRequest<SingleCategoryConnection>(query, variables);
-  return data.category;
+  const category = await categoryWithProducts(categorySlug, first, after);
+  return category as unknown as SingleCategoryConnection['category'];
 }
 
-
-
-export async function getCategoryTabsBySlug(
-  first: number,
-  slug: string) {
-  const query = `
-    query CategoryTabs($slug: String!, $first: Int!) {
-      category(slug: $slug) {
-        id
-        name
-        children(first: $first) {
-          edges {
-            node {
-              id
-              name
-              slug
-            }
-          }
-        }
-      }
-    }
-  `;
-  const variables = {slug, first};
-  const data = await graphqlRequest<{ category: any }>(query, variables);
-  return data.category?.children?.edges?.map((e: any) => e.node) ?? [];
+export async function getCategoryTabsBySlug(first: number, slug: string) {
+  const { items } = await fetchCategories();
+  const root = items.find((c) => c.slug === slug);
+  return (root?.children ?? []).slice(0, first).map((ch) => ({
+    id: ch.id,
+    name: ch.name,
+    slug: ch.slug,
+  }));
 }

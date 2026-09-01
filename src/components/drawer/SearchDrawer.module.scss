@@ -1,67 +1,506 @@
-.backdrop {
+@use '@/style/variables.scss' as *;
+
+/* Shell как у Jcos: scrim + slide-down panel, колонка max 640px */
+
+.root {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.55);
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  padding-top: 80px;
   z-index: 5000;
-  animation: fadeIn 0.25s ease forwards;
+  pointer-events: auto;
 }
 
-.container {
-  width: 100%;
-  max-width: 550px;
-  max-height: calc(100vh - 100px);
-  background: #fff;
-  border-radius: 14px;
-  padding: 20px;
-  animation: slideDown 0.25s ease forwards;
+.scrim {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  appearance: none;
+  background: rgba(0, 0, 0, 0.48);
+  cursor: pointer;
+  opacity: 1;
+  transition: opacity 0.35s ease;
+}
+
+.slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(-100%);
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+
+.open .slide {
+  transform: translateY(0);
+}
+
+.closing .slide {
+  transform: translateY(-100%);
+}
+
+.closing .scrim {
+  opacity: 0;
+}
+
+.bg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: auto;
+  background: $white;
+  /* высота по контенту — scrim снизу остаётся кликабельным */
+  min-height: calc(var(--header-height, 72px) + 220px);
+  height: 100%;
+  max-height: 92vh;
+}
+
+.backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  margin: 0;
+  padding: 0;
+  border: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.panel {
   position: relative;
+  z-index: 1;
+  padding: calc(var(--header-height, 72px) + 20px) 24px 28px;
+  color: $black;
+  pointer-events: auto;
+  max-height: min(92vh, var(--search-vvh, 100vh));
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
-.scrollArea {
-  flex: 1;
+.inner {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
-  overflow-y: auto;
+  flex: 1;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.topLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.45);
 }
 
 .closeBtn {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  background: transparent;
+  flex: 0 0 auto;
+  appearance: none;
   border: none;
-  font-size: 22px;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.55);
   cursor: pointer;
-  opacity: 0.6;
-  transition: 0.2s;
-}
+  padding: 8px;
+  margin: -8px -8px -8px 0;
+  line-height: 0;
+  transition: color 0.2s ease;
 
-.closeBtn:hover {
-  opacity: 1;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
+  &:hover {
+    color: $black;
   }
 }
 
-@keyframes slideDown {
-  from {
-    transform: translateY(-15px);
-    opacity: 0;
+.fieldRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.14);
+  padding-bottom: 12px;
+}
+
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: $black;
+  font: inherit;
+  font-size: clamp(1.25rem, 2.4vw, 1.75rem);
+  font-weight: 350;
+  line-height: 1.3;
+  outline: none;
+
+  &::-webkit-search-cancel-button {
+    display: none;
   }
-  to {
-    transform: translateY(0);
-    opacity: 1;
+
+  &::placeholder {
+    color: rgba(0, 0, 0, 0.38);
+  }
+}
+
+.clearBtn {
+  flex: 0 0 auto;
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  padding: 6px;
+  line-height: 0;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: $black;
+  }
+}
+
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-height: min(calc(var(--search-vvh, 100vh) * 0.5), 480px);
+  overflow: auto;
+  padding-bottom: 4px;
+  overscroll-behavior: contain;
+  min-height: 0;
+}
+
+.meta {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.55);
+  font-size: 14px;
+}
+
+.idle {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.chipList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip,
+.chipLink {
+  appearance: none;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: transparent;
+  color: $black;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.2;
+  padding: 8px 12px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.28);
+  }
+}
+
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.skeletonRow {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px;
+}
+
+.skeletonThumb {
+  width: 44px;
+  height: 44px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.skeletonLines {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.skeletonLine {
+  display: block;
+  height: 12px;
+  width: 72%;
+  border-radius: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.1) 45%,
+    rgba(0, 0, 0, 0.05) 90%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.1s ease-in-out infinite;
+}
+
+.skeletonLineShort {
+  width: 36%;
+  height: 10px;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.emptyActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 18px;
+}
+
+.emptyBtn,
+.emptyLink {
+  appearance: none;
+  border: none;
+  background: transparent;
+  color: $black;
+  font: inherit;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+  padding: 0;
+
+  &:hover {
+    opacity: 0.7;
+  }
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.groupLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.hitList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hit {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 4px;
+  color: $black;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: background 0.15s ease;
+
+  &:hover,
+  &.hitActive {
+    background: rgba(0, 0, 0, 0.04);
+  }
+
+  &.hitActive {
+    outline: 1px solid rgba(0, 0, 0, 0.18);
+    outline-offset: -1px;
+  }
+}
+
+.hitImg,
+.hitPh {
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.hitPh {
+  display: grid;
+  place-items: center;
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.hitText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.hitTitle {
+  font-size: 15px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mark {
+  background: rgba(41, 114, 48, 0.18);
+  color: inherit;
+  font: inherit;
+  padding: 0 0.06em;
+  border-radius: 1px;
+}
+
+.hitSub {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.viewAll {
+  color: $green-297;
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+
+  &:hover {
+    opacity: 0.75;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+/* tablet/mobile nav chrome — тот же порог, что header burger (1024) */
+@media (max-width: $viewport-tablet-max) {
+  .panel {
+    padding: calc(var(--header-height, 54px) + 16px) 16px 24px;
+  }
+
+  .results {
+    max-height: min(calc(var(--search-vvh, 100vh) * 0.42), 360px);
+  }
+
+  .hit,
+  .skeletonRow {
+    grid-template-columns: 40px minmax(0, 1fr);
+  }
+
+  .hitImg,
+  .hitPh,
+  .skeletonThumb {
+    width: 40px;
+    height: 40px;
+  }
+
+  .input {
+    font-size: 1.25rem;
+  }
+}
+
+.compact {
+  .panel {
+    padding-top: calc(var(--header-height, 54px) + 8px);
+    padding-bottom: 12px;
+  }
+
+  .topBar {
+    margin-bottom: 6px;
+  }
+
+  .fieldRow {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+  }
+
+  .results {
+    gap: 16px;
+    max-height: min(calc(var(--search-vvh, 100vh) * 0.36), 260px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scrim,
+  .slide {
+    transition: none !important;
+  }
+
+  .skeletonLine {
+    animation: none;
   }
 }

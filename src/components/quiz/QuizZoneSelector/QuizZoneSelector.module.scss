@@ -22,13 +22,16 @@
   cursor: pointer;
   text-align: left;
   font-family: $font-onest;
-  transition: all 0.25s ease;
+  box-shadow: 0 4px 20px transparent;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
 
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       border-color: $green-297;
       box-shadow: 0 4px 20px rgba($green-297, 0.12);
-      transform: translateY(-2px);
     }
   }
 }

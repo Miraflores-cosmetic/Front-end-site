@@ -1,3 +1,5 @@
+@use '@/style/variables.scss' as *;
+
 .drawer {
   position: relative;
   height: 100%;
@@ -22,26 +24,77 @@
     .headerWrapper {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
+      gap: 16px;
       margin-bottom: 8px;
+
       .aboutUs {
-        font-family: 'Tenor Sans', sans-serif;
-        font-weight: 400;
+        font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+        font-weight: 300;
         font-size: 20px;
         text-transform: uppercase;
+        margin: 0;
       }
+
+      .aboutHint {
+        margin: 6px 0 0;
+        font-size: 13px;
+        line-height: 1.4;
+        color: #6e6d67;
+      }
+
       .close {
         cursor: pointer;
         font-weight: 500;
         font-size: 13px;
         text-transform: uppercase;
         color: #222;
+        background: none;
+        border: none;
+        padding: 0;
+        font-family: inherit;
       }
     }
     .infoWrapper {
       display: flex;
       flex-direction: column;
-      gap: 32px;
+      gap: 28px;
+    }
+
+    .fieldGroup {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      padding: 20px 16px;
+      border: 1px solid rgba(110, 109, 103, 0.2);
+      border-radius: 12px;
+      background: #faf9f5;
+    }
+
+    .groupLabel {
+      margin: 0 0 4px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #6e6d67;
+    }
+
+    .checkboxRow {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1.4;
+      color: #222;
+
+      input {
+        margin-top: 2px;
+        width: 18px;
+        height: 18px;
+        flex-shrink: 0;
+      }
     }
     .dadteOfBirdthWrapper {
       display: flex;
@@ -104,19 +157,37 @@
     // border-top: 1px solid #f0f0f0;
     
     .orderButton {
+      box-sizing: border-box;
       cursor: pointer;
       width: 100%;
       height: 48px;
-      border-radius: 24px;
+      min-height: 48px;
+      padding: 0 20px;
+      border-radius: 100px;
       background-color: #000;
-      color: white;
-      border: none;
-      font-size: 16px;
-      font-weight: 400;
-      transition: opacity 0.2s;
-      
-      &:hover {
-        opacity: 0.9;
+      color: #fff;
+      border: 1px solid transparent;
+      font-family: $font-onest, $font-avenir;
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      line-height: 1.2;
+      text-transform: none;
+      transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+
+      @media (max-width: 500px) {
+        font-size: 14px;
+      }
+
+      &:hover:not(:disabled) {
+        background-color: #fff;
+        border-color: #000;
+        color: #000;
+      }
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
       }
     }
   }

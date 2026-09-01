@@ -1,6 +1,7 @@
 import type { FaceResultMeta } from './buildFaceResult';
 import { getQuizHtml, getQuizMedia, getQuizPlain } from './contentUtils';
 import { splitQuizIntroAndProducts } from './parseQuizProducts';
+import { normalizeMediaUrl } from '@/utils/mediaUrl';
 import type { QuizContentMap, ResolvedContentBlock, ResolvedTextBlock } from '@/types/quizContent';
 
 export function resolveFaceResultBlocks(
@@ -28,12 +29,14 @@ export function resolveFaceResultBlocks(
       .map((key) => {
         const item = getQuizMedia(content, key);
         if (!item?.mediaUrl || !item.mediaType) return null;
+        const url = normalizeMediaUrl(item.mediaUrl);
+        if (!url) return null;
         return {
           key,
-          url: item.mediaUrl,
+          url,
           mediaType: item.mediaType,
         };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null),
-  }));
+  })).filter((block) => block.texts.length > 0 || block.media.length > 0);
 }

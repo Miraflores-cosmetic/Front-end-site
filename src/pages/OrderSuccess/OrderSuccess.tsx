@@ -1,105 +1,102 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import styles from './OrderSuccess.module.scss';
-import Header from '@/components/Header/Header';
-import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footer-img.png';
-import { completeCheckout } from '@/services/checkout.service';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/store/store';
 import { clearCart } from '@/store/slices/checkoutSlice';
+import { getCheckoutStatus, getPaymentStatus } from '@/api/ordersApi';
+import {
+  clearPendingCheckoutOrder,
+  PENDING_ORDER_ID_KEY,
+  PENDING_PAYMENT_ID_KEY,
+  PENDING_PAY_TOKEN_KEY,
+} from '@/utils/pendingCheckoutOrder';
 
 const OrderSuccess: React.FC = () => {
   const [isCompleting, setIsCompleting] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useDispatch<AppDispatch>();
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const completeOrder = async () => {
+    const confirmPayment = async () => {
       try {
-        // Получаем checkoutId из localStorage
-        const checkoutId = localStorage.getItem('pendingCheckoutId');
-        
-        if (!checkoutId) {
-          console.warn('No pending checkoutId found in localStorage');
+        // payToken только из sessionStorage этой вкладки (не query — history/Referer/logs).
+        // Другая вкладка/браузер без session не подтвердит: guest cross-device
+        // без query-token осознанно невозможен (см. pendingCheckoutOrder).
+        const orderId =
+          searchParams.get('orderId') ||
+          sessionStorage.getItem(PENDING_ORDER_ID_KEY) ||
+          '';
+        const payToken = sessionStorage.getItem(PENDING_PAY_TOKEN_KEY) || '';
+        const paymentId = sessionStorage.getItem(PENDING_PAYMENT_ID_KEY);
+
+        // Strip legacy payToken from URL if present (share/bookmark safety).
+        if (searchParams.has('payToken')) {
+          const next = new URLSearchParams(searchParams);
+          next.delete('payToken');
+          const qs = next.toString();
+          window.history.replaceState(
+            null,
+            '',
+            `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`,
+          );
+        }
+
+        if (paymentId && payToken) {
+          const payStatus = await getPaymentStatus(paymentId, payToken);
+          if (payStatus.paid) {
+            dispatch(clearCart());
+            clearPendingCheckoutOrder();
+            setIsCompleting(false);
+            return;
+          }
+        }
+
+        if (orderId) {
+          if (!payToken) {
+            setError(
+              'Не удалось подтвердить оплату в этой вкладке (токен только в session браузера, где оформляли заказ). Если деньги списались — проверьте письмо с заказом или зайдите в профиль.',
+            );
+            setIsCompleting(false);
+            return;
+          }
+          for (let i = 0; i < 8; i++) {
+            const status = await getCheckoutStatus(orderId, payToken);
+            if (status.paid) {
+              dispatch(clearCart());
+              clearPendingCheckoutOrder();
+              setIsCompleting(false);
+              return;
+            }
+            await new Promise((r) => setTimeout(r, 1500));
+          }
+          setError(
+            'Оплата ещё не подтверждена. Если деньги списались — подождите пару минут и обновите страницу.',
+          );
           setIsCompleting(false);
           return;
         }
 
-        console.log('Completing checkout on success page:', checkoutId);
-
-        // Завершаем checkout
-        const result = await completeCheckout(checkoutId);
-        console.log('Checkout completed on success page:', result);
-
-        if (result.success && result.order) {
-          console.log('Order created successfully:', {
-            id: result.order.id,
-            number: result.order.number,
-            status: result.order.status,
-          });
-          
-          // Очищаем checkoutId из localStorage
-          localStorage.removeItem('pendingCheckoutId');
-          localStorage.removeItem('pendingPaymentId');
-          localStorage.removeItem('pendingPaymentAmount');
-          
-          // Очищаем корзину
-          dispatch(clearCart());
-          
-          setIsCompleting(false);
-        } else {
-          // Если заказ не был создан, но ошибка "Checkout not found", 
-          // возможно заказ уже создан (видно в админке)
-          if (result.error && result.error.includes('Checkout not found')) {
-            console.warn('Checkout not found, but order might already exist. Clearing cart anyway.');
-            // Очищаем checkoutId из localStorage
-            localStorage.removeItem('pendingCheckoutId');
-            localStorage.removeItem('pendingPaymentId');
-            localStorage.removeItem('pendingPaymentAmount');
-            // Очищаем корзину на всякий случай
-            dispatch(clearCart());
-            setIsCompleting(false);
-          } else {
-            throw new Error(result.error || 'Failed to complete checkout');
-          }
-        }
-      } catch (error: any) {
-        console.error('Error completing checkout on success page:', error);
-        // Если ошибка "Checkout not found", но мы на странице успеха (оплата прошла),
-        // значит заказ скорее всего уже создан
-        if (error.message && error.message.includes('Checkout not found')) {
-          console.warn('Checkout not found error, but payment was successful. Order likely exists.');
-          // Очищаем checkoutId из localStorage
-          localStorage.removeItem('pendingCheckoutId');
-          localStorage.removeItem('pendingPaymentId');
-          localStorage.removeItem('pendingPaymentAmount');
-          // Очищаем корзину
-          dispatch(clearCart());
-          setIsCompleting(false);
-        } else {
-          setError(error.message || 'Ошибка при завершении заказа');
-          setIsCompleting(false);
-          // Не удаляем checkoutId из localStorage, чтобы можно было повторить попытку
-        }
+        setError('Не найден номер заказа для проверки оплаты.');
+        setIsCompleting(false);
+      } catch (e: unknown) {
+        setError(e instanceof Error ? e.message : 'Ошибка при проверке оплаты');
+        setIsCompleting(false);
       }
     };
 
-    completeOrder();
-  }, [dispatch]);
+    void confirmPayment();
+  }, [dispatch, searchParams]);
 
   return (
     <>
-      <Header />
       <main className={styles.successContainer}>
         <div className={styles.content}>
           {isCompleting ? (
             <>
               <h1 className={styles.title}>Обработка заказа...</h1>
-              <p className={styles.subtitle}>
-                Пожалуйста, подождите
-              </p>
+              <p className={styles.subtitle}>Пожалуйста, подождите</p>
             </>
           ) : error ? (
             <>
@@ -108,9 +105,6 @@ const OrderSuccess: React.FC = () => {
               </h1>
               <p className={styles.subtitle} style={{ color: '#dc2626' }}>
                 {error}
-              </p>
-              <p className={styles.subtitle}>
-                Пожалуйста, свяжитесь с поддержкой, если оплата была успешной.
               </p>
             </>
           ) : (
@@ -124,7 +118,7 @@ const OrderSuccess: React.FC = () => {
 
           {!isCompleting && !error && (
             <div className={styles.buttons}>
-              <Link to="/profile" className={styles.buttonPrimary}>
+              <Link to="/profile?tab=orders" className={styles.buttonPrimary}>
                 Перейти к заказам
               </Link>
               <Link to="/catalog" className={styles.buttonSecondary}>
@@ -134,10 +128,8 @@ const OrderSuccess: React.FC = () => {
           )}
         </div>
       </main>
-      <Footer footerImage={footerImage} />
     </>
   );
 };
 
 export default OrderSuccess;
-

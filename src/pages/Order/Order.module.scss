@@ -32,8 +32,19 @@
   }
 }
 
+.loadingShell {
+  margin: 48px auto;
+  padding: 0 16px;
+  color: #6e6d67;
+  font-size: 15px;
+}
+
 @media (max-width: 768px) {
   .orderContainer {
+    flex-direction: column;
     padding: 0 16px;
+    padding-bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    min-height: auto;
+    overflow: visible;
   }
 }

@@ -2,26 +2,33 @@
   width: calc(30% - 50px);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  position: sticky;
+  top: 96px;
+  align-self: flex-start;
+  max-height: calc(100vh - 120px);
   padding-bottom: 32px;
+  box-sizing: border-box;
 
   @media (max-width: 768px) {
+    position: static;
+    max-height: none;
     width: 100%;
     gap: 40px;
     padding-bottom: 24px;
   }
 }
+
 .nameMenuWrapper {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+
   .header {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-end;
     align-items: center;
-    margin-bottom: 46px;
-
-    @media (max-width: 768px) {
-      margin-bottom: 24px;
-      align-items: baseline;
-    }
+    margin-bottom: 24px;
 
     .logoutLink {
       font-size: 13px;
@@ -30,16 +37,10 @@
       cursor: pointer;
       font-weight: 500;
       letter-spacing: 0.05em;
-    }
-  }
-
-  .userName {
-    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-    font-size: 48px;
-    font-weight: 300;
-    text-transform: uppercase;
-    @media (max-width: 768px) {
-      font-size: 24px;
+      background: none;
+      border: none;
+      padding: 0;
+      font-family: inherit;
     }
   }
 
@@ -49,7 +50,15 @@
     width: 100%;
   }
 
+  .menuList {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+  }
+
   .menuItem {
+    width: 100%;
     background: none;
     border: none;
     text-align: left;
@@ -65,6 +74,7 @@
     align-items: center;
     text-transform: uppercase;
     box-sizing: border-box;
+    font-family: inherit;
 
     @media (max-width: 768px) {
       font-size: 14px;
@@ -128,6 +138,9 @@
 }
 
 .support {
+  flex-shrink: 0;
+  margin-top: auto;
+  padding-top: 32px;
   font-size: 14px;
   color: #6e6d6799;
 

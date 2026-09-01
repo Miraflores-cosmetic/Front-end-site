@@ -1,4 +1,5 @@
 import React from 'react';
+import { TextField } from '@/components/text-field/TextField';
 import styles from './Input.module.scss';
 
 interface CustomInputProps {
@@ -10,7 +11,9 @@ interface CustomInputProps {
   buttonText?: string;
   onButtonClick?: () => void;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  width?: string | number; // 🔹 Add dynamic width prop
+  width?: string | number;
+  fieldError?: string;
+  disabled?: boolean;
 }
 
 export const Input: React.FC<CustomInputProps> = ({
@@ -22,39 +25,24 @@ export const Input: React.FC<CustomInputProps> = ({
   buttonText,
   onButtonClick,
   onChange,
-  width // 🔹 Receive width prop
+  width,
+  fieldError,
+  disabled,
 }) => {
   return (
-    <div
-      className={styles.wrapper}
-      style={{ width }} // 🔹 Apply dynamic width
-    >
-      {imageSrc && <img src={imageSrc} alt='icon' className={styles.icon} />}
-      {label && <label className={styles.label}>{label}</label>}
-
-      <div className={styles.inputRow}>
-        {type === 'password' ? (
-          <div className={styles.passwordDisplay}>
-            {value.split('').map((_, i) => (
-              <span key={i} className={styles.dot}></span>
-            ))}
-          </div>
-        ) : (
-          <input
-            type={type}
-            value={value}
-            onChange={onChange}
-            placeholder={placeholder}
-            className={styles.input}
-          />
-        )}
-
-        {buttonText && (
-          <button className={styles.button} onClick={onButtonClick}>
-            {buttonText}
-          </button>
-        )}
-      </div>
+    <div className={styles.wrapper} style={{ width }}>
+      {imageSrc ? <img src={imageSrc} alt="" className={styles.icon} /> : null}
+      <TextField
+        label={label}
+        placeholder={placeholder}
+        type={type}
+        value={value}
+        onChange={onChange}
+        error={fieldError}
+        rightLinkText={buttonText}
+        onRightLinkClick={onButtonClick}
+        disabled={disabled}
+      />
     </div>
   );
 };

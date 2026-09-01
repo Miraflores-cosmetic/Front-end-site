@@ -1,64 +1,84 @@
-/**
- * Service for validating and applying vouchers via REST API
- */
+import { apiJson, getOrCreateGuestId } from '@/api/apiClient';
 
-// Use relative path for proxy in development, absolute for production
-const API_BASE_URL = import.meta.env.VITE_API_URL || '';
+export type VoucherKind = 'promo' | 'gift';
 
 export interface VoucherValidationResult {
   ok: boolean;
+  kind?: VoucherKind;
   code?: string;
   discountAmount?: number;
-  discountType?: 'FIXED' | 'PERCENTAGE';
+  discountType?: 'FIXED' | 'PERCENTAGE' | 'PERCENT' | 'FIXED' | 'GIFT';
   discountPercent?: number;
   discountName?: string;
   error?: string;
 }
 
 /**
- * Validates a voucher code and returns discount information
+ * Сначала подарочный сертификат, затем промокод (как в Jcos cart).
  */
 export async function validateVoucher(
   promoCode: string,
-  variantIds: string[],
-  quantities: number[],
-  channel: string = 'miraflores-site'
+  _variantIds: string[],
+  _quantities: number[],
+  _channel?: string,
+  subtotal?: number,
+  email?: string,
 ): Promise<VoucherValidationResult> {
+  const code = promoCode.trim();
+  const payable = Math.max(0, Math.round(subtotal ?? 0));
+
   try {
-    const url = API_BASE_URL ? `${API_BASE_URL}/voucher/validate/` : '/voucher/validate/';
-    console.log('[Voucher Service] Validating voucher:', { promoCode, variantIds, quantities, channel, url });
-    
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        promoCode: promoCode.trim(),
-        variantIds,
-        quantities,
-        channel,
-      }),
+    const giftRes = await apiJson<{
+      kind?: string;
+      code: string;
+      applyAmount: number;
+    }>('/gift-certificates/validate', 'POST', {
+      code,
+      payableBeforeGift: payable,
     });
 
-    console.log('[Voucher Service] Response status:', response.status, response.statusText);
-    const data = await response.json();
-    console.log('[Voucher Service] Response data:', data);
-
-    if (!response.ok) {
+    if (giftRes.kind === 'gift' && giftRes.applyAmount >= 1) {
       return {
-        ok: false,
-        error: data.error || 'Ошибка при валидации промокода',
+        ok: true,
+        kind: 'gift',
+        code: giftRes.code || code.toUpperCase(),
+        discountAmount: giftRes.applyAmount,
+        discountType: 'GIFT',
+        discountName: giftRes.code || code,
       };
     }
+  } catch {
+    // не сертификат — пробуем промокод
+  }
 
-    return data;
-  } catch (error: any) {
-    console.error('[Voucher Service] Error validating voucher:', error);
+  try {
+    const res = await apiJson<{
+      code: string;
+      type: string;
+      value: number;
+      discountAmount: number;
+      total: number;
+    }>('/promo/validate', 'POST', {
+      code,
+      subtotal: payable,
+      email,
+      guestId: getOrCreateGuestId(),
+    });
+
+    const discountType =
+      res.type === 'PERCENT' ? 'PERCENTAGE' : res.type === 'FIXED' ? 'FIXED' : res.type;
+
     return {
-      ok: false,
-      error: error?.message || 'Ошибка при валидации промокода',
+      ok: true,
+      kind: 'promo',
+      code: res.code,
+      discountAmount: res.discountAmount,
+      discountType: discountType as VoucherValidationResult['discountType'],
+      discountPercent: res.type === 'PERCENT' ? res.value : undefined,
+      discountName: res.code,
     };
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : 'Ошибка при валидации промокода';
+    return { ok: false, error: msg };
   }
 }
-

@@ -2,17 +2,17 @@ import React from 'react';
 import styles from '../right-part/OrderRightPart.module.scss';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
 
-// 1. Update Interface to match your Real Data
 export interface OrderProduct {
   variantId: string;
+  lineKey?: string;
   title: string;
-  size: string; // In your data, this seems to be the name or description
+  size: string;
   thumbnail: string;
   price: number;
   oldPrice: number | null;
   discount: number | string | null;
   quantity: number;
-  isGift?: boolean; // Optional, in case you handle gifts logic later
+  isGift?: boolean;
 }
 
 interface OrderCartListProps {
@@ -34,7 +34,10 @@ const CardList: React.FC<OrderCartListProps> = ({ cartData }) => {
     <>
       {cartData.map((item) => (
         
-        <div className={styles.orderCart} key={item.variantId}>
+        <div
+          className={styles.orderCart}
+          key={item.lineKey || item.variantId}
+        >
           {/* Image */}
           <figure className={styles.cartImageWrapper}>
             <ImageWithFallback 

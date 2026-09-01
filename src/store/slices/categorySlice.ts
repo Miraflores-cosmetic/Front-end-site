@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { getCategoryBySlug, getCategoryTabsBySlug } from '@/graphql/queries/category.service';
 import { categorySliceState, CategoryTab, getCategoryProductsArgs } from '@/types/category';
 import { BestSellersProduct } from '@/types/products';
-import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
+import { extractProductCardDescription } from '@/utils/productCardDescription';
 
 const initialState: categorySliceState = {
   tabs: [],
@@ -214,36 +214,15 @@ const categorySlice = createSlice({
                 .map((item: any) => item?.url)
                 .filter(Boolean)
             : [];
-          // Извлекаем описание из атрибутов продукта
-          let description = '';
-          if (node.attributes && Array.isArray(node.attributes)) {
-            const descAttr = node.attributes.find((attr: any) => 
-              attr.attribute?.slug === 'opisanie-v-kartochke-tovara' || 
-              attr.attribute?.name?.toLowerCase().includes('описание') ||
-              attr.attribute?.name?.toLowerCase().includes('description')
-            );
-            if (descAttr?.values?.[0]?.plainText) {
-              description = descAttr.values[0].plainText;
-            } else if (descAttr?.values?.[0]?.name) {
-              description = descAttr.values[0].name;
-            }
-          }
-          
-          // Если не нашли в атрибутах, пробуем стандартное описание
-          if (!description) {
-            try {
-              if (node.description) {
-                const parsed = JSON.parse(node.description);
-                description = parsed?.blocks?.[0]?.data?.text || '';
-              }
-            } catch (e) {
-              description = node.description || '';
-            }
-          }
-          
-          if (description) {
-            description = sanitizeProductCardDescription(description, { preserveHtml: true });
-          }
+          // «Описание в карточке товара» (shortDescription / атрибут)
+          const description = extractProductCardDescription(
+            {
+              attributes: node.attributes,
+              shortDescription: (node as { shortDescription?: string | null }).shortDescription,
+              description: node.description,
+            },
+            { preserveHtml: true },
+          );
           
           // Обрабатываем варианты: извлекаем объем из атрибутов (как в bestsellersSlice)
           const variants = (node.productVariants?.edges || []).map((v: any) => {

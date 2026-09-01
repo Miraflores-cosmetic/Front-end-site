@@ -1,29 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import styles from './InfoMobileContent.module.scss';
-import DeliveryProfile from '@/components/delivary-profile/DeliveryProfile';
+import DeliveryProfile from '@/components/delivery-profile/DeliveryProfile';
+import Bestsellers from '@/components/bestsellers/Bestsellers';
 import { openDrawer } from '@/store/slices/drawerSlice';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { TabId } from '@/pages/Profile/side-bar/SideBar';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { AddressInfo } from '@/types/auth';
+import ChangePasswordModal from '@/components/change-password-modal/ChangePasswordModal';
 
 interface InfoMobileContentProps {
   setOpenAccordion: React.Dispatch<React.SetStateAction<TabId | null>>;
-}
-
-function getMetadataValue(
-  metadata: { key: string; value: string }[] | undefined,
-  key: string
-): string {
-  if (!metadata) return '';
-  return metadata.find(m => m.key === key)?.value || '';
 }
 
 const InfoMobileContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion }) => {
   const dispatch = useDispatch();
   const { me } = useSelector((state: RootState) => state.authSlice);
   const isMobile = useScreenMatch();
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const [phone, setPhone] = useState('');
   const [birthday, setBirthday] = useState('');
@@ -31,14 +26,9 @@ const InfoMobileContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion 
 
   useEffect(() => {
     if (!me) return;
-    const defaultAddress = me.addresses?.find(
-      a => a.isDefaultBillingAddress || a.isDefaultShippingAddress
-    );
-    const phoneFromAddress = defaultAddress?.phone || '';
-    const phoneFromMeta = getMetadataValue(me.metadata, 'phone');
-    setPhone(phoneFromMeta || phoneFromAddress || '');
-    setBirthday(getMetadataValue(me.metadata, 'birthday') || '');
-    setReceiveGreetings(getMetadataValue(me.metadata, 'receiveGreetings') === 'true');
+    setPhone(me.phone || '');
+    setBirthday(me.birthday || '');
+    setReceiveGreetings(me.marketingConsent === true);
   }, [me]);
 
   const handleChange = () => {
@@ -102,18 +92,35 @@ const InfoMobileContent: React.FC<InfoMobileContentProps> = ({ setOpenAccordion 
           <p className={styles.value}>{receiveGreetings ? 'Да' : 'Нет'}</p>
         </section>
 
-        <p className={styles.change} onClick={handleChange}>
+        <button type="button" className={styles.change} onClick={handleChange}>
           Изменить
-        </p>
+        </button>
+        <button
+          type="button"
+          className={styles.passwordBtn}
+          onClick={() => setShowPasswordModal(true)}
+        >
+          Сменить пароль
+        </button>
       </article>
 
       <DeliveryProfile onSelectAddress={(_address: AddressInfo) => {}} />
 
-      {isMobile && (
-        <p className={styles.closeBtn} onClick={handleCloseAccordion}>
+      <section className={styles.bestsellersSection}>
+        <p className={styles.bestsellersTitle}>КОЕ-ЧТО НОВОЕ ДЛЯ ВАС</p>
+        <Bestsellers isTitleHidden isProfilePage />
+      </section>
+
+      {isMobile ? (
+        <button type="button" className={styles.closeBtn} onClick={handleCloseAccordion}>
           Закрыть
-        </p>
-      )}
+        </button>
+      ) : null}
+
+      <ChangePasswordModal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
     </article>
   );
 };

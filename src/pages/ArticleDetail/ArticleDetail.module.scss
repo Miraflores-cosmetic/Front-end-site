@@ -1,15 +1,16 @@
 @use '@/style/variables.scss' as *;
 
 .articlesDetails {
+  --page-max-width: #{$page-max-width};
   min-height: 100vh;
   background-color: $white;
-  overflow-x: clip;
+  overflow-x: visible;
   display: flex;
   flex-direction: column;
   /* Скрываем скроллбар */
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE 10+ */
-  max-width: 1536px;
+  max-width: var(--page-max-width);
   margin: 0 auto;
   /* как список /articles: верх и боковые отступы */
   padding: 24px 32px 0;
@@ -40,9 +41,15 @@
       .back {
         width: 19px;
         height: 22px;
+        flex-shrink: 0;
       }
       .goBackText {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
         font-size: 14px;
+        text-decoration: none;
+        color: inherit;
       }
     }
 

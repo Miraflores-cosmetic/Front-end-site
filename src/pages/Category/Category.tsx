@@ -1,7 +1,6 @@
 import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import styles from './Category.module.scss';
-import Header from '@/components/Header/Header';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 const LazyComponent = lazy(() => import('./LazyComponent'));
@@ -53,7 +52,6 @@ const Category: React.FC = () => {
 
   return (
     <>
-      <Header />
       <section
         ref={sectionRef}
         className={`${styles.faceContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}

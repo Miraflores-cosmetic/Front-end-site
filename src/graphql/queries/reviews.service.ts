@@ -1,130 +1,100 @@
-import { graphqlRequest, CHANNEL } from '@/graphql/client';
+import { apiFetch, apiJson, ApiError, getAccessToken } from '@/api/apiClient';
 
 export interface ProductReviewCreateInput {
-  product: string; // Global ID продукта
-  order?: string; // Global ID заказа
-  rating: number; // 1-5
+  product: string;
+  order?: string;
+  rating: number;
   text: string;
   image1?: File | null;
   image2?: File | null;
 }
 
-export interface ProductReviewCreateResponse {
-  productReviewCreate: {
-    review: {
-      id: string;
-      rating: number;
-      text: string;
-    } | null;
-    errors: Array<{
-      field: string | null;
-      message: string;
-      code: string;
-    }>;
-  };
-}
+export type CreateProductReviewResult = {
+  id: string;
+  rating: number;
+  text: string;
+  imagesAttached: boolean;
+  imagesError?: string;
+};
 
-/**
- * Создать отзыв на товар
- */
-export async function createProductReview(input: ProductReviewCreateInput): Promise<ProductReviewCreateResponse> {
-  // Для загрузки файлов нужно использовать multipart/form-data
-  // GraphQL с файлами требует специальной обработки
-  const mutation = `
-    mutation ProductReviewCreate($input: ProductReviewCreateInput!) {
-      productReviewCreate(input: $input) {
-        review {
-          id
-          rating
-          text
-        }
-        errors {
-          field
-          message
-          code
-        }
-      }
-    }
-  `;
+export async function createProductReview(
+  input: ProductReviewCreateInput,
+): Promise<CreateProductReviewResult> {
+  const created = await apiJson<{ id: string; rating: number; text: string }>('/reviews', 'POST', {
+    productId: input.product,
+    orderId: input.order,
+    rating: input.rating,
+    text: input.text,
+  });
 
-  // Если есть файлы, нужно использовать FormData
-  if (input.image1 || input.image2) {
-    const formData = new FormData();
-
-    // Создаем operations для GraphQL multipart request
-    const operations = JSON.stringify({
-      query: mutation,
-      variables: {
-        input: {
-          product: input.product,
-          order: input.order,
-          rating: input.rating,
-          text: input.text
-        }
-      }
-    });
-
-    formData.append('operations', operations);
-
-    // Маппинг файлов
-    const map: Record<string, string[]> = {};
-    let fileIndex = 0;
-
-    if (input.image1) {
-      formData.append(`${fileIndex}`, input.image1);
-      map[`${fileIndex}`] = ['variables.input.image1'];
-      fileIndex++;
-    }
-
-    if (input.image2) {
-      formData.append(`${fileIndex}`, input.image2);
-      map[`${fileIndex}`] = ['variables.input.image2'];
-    }
-
-    formData.append('map', JSON.stringify(map));
-
-    // Та же логика, что в client.ts: в dev — относительный путь через прокси (без CORS), в production — полный URL
-    const isDev = import.meta.env.DEV;
-    const endpoint = isDev ? '/graphql/' : String(import.meta.env.VITE_GRAPHQL_URL || '');
-    if (!endpoint) throw new Error('VITE_GRAPHQL_URL is not defined');
-    const token = localStorage.getItem('token');
-
-    if (!token) {
-      throw new Error('Необходимо авторизоваться для отправки отзыва');
-    }
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        // НЕ добавляем Content-Type для FormData - браузер сам установит с boundary
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const result = await response.json();
-
-    if (result.errors && result.errors.length > 0) {
-      throw new Error(result.errors[0].message);
-    }
-
-    return result.data;
-  } else {
-    // Без файлов используем обычный запрос
-    const variables = {
-      input: {
-        product: input.product,
-        order: input.order,
-        rating: input.rating,
-        text: input.text
-      }
-    };
-
-    const data = await graphqlRequest<ProductReviewCreateResponse>(mutation, variables);
-    return data;
+  const hasImages = Boolean(input.image1 || input.image2);
+  if (!hasImages) {
+    return { ...created, imagesAttached: false };
   }
+
+  const fd = new FormData();
+  if (input.image1) fd.append('files', input.image1);
+  if (input.image2) fd.append('files', input.image2);
+  const token = getAccessToken();
+  const res = await fetch(`/api/v1/reviews/${encodeURIComponent(created.id)}/images`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: fd,
+  });
+
+  if (!res.ok) {
+    let message = `HTTP ${res.status}`;
+    try {
+      const body = (await res.json()) as { message?: string | string[] };
+      if (Array.isArray(body.message)) message = body.message.join(', ');
+      else if (body.message) message = String(body.message);
+    } catch {
+      /* keep status */
+    }
+    if (res.status === 401) {
+      throw new ApiError(message || 'Требуется вход', 401);
+    }
+    return {
+      ...created,
+      imagesAttached: false,
+      imagesError: message || 'Не удалось загрузить фото',
+    };
+  }
+
+  return { ...created, imagesAttached: true };
 }
+
+export async function getProductReviews(
+  slug: string,
+  page = 1,
+  limit = 20,
+): Promise<ProductReviewsListResponse> {
+  return apiFetch(`/reviews/product/${encodeURIComponent(slug)}`, {
+    query: { page, limit },
+  });
+}
+
+export type ProductReviewsListResponse = {
+  product: {
+    id: string;
+    slug: string;
+    name: string;
+    imageUrl?: string | null;
+  } | null;
+  ratingAvg: number | null;
+  ratingCount: number;
+  items: Array<{
+    id: string;
+    rating: number;
+    text: string;
+    createdAt?: string;
+    authorName?: string | null;
+    image1?: string | null;
+    image2?: string | null;
+    image1Url?: string | null;
+    image2Url?: string | null;
+  }>;
+  total: number;
+  page: number;
+  limit: number;
+};

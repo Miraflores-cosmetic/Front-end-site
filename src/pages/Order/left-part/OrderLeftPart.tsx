@@ -6,65 +6,110 @@ import goBack from '@/assets/icons/go-back.svg';
 import siteLogo from '@/assets/icons/Logo-mira.svg';
 import krem from '@/assets/images/Cream.png';
 
-import CustomCheckbox from '@/components/custom-checkBox/CustomCheckbox';
 import CustomButton from '@/components/custom-button/CustomButton';
-import DeliveryProfile from '@/components/delivary-profile/DeliveryProfile';
-import TotalAccordion from '../total-accardion/TotalAccardion';
+import DeliveryProfile from '@/components/delivery-profile/DeliveryProfile';
+import TotalAccordion from '../total-accordion/TotalAccordion';
+import Certificate from '../order-components/Certificate';
 import YooKassaWidget from '@/components/yookassa/YooKassaWidget';
 
 import { useScreenMatch } from '@/hooks/useScreenMatch';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/store/store';
 import { AddressInfo } from '@/types/auth';
 import { formatPhoneNumber } from '@/utils/phoneFormatter';
 import { useOrderCheckout } from '../OrderCheckoutContext';
+import { createOrder, payOrder, abandonOrder, requestShippingQuote } from '@/api/ordersApi';
+import { getOrCreateGuestId } from '@/api/apiClient';
+import { resolveCheckoutShippingMethod } from '@/utils/checkoutShipping';
+import { extractPvzCodeFromStreet2 } from '@/lib/addressVspMeta';
+import { syncCartLines } from '@/store/slices/checkoutSlice';
+import { AppDispatch } from '@/store/store';
+import { useToast } from '@/components/toast/toast';
+import { useApplicableGift } from '@/hooks/useApplicableGift';
+import { calcCartSubtotal } from '@/utils/freePvzShipping';
+import {
+  buildCheckoutFingerprint,
+  buildOrderSuccessReturnUrl,
+  clearPendingCheckoutOrder,
+  readPendingCheckoutOrder,
+  writePendingCheckoutOrder,
+} from '@/utils/pendingCheckoutOrder';
 
+const EMAIL_RE =
+  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
 
-// 1. Define the shape of your form data
+function normalizePhoneDigits(raw: string): string {
+  let d = raw.replace(/\D/g, '');
+  if (d.length === 11 && d.startsWith('8')) {
+    d = `7${d.slice(1)}`;
+  }
+  return d;
+}
+
+/** Согласовано с Nest `isValidPhone`: 10–15 цифр; RU 11 с 7 или 10 локальных. */
+function isValidRuPhone(raw: string): boolean {
+  const d = normalizePhoneDigits(raw);
+  if (d.length < 10 || d.length > 15) return false;
+  if (d.length === 11 && d.startsWith('7')) return true;
+  if (d.length === 10) return true;
+  return d.length >= 10 && d.length <= 15;
+}
+
 interface OrderFormData {
   name: string;
   email: string;
   phone: string;
-  isSubscribed: boolean;
+  comment: string;
 }
+
+const COMMENT_MAX = 1000;
 
 const OrderLeftPart: React.FC = () => {
   const navigate = useNavigate();
+  const toast = useToast();
   const { me } = useSelector((state: RootState) => state.authSlice);
   const isMobile = useScreenMatch();
 
-  // 2. Consolidated State (Cleaner hooks)
   const [formData, setFormData] = useState<OrderFormData>({
     name: '',
     email: '',
     phone: '',
-    isSubscribed: true,
+    comment: '',
   });
+  const [commentFocused, setCommentFocused] = useState(false);
 
   const {
     selectedAddress,
-    setSelectedAddress,
+    applySavedAddress,
+    setCheckoutEmail,
     cdekShippingRub,
     cdekShippingLoading,
     cdekShippingError,
+    shippingQuoteMeta,
     freePvzShippingApplied,
+    payable,
   } = useOrderCheckout();
   const [confirmationToken, setConfirmationToken] = useState<string | null>(null);
   const [showYooKassaWidget, setShowYooKassaWidget] = useState(false);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
+  /** Сумма с Nest после create/pay — CTA, если разошлась с client payableTotal. */
+  const [chargedTotal, setChargedTotal] = useState<number | null>(null);
   const [validationErrors, setValidationErrors] = useState<{
-    name?: boolean;
-    email?: boolean;
-    phone?: boolean;
+    name?: string;
+    email?: string;
+    phone?: string;
+    address?: string;
     general?: string;
   }>({});
   const { lines } = useSelector((state: RootState) => state.checkout);
-  const { voucherDiscount } = useSelector((state: RootState) => state.checkout);
+  const { voucherCode, voucherKind } = useSelector((state: RootState) => state.checkout);
+  const dispatch = useDispatch<AppDispatch>();
+  const giftSubtotal = React.useMemo(() => calcCartSubtotal(lines || []), [lines]);
+  const giftLine = useApplicableGift(giftSubtotal);
 
   /** Один раз подставляем ФИО/email/телефон из профиля. После смены ПВЗ вызывается getMe() — без этого снова затирало вручную введённые поля. */
   const didHydrateFormFromMeRef = useRef(false);
 
-  // 3. Один раз подставляем данные из профиля в пустые поля (не затираем уже введённое; не трогаем форму при повторных getMe после смены ПВЗ)
   useEffect(() => {
     if (!me || didHydrateFormFromMeRef.current) return;
     didHydrateFormFromMeRef.current = true;
@@ -101,16 +146,24 @@ const OrderLeftPart: React.FC = () => {
           ? formatPhoneNumber(phone) || prev.phone
           : prev.phone,
     }));
-  }, [me]);
+  }, [me, setCheckoutEmail]);
 
+  useEffect(() => {
+    setCheckoutEmail(formData.email);
+  }, [formData.email, setCheckoutEmail]);
 
-  // 4. Generic Change Handler
-  const handleInputChange = (field: keyof OrderFormData, value: string | boolean) => {
+  const handleInputChange = (field: keyof OrderFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleAddressSelect = useCallback((address: AddressInfo) => {
-    setSelectedAddress(address);
+    if (!applySavedAddress(address)) {
+      return;
+    }
+
+    setValidationErrors((prev) =>
+      prev.address ? { ...prev, address: undefined, general: undefined } : prev,
+    );
 
     if (address?.phone) {
       setFormData((prev) => ({
@@ -118,166 +171,340 @@ const OrderLeftPart: React.FC = () => {
         phone: formatPhoneNumber(address.phone) || prev.phone,
       }));
     }
-  }, [setSelectedAddress]);
+  }, [applySavedAddress]);
 
   const handlePayment = async () => {
-    if (!selectedAddress) {
-      alert('Пожалуйста, выберите адрес доставки');
-      return;
+    const errors: {
+      name?: string;
+      email?: string;
+      phone?: string;
+      address?: string;
+      general?: string;
+    } = {};
+
+    if (!formData.name.trim()) {
+      errors.name = 'Укажите имя и фамилию';
     }
 
-    const errors: any = {};
-    if (!formData.name.trim()) errors.name = true;
-    if (!formData.email.trim()) errors.email = true;
-    if (!formData.phone.trim()) errors.phone = true;
+    const emailTrimmed = formData.email.trim();
+    if (!emailTrimmed) {
+      errors.email = 'Укажите email';
+    } else if (!EMAIL_RE.test(emailTrimmed)) {
+      errors.email = 'Некорректный email';
+    }
+
+    if (!formData.phone.trim()) {
+      errors.phone = 'Укажите телефон';
+    } else if (!isValidRuPhone(formData.phone)) {
+      errors.phone = 'Телефон в формате +7…';
+    }
+
+    if (!selectedAddress) {
+      errors.address = 'Выберите или добавьте адрес доставки';
+    } else if (payable.hasPayableLines) {
+      const shippingMethod = resolveCheckoutShippingMethod(selectedAddress.streetAddress2);
+      if (!shippingMethod) {
+        errors.address = 'Выберите адрес со способом доставки (СДЭК или Яндекс Доставка)';
+      } else if (cdekShippingLoading) {
+        errors.general = 'Подождите, рассчитывается стоимость доставки';
+      } else if (!payable.shippingReady || payable.shippingRub == null || payable.payableTotal == null) {
+        errors.address =
+          cdekShippingError ||
+          'Не удалось рассчитать доставку. Укажите корректный индекс и способ доставки.';
+      }
+    }
 
     if (Object.keys(errors).length > 0) {
-      setValidationErrors({
-        ...errors,
-        general: 'Заполните все поля'
+      const general =
+        errors.general ||
+        errors.address ||
+        [errors.name, errors.email, errors.phone].filter(Boolean).join('. ') ||
+        'Заполните обязательные поля';
+      setValidationErrors({ ...errors, general });
+      toast.error(general);
+      requestAnimationFrame(() => {
+        const first =
+          document.querySelector<HTMLElement>('[data-checkout-field="address"].hasError') ||
+          document.querySelector<HTMLElement>('[aria-invalid="true"]');
+        first?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        if (first?.tagName === 'INPUT') first.focus();
+        else first?.querySelector<HTMLElement>('input, button')?.focus();
       });
       return;
     }
 
     setValidationErrors({});
 
-    if (lines.length === 0) {
-      alert('Корзина пуста');
+    if (!selectedAddress) {
       return;
     }
 
-    const payableLines = lines.filter((line: { isGift?: boolean }) => !line.isGift);
-    if (payableLines.length > 0) {
-      if (cdekShippingLoading) {
-        alert('Подождите, рассчитывается стоимость доставки');
-        return;
-      }
-      if (cdekShippingRub == null) {
-        alert(
-          cdekShippingError ||
-            'Не удалось рассчитать доставку. Укажите корректный индекс в адресе доставки.',
-        );
-        return;
-      }
+    if (lines.length === 0) {
+      toast.error('Корзина пуста');
+      navigate('/', { replace: true });
+      return;
     }
 
-    const shippingAmount = payableLines.length > 0 ? cdekShippingRub ?? 0 : 0;
+    /** Один итог с summary/CTA: Nest order.total ≈ payableTotal. */
+    const shippingAmount = payable.hasPayableLines ? (payable.shippingRub ?? 0) : 0;
+    const shippingMethod = resolveCheckoutShippingMethod(selectedAddress.streetAddress2);
+    if (!shippingMethod) {
+      toast.error('Выберите адрес со способом доставки (СДЭК или Яндекс Доставка)');
+      return;
+    }
+
+    const phoneDigits = normalizePhoneDigits(formData.phone);
+    const phoneE164 = `+${phoneDigits}`;
 
     setIsCreatingPayment(true);
     try {
-      // 1. Создаем checkout через REST API
-      const checkoutResponse = await fetch('/api/checkout/create-without-stock-check/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          channel: 'miraflores-site',
-          email: formData.email,
-          lines: lines.map((line: any) => ({
-            variantId: line.variantId,
-            quantity: line.quantity,
-          })),
-        }),
+      const syncResult = await dispatch(syncCartLines()).unwrap();
+      if (syncResult.removed?.length) {
+        toast.error(
+          `Часть товаров недоступна и убрана из корзины (${syncResult.removed.length}). Проверьте корзину и попробуйте снова.`,
+        );
+        return;
+      }
+      if (!(syncResult.lines?.length > 0)) {
+        toast.error('Корзина пуста');
+        return;
+      }
+
+      const orderLines = syncResult.lines
+        .filter((l: { isGift?: boolean }) => !l.isGift)
+        .map((line: { variantId: string; quantity: number }) => ({
+          variantId: line.variantId,
+          qty: line.quantity,
+        }));
+
+      const recipientName = [selectedAddress.firstName, selectedAddress.lastName]
+        .map((x) => (x || '').trim())
+        .filter(Boolean)
+        .join(' ');
+      const shippingAddress = {
+        city: selectedAddress.city,
+        address: selectedAddress.streetAddress1,
+        apartment: selectedAddress.apartment || undefined,
+        region: selectedAddress.countryArea || undefined,
+        district: selectedAddress.cityArea || undefined,
+        postalCode: selectedAddress.postalCode || undefined,
+        comment: selectedAddress.streetAddress2 || undefined,
+        pvzCode: extractPvzCodeFromStreet2(selectedAddress.streetAddress2),
+        phone: selectedAddress.phone?.trim() || undefined,
+        recipientName: recipientName || undefined,
+        ...(shippingQuoteMeta
+          ? {
+              carrierQuote: {
+                tariffId: shippingQuoteMeta.tariffId ?? null,
+                tariffName: shippingQuoteMeta.tariffName ?? null,
+                daysMin: shippingQuoteMeta.daysMin ?? null,
+                daysMax: shippingQuoteMeta.daysMax ?? null,
+                cost: shippingAmount,
+                method: shippingMethod,
+                source: 'client_estimate',
+              },
+            }
+          : {}),
+      };
+
+      const promoCode = voucherKind === 'gift' ? null : voucherCode || null;
+      const giftCertificateCode = voucherKind === 'gift' ? voucherCode || null : null;
+
+      const customerNote = formData.comment.trim().slice(0, COMMENT_MAX) || null;
+
+      const fingerprint = buildCheckoutFingerprint({
+        lines: orderLines,
+        email: emailTrimmed,
+        phone: phoneE164,
+        customerName: formData.name.trim(),
+        customerNote,
+        shippingMethod,
+        shippingAddress,
+        promoCode,
+        giftCertificateCode,
+        shippingCost: shippingAmount,
+        // Не шлём gift в lines — Nest create аттачит через getApplicableGift.
+        // В fingerprint — чтобы не reuse pending-заказа, созданного без подарка.
+        gratitudeGiftVariantId: giftLine?.variantId ?? null,
       });
 
-      const checkoutResult = await checkoutResponse.json();
+      const openPayWidget = async (orderId: string, orderNumber: string, payToken: string) => {
+        const payResult = await payOrder(orderId, payToken);
 
-      if (!checkoutResponse.ok || !checkoutResult.success) {
-        throw new Error(checkoutResult.error || 'Failed to create checkout');
+        if (payResult.alreadyPaid) {
+          window.location.href = buildOrderSuccessReturnUrl({
+            orderId,
+            orderNumber,
+          });
+          return;
+        }
+
+        if (typeof payResult.total === 'number' && Number.isFinite(payResult.total)) {
+          const serverTotal = Math.round(payResult.total);
+          const clientTotal =
+            payable.payableTotal != null ? Math.round(payable.payableTotal) : null;
+          setChargedTotal(serverTotal);
+          if (clientTotal != null && serverTotal !== clientTotal) {
+            toast.warning(
+              `Сумма к оплате уточнена: ${serverTotal.toLocaleString('ru-RU')}₽`,
+            );
+          }
+        }
+
+        const existing = readPendingCheckoutOrder();
+        writePendingCheckoutOrder({
+          orderId,
+          orderNumber,
+          payToken,
+          idempotencyKey:
+            existing?.idempotencyKey ||
+            (typeof crypto !== 'undefined' && 'randomUUID' in crypto
+              ? crypto.randomUUID()
+              : `ik-${Date.now()}`),
+          fingerprint,
+          paymentId: payResult.paymentId ?? null,
+        });
+
+        if (payResult.confirmationToken) {
+          setConfirmationToken(payResult.confirmationToken);
+          setShowYooKassaWidget(true);
+        } else {
+          throw new Error('No confirmation token received');
+        }
+      };
+
+      const pending = readPendingCheckoutOrder();
+      if (pending && pending.fingerprint === fingerprint) {
+        try {
+          await openPayWidget(pending.orderId, pending.orderNumber, pending.payToken);
+          return;
+        } catch (reuseErr) {
+          console.warn('Pending order pay reuse failed, creating a new order', reuseErr);
+          try {
+            await abandonOrder(pending.orderId, pending.payToken);
+          } catch {
+            // ignore
+          }
+          clearPendingCheckoutOrder();
+        }
+      } else if (pending && pending.fingerprint !== fingerprint) {
+        try {
+          await abandonOrder(pending.orderId, pending.payToken);
+        } catch {
+          // ignore
+        }
+        clearPendingCheckoutOrder();
       }
 
-      const checkoutId = checkoutResult.checkout.token || checkoutResult.checkout.id;
-      console.log('Checkout created:', checkoutId);
-
-      // Сохраняем checkoutId в localStorage для использования на странице success
-      localStorage.setItem('pendingCheckoutId', checkoutId);
-
-      const totalAmount =
-        lines.reduce((sum: number, line: any) => sum + line.price * line.quantity, 0) -
-        (voucherDiscount || 0) +
-        shippingAmount;
-
-      // Создаем описание заказа
-      const description = `Заказ - ${lines.length} товар(ов)`;
-
-      // 2. Вызываем API для создания платежа
-      const paymentResponse = await fetch('/api/yookassa/create-payment', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          amount: Math.max(0, totalAmount),
-          currency: 'RUB',
-          description: description,
-          orderId: checkoutId,
-          returnUrl: `${window.location.origin}/order/success`,
-          metadata: {
-            userEmail: formData.email,
-            userName: formData.name,
-            userPhone: formData.phone,
-            itemsCount: lines.length,
-            checkoutId: checkoutId,
-          },
-        }),
+      const quoteRes = await requestShippingQuote({
+        lines: orderLines,
+        shippingAddress,
+        shippingMethod,
+        clientEstimate: shippingAmount,
+        ...(shippingAddress.carrierQuote
+          ? { carrierQuote: shippingAddress.carrierQuote }
+          : {}),
       });
 
-      const paymentResult = await paymentResponse.json();
+      const idempotencyKey =
+        typeof crypto !== 'undefined' && 'randomUUID' in crypto
+          ? crypto.randomUUID()
+          : `ik-${Date.now()}`;
 
-      if (!paymentResponse.ok) {
-        throw new Error(paymentResult.error || 'Failed to create payment');
+      const order = await createOrder({
+        lines: orderLines,
+        email: emailTrimmed,
+        phone: phoneE164,
+        customerName: formData.name.trim(),
+        customerNote,
+        guestId: getOrCreateGuestId(),
+        idempotencyKey,
+        promoCode,
+        giftCertificateCode,
+        shippingQuote: quoteRes.quote,
+        shippingMethod: quoteRes.method,
+        shippingAddress,
+      });
+
+      if (!order.payToken) {
+        throw new Error('Сервер не вернул payToken');
       }
 
-      if (paymentResult.confirmationToken) {
-        setConfirmationToken(paymentResult.confirmationToken);
-        setShowYooKassaWidget(true);
-      } else {
-        throw new Error('No confirmation token received');
+      if (
+        giftLine?.variantId &&
+        !(order.items || []).some((i) => i.isGratitudeGift && i.variantId === giftLine.variantId)
+      ) {
+        // Nest soft-skip при OOS — не блокируем оплату.
+        toast.warning(
+          'Подарок благодарности временно недоступен — оформляем заказ без него',
+        );
       }
-    } catch (error: any) {
+
+      writePendingCheckoutOrder({
+        orderId: order.id,
+        orderNumber: order.number,
+        payToken: order.payToken,
+        idempotencyKey,
+        fingerprint,
+      });
+
+      await openPayWidget(order.id, order.number, order.payToken);
+    } catch (error: unknown) {
       console.error('Error creating payment:', error);
-      alert(error.message || 'Ошибка создания платежа. Пожалуйста, попробуйте позже.');
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Ошибка создания платежа. Пожалуйста, попробуйте позже.',
+      );
     } finally {
       setIsCreatingPayment(false);
     }
   };
 
+  const yooKassaReturnUrl = React.useMemo(() => {
+    if (!confirmationToken || typeof window === 'undefined') return '';
+    return buildOrderSuccessReturnUrl();
+  }, [confirmationToken]);
+
+  const handleYooKassaSuccess = useCallback(() => {
+    window.location.href = buildOrderSuccessReturnUrl();
+  }, []);
+
+  const handleYooKassaError = useCallback(
+    (error: { message?: string }) => {
+      console.error('Payment error:', error);
+      toast.error(
+        'Ошибка при обработке платежа: ' + (error.message || 'Неизвестная ошибка'),
+      );
+    },
+    [toast],
+  );
+
+  /**
+   * Закрытие виджета / «Оплатить позже»: soft-keep pending с тем же fingerprint.
+   * Повторный CTA → pay reuse без re-quote/create. Abandon только при смене
+   * fingerprint или failed reuse (см. handlePayment).
+   */
+  const handleYooKassaClose = useCallback(() => {
+    setConfirmationToken(null);
+    setShowYooKassaWidget(false);
+  }, []);
+
+  // Сброс server charge, если клиентский итог изменился (корзина / доставка / промо).
+  useEffect(() => {
+    setChargedTotal(null);
+  }, [payable.payableTotal]);
+
   const mobileAccordionData = React.useMemo(() => {
     const safeLines = lines || [];
 
-    let totalItems = 0;
-    let totalPrice = 0;
-    let totalOldPrice = 0;
-
-    safeLines.forEach((line: any) => {
-      const q = Number(line.quantity ?? 0) || 0;
-      const price = Number(line.price ?? 0) || 0;
-      const old = Number(line.oldPrice ?? 0) || 0;
-
-      totalItems += q;
-      totalPrice += price * q;
-      totalOldPrice += (old > price ? old : price) * q;
-    });
-
-    const totalDiscount = Math.max(0, totalOldPrice - totalPrice);
-    const promo = voucherDiscount || 0;
-
-    const hasPayableLines = safeLines.some((line: any) => !line.isGift);
-    const shippingIncluded =
-      hasPayableLines && !cdekShippingLoading && (cdekShippingRub ?? null) != null && !cdekShippingError;
-    const shippingAmount = shippingIncluded ? (cdekShippingRub ?? 0) : 0;
-
-    const finalTotal = Math.max(0, totalPrice - promo + shippingAmount);
-
-    const products = safeLines.map((line: any, idx: number) => {
+    const products = safeLines.map((line: any) => {
       const price = Number(line.price ?? 0) || 0;
       const old = Number(line.oldPrice ?? 0) || 0;
       const discountLabel =
         old > price && old > 0 ? `-${Math.round(((old - price) / old) * 100)}%` : undefined;
-
       return {
-        id: idx + 1,
+        id: line.variantId,
         name: line.title || 'Товар',
         size: line.size || '',
         price,
@@ -289,27 +516,63 @@ const OrderLeftPart: React.FC = () => {
       };
     });
 
+    if (giftLine) {
+      products.push({
+        id: `${giftLine.variantId}:gift`,
+        name: giftLine.title,
+        size: '',
+        price: 0,
+        oldPrice: undefined,
+        discount: undefined,
+        image: giftLine.thumbnail || krem,
+        isGift: true,
+        quantity: giftLine.quantity,
+      });
+    }
+
     return {
-      totalItems,
-      finalTotal,
-      totalOldPrice,
-      totalDiscount,
-      promo,
+      totalItems: payable.totalItems + (giftLine ? giftLine.quantity : 0),
+      finalTotal: payable.payableTotal,
+      goodsTotal: payable.goodsTotal,
+      totalOldPrice: payable.totalOldPrice,
+      totalDiscount: payable.catalogDiscount,
+      promo: payable.voucherDiscount,
       products,
-      hasPayableLines,
+      hasPayableLines: payable.hasPayableLines,
+      shippingReady: payable.shippingReady,
     };
-  }, [lines, voucherDiscount, cdekShippingRub, cdekShippingLoading, cdekShippingError]);
+  }, [lines, payable, giftLine]);
+
+  const payLabel = React.useMemo(() => {
+    if (isCreatingPayment) return 'Создание платежа...';
+    if (payable.hasPayableLines && !payable.shippingReady) {
+      return 'Оформить и оплатить';
+    }
+    const displayTotal = chargedTotal ?? payable.payableTotal;
+    if (displayTotal == null) {
+      return 'Оформить и оплатить';
+    }
+    const amount = Math.round(displayTotal).toLocaleString('ru-RU');
+    return `Оформить и оплатить · ${amount}₽`;
+  }, [isCreatingPayment, payable, chargedTotal]);
+
+  const payDisabled =
+    isCreatingPayment ||
+    showYooKassaWidget ||
+    (payable.hasPayableLines &&
+      (cdekShippingLoading || !payable.shippingReady || payable.payableTotal == null));
 
   return (
     <section className={styles.left}>
-      {/* Navigation & Header Logic */}
       {!isMobile && (
-        <img
-          src={goBack}
-          alt='goBack'
-          onClick={() => navigate(-1)}
+        <button
+          type="button"
           className={styles.goBack}
-        />
+          aria-label="Назад"
+          onClick={() => navigate(-1)}
+        >
+          <img src={goBack} alt="" />
+        </button>
       )}
 
       {isMobile && (
@@ -325,17 +588,27 @@ const OrderLeftPart: React.FC = () => {
             </button>
             <div className={styles.logoWrapper}>
               <Link to="/" aria-label="На главную">
-                <img src={siteLogo} alt='Miraflores' className={styles.Miraflores_logo} />
+                <img
+                  src={siteLogo}
+                  alt='Miraflores'
+                  className={styles.Miraflores_logo}
+                  width={128}
+                  height={14}
+                  decoding="async"
+                />
               </Link>
             </div>
+            <div className={styles.headerSpacer} aria-hidden />
           </div>
         </section>
       )}
 
       {isMobile && (
         <section>
+          <Certificate />
           <TotalAccordion
             total={mobileAccordionData.finalTotal}
+            goodsTotal={mobileAccordionData.goodsTotal}
             totalOld={mobileAccordionData.totalOldPrice}
             totalItems={mobileAccordionData.totalItems}
             products={mobileAccordionData.products}
@@ -351,36 +624,43 @@ const OrderLeftPart: React.FC = () => {
         </section>
       )}
 
-      {/* --- Refactored Inputs Section --- */}
       <section className={styles.inputWrapper}>
         <Input
           value={formData.name}
           label="Имя Фамилия"
           required
+          data-checkout-field="name"
           onChange={(e) => {
             handleInputChange('name', e.target.value);
-            if (validationErrors.name) setValidationErrors(prev => ({ ...prev, name: false }));
+            if (validationErrors.name) {
+              setValidationErrors((prev) => ({ ...prev, name: undefined }));
+            }
           }}
           type='text'
-          placeholder='Имя Фамилия'
           error={validationErrors.name}
         />
         <Input
           value={formData.email}
           label="Email"
           required
+          data-checkout-field="email"
           onChange={(e) => {
             handleInputChange('email', e.target.value);
-            if (validationErrors.email) setValidationErrors(prev => ({ ...prev, email: false }));
+            if (validationErrors.email) {
+              setValidationErrors((prev) => ({ ...prev, email: undefined }));
+            }
           }}
           type='email'
-          placeholder='Email'
           error={validationErrors.email}
         />
       </section>
 
       <section>
-        <DeliveryProfile onSelectAddress={handleAddressSelect} />
+        <DeliveryProfile
+          onSelectAddress={handleAddressSelect}
+          hasError={Boolean(validationErrors.address)}
+          errorMessage={validationErrors.address}
+        />
       </section>
 
       <section className={styles.phoneWrapper}>
@@ -388,44 +668,78 @@ const OrderLeftPart: React.FC = () => {
           value={formData.phone}
           required
           label="Телефон"
+          data-checkout-field="phone"
           error={validationErrors.phone}
           onChange={(e) => {
-            if (validationErrors.phone) setValidationErrors(prev => ({ ...prev, phone: false }));
+            if (validationErrors.phone) {
+              setValidationErrors((prev) => ({ ...prev, phone: undefined }));
+            }
             const formatted = formatPhoneNumber(e.target.value);
             handleInputChange('phone', formatted);
           }}
-
           type='text'
-          placeholder='+7 (999) 999-99-99'
         />
       </section>
 
-      {!isMobile && (
-        <section className={styles.checkWrapper}>
-          <CustomCheckbox
-            checked={formData.isSubscribed}
-            onChange={(val) => handleInputChange('isSubscribed', val)}
+      <section className={styles.commentWrapper}>
+        <div
+          className={[
+            styles.commentField,
+            commentFocused ? styles.commentFieldFocused : '',
+            formData.comment.trim() ? styles.commentFieldActive : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        >
+          <label className={styles.commentLabel} htmlFor="checkout-order-comment">
+            Комментарий к заказу
+          </label>
+          <textarea
+            id="checkout-order-comment"
+            className={styles.commentTextarea}
+            data-checkout-field="comment"
+            value={formData.comment}
+            maxLength={COMMENT_MAX}
+            rows={3}
+            onFocus={() => setCommentFocused(true)}
+            onBlur={() => setCommentFocused(false)}
+            onChange={(e) =>
+              handleInputChange('comment', e.target.value.slice(0, COMMENT_MAX))
+            }
           />
-          <label>Пишите мне о распродажах, скидках и новых поступлениях</label>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* Виджет ЮKassa - показывается когда доступен confirmation_token */}
       {showYooKassaWidget && confirmationToken && (
         <div style={{ marginBottom: '24px' }}>
           <YooKassaWidget
             confirmationToken={confirmationToken}
-            returnUrl={`${window.location.origin}/order/success`}
-            onSuccess={(result) => {
-              console.log('Payment successful:', result);
-              window.location.href = '/order/success';
+            returnUrl={yooKassaReturnUrl}
+            onSuccess={handleYooKassaSuccess}
+            onError={handleYooKassaError}
+            onClose={() => {
+              handleYooKassaClose();
             }}
-            onError={(error) => {
-              console.error('Payment error:', error);
-              alert('Ошибка при обработке платежа: ' + (error.message || 'Неизвестная ошибка'));
-            }}
-            onClose={() => setShowYooKassaWidget(false)}
           />
+          <button
+            type="button"
+            className={styles.agreement}
+            style={{
+              display: 'block',
+              marginTop: 12,
+              padding: 0,
+              border: 'none',
+              background: 'none',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              color: 'inherit',
+            }}
+            onClick={() => {
+              handleYooKassaClose();
+            }}
+          >
+            Оплатить позже
+          </button>
         </div>
       )}
 
@@ -435,17 +749,13 @@ const OrderLeftPart: React.FC = () => {
             <p className={styles.validationError}>{validationErrors.general}</p>
           )}
           <CustomButton
-            label={isCreatingPayment ? 'Создание платежа...' : 'Оплатить'}
+            label={payLabel}
             onClick={handlePayment}
-            disabled={
-              isCreatingPayment ||
-              showYooKassaWidget ||
-              (lines.some((l: { isGift?: boolean }) => !l.isGift) && cdekShippingLoading)
-            }
+            disabled={payDisabled}
           />
         </figure>
         <p className={styles.agreement}>
-          Нажимая на кнопку «Оформить заказ», я соглашаюсь с условиями{' '}
+          Нажимая на кнопку «Оформить и оплатить», я соглашаюсь с условиями{' '}
           <Link to="/info/oferta-i-usloviia-polzovaniia">Публичной оферты</Link>{' '}
           и выражаю своё согласие на обработку моих персональных данных в соответствии с{' '}
           <Link to="/info/politika-konfidentsialnosti">Политикой конфиденциальности</Link>

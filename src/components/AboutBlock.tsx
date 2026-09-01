@@ -1,13 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import styles from './AboutBlock.module.scss';
 import AvoutCenter from '@/assets/images/AvoutCenter.webp';
 import aboutVideo from '@/assets/videos/about-center.mp4';
 import AboutRight from '@/assets/images/AboutRight.webp';
 import AboutLeft from '@/assets/images/AboutLeft.png';
-import arrowToRoght from '@/assets/icons/ArrowToRight.svg';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { VIEWPORT_TABLET_MAX } from '@/constants/viewport';
-import AppLink from '@/components/AppLink/AppLink';
+import MoreLink, { SectionTitleRow } from '@/components/MoreLink/MoreLink';
+import { HomeSection } from '@/components/home-section/HomeSection';
 
 const AboutText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <p className={styles.text}>{children}</p>
@@ -15,98 +15,23 @@ const AboutText: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 const AboutImage: React.FC<{
   src: string;
-  alt: string;
   className?: string;
-}> = ({ src, alt, className }) => (
-  <img src={src} alt={alt} className={className || styles.smallImage} />
-);
-
-const AboutMore: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => (
-  <div className={isMobile ? styles.mobileMore : styles.more}>
-    <AppLink to='/about'>
-      <p>БОЛЬШЕ О НАС</p>{' '}
-      <img
-        src={arrowToRoght}
-        alt='arrowToRoght'
-        className={isMobile ? styles.mobileArrowToRoght : styles.arrowToRoght}
-      />
-    </AppLink>
-  </div>
+}> = ({ src, className }) => (
+  <img src={src} alt="" aria-hidden className={className || styles.smallImage} />
 );
 
 const AboutBlock: React.FC = () => {
   const isTablet = useScreenMatch(VIEWPORT_TABLET_MAX);
   const isMobile = useScreenMatch();
-  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
-  const sectionRef = React.useRef<HTMLElement>(null);
-
-  // Intersection Observer для запуска анимации при скролле к секции
-  useEffect(() => {
-    if (!sectionRef.current || isSectionLoaded) return;
-
-    // Проверяем, видна ли секция сразу при загрузке
-    const checkVisibility = () => {
-      if (sectionRef.current) {
-        const rect = sectionRef.current.getBoundingClientRect();
-        const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
-        return isVisible;
-      }
-      return false;
-    };
-
-    // Проверяем сразу
-    if (checkVisibility()) {
-      setIsSectionLoaded(true);
-      return;
-    }
-
-    // Небольшая задержка для повторной проверки (на случай если DOM еще не готов)
-    const timer = setTimeout(() => {
-      if (checkVisibility()) {
-        setIsSectionLoaded(true);
-        return;
-      }
-    }, 100);
-
-    // Создаем Intersection Observer
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          // Если секция видна в viewport, запускаем анимацию
-          if (entry.isIntersecting && !isSectionLoaded) {
-            setIsSectionLoaded(true);
-          }
-        });
-      },
-      {
-        // Запускаем анимацию когда секция видна на 20%
-        threshold: 0.2,
-        // Небольшой отступ сверху для более раннего запуска
-        rootMargin: '0px 0px -100px 0px'
-      }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => {
-      clearTimeout(timer);
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
-  }, [isSectionLoaded]);
 
   return (
-    <section 
-      ref={sectionRef}
-      className={`${styles.about} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
-      aria-label="О нас"
-    >
-      <h2 className={styles.title}>
-        ДОКАЗАНО. ЗАПАТЕНТОВАНО. <br /> СОЗДАНО С ЗАБОТОЙ.
-      </h2>
+    <HomeSection className={styles.about} aria-label="О нас">
+      <SectionTitleRow className={styles.titleRow}>
+        <h2 className={styles.title}>
+          ДОКАЗАНО. ЗАПАТЕНТОВАНО. <br /> СОЗДАНО С ЗАБОТОЙ.
+        </h2>
+        <MoreLink to="/about">{isMobile ? 'о нас' : 'больше о нас'}</MoreLink>
+      </SectionTitleRow>
 
       <div className={isMobile ? styles.containerMobile : styles.container}>
         <div className={styles.left}>
@@ -119,7 +44,7 @@ const AboutBlock: React.FC = () => {
           </div>
 
           <div className={isMobile ? styles.mobileBottom : styles.leftBottom}>
-            {!isMobile && !isTablet && <AboutImage src={AboutLeft} alt='LeftFoto' />}
+            {!isMobile && !isTablet && <AboutImage src={AboutLeft} />}
             <AboutText>
               Мы уверены: природа уже создала всё необходимое для здоровья и красоты кожи — наша
               задача лишь научиться грамотно это использовать. В каждом средстве Miraflores — чистые
@@ -128,10 +53,9 @@ const AboutBlock: React.FC = () => {
           </div>
         </div>
 
-        {/* Center */}
         <div className={styles.center}>
           <video
-            src={isSectionLoaded ? aboutVideo : undefined}
+            src={aboutVideo}
             poster={AvoutCenter}
             muted
             autoPlay
@@ -143,10 +67,9 @@ const AboutBlock: React.FC = () => {
           />
         </div>
 
-        {/* Right Column */}
         <div className={styles.right}>
           <div className={styles.smallImageWrapper}>
-            {!isMobile && !isTablet && <AboutImage src={AboutRight} alt='RightFoto' />}
+            {!isMobile && !isTablet && <AboutImage src={AboutRight} />}
           </div>
 
           <div className={isMobile ? styles.mobileTextWrapper : styles.textWrapper}>
@@ -159,11 +82,9 @@ const AboutBlock: React.FC = () => {
               влюблена в своё дело.
             </AboutText>
           </div>
-
-          <AboutMore isMobile={isMobile} />
         </div>
       </div>
-    </section>
+    </HomeSection>
   );
 };
 

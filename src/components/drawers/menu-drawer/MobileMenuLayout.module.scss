@@ -1,0 +1,170 @@
+@use '@/style/variables.scss' as *;
+
+.layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  box-sizing: border-box;
+}
+
+.header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 14px 16px;
+  min-height: 52px;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.closeButton {
+  position: relative;
+  z-index: 1;
+  border: none;
+  background: transparent;
+  padding: 8px;
+  margin: -8px 0 -8px -8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.closeIcon {
+  width: 20px;
+  height: 20px;
+  position: relative;
+  display: block;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 20px;
+    height: 1.5px;
+    background: #000;
+    border-radius: 1px;
+  }
+
+  &::before {
+    transform: translate(-50%, -50%) rotate(45deg);
+  }
+
+  &::after {
+    transform: translate(-50%, -50%) rotate(-45deg);
+  }
+}
+
+.logo {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 118px;
+  height: 24px;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.nav {
+  padding: 24px 16px 16px;
+  width: 100%;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  box-sizing: border-box;
+}
+
+.quiz {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding-bottom: 8px;
+}
+
+.quizFigure {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  margin: 0;
+}
+
+.quizCaption {
+  margin: 0;
+  padding: 0;
+}
+
+.quizImage {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 188 / 216;
+  display: block;
+  object-fit: cover;
+}
+
+.footer {
+  flex-shrink: 0;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px) + 12px);
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: #fff;
+}
+
+.secondaryBtn,
+.accountBtn,
+.quizBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 36px;
+  padding: 8px 16px;
+  box-sizing: border-box;
+  border-radius: 50px;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+
+  &:active {
+    opacity: 0.88;
+  }
+}
+
+.secondaryBtn {
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+}
+
+.accountBtn {
+  border: 1px solid #000;
+  background: #000;
+  color: #fff;
+}
+
+.quizBtn {
+  border: 1px solid $green-297;
+  background: $green-297;
+  color: #fff;
+}

@@ -10,8 +10,7 @@ import { closeDrawer } from '@/store/slices/drawerSlice';
 import { RootState } from '@/store/store';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import AboutDrawer from './about-drawer/AboutDrawer';
-import AddCommentDrawer from './add-comment-drawer/AddComment';
-import AddressDrawer from './adress-drawer/AddressDrawer';
+import AddressDrawer from './address-drawer/AddressDrawer';
 import React from 'react';
 
 /** Оверлей и панель выше хедера (800) и выпадашек профиля (~1000), ниже тостов */
@@ -21,15 +20,13 @@ const DrawerWrapper: React.FC = () => {
   const activeDrawer = useSelector((state: RootState) => state.drawer.activeDrawer);
   const dispatch = useDispatch();
 
-  const isAdress = activeDrawer === 'address' ? true : false;
+  const isAddress = activeDrawer === 'address';
 
   const isOpenBasket = activeDrawer === 'basket' ? true : false;
   const isOpenMenu = activeDrawer === 'menu' ? true : false;
   const isOpenAbout = activeDrawer === 'about' ? true : false;
-  const isAddComment = activeDrawer === 'add-comment' ? true : false;
   const isMobileBasket = useScreenMatch();
 
-  // Добавляем/удаляем класс на body когда drawer открыт
   React.useEffect(() => {
     if (activeDrawer) {
       document.body.classList.add('drawer-open');
@@ -47,7 +44,7 @@ const DrawerWrapper: React.FC = () => {
         className='basket-drawer'
         open={isOpenBasket}
         onClose={() => dispatch(closeDrawer())}
-        size={isMobileBasket ? '100%' : 664}
+        size={isMobileBasket ? '100%' : 600}
         direction='right'
         zIndex={DRAWER_Z_INDEX}
       >
@@ -76,19 +73,8 @@ const DrawerWrapper: React.FC = () => {
         <AboutDrawer />
       </Drawer>
       <Drawer
-        className={styles.drawerContainer}
-        open={isAddComment}
-        onClose={() => dispatch(closeDrawer())}
-        size={isMobileBasket ? '100%' : 664}
-        duration={400}
-        direction='right'
-        zIndex={DRAWER_Z_INDEX}
-      >
-        <AddCommentDrawer />
-      </Drawer>
-      <Drawer
         className={`${styles.drawerContainer} address-drawer`}
-        open={isAdress}
+        open={isAddress}
         onClose={() => dispatch(closeDrawer())}
         size={isMobileBasket ? '100%' : 664}
         duration={400}

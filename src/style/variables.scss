@@ -1,17 +1,24 @@
 // Colors
 $white: #ffffff;
 $black: #000000;
+/** Brand green (logo / CTA / accents) */
 $green-297: #297230;
 $color-secondary: #9333ea;
+/** Bimbo note accent (home hero) */
+$purple-note: #9747ff;
 $gray-6e: #6e6d67;
 $gray-a3: #a3a3a3;
+$gray-light: #f5f5f5;
 $red-ff: #ff4766;
 $red-line: #ff0808;
 $bg-light: #f6f5ef;
 
-// Layout breakpoints — синхрон с `src/constants/viewport.ts` (VIEWPORT_MOBILE_MAX и т.д.)
+// Layout breakpoints — синхрон с `src/constants/viewport.ts`
 $viewport-mobile-max: 768px;
 $viewport-tablet-max: 1024px;
+
+/** Ширина контентной колонки. Переопределяется через --page-max-width. */
+$page-max-width: 1536px;
 
 // Spacing
 $spacing-xs: 4px;
@@ -21,25 +28,17 @@ $spacing-lg: 24px;
 $spacing-xl: 32px;
 
 // fonts
-/* === Font Families === */
 $font-avenir: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-$font-oceanic: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+$font-oceanic: 'TRIAL Oceanic', 'Oceanic', Georgia, 'Times New Roman', serif;
+$font-bimbo: 'Bimbo', 'Avenir Next', sans-serif;
 $font-onest: 'Onest', 'Avenir Next', sans-serif;
 
-/* === Font Weights === */
 $font-light: 300;
 $font-regular: 400;
 $font-medium: 500;
 $font-semibold: 600;
 $font-bold: 700;
 
-/* === Button Font Weight === */
 $button-font-weight: 500;
 
-/* === Colors === */
-$black: #000;
-$green-297: #297c3b;
-$gray-light: #f5f5f5;
-
-/* === Default font === */
 $font-default: $font-onest;

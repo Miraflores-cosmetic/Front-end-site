@@ -1,86 +1,60 @@
 .favoritesContent {
-  margin-top: 24px;
-  padding-top: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-
-  .titleWrapper {
+  .toolbar {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     gap: 16px;
     flex-wrap: wrap;
+    padding-bottom: 8px;
   }
 
-  .title {
-    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-    font-size: 36px;
-    font-weight: 300;
+  .count {
     margin: 0;
-
-    @media (max-width: 768px) {
-      font-size: 24px;
-    }
+    font-size: 14px;
+    color: #6e6d67;
   }
 
   .clearButton {
-    padding: 8px 16px;
+    appearance: none;
+    min-height: 36px;
+    padding: 0 16px;
     background: transparent;
-    border: 1px solid #6e6d67;
-    border-radius: 4px;
-    font-size: 14px;
+    border: 1px solid #000;
+    border-radius: 100px;
+    font-size: 13px;
     font-weight: 500;
-    color: #6e6d67;
+    color: #000;
     cursor: pointer;
     transition: all 0.2s;
-    text-transform: uppercase;
+    font-family: inherit;
 
     &:hover:not(:disabled) {
-      background: #6e6d67;
-      color: white;
+      background: #000;
+      color: #fff;
     }
 
     &:disabled {
       opacity: 0.5;
       cursor: not-allowed;
     }
-
-    @media (max-width: 768px) {
-      font-size: 12px;
-      padding: 6px 12px;
-    }
   }
 
-  .container {
-    border-top: 1px solid #6e6d6799;
-    padding-top: 24px;
+  .grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 32px 20px;
 
-    @media (min-width: 1200px) {
-      grid-template-columns: repeat(2, 1fr);
-    }
-
-    @media (max-width: 800px) {
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px 12px;
+    @media (max-width: 1200px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
     @media (max-width: 768px) {
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      justify-items: stretch;
-      column-gap: 8px;
-      row-gap: 32px;
+      gap: 24px 12px;
     }
   }
 
-  .loading,
-  .emptyState {
-    text-align: center;
-    padding: 60px 0;
-    color: #6e6d67;
-    font-size: 18px;
+  .cardCell {
+    min-width: 0;
   }
 }

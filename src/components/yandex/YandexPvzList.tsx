@@ -78,6 +78,10 @@ const YandexPvzList: React.FC<YandexPvzListProps> = ({
         setShowWidget(initialMode === 'map');
     }, [initialMode]);
 
+    useEffect(() => {
+        setSelectedCityName(catalogDisplayCityForUserCity(defaultCity));
+    }, [defaultCity]);
+
     const geoId = YANDEX_CITY_GEO_ID[selectedCityName] ?? 213;
     const cityCenterForMap = useMemo(() => {
         const c = yandexGeoCenter(geoId);

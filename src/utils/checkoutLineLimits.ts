@@ -16,9 +16,23 @@ export function maxQuantityForVariantLine(quantityLimitPerCustomer: number | nul
   return Number.MAX_SAFE_INTEGER;
 }
 
+/** Учитывает лимит варианта и остаток после sync (quantityAvailable). */
+export function effectiveLineQuantityCap(
+  quantityLimitPerCustomer: number | null | undefined,
+  quantityAvailable: number | null | undefined,
+): number {
+  const limitMax = maxQuantityForVariantLine(quantityLimitPerCustomer);
+  const stockMax =
+    quantityAvailable != null && quantityAvailable > 0
+      ? quantityAvailable
+      : limitMax;
+  return Math.min(limitMax, stockMax);
+}
+
 export function isAtOrOverLineLimit(
   quantity: number,
-  quantityLimitPerCustomer: number | null | undefined
+  quantityLimitPerCustomer: number | null | undefined,
+  quantityAvailable?: number | null,
 ): boolean {
-  return quantity >= maxQuantityForVariantLine(quantityLimitPerCustomer);
+  return quantity >= effectiveLineQuantityCap(quantityLimitPerCustomer, quantityAvailable);
 }

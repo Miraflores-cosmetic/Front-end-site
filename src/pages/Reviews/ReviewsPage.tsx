@@ -1,27 +1,25 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 import styles from './ReviewsPage.module.scss';
 import { Reviews } from '@/components/take-test/reviews/Reviews';
-import Header from '@/components/Header/Header';
-import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footer-img.png';
+import { useDocumentSeo } from '@/hooks/useDocumentSeo';
 
 const ReviewsPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const productSlug = searchParams.get('product') ?? undefined;
 
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
+  useDocumentSeo({
+    title: productSlug ? 'Отзывы о товаре' : 'Отзывы',
+    description: 'Отзывы покупателей Miraflores о натуральной косметике.',
+    canonicalPath: productSlug
+      ? `/reviews?product=${encodeURIComponent(productSlug)}`
+      : '/reviews',
+  });
 
   return (
-    <>
-      <Header />
-      <main className={styles.reviewsPage}>
-        <Reviews variant="page" productSlug={productSlug} />
-        <Footer footerImage={footerImage} />
-      </main>
-    </>
+    <main className={styles.reviewsPage}>
+      <Reviews variant="page" productSlug={productSlug} />
+    </main>
   );
 };
 

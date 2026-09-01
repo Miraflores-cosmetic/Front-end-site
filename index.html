@@ -17,9 +17,42 @@
       content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title>Miraflores</title>
+    <style>
+      #site-boot-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        background: #297230;
+        pointer-events: none;
+      }
+    </style>
   </head>
   <body>
+    <div id="site-boot-loader" aria-hidden="true"></div>
+    <script>
+      /* Boot green только на Home — на остальных маршрутах не мелькает. */
+      (function () {
+        var p = location.pathname;
+        if (p !== '/' && p !== '') {
+          var boot = document.getElementById('site-boot-loader');
+          if (boot) boot.remove();
+        }
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      (function () {
+        var t = 8000;
+        setTimeout(function () {
+          if (document.body.classList.contains('--js-ready')) return;
+          var boot = document.getElementById('site-boot-loader');
+          if (boot) boot.remove();
+          var l = document.querySelector('[data-site-loader]');
+          if (l) l.remove();
+          document.body.classList.add('--js-ready');
+        }, t);
+      })();
+    </script>
   </body>
 </html>

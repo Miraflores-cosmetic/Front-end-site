@@ -73,7 +73,7 @@ const CatalogList: React.FC = () => {
     <div className={styles['catalog-grid']}>
       {items.map((item) => (
         <div key={item.id} className={styles.item}>
-          <AppLink to={`/category/${item.slug}`} className={styles.itemLink}>
+          <AppLink to={`/catalog/${item.slug}`} className={styles.itemLink}>
             <ImageWithFallback src={item.image} alt={item.title} className={styles.itemImage} />
             <p className={styles.itemTitle}>{item.title}</p>
           </AppLink>

@@ -14,6 +14,10 @@
     min-height: 0;
   }
 
+  @media (max-width: 768px) {
+    display: none;
+  }
+
   @include mixins.respond(laptop) {
     padding: 24px 32px 24px 32px;
   }
@@ -21,19 +25,45 @@
   .listWrapper {
     @include mixins.flex(flex-start, stretch, column, 16px);
 
+    .listHeader {
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .editCartBtn {
+      appearance: none;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: none;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: #297230;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      cursor: pointer;
+
+      &:hover {
+        color: #000;
+      }
+    }
+
     .orderCart {
       @include mixins.flex(flex-start, stretch, row, 20px);
 
       .cartImageWrapper {
         @include mixins.flex(center, center);
+        flex-shrink: 0;
         background-color: #f6f5ef;
-        width: 100%;
-        max-width: 180px;
-        height: 180px;
+        width: 136px;
+        height: 136px;
+        max-width: 136px;
 
         .kremImage {
-          width: 442px;
-          height: 452px;
+          width: 100%;
+          height: 100%;
           max-width: 100%;
           max-height: 100%;
           object-fit: cover;
@@ -91,11 +121,20 @@
           }
 
           .surprise {
-            @include mixins.flex(center, center);
-            background-color: #ff4766;
-            width: 92px;
-            height: 43px;
-            @include mixins.font(14px, 500, #fff);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: auto;
+            min-width: 0;
+            height: auto;
+            padding: 4px 10px;
+            border-radius: 100px;
+            background-color: #297230;
+            font-family: 'Avenir Next', 'Onest', sans-serif;
+            font-size: 12px;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            line-height: 1.2;
             color: #ffffff;
           }
 
@@ -154,71 +193,6 @@
           }
         }
       }
-    }
-  }
-
-  .promoInputWrapper {
-    margin-top: 16px;
-    display: flex;
-    gap: 8px;
-    align-items: center;
-  }
-
-  .promoInput {
-    flex: 1;
-    padding: 10px 14px;
-    border: 1px solid #6e6d67;
-    border-radius: 4px;
-    font-size: 14px;
-    font-family: inherit;
-
-    &:focus {
-      outline: none;
-      border-color: #000;
-    }
-  }
-
-  .promoApplyBtn {
-    padding: 10px 20px;
-    background: #000;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background 0.2s;
-
-    &:hover:not(:disabled) {
-      background: #333;
-    }
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  }
-
-  .sertificatWrapper {
-    margin-top: 32px;
-    @include mixins.flex(space-between, flex-start, column, 10px);
-
-    .promoWrapper {
-      width: 100%;
-      @include mixins.flex(space-between, flex-start);
-
-      .promoWrapperLeft {
-        @include mixins.flex(flex-start, center, row, 8px);
-        width: 100%;
-
-        .promoTxt {
-          @include mixins.font(15px, 500);
-        }
-      }
-    }
-
-    .SALE {
-      @include mixins.font(15px, 400);
     }
   }
 
@@ -419,5 +393,208 @@
         }
       }
     }
+  }
+}
+
+/* Certificate — top-level: используется и в .right, и в mobile TotalAccordion */
+.certificateWrapper {
+  margin-top: 32px;
+  @include mixins.flex(space-between, flex-start, column, 10px);
+
+  .promoWrapper {
+    width: 100%;
+    border: none;
+    background: transparent;
+    padding: 0;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    @include mixins.flex(space-between, center, row, 12px);
+
+    .promoWrapperLeft {
+      @include mixins.flex(flex-start, center, row, 8px);
+      flex: 1;
+      min-width: 0;
+
+      .promocode {
+        flex-shrink: 0;
+        width: 20px;
+        height: 20px;
+      }
+
+      .promoTxt {
+        @include mixins.font(15px, 500);
+        margin: 0;
+      }
+    }
+
+    .promoToggle {
+      flex-shrink: 0;
+      width: 20px;
+      height: 20px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      color: #000;
+
+      .minus {
+        width: 16px;
+        height: 16px;
+        display: block;
+      }
+
+      &::after {
+        content: '';
+        position: absolute;
+        width: 1.5px;
+        height: 12px;
+        background: currentColor;
+        transition: opacity 0.15s ease, transform 0.15s ease;
+      }
+
+      &.promoToggleOpen::after {
+        opacity: 0;
+        transform: scaleY(0);
+      }
+    }
+  }
+
+  .SALE {
+    @include mixins.font(15px, 400);
+    margin: 0;
+  }
+
+  .giftShippingNote {
+    @include mixins.font(12px, 400);
+    margin: 4px 0 0;
+    color: #6e6d67;
+    line-height: 1.45;
+    max-width: 36em;
+  }
+}
+
+.promoInputWrapper {
+  margin-top: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  width: 100%;
+
+  > *:first-child {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.promoApplyBtn {
+  flex-shrink: 0;
+  padding: 10px 20px;
+  min-height: 48px;
+  background: #297c3b;
+  color: #fff;
+  border: none;
+  border-radius: 9999px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+
+  &:hover:not(:disabled) {
+    opacity: 0.92;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+@media (max-width: 768px) {
+  .certificateWrapper {
+    margin-top: 0;
+    gap: 0;
+    width: 100%;
+
+    .promoWrapper {
+      padding: 12px 14px;
+      background: #f6f5ef;
+      border-radius: 14px;
+      gap: 10px;
+      min-height: 48px;
+      box-sizing: border-box;
+      transition: background 0.15s ease, border-radius 0.15s ease;
+
+      &:active {
+        background: #f0eee6;
+      }
+
+      &.promoWrapperOpen {
+        border-radius: 14px 14px 0 0;
+      }
+
+      .promoWrapperLeft {
+        gap: 10px;
+        align-items: center;
+
+        .promocode {
+          width: 18px;
+          height: 18px;
+        }
+
+        .promoTxt {
+          margin: 0;
+          font-size: 13px;
+          font-weight: 500;
+          line-height: 1.3;
+          color: #000;
+        }
+      }
+
+      .promoToggle {
+        width: 22px;
+        height: 22px;
+        color: #6e6d67;
+      }
+    }
+
+    .SALE {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #f6f5ef;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #297230;
+    }
+
+    .giftShippingNote {
+      margin-top: 8px;
+      padding: 0 2px;
+      font-size: 11px;
+      line-height: 1.4;
+    }
+  }
+
+  .promoInputWrapper {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin-top: 0;
+    padding: 0 14px 14px;
+    background: #f6f5ef;
+    border-radius: 0 0 14px 14px;
+    box-sizing: border-box;
+  }
+
+  .promoApplyBtn {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 16px;
+    font-size: 14px;
+    border-radius: 12px;
   }
 }

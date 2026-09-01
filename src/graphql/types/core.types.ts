@@ -44,12 +44,28 @@ export interface ProductNode extends Node {
  */
 export interface ProductDetailNode extends ProductNode {
   description: string;
+  pageShortDescriptionHtml?: string;
+  actionEffectHtml?: string;
+  applicationHtml?: string;
+  compositionHtml?: string;
+  importantNoteHtml?: string;
+  mirafloresNoteHtml?: string;
+  storageHtml?: string;
+  purpose?: string;
+  shelfLife?: string;
+  catalogTags?: Array<{ id: string; name: string; slug: string; sortOrder?: number }>;
+  metaTitle?: string | null;
+  metaDescription?: string | null;
+  ogImageUrl?: string | null;
+  canonicalPath?: string | null;
+  seoNoIndex?: boolean;
   productType: {
     name: string;
   };
   category: {
     name: string;
     id: string;
+    slug?: string;
   };
   rating?: number;
   attributes: Attribute[];
@@ -60,7 +76,8 @@ export interface ProductDetailNode extends ProductNode {
   productVariants: {
     edges: ProductVariant[]
   }
-  reviews: Array<{
+  /** Отзывы на PDP приходят через /reviews, не через detail-адаптер */
+  reviews?: Array<{
     id: string;
     rating: number;
     text: string;
@@ -117,6 +134,8 @@ export interface OrderNode extends Node {
     gross: { amount: number; currency: string };
   };
   userEmail: string;
+  tracking?: string | null;
+  trackingProvider?: string | null;
   lines?: Array<{
     id: string;
     productName: string;

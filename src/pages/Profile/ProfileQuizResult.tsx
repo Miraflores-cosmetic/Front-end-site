@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Header from '@/components/Header/Header';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { QuizResultStatic } from '@/components/quiz/QuizResultStatic/QuizResultStatic';
 import { useQuizContent } from '@/contexts/QuizContentContext';
-import { fetchSavedQuizResult } from '@/graphql/queries/quizResult.service';
+import { fetchSavedQuizResult } from '@/services/quizResult.service';
 import { buildFaceResult } from '@/lib/quiz/buildFaceResult';
 import { resolveFaceResultBlocks } from '@/lib/quiz/resolveBlocks';
 import type { SavedQuizResult } from '@/types/quizResult';
@@ -43,7 +42,6 @@ const ProfileQuizResultPage: React.FC = () => {
   if (loading || contentLoading) {
     return (
       <>
-        <Header />
         <div className={styles.loaderWrap}>
           <SpinnerLoader />
         </div>
@@ -57,7 +55,6 @@ const ProfileQuizResultPage: React.FC = () => {
 
   return (
     <>
-      <Header />
       <main className={styles.page}>
         <div className={styles.container}>
           <Link to="/profile?tab=quiz" className={styles.backLink}>

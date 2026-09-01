@@ -1,293 +1,389 @@
 @use '@/style/variables.scss' as *;
 
 .footer {
-  height: 500px;
-  padding-top: 60px;
   width: 100%;
+  margin: 80px 0 0;
+  padding: 0;
+  color: $white;
+  font-family: $font-avenir;
+  overflow-x: clip;
+}
+
+/** Отступ под sticky ATC на PDP mobile */
+.pdpStickyClearance {
+  @media (max-width: 768px) {
+    padding-bottom: var(
+      --pdp-sticky-clearance,
+      calc(72px + env(safe-area-inset-bottom, 0px))
+    );
+  }
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  width: 100%;
+  min-height: 0;
+  overflow: visible;
+}
+
+.left {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 236px;
+  padding: 40px 32px 28px;
+  background: $green-297;
+  color: $white;
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 28px 24px;
+  align-items: start;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.columnTitle {
+  margin: 0;
+  font-family: 'Onest', $font-avenir, sans-serif;
+  font-size: 12px;
+  font-weight: $font-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.columnLinks {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.columnLinks a {
+  font-family: 'Onest', $font-avenir, sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: $white;
+  text-decoration: none;
+  text-transform: uppercase;
+  line-height: 1.35;
+  letter-spacing: 0;
+  transition: opacity 0.2s ease, text-decoration 0.2s ease;
+}
+
+.columnLinks a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.consentNote {
+  margin: -6px 0 0;
+  font-family: $font-avenir;
+  font-size: 11px;
+  font-weight: $font-regular;
+  line-height: 1.4;
+  text-transform: none;
+  letter-spacing: 0;
+  color: rgba(255, 255, 255, 0.5);
+
+  a {
+    font-size: inherit;
+    font-weight: inherit;
+    text-transform: none;
+    color: rgba(255, 255, 255, 0.72);
+    text-decoration: underline;
+    text-underline-offset: 0.12em;
+  }
+}
+
+.leftBottom {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.partnerCta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: 620px;
+}
+
+.partnerCtaTitle {
+  margin: 0;
+  font-family: $font-avenir;
+  font-size: 12px;
+  font-weight: $font-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: $white;
+}
+
+.partnerCtaText {
+  margin: 0;
+  font-family: $font-avenir;
+  font-size: 13px;
+  font-weight: $font-regular;
+  line-height: 1.45;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.partnerCtaLink {
+  margin-top: 4px;
+  font-family: 'Onest', $font-avenir, sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  color: $white;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+  transition: opacity 0.2s ease;
+}
+
+.partnerCtaLink:hover {
+  opacity: 0.8;
+}
+
+.leftBottomMeta {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 12px 24px;
+}
+
+.legalLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+}
+
+/* Как .partnerCtaText — отдельный класс, чтобы не перебивалось .columnLinks a */
+.legalLink {
+  font-family: $font-avenir;
+  font-size: 13px;
+  font-weight: $font-regular;
+  line-height: 1.45;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.72);
+  text-decoration: none;
+  transition: opacity 0.2s ease, text-decoration 0.2s ease;
+}
+
+.legalLink:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.metaAside {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  text-align: right;
+}
+
+.copyright {
+  font-family: $font-avenir;
+  font-size: 12px;
+  font-weight: $font-regular;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.legalRequisites {
+  margin: 0;
+  font-family: $font-avenir;
+  font-size: 11px;
+  line-height: 1.4;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.right {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 40px 32px 28px;
+  background: #f6f5ef;
+  color: $black;
+  min-height: 240px;
+  overflow: visible;
+}
+
+.rightTop {
   display: flex;
   justify-content: space-between;
-  align-items: start;
-  gap: 100px;
-  margin-bottom: 16px;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 2;
+}
 
-  &.footerPaddingX32 {
-    padding-left: 32px;
-    padding-right: 32px;
+.rightLink {
+  font-family: 'Onest', $font-avenir, sans-serif;
+  font-size: 14px;
+  font-weight: 300;
+  color: $black;
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0;
+  transition: color 0.2s ease, text-decoration 0.2s ease;
+}
 
-    @media (max-width: 1100px) {
-      padding-left: 32px;
-      padding-right: 32px;
-    }
+.rightLink:hover {
+  color: $green-297;
+  text-decoration: underline;
+}
 
-    @media (max-width: 420px) {
-      padding-left: 32px;
-      padding-right: 32px;
-    }
+.rightLogoSlot {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  position: relative;
+  z-index: 1;
+  overflow: visible;
+}
+
+.rightLogo {
+  position: sticky;
+  bottom: 6px;
+  width: 100%;
+  color: $green-297;
+  line-height: 0;
+  overflow: visible;
+}
+
+.rightLogoHome {
+  display: block;
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
+  line-height: 0;
+}
+
+.rightLogoMark {
+  display: block;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  aspect-ratio: 179 / 36;
+  color: $green-297;
+  overflow: visible;
+}
+
+.rightLogo :global(path) {
+  fill: $green-297;
+}
+
+.rightLogoMark:global(.logo-wave),
+.rightLogo :global(.logo-wave) {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 179 / 36;
+  overflow: visible;
+}
+
+.rightLogo :global(.logo-wave__letter) {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.rightLogo :global(.logo-wave__img) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+@media (max-width: 1100px) {
+  .shell {
+    grid-template-columns: 1fr 0.85fr;
   }
 
-  &.footerPaddingRight32 {
-    padding-right: 32px;
-
-    @media (max-width: 1100px) {
-      padding-right: 32px;
-    }
-
-    @media (max-width: 420px) {
-      padding-right: 32px;
-    }
+  .left,
+  .right {
+    padding: 32px 24px 24px;
   }
 
-  @media (max-width: 1290px) {
-    gap: 50px;
+  .columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px 16px;
+  }
+}
+
+@media (max-width: $viewport-mobile-max) {
+  .footer {
+    margin-top: 48px;
   }
 
-  @media (max-width: 1100px) {
-    gap: 25px;
-  }
-
-  @media (max-width: 1100px) {
-    padding: 0 12px;
-  }
-
-  @media (max-width: 480px) {
-    margin-bottom: 0;
-    height: 420px;
-  }
-
-  @media (max-width: 420px) {
-    padding: 0;
-  }
-
-  @media (max-width: 768px) {
-    height: auto;
+  .shell {
+    grid-template-columns: 1fr;
     min-height: 0;
-    flex-direction: column;
-    align-items: stretch;
+  }
+
+  .left {
+    min-height: 0;
+    gap: 40px;
+    padding: 28px max(16px, env(safe-area-inset-right, 0px)) 24px
+      max(16px, env(safe-area-inset-left, 0px));
+  }
+
+  .columns {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  .right {
+    min-height: 160px;
+    padding: 24px max(16px, env(safe-area-inset-right, 0px)) 20px
+      max(16px, env(safe-area-inset-left, 0px));
+    gap: 10px;
+  }
+
+  .rightLogo {
+    bottom: 2px;
+  }
+
+  .leftBottom {
     gap: 24px;
-    padding: 32px 16px 40px;
-    margin-bottom: 0;
   }
 
-  &.footerPageHome {
-    @media (max-width: $viewport-mobile-max) {
-      padding-left: 0;
-      padding-right: 0;
-    }
-  }
-
-  .supportColumn {
-    display: flex;
+  .leftBottomMeta {
     flex-direction: column;
-    gap: 24px;
-
-    .supportLegal {
-      font-family: 'Onest', 'Avenir Next', sans-serif;
-      font-size: 12px;
-      color: #6e6d67;
-      margin: 0;
-      line-height: 1.4;
-    }
+    align-items: flex-start;
+    gap: 14px;
   }
 
-  .footerMobile .legalSection {
-    max-width: 36rem;
+  .metaAside {
+    align-items: flex-start;
+    text-align: left;
   }
 
-  .footerMobile .legalSection .supportLegal {
-    line-height: 1.55;
-  }
-
-  .footerBottomLink {
-    font-size: 14px;
-    color: #6e6d67;
-    text-decoration: none;
-    transition: color 0.2s ease, text-decoration 0.2s ease;
-
-    &:hover {
-      color: #297230;
-      text-decoration: underline;
-    }
-  }
-
-  .footerMobile .footerBottomLink {
-    display: inline;
-    min-height: 0;
-    min-width: 0;
-    padding: 0;
-    font-size: 12px;
-    white-space: nowrap;
-    vertical-align: baseline;
-  }
-
-  .footerBottomText {
-    font-size: 14px;
-    color: #6e6d67;
-  }
-
-  .footerMobile .footerBottomText {
-    display: inline;
-    min-height: 0;
-    margin: 0;
-    padding: 0;
-    font-size: 12px;
-    white-space: nowrap;
-    vertical-align: baseline;
-  }
-
-  .footerMobile {
-    position: relative;
-    display: flex;
+  .legalLinks {
     flex-direction: column;
-    width: 100%;
-    gap: 20px;
-
-    @media (max-width: 768px) {
-      justify-content: flex-start;
-      min-height: 0;
-    }
-
-    .mobileContainer {
-      width: 100%;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      position: relative;
-
-      .mobileLeft {
-        flex: 1 1 0;
-        min-width: 0;
-      }
-
-      .mobileRight {
-        flex: 1 1 0;
-        min-width: 0;
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
-      }
-    }
-
-    .footerBottomMobile {
-      display: flex;
-      flex-wrap: nowrap;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      width: 100%;
-      padding-top: 8px;
-      border-top: 1px solid rgba(110, 109, 103, 0.25);
-      box-sizing: border-box;
-    }
-  }
-
-  .footerLeft {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    height: 100%;
-
-    .footerBgImage {
-      width: 540px;
-      height: 260px;
-      object-fit: cover;
-      object-position: center;
-    }
-
-    .footerLogo {
-      width: 100%;
-      height: auto;
-      display: block;
-      object-fit: contain;
-    }
-
-    @media (max-width: 1290px) {
-      width: 420px;
-    }
-
-    @media (max-width: 1100px) {
-      width: 400px;
-    }
-
-    @media (max-width: 1040px) {
-      width: 380px;
-    }
-  }
-
-  .footerRightWrapper {
-    flex: 1;
-    display: flex;
-    height: 100%;
-    flex-direction: column;
-    justify-content: space-between;
-
-    .footerRight {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 80px;
-    }
-
-    .footerBottom {
-      position: relative;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      padding-bottom: 24px;
-
-      @media (max-width:1024px) {
-        justify-content: space-between;
-      }
-
-      .fotterBottmotxt {
-        font-size: 14px;
-        color: #6e6d67;
-      }
-
-      .bimoTxt {
-        position: absolute;
-        left: -90px;
-        top: -150px;
-        transform: rotate(-10deg);
-        font-family: 'Bimbo', 'Avenir Next', sans-serif;
-        font-size: 22px;
-        color: #9747ff;
-        font-weight: 400;
-
-        @media (max-width: 1024px) and (min-width: 769px) {
-          transform: rotate(10deg);
-          left: 40px;
-          top: -150px;
-        }
-
-        @media (max-width: 768px) {
-          left: -90px;
-          top: -150px;
-          transform: rotate(-10deg);
-        }
-      }
-
-      .lineTo {
-        position: absolute;
-        left: -10px;
-        top: -100px;
-        width: 80px;
-        height: 100px;
-
-        @media (max-width: 1024px) and (min-width: 769px) {
-          -webkit-transform: scaleX(-1);
-          transform: scaleX(-1);
-          left: 40px;
-        }
-
-        @media (max-width: 768px) {
-          -webkit-transform: scaleX(1);
-          transform: scaleX(1);
-          left: -10px;
-          top: -100px;
-        }
-      }
-    }
+    flex-wrap: nowrap;
+    gap: 10px;
   }
 }

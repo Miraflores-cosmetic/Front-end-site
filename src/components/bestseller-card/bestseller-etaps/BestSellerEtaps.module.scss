@@ -1,16 +1,16 @@
 .etapsWrapper {
   display: flex;
   flex-direction: column;
-  margin-top: 240px;
-  margin-bottom: 40px; // Отступ до карточек на странице товара
+  margin-top: 40px;
+  margin-bottom: 24px;
   padding-left: 0;
   padding-right: 0;
   max-width: 1536px;
   margin-left: auto;
   margin-right: auto;
   @media (max-width: 768px) {
-    margin-top: 52px;
-    margin-bottom: 20px;
+    margin-top: 32px;
+    margin-bottom: 16px;
     padding-left: 0;
     padding-right: 0;
     width: 100%;
@@ -43,7 +43,15 @@
       }
     }
 
-    .etap {
+    .etap,
+    .etapActive {
+      appearance: none;
+      margin: 0;
+      padding: 0;
+      border: none;
+      background: none;
+      font: inherit;
+      text-align: left;
       display: flex;
       align-items: center;
       gap: 24px;
@@ -51,8 +59,12 @@
       transition: color 0.25s ease;
       flex: 0 0 auto;
 
+      &:disabled {
+        cursor: default;
+      }
+
       @media (hover: hover) and (pointer: fine) {
-        &:hover .etapTextWrapper {
+        &:hover:not(:disabled) .etapTextWrapper {
           .etapTitle,
           .etapName {
             color: #297230;
@@ -62,9 +74,16 @@
 
       @media (max-width: 768px) {
         gap: 12px;
+        min-height: 44px;
       }
+
       .etapTextWrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+
         .etapTitle {
+          display: block;
           text-transform: uppercase;
           font-size: 32px;
           font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
@@ -76,8 +95,9 @@
           }
         }
         .etapName {
+          display: block;
           color: #6e6d67cc;
-          font-family: 300;
+          font-weight: 300;
           font-size: 16px;
           transition: color 0.25s ease;
           @media (max-width: 768px) {
@@ -87,46 +107,12 @@
       }
     }
     .etapActive {
-      display: flex;
-      align-items: center;
-      gap: 24px;
-      cursor: pointer;
-      transition: color 0.25s ease;
-      flex: 0 0 auto;
-
-      @media (hover: hover) and (pointer: fine) {
-        &:hover .etapTextWrapper {
-          .etapTitle,
-          .etapName {
-            color: #297230;
-          }
-        }
-      }
-
-      @media (max-width: 768px) {
-        gap: 12px;
-      }
-
       .etapTextWrapper {
         .etapTitle {
-          text-transform: uppercase;
-          font-size: 32px;
-          font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-          font-weight: 300;
           color: black;
-          transition: color 0.25s ease;
-          @media (max-width: 768px) {
-            font-size: 18px;
-          }
         }
         .etapName {
           color: black;
-          font-family: 300;
-          font-size: 16px;
-          transition: color 0.25s ease;
-          @media (max-width: 768px) {
-            font-size: 13px;
-          }
         }
       }
     }

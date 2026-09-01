@@ -1,93 +1,38 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import styles from './InfoTestBlock.module.scss';
 import flower from '@/assets/images/romashka.png';
+import { SITE_EMAIL } from '@/config/siteNavLinks';
+import { HomeSection } from '@/components/home-section/HomeSection';
 
 export const InfoTest: React.FC = () => {
-  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-
-  // Intersection Observer для запуска анимации при скролле к секции
-  useEffect(() => {
-    if (!sectionRef.current || isSectionLoaded) return;
-
-    // Проверяем, видна ли секция сразу при загрузке
-    const checkVisibility = () => {
-      if (sectionRef.current) {
-        const rect = sectionRef.current.getBoundingClientRect();
-        const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
-        return isVisible;
-      }
-      return false;
-    };
-
-    // Проверяем сразу
-    if (checkVisibility()) {
-      setIsSectionLoaded(true);
-      return;
-    }
-
-    // Небольшая задержка для повторной проверки (на случай если DOM еще не готов)
-    const timer = setTimeout(() => {
-      if (checkVisibility()) {
-        setIsSectionLoaded(true);
-        return;
-      }
-    }, 100);
-
-    // Создаем Intersection Observer
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          // Если секция видна в viewport, запускаем анимацию
-          if (entry.isIntersecting && !isSectionLoaded) {
-            setIsSectionLoaded(true);
-          }
-        });
-      },
-      {
-        // Запускаем анимацию когда секция видна на 20%
-        threshold: 0.2,
-        // Небольшой отступ сверху для более раннего запуска
-        rootMargin: '0px 0px -100px 0px'
-      }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => {
-      clearTimeout(timer);
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
-  }, [isSectionLoaded]);
-
   return (
-    <section 
-      ref={sectionRef}
-      className={`${styles.infoTest} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
-      aria-label="Информация о тесте"
-    >
-      <div className={styles.textWrapper}>
-        <p> Подберите свой</p>
-        <p> идеальный уход </p>
-        <p>за кожей</p>
-        <img src={flower} alt={'Flower'} className={styles.romashka} />
-      </div>
+    <HomeSection className={styles.infoTest} aria-labelledby="info-test-title">
+      <h2
+        id="info-test-title"
+        className={styles.title}
+        aria-label="Подберите свой идеальный уход за кожей"
+      >
+        <span className={styles.titleLine} aria-hidden>
+          Подберите св
+          <img src={flower} alt="" className={styles.romashka} />
+          й
+        </span>
+        <span className={styles.titleLine} aria-hidden>
+          идеальный уход
+        </span>
+        <span className={styles.titleLine} aria-hidden>
+          за кожей
+        </span>
+      </h2>
       <div className={styles.btnWrapper}>
         <Link to="/quiz" className={styles.btnTest}>
           Пройти тест
         </Link>
-        <a 
-          href="mailto:info@miraflores-shop.ru"
-          className={styles.btnWrite}
-        >
+        <a href={SITE_EMAIL.href} className={styles.btnWrite}>
           Написать основательнице
         </a>
       </div>
-    </section>
+    </HomeSection>
   );
 };

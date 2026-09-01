@@ -4,62 +4,62 @@ import styles from './AboutDrawer.module.scss';
 import { useDispatch, useSelector } from 'react-redux';
 import { closeDrawer } from '@/store/slices/drawerSlice';
 import { Input } from './components/input-profile/Input';
-import CustomCheckbox from '@/components/custom-checkBox/CustomCheckbox';
-import warning from '@/assets/icons/warning.svg';
-import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { AppDispatch, RootState } from '@/store/store';
-import { updateAccountAction, getMe } from '@/store/slices/authSlice';
+import { getMe } from '@/store/slices/authSlice';
+import { updateBuyerProfile } from '@/api/authApi';
 import { useToast } from '@/components/toast/toast';
+import { translateAuthError } from '@/utils/translateAuthError';
+import ChangePasswordModal from '@/components/change-password-modal/ChangePasswordModal';
 
 const AboutDrawer: React.FC = () => {
   const { me } = useSelector((state: RootState) => state.authSlice);
   const dispatch = useDispatch<AppDispatch>();
   const toast = useToast();
-  const isMobile = useScreenMatch();
 
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [date, setDate] = useState('');
-  const [city, setCity] = useState('');
-  const [password, setPassword] = useState('**********');
-  const [checked, setChecked] = useState(true);
+  const [birthday, setBirthday] = useState('');
+  const [receiveGreetings, setReceiveGreetings] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  // Initialize state from Redux store
   useEffect(() => {
-    if (me) {
-      const fullName = [me.firstName, me.lastName].filter(Boolean).join(' ');
-      setName(fullName || '');
-      setEmail(me.email || '');
-      // Phone and other fields logic if available in 'me'
-    }
+    if (!me) return;
+    setFirstName(me.firstName || '');
+    setLastName(me.lastName || '');
+    setEmail(me.email || '');
+    setPhone(me.phone || '');
+    setBirthday(me.birthday || '');
+    setReceiveGreetings(me.marketingConsent === true);
   }, [me]);
 
-  const handleOrder = async () => {
-    if (!name.trim()) {
-      toast.error('Пожалуйста, введите имя');
+  const handleSave = async () => {
+    if (!firstName.trim() || !lastName.trim()) {
+      toast.error('Пожалуйста, заполните имя и фамилию');
       return;
     }
 
+    setSaving(true);
     try {
-      const nameParts = name.trim().split(' ');
-      const firstName = nameParts[0];
-      const lastName = nameParts.slice(1).join(' ') || '';
-
-      await dispatch(
-        updateAccountAction({
-          firstName,
-          lastName
-        })
-      ).unwrap();
+      await updateBuyerProfile({
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        phone: phone.trim(),
+        birthday: birthday || null,
+        marketingConsent: receiveGreetings,
+      });
 
       await dispatch(getMe()).unwrap();
 
       toast.success('Профиль успешно обновлен');
       dispatch(closeDrawer());
-    } catch (error: any) {
-      console.error('Update account error:', error);
-      toast.error(error?.message || 'Ошибка при обновлении профиля');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : undefined;
+      toast.error(translateAuthError(message) || 'Ошибка при обновлении профиля');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -67,53 +67,78 @@ const AboutDrawer: React.FC = () => {
     <div className={styles.drawer}>
       <div className={styles.contentWrapper}>
         <header className={styles.headerWrapper}>
-          <p className={styles.aboutUs}>ИНФОРМАЦИЯ О ВАС</p>
-          <p className={styles.close} onClick={() => dispatch(closeDrawer())}>
+          <div>
+            <p className={styles.aboutUs}>Информация о вас</p>
+            <p className={styles.aboutHint}>Контакты и данные для заказов и поздравлений</p>
+          </div>
+          <button
+            type="button"
+            className={styles.close}
+            onClick={() => dispatch(closeDrawer())}
+            aria-label="Закрыть"
+          >
             ЗАКРЫТЬ
-          </p>
+          </button>
         </header>
         <article className={styles.infoWrapper}>
-          <Input label='' value={name} onChange={e => setName(e.target.value)} />
-          <Input label='' value={phone} placeholder={phone ? '' : 'Телефон не указан'} onChange={e => setPhone(e.target.value)} />
-          <Input label='' value={email} placeholder={email ? '' : 'Email не указан'} onChange={e => setEmail(e.target.value)} />
-          <Input
-            label=''
-            type='password'
-            value={password}
-            buttonText='Сменить пароль'
-            onButtonClick={() => toast.warning('Смена пароля будет доступна в ближайшее время')}
-            onChange={e => setPassword(e.target.value)}
-          />
-        </article>
-        <article className={styles.dadteOfBirdthWrapper}>
-          <p className={styles.title}>Дата рождения</p>
-          <div className={styles.infoAboutDateWrapper}>
-            <article className={styles.inputWrapper}>
-              <Input label='' value={date} placeholder={date ? '' : 'Дата рождения не указана'} onChange={e => setDate(e.target.value)} width='50%' />
-              <Input
-                label=''
-                placeholder={`Год рождения (опционально)`}
-                value={city}
-                onChange={e => setCity(e.target.value)}
-                width='50%'
+          <section className={styles.fieldGroup}>
+            <p className={styles.groupLabel}>Личные данные</p>
+            <Input label="Имя" value={firstName} onChange={e => setFirstName(e.target.value)} />
+            <Input
+              label="Фамилия"
+              value={lastName}
+              onChange={e => setLastName(e.target.value)}
+            />
+            <Input
+              label="Дата рождения"
+              type="date"
+              value={birthday}
+              onChange={e => setBirthday(e.target.value)}
+            />
+            <label className={styles.checkboxRow}>
+              <input
+                type="checkbox"
+                checked={receiveGreetings}
+                onChange={e => setReceiveGreetings(e.target.checked)}
               />
-            </article>
-            <article className={styles.checkboxWrapper}>
-              <CustomCheckbox checked={checked} onChange={setChecked} />
-              <label className={styles.label}>Получать поздравления</label>
-            </article>
-          </div>
-        </article>
-        <article className={styles.warningWrapper}>
-          <img src={warning} alt='warning-icon' />
-          <p>Небольшое описание поздравлений</p>
+              <span>Получать поздравления с днём рождения</span>
+            </label>
+          </section>
+          <section className={styles.fieldGroup}>
+            <p className={styles.groupLabel}>Контакты и доступ</p>
+            <Input label="Email" value={email} onChange={() => {}} disabled />
+            <Input
+              label="Телефон"
+              type="tel"
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+            />
+            <Input
+              label="Пароль"
+              type="password"
+              value="••••••••"
+              onChange={() => {}}
+              buttonText="Сменить"
+              onButtonClick={() => setShowPasswordModal(true)}
+            />
+          </section>
         </article>
       </div>
       <div className={styles.buttonWrapper}>
-        <button className={styles.orderButton} onClick={handleOrder}>
-          Сохранить
+        <button
+          type="button"
+          className={styles.orderButton}
+          onClick={() => void handleSave()}
+          disabled={saving}
+        >
+          {saving ? 'Сохранение...' : 'Сохранить'}
         </button>
       </div>
+
+      <ChangePasswordModal
+        open={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+      />
     </div>
   );
 };

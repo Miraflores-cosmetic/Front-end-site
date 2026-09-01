@@ -1,207 +1,178 @@
 import React, { useEffect, useState, useRef } from 'react';
 import styles from './EmailConfirmation.module.scss';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import siteLogo from '@/assets/icons/Logo-mira.svg';
 
 import { TextField } from '@/components/text-field/TextField';
 import { Button } from '@/components/button/Button';
 import { useCountdown } from '@/hooks/useCountdown';
-import { confirmEmailRequest, confirmAccount, getMeInfo } from '@/graphql/queries/auth.service';
+import { confirmEmailRequest } from '@/api/authApi';
 import { verifyEmailCode } from '@/services/auth.service';
 import { useToast } from '@/components/toast/toast';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe, resetSignUp } from '@/store/slices/authSlice';
-import { resolvePostAuthRedirect } from '@/graphql/queries/quizResult.service';
+import { resolvePostAuthRedirect } from '@/utils/authRedirect';
+import { useDocumentSeo } from '@/hooks/useDocumentSeo';
 
-// Mask email for display
+/** Синхронно с Nest EMAIL_COOLDOWN_MS (75s). */
+const RESEND_COOLDOWN_SEC = 75;
+/** Синхронно с Nest OTP_TTL_MS (10 мин). */
+const OTP_TTL_MINUTES = 10;
+
 const maskEmail = (email: string): string => {
   if (!email) return '';
   const [local, domain] = email.split('@');
   if (local.length <= 2) return email;
-  const masked = `${local[0]}${'*'.repeat(local.length - 2)}${local[local.length - 1]}@${domain}`;
-  return masked;
+  return `${local[0]}${'*'.repeat(local.length - 2)}${local[local.length - 1]}@${domain}`;
 };
 
+const normalizeOtp = (raw: string): string =>
+  raw.replace(/\D/g, '').slice(0, 6);
+
 const EmailConfirmation: React.FC = () => {
+  useDocumentSeo({
+    title: 'Подтверждение email',
+    description: 'Подтверждение регистрации Miraflores',
+    canonicalPath: '/email-confirmation',
+    noIndex: true,
+  });
+
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
-  const [searchParams] = useSearchParams();
+  const [resending, setResending] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const fromState = (location.state as { from?: string } | null) ?? null;
   const toast = useToast();
   const dispatch = useDispatch<AppDispatch>();
-  const emailSentRef = useRef(false); // Флаг для предотвращения повторной отправки
-  
-  // Get email from Redux state or localStorage
+  const emailSentRef = useRef(false);
+
   const { email: emailFromState } = useSelector((state: RootState) => state.authSlice);
   const email = emailFromState || localStorage.getItem('email') || '';
 
-  const token = searchParams.get('token');
+  const { timeLeft, reset, isFinished, formatTime } = useCountdown(RESEND_COOLDOWN_SEC);
 
-  useEffect(() => {
-    // Check if email is already confirmed
-    const checkEmailConfirmed = async () => {
-      try {
-        const me = await getMeInfo();
-        if (me?.isConfirmed) {
-          toast.success('Ваш email уже подтвержден');
-          setTimeout(() => {
-            navigate(resolvePostAuthRedirect('/'));
-          }, 1500);
-          return true;
-        }
-      } catch (error) {
-        // Ignore error if user is not authenticated
-      }
-      return false;
-    };
-
-    // Если есть токен в URL, автоматически подтверждаем аккаунт
-    if (token) {
-      handleConfirmWithToken(token);
-    } else {
-      // Проверяем, не подтвержден ли уже email
-      checkEmailConfirmed().then((isConfirmed) => {
-        if (!isConfirmed) {
-          // Отправляем код подтверждения при загрузке страницы через REST API (не требует авторизации)
-          // Защита от повторной отправки (React StrictMode вызывает useEffect дважды в dev)
-          if (!emailSentRef.current && email) {
-            emailSentRef.current = true;
-            confirmEmailRequest(email).then((res) => {
-              if (import.meta.env.DEV) {
-                console.log('Confirmation email sent:', res);
-              }
-              toast.success('Письмо с подтверждением отправлено на ваш email');
-            }).catch((error) => {
-              if (import.meta.env.DEV) {
-                console.error('Error sending confirmation email:', error);
-              }
-              toast.error(error?.message || 'Ошибка при отправке письма подтверждения');
-              emailSentRef.current = false; // Разрешаем повторную попытку при ошибке
-            });
-          } else if (!email) {
-            toast.error('Email не найден. Пожалуйста, зарегистрируйтесь снова.');
-          }
-        }
-      });
-    }
-  }, [token, email]);
-
-  const handleConfirmWithToken = async (confirmToken: string) => {
-    setLoading(true);
-    try {
-      const result = await confirmAccount(confirmToken);
-      if (result.user) {
-        toast.success('Email успешно подтвержден!');
-        // Очищаем email из localStorage после успешного подтверждения
-        localStorage.removeItem('email');
-        // Обновляем данные пользователя
-        await dispatch(getMe());
-        setTimeout(() => {
-          navigate(resolvePostAuthRedirect('/'));
-        }, 1500);
-      }
-    } catch (error: any) {
-      if (import.meta.env.DEV) {
-        console.error('Error confirming account:', error);
-      }
-      const errorMessage = error?.message || 'Ошибка при подтверждении email';
-      
-      // Handle expired or invalid token
-      if (errorMessage.includes('expired') || errorMessage.includes('invalid') || errorMessage.includes('недействителен')) {
-        toast.error('Ссылка подтверждения недействительна или истекла. Запросите новый код.');
-      } else {
-        toast.error(errorMessage);
-      }
-    } finally {
-      setLoading(false);
-    }
+  const goAfterAuth = () => {
+    navigate(resolvePostAuthRedirect('/', fromState));
   };
 
-  // используем хук обратного отсчёта (3 минуты = 180 секунд)
-  const { timeLeft, reset, isFinished, formatTime } = useCountdown(180);
+  // Nest: аккаунт появляется только после complete — getMe на mount не нужен
+  // (и вреден при протухшем JWT в LS).
+  useEffect(() => {
+    const alreadySent =
+      typeof sessionStorage !== 'undefined' &&
+      sessionStorage.getItem('miraflores.register.otpSent') === email;
+
+    if (!emailSentRef.current && email && !alreadySent) {
+      emailSentRef.current = true;
+      confirmEmailRequest(email)
+        .then((res) => {
+          if (res.otpSent) {
+            reset();
+            toast.success('Письмо с подтверждением отправлено на ваш email');
+          } else {
+            toast.warning(
+              res.message ||
+                'Если аккаунт уже есть — войдите. Иначе проверьте почту или попробуйте позже.',
+            );
+            emailSentRef.current = false;
+          }
+        })
+        .catch((error) => {
+          toast.error(error?.message || 'Ошибка при отправке письма подтверждения');
+          emailSentRef.current = false;
+        });
+    } else if (!email) {
+      toast.error('Email не найден. Пожалуйста, зарегистрируйтесь снова.');
+    } else if (alreadySent && !emailSentRef.current) {
+      emailSentRef.current = true;
+      toast.success('Введите код из письма');
+    }
+  }, [email]);
 
   const handleNavigatetoHome = () => navigate('/');
-  
-  const handleRequest = async () => {
-    if (!code.trim()) {
-      toast.error('Введите код подтверждения');
+
+  const handleRequest = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const otp = normalizeOtp(code);
+    if (otp.length !== 6) {
+      toast.error('Введите 6-значный код из письма');
       return;
     }
 
-    // Если есть токен в URL, используем его (старый способ через ссылку)
-    if (token) {
-      await handleConfirmWithToken(token);
-      return;
-    }
-
-    // Иначе используем код через REST API
     setLoading(true);
     try {
       if (!email) {
         toast.error('Email не найден. Пожалуйста, зарегистрируйтесь снова.');
-        setLoading(false);
         return;
       }
 
-      const result = await verifyEmailCode(email, code.trim());
-      
+      const result = await verifyEmailCode(email, otp);
+
       if (result.ok && result.token) {
-        // Сохраняем токены
-        localStorage.setItem('token', result.token);
-        localStorage.setItem('refreshToken', result.refreshToken || '');
+        // JWT уже в LS через setAccessToken в verifyEmailCode / authApi
         if (result.user?.id) {
           localStorage.setItem('userId', result.user.id);
         }
-        
-        // Очищаем email из localStorage после успешного подтверждения
         localStorage.removeItem('email');
-        
-        // Обновляем данные пользователя
         await dispatch(getMe());
-        
         toast.success('Email успешно подтвержден!');
         setTimeout(() => {
-          navigate(resolvePostAuthRedirect('/'));
+          goAfterAuth();
         }, 1500);
       } else {
-        // Handle expired code
         if (result.error?.includes('expired') || result.error?.includes('истек')) {
           toast.error('Код подтверждения истек. Запросите новый код.');
         } else {
           toast.error(result.error || 'Ошибка при подтверждении кода');
         }
       }
-    } catch (error: any) {
-      if (import.meta.env.DEV) {
-        console.error('Error verifying email code:', error);
+    } catch (error: unknown) {
+      const msg =
+        error instanceof Error ? error.message : 'Ошибка при подтверждении кода';
+      if (msg.includes('Пароль не найден')) {
+        toast.warning(
+          'Страница обновлена — пароль нужно ввести снова. Это последний шаг регистрации.',
+        );
+        navigate('/sign-up', { state: fromState });
+        return;
       }
-      toast.error(error?.message || 'Ошибка при подтверждении кода');
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
   const handleChangeEmail = () => {
-    // Прерываем процесс регистрации: очищаем данные регистрации
     dispatch(resetSignUp());
-    // Перенаправляем на страницу регистрации
     navigate('/sign-up');
   };
 
   const handleResendCode = async () => {
-    // REST API не требует авторизации, только email
+    if (!isFinished || resending) return;
     if (!email) {
       toast.error('Email не найден. Пожалуйста, зарегистрируйтесь снова.');
       return;
     }
 
+    setResending(true);
     try {
-      await confirmEmailRequest(email);
-      reset(); // сброс таймера после повторной отправки
-      toast.success('Письмо с подтверждением отправлено повторно');
-    } catch (error: any) {
-      toast.error(error?.message || 'Ошибка при отправке письма');
+      const res = await confirmEmailRequest(email);
+      if (res.otpSent) {
+        reset();
+        toast.success('Письмо с подтверждением отправлено повторно');
+      } else {
+        toast.warning(
+          res.message ||
+            'Слишком частые запросы или аккаунт уже есть. Подождите и попробуйте снова, либо войдите.',
+        );
+      }
+    } catch (error: unknown) {
+      const msg = error instanceof Error ? error.message : 'Ошибка при отправке письма';
+      toast.error(msg);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -209,41 +180,78 @@ const EmailConfirmation: React.FC = () => {
     <section className={styles.confirmationContainer}>
       <div className={styles.confirmationWrapper}>
         <div className={styles.imageWrapper}>
-          <img src={siteLogo} alt='Miraflores' className={styles.logo} onClick={handleNavigatetoHome} />
+          <button
+            type="button"
+            className={styles.logoButton}
+            onClick={handleNavigatetoHome}
+            aria-label="На главную"
+          >
+            <img src={siteLogo} alt="" className={styles.logo} />
+          </button>
         </div>
 
-        <h2 className={styles.title}>Подтверждение почты</h2>
+        <h1 className={styles.title}>Подтверждение почты</h1>
         {email && (
           <div className={styles.infoBox}>
             <p className={styles.infoText}>
-              ✓ Письмо отправлено на <strong>{maskEmail(email)}</strong>
+              Код отправлен на <strong>{maskEmail(email)}</strong>
             </p>
             <p className={styles.infoHint}>
-              Проверьте папку "Спам", если письмо не пришло
+              Код действует {OTP_TTL_MINUTES} минут. Проверьте папку «Спам», если письма нет.
             </p>
           </div>
         )}
-        <p className={styles.desc}>
-          Мы отправили 'Одноразовый код доступа' на указанный вами бизнес-адрес электронной почты.
-        </p>
+        <p className={styles.desc}>Введите 6-значный код из письма.</p>
 
-        <div className={styles.textFieldWrapper}>
-          <TextField label='Код' value={code} onChange={e => setCode(e.target.value)} />
-        </div>
-
-        <div className={styles.countDownWrapper}>
-          <div className={styles.top}>
-            <p className={styles.topTxt}>
-              Не пришел код? <span onClick={handleResendCode}>Отправить еще раз</span>
-            </p>
-            <p className={styles.time}>{formatTime(timeLeft)}</p>
+        <form onSubmit={(e) => void handleRequest(e)} noValidate>
+          <div className={styles.textFieldWrapper}>
+            <TextField
+              label="Код"
+              value={code}
+              onChange={(e) => setCode(normalizeOtp(e.target.value))}
+              onPaste={(e) => {
+                e.preventDefault();
+                const text = e.clipboardData.getData('text') || '';
+                setCode(normalizeOtp(text));
+              }}
+              autoComplete="one-time-code"
+              inputMode="numeric"
+              pattern="[0-9]{6}"
+              maxLength={6}
+              autoFocus
+              enterKeyHint="done"
+            />
           </div>
-          <Button text='Подтвердить' onClick={handleRequest} disabled={loading} />
-          <p className={styles.changeEmail} onClick={handleChangeEmail}>
-            Сменить Email
-          </p>
-          {isFinished && <p className={styles.expired}>Код истёк</p>}
-        </div>
+
+          <div className={styles.countDownWrapper}>
+            <div className={styles.top}>
+              <p className={styles.topTxt}>
+                Не пришел код?{' '}
+                <button
+                  type="button"
+                  className={styles.resendBtn}
+                  onClick={() => void handleResendCode()}
+                  disabled={!isFinished || resending}
+                >
+                  {resending ? 'Отправка...' : 'Отправить еще раз'}
+                </button>
+              </p>
+              {!isFinished && (
+                <p className={styles.time} aria-live="polite">
+                  через {formatTime(timeLeft)}
+                </p>
+              )}
+            </div>
+            <Button
+              type="submit"
+              text={loading ? 'Проверка...' : 'Подтвердить'}
+              disabled={loading || normalizeOtp(code).length !== 6}
+            />
+            <button type="button" className={styles.changeEmail} onClick={handleChangeEmail}>
+              Сменить Email
+            </button>
+          </div>
+        </form>
       </div>
     </section>
   );

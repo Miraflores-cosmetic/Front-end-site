@@ -1,5 +1,21 @@
 import { SerializedError } from '@reduxjs/toolkit';
 
+/** Результат login / register/complete для authSlice. */
+export interface AuthTokenResult {
+  token: string;
+  errors: { code: string; message: string; field?: string }[];
+}
+
+/** Минимальный user shape (адреса и др.). */
+export interface AuthUser {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  isActive?: boolean;
+  isConfirmed?: boolean;
+}
+
 export interface MeInfo {
   id: string;
   email: string;
@@ -12,6 +28,9 @@ export interface MeInfo {
   orders?: { totalCount: number };
   avatar: ProfileAvatar | null;
   metadata?: { key: string; value: string }[];
+  phone?: string | null;
+  birthday?: string | null;
+  marketingConsent?: boolean;
 }
 
 export interface ProfileAvatar {
@@ -21,7 +40,6 @@ export interface ProfileAvatar {
 
 export interface AuthState {
   email: string;
-  pass: string;
   signUp: {
     agreeChecked: boolean;
     success: boolean;
@@ -44,13 +62,16 @@ export interface AuthState {
 
 interface ResultSignUp {
   email: string;
+  otpSent: boolean;
+  message: string;
 }
 
 export type ResultType = ResultSignUp | null;
 
 export interface SignUpArgs {
   email: string;
-  pass: string;
+  password: string;
+  consentMarketing?: boolean;
 }
 
 export interface MeInfoRequest {
@@ -60,7 +81,8 @@ export interface MeInfoRequest {
 export interface AddressInfo {
   cityArea: string;
   city: string;
-  companyName: string;
+  /** Квартира / офис */
+  apartment: string;
   countryArea: string;
   firstName: string;
   id: string;

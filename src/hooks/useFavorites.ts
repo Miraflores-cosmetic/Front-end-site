@@ -4,7 +4,7 @@ import { RootState } from '@/store/store';
 import {
   FavoriteProduct,
   getFavorites,
-} from '@/graphql/queries/favorites.service';
+} from '@/services/favorites.service';
 
 export function useFavorites() {
   const { me, isAuth } = useSelector((state: RootState) => state.authSlice);

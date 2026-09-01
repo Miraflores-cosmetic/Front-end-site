@@ -5,99 +5,76 @@ import styles from './SizeTabs.module.scss';
 import { ProductVariant } from '@/types/productSlice';
 import { useDispatch } from 'react-redux';
 import { AppDispatch } from '@/store/store';
-
 import { setActiveVariantId } from '@/store/slices/productSlice';
 import { isVariantOutOfStock } from '@/utils/stock';
+import { getVolumeFromVariant } from '@/utils/getVolumeFromVariant';
+import { useToast } from '@/components/toast/toast';
+import { useSlidingTabIndicator } from '@/hooks/useSlidingTabIndicator';
 
 interface ProductTabsProps {
   options: ProductVariant[];
   activeVariantId: string | null;
 }
 
+/** Только выбор объёма; цена рендерится рядом с ATC в BuyBox. */
 const SizeTabs: React.FC<ProductTabsProps> = ({ options, activeVariantId }) => {
-  const activeOption = options.find(o => o.node.id === activeVariantId);
   const dispatch = useDispatch<AppDispatch>();
-
-  const activeOutOfStock = activeOption
-    ? isVariantOutOfStock({
-        trackInventory: activeOption.node.trackInventory,
-        quantityAvailable: activeOption.node.quantityAvailable
-      })
-    : false;
-
-  const getVolumeFromVariant = (variant: ProductVariant): string => {
-    if (!variant?.node?.attributes || !Array.isArray(variant.node.attributes)) {
-      return variant?.node?.name || '';
-    }
-    
-    const volumeAttr = variant.node.attributes.find((attr: any) => {
-      const slug = attr.attribute?.slug?.toLowerCase() || '';
-      const name = attr.attribute?.name?.toLowerCase() || '';
-      return slug === 'obem' || 
-             slug === 'volume' ||
-             name.includes('объем') ||
-             name.includes('volume');
-    });
-    
-    if (volumeAttr) {
-      const value = volumeAttr.values?.[0];
-      if (value?.name) {
-        return value.name;
-      } else if (value?.plainText) {
-        return value.plainText;
-      } else if (value?.slug) {
-        return value.slug;
-      }
-    }
-    
-    return variant?.node?.name || '';
-  };
-
-  const setActiveId = (id: string) => {
-    dispatch(setActiveVariantId(id));
-  };
-
-  const formatPrice = (amount: number) =>
-    Math.round(amount).toLocaleString('ru-RU');
+  const toast = useToast();
+  const { wrapRef, setBtnRef, setHoverKey, onWrapperMouseLeave } =
+    useSlidingTabIndicator(activeVariantId);
 
   if (activeVariantId === null) return null;
-  if (activeVariantId !== null)
-    return (
-      <div className={styles.wrapper}>
-        <div className={styles.tabs}>
-          {options.map(opt => {
-            const volume = getVolumeFromVariant(opt);
-            return (
-              <button
-                key={opt.node.id}
-                className={`${styles.tab} ${opt.node.id === activeVariantId ? styles.active : ''}`}
-                onClick={() => setActiveId(opt.node.id)}
-              >
-                {volume}
-              </button>
-            );
-          })}
-        </div>
 
-        <div className={styles.info}>
-          {activeOutOfStock ? (
-            <span className={styles.outOfStockLabel}>Нет в наличии</span>
-          ) : (
-            <>
-              <span className={styles.price}>{formatPrice(activeOption?.node.pricing.price.gross.amount ?? 0)}₽</span>
-              {activeOption?.node.pricing.discount && (
-                <span className={styles.oldPrice}>
-                  {formatPrice(activeOption.node.pricing.priceUndiscounted.gross.amount)}₽
-                </span>
-              )}
-            </>
-          )}
-          {/* {getDiscountPercentage(activeOption) && (
-          <span className={styles.discount}>-{getDiscountPercentage(activeOption)}%</span>
-        )} */}
-        </div>
+  return (
+    <div className={styles.wrapper}>
+      <div
+        ref={wrapRef}
+        className={styles.tabs}
+        role="tablist"
+        aria-label="Объём"
+        onMouseLeave={onWrapperMouseLeave}
+      >
+        <span className={styles.tabsIndicator} aria-hidden />
+        {options.map((opt) => {
+          const volume = getVolumeFromVariant(opt);
+          const isActive = opt.node.id === activeVariantId;
+          const oos = isVariantOutOfStock({
+            trackInventory: opt.node.trackInventory,
+            quantityAvailable: opt.node.quantityAvailable,
+          });
+          return (
+            <button
+              key={opt.node.id}
+              ref={setBtnRef(opt.node.id)}
+              type="button"
+              role="tab"
+              aria-selected={isActive}
+              aria-disabled={oos || undefined}
+              aria-label={oos ? `${volume}, нет в наличии` : volume}
+              className={[
+                styles.tab,
+                isActive ? styles.active : '',
+                oos ? styles.tabOutOfStock : '',
+              ]
+                .filter(Boolean)
+                .join(' ')}
+              onMouseEnter={() => setHoverKey(opt.node.id)}
+              onClick={() => {
+                if (oos) {
+                  toast.error('Нет в наличии');
+                  return;
+                }
+                dispatch(setActiveVariantId(opt.node.id));
+              }}
+            >
+              <span className={styles.tabVolume}>{volume}</span>
+              {oos ? <span className={styles.tabOosHint}>нет</span> : null}
+            </button>
+          );
+        })}
       </div>
-    );
+    </div>
+  );
 };
 
 export default SizeTabs;

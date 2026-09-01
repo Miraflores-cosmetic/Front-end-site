@@ -2,9 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef } from 'react';
 import styles from '../Category.module.scss';
-import Footer from '@/components/Footer/Footer';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
-import footerImage from '@/assets/images/footer-img.png';
 import TabBar from '@/components/tab-bar/TabBar';
 import { AnimatePresence } from 'framer-motion';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -343,7 +341,7 @@ const LazyComponent: React.FC = () => {
                 .map((item) => (
                   <article className={styles.imagesWrapper} key={item.id}>
                     <AppLink
-                      to={'/category/' + item.category.slug}
+                      to={'/catalog/' + encodeURIComponent(item.category.slug)}
                       className={styles.imagesLink}
                     >
                       <img alt="" src={item.category.backgroundImage.url} className={styles.slideImage} />
@@ -357,7 +355,6 @@ const LazyComponent: React.FC = () => {
           </article>
         </section>
       )}
-      <Footer footerImage={footerImage} />
     </>
   );
 };

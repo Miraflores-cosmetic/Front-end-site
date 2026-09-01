@@ -46,20 +46,47 @@
   font-display: swap;
 }
 
-/* === Oceanic === */
-/* === Oceanic Light === */
+/* === TRIAL Oceanic (display) === */
 @font-face {
-  font-family: 'Oceanic';
-  src: url('@/assets/fonts/trial-oceanic/Oceanic-Light.ttf') format('truetype');
+  font-family: 'TRIAL Oceanic';
+  src:
+    url('@/assets/fonts/trial-oceanic/Oceanic-Light.woff2') format('woff2'),
+    url('@/assets/fonts/trial-oceanic/Oceanic-Light.woff') format('woff'),
+    url('@/assets/fonts/trial-oceanic/Oceanic-Light.ttf') format('truetype');
   font-weight: 300;
   font-style: normal;
   font-display: swap;
 }
 
-/* === Oceanic Regular === */
+@font-face {
+  font-family: 'TRIAL Oceanic';
+  src:
+    url('@/assets/fonts/trial-oceanic/Oceanic-Regular.woff2') format('woff2'),
+    url('@/assets/fonts/trial-oceanic/Oceanic-Regular.woff') format('woff'),
+    url('@/assets/fonts/trial-oceanic/Oceanic-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Alias — существующие стили с font-family: Oceanic */
 @font-face {
   font-family: 'Oceanic';
-  src: url('@/assets/fonts/trial-oceanic/Oceanic-Regular.woff') format('woff');
+  src:
+    url('@/assets/fonts/trial-oceanic/Oceanic-Light.woff2') format('woff2'),
+    url('@/assets/fonts/trial-oceanic/Oceanic-Light.woff') format('woff'),
+    url('@/assets/fonts/trial-oceanic/Oceanic-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Oceanic';
+  src:
+    url('@/assets/fonts/trial-oceanic/Oceanic-Regular.woff2') format('woff2'),
+    url('@/assets/fonts/trial-oceanic/Oceanic-Regular.woff') format('woff'),
+    url('@/assets/fonts/trial-oceanic/Oceanic-Regular.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;

@@ -1,9 +1,6 @@
 import React, { useEffect } from 'react';
 import styles from './Atelier.module.scss';
-import Header from '@/components/Header/Header';
-import Footer from '@/components/Footer/Footer';
 import Bestsellers from '@/components/bestsellers/Bestsellers';
-import footerImage from '@/assets/images/footer-img.png';
 import tatiyanaImage from '@/assets/images/Tatiyana-miraflores.png';
 
 const COLLECTION_NABORY_ID = 'Q29sbGVjdGlvbjoxMQ==';
@@ -27,7 +24,6 @@ const Atelier: React.FC = () => {
 
   return (
     <React.Fragment>
-      <Header />
       <main className={styles.atelierPage}>
         <div className={styles.titleContainer}>
           <h1 className={styles.title}>Косметическое Ателье</h1>
@@ -100,7 +96,6 @@ const Atelier: React.FC = () => {
           isAtelierSection
           isTitleHidden
         />
-        <Footer footerImage={footerImage} />
       </main>
     </React.Fragment>
   );

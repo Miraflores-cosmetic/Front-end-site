@@ -7,23 +7,33 @@
   font-weight: 500;
   color: #fff;
   cursor: pointer;
-  &:hover {
-    p {
-      transform: scale(1.1);
-      transition: transform 0.5s ease;
-    }
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+
+  p {
+    margin: 0;
   }
 
   &.success {
     background: #297230;
-    &:hover {
+
+    &:hover:not(:disabled) {
       background: #3e9642;
+    }
+
+    &:active:not(:disabled) {
+      background: #246529;
     }
   }
 
   &.error {
-    &:hover {
+    background: #c62828;
+
+    &:hover:not(:disabled) {
       background: #b71c1c;
+    }
+
+    &:active:not(:disabled) {
+      background: #8e0000;
     }
   }
 

@@ -1,0 +1,29 @@
+@use '@/style/variables.scss' as *;
+
+.section {
+  width: 100%;
+  box-sizing: border-box;
+  padding-top: var(--home-section-gap, 240px);
+  padding-right: var(--home-section-pad-end, #{$spacing-xl});
+  padding-bottom: 0;
+
+  /* homeContainer уже даёт 16px по бокам — не дублируем 32px справа */
+  @media (max-width: $viewport-mobile-max) {
+    padding-right: 0;
+  }
+}
+
+.bleed {
+  --home-section-pad-end: 0px;
+  overflow-x: visible;
+}
+
+.flush {
+  --home-section-gap: 0px;
+  --home-section-pad-end: 0px;
+  padding-bottom: 0;
+}
+
+.anchor {
+  scroll-margin-top: calc(var(--header-height, 72px) + var(--scroll-anchor-extra, 24px));
+}

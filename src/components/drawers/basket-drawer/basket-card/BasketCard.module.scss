@@ -1,509 +1,257 @@
-.basketCardWrapper {
-  width: 100%;
-  box-sizing: border-box;
+@use '@/style/variables.scss' as *;
+
+/* В одном стиле с TotalAccordion .productItem */
+.line {
   display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 0 20px 12px;
+  margin: 0 0 12px;
+  box-sizing: border-box;
+  font-family: $font-onest, $font-avenir;
+  border-bottom: 1px solid rgba(110, 109, 103, 0.12);
+}
+
+.thumbLink {
+  position: relative;
+  display: block;
+  flex-shrink: 0;
+  width: 96px;
+  height: 96px;
+  overflow: hidden;
   padding: 0;
+  border: none;
+  border-radius: 0;
+  background: #f6f5ef;
+  cursor: pointer;
+}
+
+.thumb,
+.thumbPlaceholder {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbPlaceholder {
+  background: #f6f5ef;
+}
+
+.lineBody {
+  min-width: 0;
+  flex: 1;
+  min-height: 96px;
+  display: flex;
   flex-direction: column;
+  gap: 6px;
+  padding: 2px 0 0;
+}
 
-  &.basketCardWrapperClickable {
-    cursor: pointer;
+.lineTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
 
-    .productName {
-      transition: color 0.2s ease;
-    }
+.lineName,
+.lineNameStatic {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  font-family: $font-onest, $font-avenir;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+  color: #000;
+  text-decoration: none;
+  text-transform: uppercase;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  cursor: pointer;
+  flex: 1;
+  min-width: 0;
+}
 
-    &:hover .productName {
-      color: #3d83f6;
-    }
-  }
+.lineName:hover {
+  opacity: 0.7;
+}
 
-  @media (max-width: 768px) {
-    padding: 0;
-  }
+.lineNameStatic {
+  cursor: default;
+}
 
-  .addProduct {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    margin-top: 6px;
-    gap: 8px;
-    flex: 2;
+.removeBtn {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: -4px -6px 0 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #6e6d67;
+  font-family: $font-onest, $font-avenir;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s ease;
 
-    .addProductInner {
-      border: 1px solid #00000014;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 5px;
-      height: 30px;
-      width: 90px;
-    }
-
-    @media (max-width: 768px) {
-      justify-content: flex-start;
-      width: 95%;
-    }
-
-    @media (max-width: 768px) {
-      margin-top: 4px;
-      gap: 6px;
-    }
-
-    .trashImage,
-    .addImage {
-      cursor: pointer;
-      width: 16px;
-      height: 16px;
-      flex-shrink: 0;
-      transition: opacity 0.2s;
-
-      &:hover {
-        opacity: 0.7;
-      }
-
-      &:active {
-        opacity: 0.5;
-      }
-
-      &.addImageDisabled {
-        opacity: 0.35;
-        cursor: not-allowed;
-        pointer-events: none;
-      }
-
-      @media (max-width: 768px) {
-        width: 18px;
-        height: 18px;
-      }
-    }
-
-    .trashCount {
-      font-size: 15px;
-      font-weight: 600;
-      color: black;
-      min-width: 20px;
-      text-align: center;
-
-      @media (max-width: 768px) {
-        font-size: 14px;
-        min-width: 18px;
-      }
-    }
-  }
-
-  /* Defines styles for the new Mobile Price Row */
-  .mobilePriceRow {
-      display: flex;
-      align-items: center;
-      gap: 4px; /* from Frame 1948759631 */
-      margin-top: 0;
-      
-      .toMobile {
-          font-family: 'Onest', sans-serif;
-          font-size: 13px;
-          font-weight: 600;
-          line-height: 17px;
-          color: black;
-          text-transform: uppercase;
-      }
-      
-      .fromMobile {
-          font-family: 'Onest', sans-serif;
-          font-size: 13px;
-          font-weight: 600;
-          line-height: 17px;
-          color: #6E6D67;
-          text-transform: uppercase;
-          text-decoration: none; /* remove default strike */
-          position: relative;
-          
-           &::after {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            width: 100%;
-            height: 1px;
-            background: #FF0808;
-            transform: rotate(-8.84deg); /* Exact rotation from dump */
-          }
-      }
-      
-      .mobileDiscount {
-          font-family: 'Avenir Next', sans-serif;
-          font-size: 13px;
-          font-weight: 500;
-          line-height: 18px;
-          color: #297230;
-          margin-left: 4px;
-      }
-
-      .outOfStockMobile {
-        font-family: 'Onest', sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-        line-height: 17px;
-        color: #6e6d67;
-        margin: 0;
-      }
+  &:hover {
+    color: #000;
   }
 }
 
-.basketCard {
+.lineMeta {
+  margin: 0;
+  font-family: $font-onest, $font-avenir;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.3;
+  color: #6e6d67;
+}
+
+.giftChip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0;
+  margin-top: auto;
+  padding: 3px 8px;
+  border-radius: 100px;
+  background: #297230;
+  color: #fff;
+  font-family: $font-onest, $font-avenir;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  width: fit-content;
+}
+
+.outOfStock {
+  margin: 0;
+  font-family: $font-onest, $font-avenir;
+  font-size: 12px;
+  font-weight: 500;
+  color: #ff0808;
+}
+
+.lineBottom {
   display: flex;
-  width: 100%;
-  height: 142px;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.qtyStepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  min-height: 40px;
+  padding: 0 2px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 100px;
 
   @media (max-width: 768px) {
-    height: auto;
-    gap: 10px; /* Frame 1948759811 gap */
-    align-items: stretch;
-  }
-
-  .basketImage {
-    flex-shrink: 0;
-    width: 142px;
-    height: 142px;
-    overflow: hidden;
-    background: #f6f5ef;
-
-    @media (max-width: 768px) {
-      width: 88px; /* Rectangle 4575 */
-      height: 88px;
-      padding: 11px; /* Image inside is 66x66, so (88-66)/2 = 11px padding */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      
-      @media (max-width: 768px) {
-         width: 66px;
-         height: 66px;
-         object-fit: contain; /* Ensure full product shows */
-      }
-    }
-
-    .placeholder {
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, #f6f5ef 0%, #ecebe4 50%, #f6f5ef 100%);
-    }
-  }
-
-  .basketInfo {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    width: 100%;
-    height: 100%;
-
-    @media (max-width: 768px) {
-      height: 88px; /* Match image height */
-      justify-content: space-between;
-      gap: 2px; /* Frame 1948759810 gap */
-    }
-
-    .topInfo {
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      gap: 4px;
-
-      @media (max-width: 768px) {
-        height: auto;
-        justify-content: center;
-      }
-
-      .productNameSizeBlock {
-        display: flex;
-        flex-direction: column;
-
-        @media (min-width: 769px) {
-          gap: 4px;
-        }
-      }
-
-      .productName {
-        font-size: 16px;
-        font-weight: 600;
-        color: black;
-        line-height: 1.3;
-        margin: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        line-clamp: 2; /* Standard property */
-        -webkit-box-orient: vertical;
-        text-transform: uppercase;
-
-        @media (max-width: 768px) {
-          font-family: 'Avenir Next', sans-serif;
-          font-size: 13px;
-          line-height: 18px;
-          font-weight: 600;
-        }
-      }
-
-      .productSize {
-        font-size: 14px;
-        font-weight: 600;
-        color: #6e6d67;
-        line-height: 1.2;
-
-        @media (min-width: 769px) {
-          font-weight: 400;
-        }
-
-        @media (max-width: 768px) {
-          font-family: 'Avenir Next', sans-serif;
-          font-size: 12px;
-          line-height: 16px;
-          font-weight: 400;
-          color: #6E6D67;
-          margin-top: 0;
-        }
-      }
-    }
-
-    .bottomInfo {
-      display: flex;
-      align-items: center;
-      border: 1px solid #00000014;
-      width: 116px;
-      justify-content: space-between;
-      padding: 10px;
-
-      @media (max-width: 768px) {
-        display: none;
-      }
-
-      @media (max-width: 768px) {
-        gap: 8px;
-      }
-
-      .trashImage,
-      .addImage {
-        cursor: pointer;
-        width: 20px;
-        height: 20px;
-        flex-shrink: 0;
-        transition: opacity 0.2s;
-
-        &:hover {
-          opacity: 0.7;
-        }
-
-        &:active {
-          opacity: 0.5;
-        }
-
-        @media (max-width: 768px) {
-          width: 18px;
-          height: 18px;
-        }
-
-        &.addImageDisabled {
-          opacity: 0.35;
-          cursor: not-allowed;
-          pointer-events: none;
-        }
-      }
-
-      .trashCount {
-        font-size: 15px;
-        font-weight: 600;
-        color: black;
-        min-width: 24px;
-        text-align: center;
-
-        @media (max-width: 768px) {
-          font-size: 14px;
-          min-width: 20px;
-        }
-      }
-    }
-  }
-
-  .baskePrice {
-    display: flex;
-    height: 100%;
-    flex-direction: column;
-    justify-content: space-between;
-    align-items: flex-end;
-    flex-shrink: 0;
-
-    @media (max-width: 768px) {
-      display: none;
-    }
-
-    .outOfStockDesktop {
-      font-family: 'Onest', sans-serif;
-      font-size: 16px;
-      font-weight: 600;
-      color: #6e6d67;
-      margin: 0;
-      text-align: right;
-    }
-
-    .discount {
-      min-width: 54px;
-      height: 31px;
-      padding: 0 8px;
-      background-color: #297230;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: 2px;
-       user-select: none;
-
-      @media (max-width: 768px) {
-        min-width: 48px;
-        height: 28px;
-        font-size: 13px;
-        padding: 0 6px;
-      }
-    }
- .discountEmpty{
-        min-width: 54px;
-      height: 31px;
-      padding: 0 8px;
-      background-color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
-      border-radius: 2px;
-      user-select: none;
-
-      @media (max-width: 768px) {
-        min-width: 48px;
-        height: 28px;
-        font-size: 13px;
-        padding: 0 6px;
-      }
-      }
-    .fromTo {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-
-      @media (max-width: 768px) {
-        gap: 8px;
-      }
-
-      .from {
-        position: relative;
-        color: #6e6d67;
-        font-size: 16px;
-        font-weight: 600;
-        line-height: 1;
-        white-space: nowrap;
-
-        @media (max-width: 768px) {
-          font-size: 15px;
-        }
-
-        &::after {
-          content: '';
-          position: absolute;
-          left: -5%;
-          top: 50%;
-          width: 110%;
-          height: 2px;
-          background: #ff0808;
-          transform: translateY(-50%) rotate(-10deg);
-        }
-      }
-
-      .to {
-        font-size: 16px;
-        font-weight: 600;
-        color: black;
-        line-height: 1;
-        white-space: nowrap;
-
-        @media (max-width: 768px) {
-          font-size: 15px;
-        }
-      }
-    }
+    min-height: 32px;
   }
 }
 
-.basketCard + .basketCard {
-  margin-top: 0;
-  
-   /* Add margin top for cards on mobile to separate them? Desktop has 0. */
-   @media (max-width: 768px) {
-       margin-top: 16px; /* Separation */
-       border-bottom: none; /* No border here, border is on controls maybe? or just space */
-       padding-bottom: 0;
-   }
+.qtyBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: $font-onest, $font-avenir;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+
+  @media (max-width: 768px) {
+    width: 32px;
+    height: 32px;
+    font-size: 14px;
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
 }
 
-.mobileControlsRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    width: 100%;
-    margin-top: 6px; /* Gap between info and controls */
-    height: 33px; /* Frame 1948759714 height */
-    background: #fff;
-    border: 0.5px solid rgba(0, 0, 0, 0.08); /* Frame 1948759714 border */
-    padding: 8px 12px;
-    box-sizing: border-box;
-    
-    .controlBtn {
-        width: 16px;
-        height: 16px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        border: none;
-        cursor: pointer;
-        padding: 0;
-        
-        img {
-            width: 100%;
-            height: 100%;
-        }
+.qtyValue {
+  min-width: 1.5ch;
+  text-align: center;
+  font-family: $font-onest, $font-avenir;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
 
-        &:disabled {
-            opacity: 0.35;
-            cursor: default;
-            pointer-events: none;
-        }
-    }
-    
-    .quantityDisplay {
-        font-family: 'Onest', sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-        line-height: 17px;
-        text-align: center;
-        text-transform: uppercase;
-        color: #000000;
-    }
+  @media (max-width: 768px) {
+    font-size: 12px;
+    min-width: 1.25ch;
+  }
 }
 
-.addImageDisabled {
-  opacity: 0.35 !important;
-  cursor: not-allowed !important;
-  pointer-events: none;
+.giftQty {
+  font-family: $font-onest, $font-avenir;
+  font-size: 12px;
+  color: #6e6d67;
+}
+
+.linePrices {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.linePrice {
+  font-family: $font-onest, $font-avenir;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  color: #000;
+}
+
+.unitPrice {
+  font-family: $font-onest, $font-avenir;
+  font-size: 11px;
+  font-weight: 400;
+  color: #6e6d67;
+  white-space: nowrap;
+}
+
+.listPrice {
+  font-family: $font-onest, $font-avenir;
+  font-size: 11px;
+  font-weight: 400;
+  color: #a3a3a3;
+  text-decoration: line-through;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .line {
+    padding: 0 16px 12px;
+  }
 }

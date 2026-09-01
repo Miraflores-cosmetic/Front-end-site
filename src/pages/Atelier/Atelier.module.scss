@@ -1,12 +1,20 @@
+@use '@/style/variables.scss' as *;
+
 .atelierPage {
-  max-width: 1536px;
+  --page-max-width: #{$page-max-width};
+  max-width: var(--page-max-width);
   margin-left: auto;
   margin-right: auto;
-  overflow-x: clip;
+  overflow-x: visible;
   overscroll-behavior-x: contain;
   width: 100%;
   padding-left: 32px;
   padding-right: 32px;
+
+  @media (max-width: $viewport-mobile-max) {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
 }
 
 .titleContainer {

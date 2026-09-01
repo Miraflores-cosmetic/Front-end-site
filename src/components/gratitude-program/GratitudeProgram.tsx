@@ -1,223 +1,277 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import styles from './GratitudeProgram.module.scss';
 import gratitudeLine from '@/assets/icons/gratitudeLine.svg';
-import ArrowToRight from '@/assets/icons/ArrowToRight.svg';
-import AppLink from '@/components/AppLink/AppLink';
-import { getPageBySlug, PageNode } from '@/graphql/queries/pages.service';
-import { editorJsToHtml } from '@/utils/editorJsParser';
-import { normalizeMediaUrl } from '@/utils/mediaUrl';
+import { Link } from 'react-router-dom';
+import MoreLink, { SectionTitleRow } from '@/components/MoreLink/MoreLink';
+import {
+  getGratitudeProgram,
+  type GratitudeTierPublic,
+} from '@/api/settingsApi';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
+import { normalizeMediaUrl } from '@/utils/mediaUrl';
+import { HomeSection } from '@/components/home-section/HomeSection';
+import { useScreenMatch } from '@/hooks/useScreenMatch';
 
-export const GratitudeProgram: React.FC = () => {
-  const [page, setPage] = useState<PageNode | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
+const FALLBACK_INTRO =
+  'У нас каждый получает подарки! Не нужно ничего копить, дополнительно регистрироваться, переживать, что бонусы сгорят.';
 
-  useEffect(() => {
-    const fetchPage = async () => {
-      try {
-        setLoading(true);
-        const pageData = await getPageBySlug('programma-blagodarnosti');
-        if (pageData) {
-          setPage(pageData);
-        }
-      } catch (err: any) {
-        console.error('Error fetching gratitude program page:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
+function articleHref(slug: string | null): string {
+  const s = slug?.trim();
+  if (!s) return '/articles/programma-blagodarnosti-2';
+  if (s.startsWith('/')) return s;
+  return `/articles/${encodeURIComponent(s)}`;
+}
 
-    fetchPage();
-  }, []);
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+}
 
-  // Intersection Observer для анимации при скролле к секции
-  useEffect(() => {
-    if (isSectionLoaded) return;
-
-    const setup = () => {
-      if (!sectionRef.current) return null;
-      const checkVisibility = () => {
-        const rect = sectionRef.current!.getBoundingClientRect();
-        return rect.top < window.innerHeight && rect.bottom > 0;
-      };
-      if (checkVisibility()) {
-        setIsSectionLoaded(true);
-        return null;
-      }
-      const observer = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) if (e.isIntersecting) setIsSectionLoaded(true);
-        },
-        { threshold: 0.2, rootMargin: '0px 0px -100px 0px' }
-      );
-      observer.observe(sectionRef.current);
-      return () => { sectionRef.current && observer.unobserve(sectionRef.current); };
-    };
-
-    let off = setup();
-    if (off) return off;
-    const id = setTimeout(() => { off = setup(); }, 120);
-    return () => { clearTimeout(id); off?.(); };
-  }, [isSectionLoaded]);
-
-  // Извлекаем данные из атрибутов
-  const getGiftInfo = (index: number): { text: string; image: string | null } => {
-    if (!page?.assignedAttributes) {
-      return { text: '', image: null };
-    }
-
-    // Ищем атрибут "Информация о подарке - N" (rich-text)
-    const giftInfoAttr = page.assignedAttributes.find(
-      (attr) => attr.attribute?.slug === `informaciya-o-podarke-${index}` ||
-                attr.attribute?.name?.toLowerCase() === `информация о подарке - ${index}`.toLowerCase()
-    );
-    
-    // Ищем атрибут "Фото подарка" (file): foto-podarka, foto-podarka-2, …
-    const slugMatch = (slug: string) => {
-      const s = (slug || '').trim();
-      if (index === 1) return s === 'foto-podarka' || s === 'foto-podarka-1';
-      return s === `foto-podarka-${index}`;
-    };
-    const nameMatch = (name: string) => {
-      const n = (name || '').toLowerCase();
-      if (index === 1) return n === 'фото подарка' || n === 'фото подарка - 1';
-      return n === `фото подарка - ${index}`;
-    };
-    const giftPhotoAttr = page.assignedAttributes.find((attr) => {
-      const url = attr.fileValue?.url ?? attr.value?.url;
-      if (!url) return false;
-      return slugMatch(attr.attribute?.slug ?? '') || nameMatch(attr.attribute?.name ?? '');
-    });
-
-    // Текст: textValue, richTextValue (Editor.js) или plainText
-    let text = '';
-    if (giftInfoAttr) {
-      if (giftInfoAttr.textValue) {
-        text = giftInfoAttr.textValue;
-      } else if (giftInfoAttr.richTextValue != null) {
-        try {
-          const parsed = typeof giftInfoAttr.richTextValue === 'string'
-            ? JSON.parse(giftInfoAttr.richTextValue)
-            : giftInfoAttr.richTextValue;
-          if (parsed && parsed.blocks) {
-            text = editorJsToHtml(parsed);
-          } else {
-            text = String(giftInfoAttr.richTextValue);
-          }
-        } catch {
-          text = String(giftInfoAttr.richTextValue);
-        }
-      }
-    }
-
-    const rawUrl = giftPhotoAttr
-      ? (giftPhotoAttr.fileValue?.url ?? giftPhotoAttr.value?.url ?? null)
-      : null;
-    const image = rawUrl ? normalizeMediaUrl(rawUrl) : null;
-
-    return { text, image };
-  };
-
-  // Извлекаем суммы из атрибутов или используем дефолтные
-  const getGiftAmounts = (): string[] => {
-    // Можно добавить логику извлечения сумм из атрибутов, если они там есть
-    // Пока используем дефолтные значения
-    return ['от 5 000₽', 'от 10 000₽', 'от 15 000₽', 'от 20 000₽'];
-  };
-
-  const giftAmounts = getGiftAmounts();
-  const gifts = [1, 2, 3, 4].map(index => getGiftInfo(index));
-
-  // Если данные загружаются, показываем дефолтный контент
-  const title = page?.title || 'Программа благодарности';
-  const content = page?.content;
-
+/** «от 5 000₽» → от + сумма для типографики */
+function PriceLabel({ text }: { text: string }) {
+  const m = text.trim().match(/^(от)\s*(.+)$/i);
+  if (!m) return <>{text}</>;
   return (
-    <section
-      ref={sectionRef}
-      className={`${styles.gratitudeContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
-      id="gratitude-program"
-    >
-      <div className={styles.titleWrapper}>
-        <p className={styles.title} id="title">{title}</p>
-        {content && (
-          <div 
-            className={styles.descWrapper}
-            dangerouslySetInnerHTML={{ 
-              __html: (() => {
-                try {
-                  const parsed = typeof content === 'string' 
-                    ? JSON.parse(content) 
-                    : content;
-                  if (parsed && parsed.blocks && Array.isArray(parsed.blocks)) {
-                    return editorJsToHtml(parsed);
-                  }
-                  return typeof content === 'string' ? content : String(content);
-                } catch (e) {
-                  return typeof content === 'string' ? content : String(content);
-                }
-              })()
-            }}
-          />
-        )}
-        {!content && (
-          <div className={styles.descWrapper}>
-            <p className={styles.desc}>
-            У нас каждый получает подарки!
-            Не нужно ничего копить, дополнительно регистрироваться, переживать,
-            что бонусы сгорят.
-            </p>
-            {/* <p className={styles.desc}>
-              Агрессивное умывание всего за минуту может нарушить защитный барьер и сделать кожу
-              уязвимой
-            </p> */}
-          </div>
-        )}
-      </div>
+    <>
+      <span className={styles.priceFrom}>{m[1]}</span>
+      {' '}
+      <span className={styles.priceSum}>{m[2]}</span>
+    </>
+  );
+}
 
-      <div className={styles.content}>
-        <div className={styles.gratitudeImageWrapper}>
-          <div className={styles.gratitudeWrapper}>
-            {giftAmounts.map((amount, index) => (
-              <p key={index} className={styles.gratitude}>
-                {amount}
-              </p>
-            ))}
-          </div>
-          <img src={gratitudeLine} alt='gratitude line' className={styles.gratitudeLine} />
-        </div>
-
+function GratitudeSkeleton() {
+  return (
+    <div className={styles.content} aria-hidden>
+      <div className={styles.desktopLayout}>
         <div className={styles.gratitudeImages}>
-          {gifts.map((gift, index) => (
-            <div key={index} id={`gift-${index + 1}`} className={styles.imageBlock}>
-              <AppLink
-                to="/articles/programma-blagodarnosti-2"
-                className={styles.imageLink}
-                aria-label={`Подарок ${giftAmounts[index] ?? index + 1}`}
-              >
-                {gift.image ? (
-                  <ImageWithFallback
-                    src={gift.image}
-                    alt={`gift ${index + 1}`}
-                    className={styles.kremImage}
-                  />
-                ) : (
-                  <div className={styles.placeholderImage} />
-                )}
-              </AppLink>
-            </div>
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className={styles.skeletonCircle} />
           ))}
         </div>
       </div>
-
-      <div className={styles.moreWrapper}>
-        <AppLink to="/articles/programma-blagodarnosti-2">
-          <p>Подробнее о программе</p>
-          <img src={ArrowToRight} alt="" />
-        </AppLink>
+      <div className={styles.mobileTrack}>
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className={styles.mobileSlide}>
+            <div className={styles.skeletonCircle} />
+          </div>
+        ))}
       </div>
-    </section>
+    </div>
+  );
+}
+
+export const GratitudeProgram: React.FC = () => {
+  const isMobile = useScreenMatch();
+  const [tiers, setTiers] = useState<GratitudeTierPublic[]>([]);
+  const [articleSlug, setArticleSlug] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [mobileIndex, setMobileIndex] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await getGratitudeProgram();
+        if (cancelled) return;
+        setTiers(data.tiers ?? []);
+        setArticleSlug(data.articleSlug);
+      } catch (err) {
+        console.error('[GratitudeProgram] settings/gratitude failed', err);
+        if (!cancelled) {
+          setTiers([]);
+          setArticleSlug(null);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const moreTo = useMemo(() => articleHref(articleSlug), [articleSlug]);
+
+  const syncMobileScroll = useCallback(() => {
+    const el = trackRef.current;
+    if (!el) return;
+    const slides = el.querySelectorAll<HTMLElement>('[data-gratitude-slide]');
+    if (!slides.length) return;
+    const mid = el.scrollLeft + el.clientWidth * 0.35;
+    let best = 0;
+    let bestDist = Infinity;
+    slides.forEach((slide, i) => {
+      const dist = Math.abs(slide.offsetLeft - mid);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    });
+    setMobileIndex(best);
+  }, []);
+
+  useEffect(() => {
+    const el = trackRef.current;
+    if (!el || loading || !isMobile) return;
+    syncMobileScroll();
+    el.addEventListener('scroll', syncMobileScroll, { passive: true });
+    window.addEventListener('resize', syncMobileScroll);
+    return () => {
+      el.removeEventListener('scroll', syncMobileScroll);
+      window.removeEventListener('resize', syncMobileScroll);
+    };
+  }, [loading, isMobile, tiers.length, syncMobileScroll]);
+
+  const scrollToSlide = (index: number) => {
+    const el = trackRef.current;
+    if (!el) return;
+    const slide = el.querySelectorAll<HTMLElement>('[data-gratitude-slide]')[index];
+    if (!slide) return;
+    el.scrollTo({ left: slide.offsetLeft, behavior: 'smooth' });
+  };
+
+  if (!loading && tiers.length === 0) return null;
+
+  return (
+    <HomeSection
+      className={styles.gratitudeContainer}
+      id="gratitude-program"
+      anchor
+      aria-labelledby="title"
+    >
+      <div className={styles.titleWrapper}>
+        {isMobile ? (
+          <>
+            <h2 className={styles.title} id="title">
+              Программа благодарности
+            </h2>
+            <MoreLink to={moreTo} className={styles.moreBelow}>
+              подробнее
+            </MoreLink>
+          </>
+        ) : (
+          <SectionTitleRow className={styles.titleRow}>
+            <h2 className={styles.title} id="title">
+              Программа благодарности
+            </h2>
+            <MoreLink to={moreTo}>подробнее</MoreLink>
+          </SectionTitleRow>
+        )}
+        <div className={styles.descWrapper}>
+          <p className={styles.desc}>{FALLBACK_INTRO}</p>
+        </div>
+      </div>
+
+      {loading ? (
+        <GratitudeSkeleton />
+      ) : (
+        <div className={styles.content}>
+          <div className={styles.desktopLayout}>
+            <div className={styles.gratitudeImageWrapper}>
+              <div className={styles.gratitudeWrapper}>
+                {tiers.map((tier) => (
+                  <p key={tier.id} className={styles.gratitude}>
+                    <PriceLabel text={tier.title} />
+                  </p>
+                ))}
+              </div>
+              <img
+                src={gratitudeLine}
+                alt=""
+                className={styles.gratitudeLine}
+                aria-hidden
+              />
+            </div>
+
+            <div className={styles.gratitudeImages}>
+              {tiers.map((tier, index) => {
+                const label =
+                  stripHtml(tier.infoHtml) || tier.title || `Подарок ${index + 1}`;
+                return (
+                  <div
+                    key={tier.id}
+                    id={`gift-${index + 1}`}
+                    className={styles.imageBlock}
+                  >
+                    <Link to={moreTo} className={styles.imageLink} aria-label={label}>
+                      {tier.imageUrl ? (
+                        <ImageWithFallback
+                          src={normalizeMediaUrl(tier.imageUrl)}
+                          alt={label}
+                          className={styles.kremImage}
+                        />
+                      ) : (
+                        <div className={styles.placeholderImage} aria-hidden />
+                      )}
+                      <span className={styles.circleCaption} aria-hidden>
+                        <span className={styles.circleCaptionText}>{label}</span>
+                      </span>
+                    </Link>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div
+            ref={trackRef}
+            className={styles.mobileTrack}
+            aria-label="Уровни программы благодарности"
+          >
+            {tiers.map((tier, index) => {
+              const label =
+                stripHtml(tier.infoHtml) || tier.title || `Подарок ${index + 1}`;
+              return (
+                <div
+                  key={tier.id}
+                  id={`gift-mobile-${index + 1}`}
+                  className={styles.mobileSlide}
+                  data-gratitude-slide
+                >
+                  <p className={styles.gratitude}>
+                    <PriceLabel text={tier.title} />
+                  </p>
+                  <div className={styles.imageBlock}>
+                    <Link to={moreTo} className={styles.imageLink} aria-label={label}>
+                      {tier.imageUrl ? (
+                        <ImageWithFallback
+                          src={normalizeMediaUrl(tier.imageUrl)}
+                          alt={label}
+                          className={styles.kremImage}
+                        />
+                      ) : (
+                        <div className={styles.placeholderImage} aria-hidden />
+                      )}
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className={styles.mobileChrome}>
+            <div
+              className={styles.dots}
+              role="tablist"
+              aria-label="Уровни благодарности"
+            >
+              {tiers.map((tier, index) => (
+                <button
+                  key={tier.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={mobileIndex === index}
+                  aria-label={`Уровень ${index + 1}`}
+                  className={mobileIndex === index ? styles.dotActive : styles.dot}
+                  onClick={() => scrollToSlide(index)}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </HomeSection>
   );
 };

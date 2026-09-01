@@ -1,54 +1,34 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import styles from './OrderRightPart.module.scss';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import CardList, { OrderProduct } from '../order-components/CardList';
-import Sertificate from '../order-components/Sertificate';
+import Certificate from '../order-components/Certificate';
 import SumDiscount from '../order-components/SumDiscount';
 import InfoContent from '../order-components/Info';
-import { useSelector } from 'react-redux';
-import { RootState } from '@/store/store';
-import { getApplicableGift } from '@/services/applicableGift.service';
-import { CHANNEL } from '@/graphql/client';
-import { normalizeMediaUrl } from '@/utils/mediaUrl';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/store/store';
+import { useApplicableGift } from '@/hooks/useApplicableGift';
+import { openDrawer } from '@/store/slices/drawerSlice';
 
 const OrderRightPart: React.FC = () => {
   /** Правый блок скрыт на узком экране (ширина меньше порога mobile из useScreenMatch). */
   const hideOrderRightColumn = useScreenMatch();
+  const dispatch = useDispatch<AppDispatch>();
   const { lines } = useSelector((state: RootState) => state.checkout);
-  const [giftLine, setGiftLine] = useState<OrderProduct | null>(null);
 
   const subtotal = useMemo(() => {
     if (!lines?.length) return 0;
-    return lines.reduce((sum: number, line: any) => sum + (line.price ?? 0) * line.quantity, 0);
+    return lines.reduce(
+      (sum, line) => sum + (line.isGift ? 0 : (line.price ?? 0) * line.quantity),
+      0,
+    );
   }, [lines]);
 
-  useEffect(() => {
-    if (subtotal < 5000) {
-      setGiftLine(null);
-      return;
-    }
-    getApplicableGift(subtotal, CHANNEL).then((res) => {
-      if (res.applicable && res.variantId && res.productName) {
-        setGiftLine({
-          variantId: res.variantId,
-          title: res.productName,
-          size: '',
-          thumbnail: normalizeMediaUrl(res.thumbnailUrl || ''),
-          quantity: res.quantity ?? 1,
-          price: 0,
-          oldPrice: null,
-          discount: null,
-          isGift: true,
-        });
-      } else {
-        setGiftLine(null);
-      }
-    }).catch(() => setGiftLine(null));
-  }, [subtotal]);
+  const giftLine = useApplicableGift(subtotal);
 
   const formattedCartData: OrderProduct[] = useMemo(() => {
     if (!lines) return [];
-    const cart: OrderProduct[] = lines.map((line: any) => {
+    const cart: OrderProduct[] = lines.map((line) => {
       const price = line.price || 0;
       const oldPrice = line.oldPrice || 0;
       let discountLabel: string | null = null;
@@ -57,6 +37,7 @@ const OrderRightPart: React.FC = () => {
       }
       return {
         variantId: line.variantId,
+        lineKey: line.variantId,
         title: line.title || 'Product',
         size: line.size || '',
         thumbnail: line.thumbnail || '',
@@ -64,10 +45,23 @@ const OrderRightPart: React.FC = () => {
         price,
         oldPrice: oldPrice > price ? oldPrice : null,
         discount: discountLabel,
-        isGift: false,
+        isGift: Boolean(line.isGift),
       };
     });
-    if (giftLine) cart.push(giftLine);
+    if (giftLine) {
+      cart.push({
+        variantId: giftLine.variantId,
+        lineKey: `${giftLine.variantId}:gift`,
+        title: giftLine.title,
+        size: '',
+        thumbnail: giftLine.thumbnail,
+        quantity: giftLine.quantity,
+        price: 0,
+        oldPrice: null,
+        discount: null,
+        isGift: true,
+      });
+    }
     return cart;
   }, [lines, giftLine]);
 
@@ -76,11 +70,18 @@ const OrderRightPart: React.FC = () => {
       {!hideOrderRightColumn && (
         <section className={styles.right}>
           <article className={styles.listWrapper}>
-            {/* 2. Pass the WHOLE array to CardList once, do not map here */}
+            <div className={styles.listHeader}>
+              <button
+                type="button"
+                className={styles.editCartBtn}
+                onClick={() => dispatch(openDrawer('basket'))}
+              >
+                Изменить корзину
+              </button>
+            </div>
             <CardList cartData={formattedCartData} />
-
           </article>
-          <Sertificate />
+          <Certificate />
           <section className={styles.discountPromo}>
             <p>
               Скидка по промо-кодам НЕ РАСПРОСТРАНЯЕТСЯ на товары уже со скидками, наборы, товары не

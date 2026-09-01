@@ -1,5 +1,3 @@
-'use client';
-
 import React, { useEffect } from 'react';
 import styles from '../ArticleDetail.module.scss';
 import { useDispatch, useSelector } from 'react-redux';
@@ -8,8 +6,14 @@ import { Link, useParams, useLocation } from 'react-router-dom';
 import back from '@/assets/icons/go-back.svg';
 import MaskedImage from '@/components/masked-image/MaskedImage';
 import ArticleContent from '@/pages/ArticleDetail/ArticleContent/ArticleContent';
-import { fetchArticleBySlug } from '@/store/slices/articleSlice';
+import Bestsellers from '@/components/bestsellers/Bestsellers';
+import {
+  fetchArticleBySlug,
+  fetchInfoPageBySlug,
+} from '@/store/slices/articleSlice';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
+import { useDocumentSeo } from '@/hooks/useDocumentSeo';
+import { useArticleSeo } from '@/pages/ArticleDetail/hooks/useArticleSeo';
 
 const LazyComponent: React.FC = () => {
   const { slug } = useParams();
@@ -20,8 +24,42 @@ const LazyComponent: React.FC = () => {
 
   useEffect(() => {
     if (!slug) return;
-    dispatch(fetchArticleBySlug(slug));
-  }, [slug, dispatch]);
+    if (isInfoPage) {
+      void dispatch(fetchInfoPageBySlug(slug));
+    } else {
+      void dispatch(fetchArticleBySlug(slug));
+    }
+  }, [slug, dispatch, isInfoPage]);
+
+  useDocumentSeo({
+    title: isInfoPage ? article?.title || '' : '',
+    description: isInfoPage ? article?.description || undefined : undefined,
+    canonicalPath: isInfoPage && article && slug ? `/info/${slug}` : undefined,
+    ogType: 'website',
+  });
+
+  useArticleSeo({
+    title: !isInfoPage ? article?.title || '' : '',
+    description: !isInfoPage ? article?.description || undefined : undefined,
+    imageUrl: !isInfoPage
+      ? article?.image || article?.previewImage || undefined
+      : undefined,
+    slug: !isInfoPage ? slug || undefined : undefined,
+    metaTitle: !isInfoPage ? article?.metaTitle : undefined,
+    metaDescription: !isInfoPage ? article?.metaDescription : undefined,
+    ogImageUrl: !isInfoPage ? article?.ogImageUrl : undefined,
+    canonicalPath: !isInfoPage ? article?.canonicalPath : undefined,
+    seoNoIndex: !isInfoPage ? article?.seoNoIndex : undefined,
+  });
+
+  const retry = () => {
+    if (!slug) return;
+    if (isInfoPage) {
+      void dispatch(fetchInfoPageBySlug(slug));
+    } else {
+      void dispatch(fetchArticleBySlug(slug));
+    }
+  };
 
   if (loading) {
     return (
@@ -37,10 +75,10 @@ const LazyComponent: React.FC = () => {
         <p>
           {error
             ? 'Не удалось загрузить материал. Проверьте соединение и попробуйте снова.'
-            : 'Статья не найдена.'}
+            : 'Страница не найдена.'}
         </p>
         {slug && error ? (
-          <button type="button" className={styles.articleRetryBtn} onClick={() => dispatch(fetchArticleBySlug(slug))}>
+          <button type="button" className={styles.articleRetryBtn} onClick={retry}>
             Повторить
           </button>
         ) : null}
@@ -49,38 +87,46 @@ const LazyComponent: React.FC = () => {
   }
 
   const showAuthor = !isInfoPage && (article.author || article.imageAuthor);
+  const backTo = isInfoPage ? '/' : '/articles';
+  const backLabel = isInfoPage ? 'На главную' : 'Вернуться в блог';
 
   return (
     <>
       <section className={styles.titleContainer}>
         <div className={styles.goBackWrapper}>
-          <img className={styles.back} src={back} alt='go back'/>
-          <Link to={isInfoPage ? '/' : '/articles'} className={styles.goBackText}>
-            {isInfoPage ? 'На главную' : 'Вернуться в блог'}
+          <Link to={backTo} className={styles.goBackText}>
+            <img className={styles.back} src={back} alt="" aria-hidden />
+            {backLabel}
           </Link>
         </div>
-        <p className={styles.articleDate}>{article.date}</p>
-        <p className={styles.title}>{article?.title}</p>
+        {article.date ? <p className={styles.articleDate}>{article.date}</p> : null}
+        <h1 className={styles.title}>{article.title}</h1>
         {showAuthor && (
           <div className={styles.userWrapper}>
-            <MaskedImage src={article?.imageAuthor ?? ''}/>
+            <MaskedImage src={article?.imageAuthor ?? ''} />
             <div className={styles.userInfo}>
               <p className={styles.userName}>{article?.author}</p>
-              <p className={styles.userRole}>{article?.authorRole}</p>
+              {article.authorRole ? (
+                <p className={styles.userRole}>{article.authorRole}</p>
+              ) : null}
             </div>
           </div>
         )}
       </section>
-      {article?.image && (
+      {!isInfoPage && article?.image ? (
         <section className={styles.articleHeroImage}>
-          <img src={article.image} alt={article?.title ?? ''} />
+          <img src={article.image} alt="" loading="lazy" decoding="async" />
         </section>
-      )}
+      ) : null}
       <section className={`${styles.descContainer} ${isInfoPage ? styles.descContainerInfo : ''}`}>
         <ArticleContent contentJson={article?.content} variant={isInfoPage ? 'info' : 'default'} />
       </section>
+      {!isInfoPage ? (
+        <section className={styles.bottomPart}>
+          <Bestsellers bleed={32} />
+        </section>
+      ) : null}
     </>
-
   );
 };
 

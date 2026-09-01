@@ -1,25 +1,48 @@
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from '../SignIn.module.scss';
-import { Eye, EyeClosed } from 'lucide-react';
 import siteLogo from '@/assets/icons/Logo-mira.svg';
 import { TextField } from '@/components/text-field/TextField';
 import { Button } from '@/components/button/Button';
 import goBackIcon from '@/assets/icons/go-back.svg';
-import { setEmail, setPass, sendSignInData, setFalseSignIiStatus, getMe } from '@/store/slices/authSlice';
-import { useNavigate } from 'react-router-dom';
+import {
+  setEmail,
+  sendSignInData,
+  clearSignInSuccess,
+  clearSignInError,
+  getMe,
+} from '@/store/slices/authSlice';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useToast } from '@/components/toast/toast';
 import { RootState, AppDispatch } from '@/store/store';
 import { translateAuthError } from '@/utils/translateAuthError';
+import { useDocumentSeo } from '@/hooks/useDocumentSeo';
+import { resolvePostAuthRedirect } from '@/utils/authRedirect';
+
+const validateEmail = (email: string): boolean => {
+  if (!email?.trim()) return false;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+};
 
 const LazyComponent: React.FC = () => {
-  const [isPasswordShowed, setIsPasswordShowed] = useState<boolean>(false);
+  useDocumentSeo({
+    title: 'Вход',
+    description: 'Вход в личный кабинет Miraflores',
+    canonicalPath: '/sign-in',
+    noIndex: true,
+  });
+
   const toast = useToast();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { email, pass, signIn, isAuth } = useSelector((state: RootState) => state.authSlice);
+  const location = useLocation();
+  const fromState = (location.state as { from?: string } | null) ?? null;
+  const { email, signIn } = useSelector((state: RootState) => state.authSlice);
+  const [pass, setPass] = useState('');
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   const handleNavigatetoHome = () => navigate('/');
   const handleGoBack = () => {
@@ -29,33 +52,58 @@ const LazyComponent: React.FC = () => {
       navigate('/');
     }
   };
-  const handleSignUp = () => navigate('/sign-up');
   const handleForgotPassword = () => navigate('/forgot-password');
 
-  // Редирект только если открыли страницу входа уже авторизованным (не после только что выполненного входа)
-  useEffect(() => {
-    if (isAuth && !signIn.success) {
-      toast.warning('Вы уже вошли в систему');
-    }
-  }, [isAuth, signIn.success]);
+  const goAfterAuth = () => {
+    navigate(resolvePostAuthRedirect('/', fromState));
+  };
+
+  // Редирект уже авторизованных — только в App.tsx (без дубля тоста).
 
   useEffect(() => {
     if (signIn.success) {
       toast.success('Вход в аккаунт выполнен!');
-      dispatch(getMe()).catch(() => {
-        /* не блокируем вход — профиль подтянется со страницы профиля */
-      });
+      setPass('');
+      dispatch(getMe()).catch(() => {});
+      goAfterAuth();
       setTimeout(() => {
-        dispatch(setFalseSignIiStatus());
-      }, 2000);
+        dispatch(clearSignInSuccess());
+      }, 500);
     }
   }, [signIn.success]);
 
   useEffect(() => {
     if (signIn.error) {
       toast.error(translateAuthError(signIn.error.message));
+      dispatch(clearSignInError());
     }
-  }, [signIn.error]);
+  }, [signIn.error, dispatch, toast]);
+
+  const canSubmit =
+    validateEmail(email) &&
+    pass.length > 0 &&
+    !emailError &&
+    !passwordError &&
+    !signIn.loadingStatus;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    let ok = true;
+    if (!validateEmail(email)) {
+      setEmailError('Введите корректный email');
+      ok = false;
+    } else {
+      setEmailError(null);
+    }
+    if (!pass) {
+      setPasswordError('Введите пароль');
+      ok = false;
+    } else {
+      setPasswordError(null);
+    }
+    if (!ok || signIn.loadingStatus) return;
+    void dispatch(sendSignInData({ email, password: pass }));
+  };
 
   return (
     <div className={styles.signInWrapper}>
@@ -68,34 +116,65 @@ const LazyComponent: React.FC = () => {
         >
           <img src={goBackIcon} alt="" aria-hidden />
         </button>
-        <img src={siteLogo} alt='Miraflores' className={styles.logo} onClick={handleNavigatetoHome} />
+        <button
+          type="button"
+          className={styles.logoButton}
+          onClick={handleNavigatetoHome}
+          aria-label="На главную"
+        >
+          <img src={siteLogo} alt="" className={styles.logo} />
+        </button>
       </div>
-      <h2 className={styles.title}>Вход в аккаунт</h2>
+      <h1 className={styles.title}>Вход в аккаунт</h1>
       <p className={styles.login}>
-        Впервые у нас? <span onClick={handleSignUp}>Зарегистрироваться</span>
+        Впервые у нас?{' '}
+        <Link to="/sign-up" className={styles.inlineLink}>
+          Зарегистрироваться
+        </Link>
       </p>
-      <div className={styles.textFieldWrapper}>
-        <TextField label='Email' value={email} onChange={e => dispatch(setEmail(e.target.value))} />
-        <div className={styles.password_container}>
+      <p className={styles.legacyHint}>
+        Если покупали у нас ранее — задайте пароль через{' '}
+        <button
+          type="button"
+          className={styles.legacyHintLink}
+          onClick={handleForgotPassword}
+        >
+          «Забыли пароль»
+        </button>
+      </p>
+      <form className={styles.form} onSubmit={handleSubmit} noValidate>
+        <div className={styles.textFieldWrapper}>
           <TextField
-            label='Пароль'
-            type={isPasswordShowed ? 'text' : 'password'}
+            label="Email"
+            type="email"
+            autoComplete="username"
+            value={email}
+            onChange={(e) => {
+              dispatch(setEmail(e.target.value));
+              if (emailError) setEmailError(null);
+            }}
+            error={emailError}
+          />
+          <TextField
+            label="Пароль"
+            type="password"
+            autoComplete="current-password"
             value={pass}
-            onChange={e => dispatch(setPass(e.target.value))}
-            rightLinkText='Забыли?'
+            onChange={(e) => {
+              setPass(e.target.value);
+              if (passwordError) setPasswordError(null);
+            }}
+            error={passwordError}
+            rightLinkText="Забыли?"
             onRightLinkClick={handleForgotPassword}
           />
-          <div
-            className={
-              pass.length > 0 ? styles.password_eye + ' show' : styles.password_eye + ' hide'
-            }
-            onClick={() => setIsPasswordShowed(!isPasswordShowed)}
-          >
-            {isPasswordShowed ? <Eye /> : <EyeClosed />}
-          </div>
         </div>
-      </div>
-      <Button text='Войти' onClick={() => dispatch(sendSignInData({ email, pass }))} />
+        <Button
+          type="submit"
+          text={signIn.loadingStatus ? 'Вход...' : 'Войти'}
+          disabled={!canSubmit}
+        />
+      </form>
     </div>
   );
 };

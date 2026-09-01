@@ -12,7 +12,7 @@ export interface CardItem {
 }
 
 interface Product {
-  id: number;
+  id: number | string;
   name: string;
   size: string;
   price: number;
@@ -24,7 +24,10 @@ interface Product {
 }
 
 export interface TotalAccordionProps {
-  total: number;
+  /** К оплате (goods + shipping). null — доставка ещё не готова. */
+  total: number | null;
+  /** Сумма товаров после скидок (без доставки). */
+  goodsTotal: number;
   totalOld?: number;
   totalItems: number;
   products: Product[];

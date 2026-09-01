@@ -1,808 +1,109 @@
-.bestsellers {
-  padding: 40px 32px 40px 0;
-  margin-top: 200px;
+@use '@/style/variables.scss' as *;
+
+.section {
+  width: 100%;
+  /* без padding-right — лента доходит до края экрана (HomeSection bleed) */
+  /* вертикальный ритм — HomeSection (--home-section-gap); не обнулять padding-top */
+  padding-bottom: 0;
+  box-sizing: border-box;
   position: relative;
   z-index: 0;
+  overflow: visible;
+  /* один inset для title и первой карточки (не только padding родителя) */
+  --bestsellers-pad-start: 0px;
+  --bestsellers-pad-end: 32px;
 
-  // Начальное состояние - скрыто для анимации
-  .title {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+  @media (max-width: $viewport-mobile-max) {
+    --bestsellers-pad-end: 16px;
   }
+}
 
-  .sliderWrapper {
-    opacity: 0;
-    transform: translateY(30px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-  }
+.titleRow {
+  margin: 0 0 28px;
+  padding: 0 var(--bestsellers-pad-end) 0 var(--bestsellers-pad-start);
 
-  // Анимация применяется когда класс добавлен - все элементы появляются одновременно
-  &.sectionAnimated {
-    .title {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    .sliderWrapper {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  // Стили для страницы каталога
-  &.catalogPage {
-    padding-top: 0;
-    padding-bottom: 0;
-    margin-top: 0;
-    margin-bottom: 240px;
-
-    @media (max-width: 768px) {
-      padding: 0;
-      margin-bottom: 120px;
-    }
-  }
-
-  // Стили для страницы профиля
-  &.profilePage {
-    padding-top: 0;
-    margin-top: 20px;
+  @media (max-width: $viewport-mobile-max) {
     margin-bottom: 20px;
-    padding-right: 0;
-
-    @media (max-width: 768px) {
-      padding: 0;
-      margin-top: 20px;
-      margin-bottom: 20px;
-    }
+    padding-left: var(--bestsellers-pad-start-mobile, var(--bestsellers-pad-start));
   }
+}
 
-  /* Горизонтальная лента в профиле: drag-to-scroll (классы вешаются из TSX) */
-  .sliderWrapperProfileDrag {
-    cursor: grab;
+.stripHost {
+  transition: opacity 0.25s ease;
+}
+
+.stripRefreshing {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.title {
+  margin: 0;
+  padding: 0;
+  font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-weight: 300;
+  font-size: 64px;
+  line-height: 1.05;
+  text-transform: uppercase;
+  color: $black;
+  min-width: 0;
+
+  @media (max-width: $viewport-mobile-max) {
+    font-size: 24px;
   }
+}
 
-  .sliderWrapperProfileDragging {
-    cursor: grabbing;
-    user-select: none;
+.status {
+  margin: 0;
+  padding: 0 var(--bestsellers-pad-end) 0 var(--bestsellers-pad-start);
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 14px;
+
+  @media (max-width: $viewport-mobile-max) {
+    padding-left: var(--bestsellers-pad-start-mobile, var(--bestsellers-pad-start));
   }
+}
 
-  // Встроенная секция (страница Ателье) — по аналогии со слайдером на странице Product
-  &.atelierSection {
+.productPage {
+  margin-top: 24px;
+  margin-bottom: 240px;
+  padding: 0;
+
+  @media (max-width: $viewport-mobile-max) {
+    margin-top: 8px;
+    margin-bottom: 100px;
+  }
+}
+
+.catalogPage {
+  margin-top: 0;
+  margin-bottom: 240px;
+  padding-top: 0;
+  padding-bottom: 0;
+
+  @media (max-width: $viewport-mobile-max) {
+    margin-bottom: 120px;
     padding: 0;
-    margin-top: 40px;
-    margin-bottom: 240px;
-    overflow-x: visible;
-    max-width: 100%;
-
-    :global {
-      .layout {
-        padding-left: 0;
-        padding-right: 0;
-        max-width: none;
-        width: 100%;
-        margin-left: 0;
-        margin-right: 0;
-      }
-
-      .slick-list {
-        overflow: visible !important;
-        margin-left: 0;
-        margin-right: 0;
-        padding: 0 !important;
-      }
-
-      .slick-track {
-        margin-left: 0 !important;
-      }
-    }
-
-    .sliderWrapper {
-      touch-action: pan-x pan-y;
-    }
-
-    @media (max-width: 768px) {
-      margin-bottom: 0;
-
-      :global {
-        .slick-list {
-          overflow-x: auto !important;
-          overflow-y: hidden !important;
-          -webkit-overflow-scrolling: touch;
-          scroll-behavior: smooth;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-
-          &::-webkit-scrollbar {
-            display: none;
-          }
-        }
-      }
-    }
-
-    @media (max-width: 768px) {
-      margin-top: 0;
-      margin-bottom: 150px;
-      padding-left: 0;
-
-      :global {
-        .layout {
-          padding-left: 0;
-        }
-
-        .slick-list {
-          overflow-x: auto !important;
-          overflow-y: hidden !important;
-        }
-      }
-    }
   }
+}
 
-  @media (max-width: 768px) {
-    margin-top: 0;
-    padding-top: 0;
-  }
+.profilePage {
+  margin-top: 20px;
+  margin-bottom: 20px;
+  padding-top: 0;
+  padding-right: 0;
 
-  @media (max-width: 768px) {
-    padding: 0 0 100px;
-    margin-top: 0;
-    margin-bottom: 0;
-
-    .title,
-    .sliderWrapper {
-      opacity: 1;
-      transform: none;
-      transition: none;
-    }
-  }
-
-  // Стили для страницы товара
-  &.productPage {
+  @media (max-width: $viewport-mobile-max) {
     padding: 0;
-    margin-top: 40px;
-    overflow-x: visible;
-    margin-bottom: 240px;
-
-    :global {
-      .layout {
-        padding-left: 0;
-        padding-right: 0;
-        max-width: none;
-        width: 100%;
-        margin-left: 0;
-        margin-right: 0;
-      }
-
-      .slick-list {
-        overflow: visible !important;
-        margin-left: 0;
-        margin-right: 0;
-        padding: 0 !important;
-      }
-
-      .slick-track {
-        margin-left: 0 !important;
-      }
-
-    }
-
-    @media (max-width: 768px) {
-      margin-bottom: 0;
-
-      :global {
-        .slick-list {
-          overflow-x: auto !important;
-          overflow-y: hidden !important;
-          -webkit-overflow-scrolling: touch;
-          scroll-behavior: smooth;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-
-          &::-webkit-scrollbar {
-            display: none;
-          }
-        }
-      }
-    }
-
-    @media (max-width: 768px) {
-      padding: 0;
-      margin-top: 0;
-      margin-bottom: 150px;
-      padding-left: 0;
-
-      :global {
-        .layout {
-          padding-left: 0;
-        }
-
-        .slick-list {
-          overflow-x: auto !important;
-          overflow-y: hidden !important;
-          -webkit-overflow-scrolling: touch;
-          scroll-behavior: smooth;
-          scrollbar-width: none;
-          -ms-overflow-style: none;
-
-          &::-webkit-scrollbar {
-            display: none;
-          }
-        }
-      }
-    }
-  }
-
-  :global {
-    .layout {
-      max-width: 1510px;
-      margin-left: 0;
-      margin-right: auto;
-    }
-
-    .slick-list {
-      margin: 0;
-      overflow: visible;
-      padding: 0 !important;
-      // Более отзывчивый горизонтальный свайп на мобилке
-      touch-action: pan-x pan-y;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .slick-slide {
-      margin-right: 40px !important;
-      width: 432px !important;
-      max-width: 432px;
-      min-width: 432px;
-      box-sizing: border-box;
-      padding: 0 !important;
-
-      @media (max-width: 768px) {
-        margin-right: 16px !important;
-        width: 264px !important;
-        min-width: 264px;
-        max-width: 264px;
-      }
-
-      &:first-child {
-        margin-left: 0 !important;
-      }
-
-      &:last-child {
-        margin-right: 0 !important;
-      }
-    }
-
-    /* центровка и отступы для точек */
-    .slick-dots {
-      position: static !important;
-      margin-top: 16px !important;
-      bottom: 0 !important;
-      display: flex !important;
-      justify-content: center;
-      list-style: none !important;
-      padding: 0 !important;
-    }
-
-    .slick-dots li {
-      margin: 0 5px;
-      width: 8px;
-      height: 8px;
-
-      button {
-        width: 8px;
-        height: 8px;
-        padding: 0;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        font-size: 0;
-        line-height: 0;
-
-        // Улучшенные focus states для accessibility
-        &:focus {
-          outline: 2px solid #297230;
-          outline-offset: 2px;
-          border-radius: 50%;
-        }
-
-        &:focus-visible {
-          outline: 2px solid #297230;
-          outline-offset: 2px;
-        }
-
-        &::before {
-          width: 8px;
-          height: 8px;
-          font-size: 8px;
-          line-height: 8px;
-        }
-      }
-    }
-
-    /* чтобы карточки не схлопывались и не накладывались */
-    .slick-track {
-      display: flex !important;
-      align-items: flex-start;
-      gap: 0 !important;
-    }
-  }
-
-  .title {
-    font-family: 'Oceanic', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-    font-size: 64px;
-    font-weight: 300;
-    margin-bottom: 40px;
-    text-transform: uppercase;
-  }
-
-  .slider {
-    padding-bottom: 20px;
-  }
-
-  .sliderWrapper {
-    position: relative;
-    /* pan-x pan-y: вертикальный жест прокручивает страницу, горизонтальный — ленту (pan-x одной оси блокировал скролл вниз) */
-    touch-action: pan-x pan-y;
-    overscroll-behavior-x: contain;
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    width: calc(100% + 32px);
-    margin-right: -32px;
-
-    @media (max-width: 768px) {
-      width: 100%;
-      margin-right: 0;
-      /* pan-x + pan-y: горизонтальный свайп по ленте карточек; вертикальный — страница (overscroll-x contain ниже) */
-      touch-action: pan-x pan-y;
-    }
-
-    &::-webkit-scrollbar {
-      display: none;
-    }
-  }
-
-  .scrollTrack {
-    display: flex;
-    align-items: flex-start;
-    gap: 40px;
-    width: max-content;
-    padding-bottom: 20px;
-
-    @media (max-width: 768px) {
-      gap: 16px;
-    }
-  }
-
-  .scrollItem {
-    flex: 0 0 432px;
-    width: 432px;
-    max-width: 432px;
-
-    @media (max-width: 768px) {
-      flex-basis: 264px;
-      width: 264px;
-      max-width: 264px;
-    }
-  }
-
-  .errorMessage {
-    padding: 20px;
-    text-align: center;
-    color: #ff0808;
-
-    button {
-      margin-top: 10px;
-      padding: 8px 16px;
-      background-color: #297230;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 14px;
-      transition: background-color 0.3s ease;
-
-      &:hover {
-        background-color: #1f5a25;
-      }
-
-      &:focus {
-        outline: 2px solid #297230;
-        outline-offset: 2px;
-      }
-    }
-  }
-
-  .imageWrapper {
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
-    height: 432px;
-    width: 100%;
-    max-width: 432px;
-    background-color: #f6f5ef;
-    overflow: hidden;
-    padding: 50px; // отступы до изображения, как в макете
-
-    @media (max-width: 768px) {
-      height: 316px;
-      padding: 32px;
-    }
-
-    img {
-      margin: 0 auto;
-      display: block;
-      width: 332px;
-      height: 332px;
-      object-fit: contain;
-    }
-
-    .discount,
-    .label {
-      position: absolute;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      top: 0;
-      height: 43px;
-      font-size: 14px;
-      font-weight: 500;
-      color: white;
-    }
-
-    .discount {
-      left: 0;
-      width: 54px;
-      background: #297230;
-    }
-
-    .label {
-      right: 0;
-      width: 79px;
-      background: #0000003d;
-    }
-
-    .sizeWrapper {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      max-width: 100%;
-      width: calc(100% - 24px);
-      padding: 10px 12px;
-      box-sizing: border-box;
-      overflow: hidden;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-    }
-  }
-
-  .card {
-    padding: 8px;
-    width: 100%;
-    max-width: 432px;
-    box-sizing: border-box;
-    overflow: hidden;
-
-    @media (max-width: 768px) {
-      max-width: 360px;
-    }
-  }
-
-  .card:hover {
-    .addToCart {
-      opacity: 1;
-    }
-  }
-
-  .info {
-    margin-top: 18px;
-    display: flex;
-    flex-direction: column;
-    max-width: 416px;
-    gap: 6px;
-    overflow: hidden;
-
-    .name {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: 4px;
-      text-transform: uppercase;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
-      word-wrap: break-word;
-      word-break: break-word;
-      line-height: 1.4;
-    }
-
-    .txtWrapper {
-      text-align: start;
-      overflow: hidden;
-      flex: 1;
-      min-width: 0;
-    }
-
-    .desc {
-      font-size: 13px;
-      font-weight: 400;
-      color: #6e6d67;
-      margin-bottom: 12px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      line-clamp: 2;
-      -webkit-box-orient: vertical;
-      word-wrap: break-word;
-      word-break: break-word;
-      line-height: 1.4;
-    }
-  }
-
-
-  .size50,
-  .size100 {
-    color: #fff !important;
-    min-width: 72px !important;
-    max-width: 140px !important;
-    height: 36px !important;
-    font-size: 12px !important;
-    font-weight: 600 !important;
-    border: none !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-    white-space: nowrap !important;
-    padding: 0 12px !important;
-    box-sizing: border-box !important;
-    flex-shrink: 1 !important;
-    text-align: center !important;
-    border-radius: 0 !important;
-    letter-spacing: 0.02em !important;
-  }
-
-  .size50 {
-    background-color: rgba(0, 0, 0, 0.65) !important;
-  }
-
-  .size100 {
-    background-color: rgba(0, 0, 0, 0.4) !important;
-  }
-
-  .priceWrapper {
-    display: flex;
-    gap: 8px;
-    justify-content: center;
-    align-items: baseline;
-
-    .oldPrice {
-      position: relative;
-      color: #6e6d67;
-      font-size: 16px;
-      font-weight: 600;
-
-      &::after {
-        content: '';
-        position: absolute;
-        left: -5%;
-        top: 50%;
-        width: 110%;
-        height: 1px;
-        background: #ff0808;
-        transform: rotate(-10deg);
-      }
-    }
-
-    .price {
-      font-size: 16px;
-      font-weight: 600;
-      color: black;
-      font-family: 'Onest', 'Avenir Next', sans-serif;
-    }
   }
 }
 
-/* миксин */
-@mixin image-size($w, $h, $imgW: null, $imgH: null) {
-  .bestsellers {
-    .imageWrapper {
-      width: $w;
-      height: $h;
+.atelierSection {
+  margin-top: 40px;
+  margin-bottom: 240px;
+  padding: 0;
 
-      @if $imgW and $imgH {
-        img {
-          width: $imgW;
-          height: $imgH;
-        }
-      }
-    }
-
-    .info {
-      width: $w;
-    }
+  @media (max-width: $viewport-mobile-max) {
+    margin-bottom: 120px;
   }
-}
-
-/* адаптив */
-@media (max-width: 610px) {
-  .bestsellers {
-    .info {
-      flex-direction: column;
-      align-items: flex-start;
-      margin-top: 12px;
-    }
-  }
-}
-
-@media (max-width: 470px) {
-  .bestsellers {
-    .title {
-      font-size: 24px;
-      margin-bottom: 16px;
-    }
-  }
-}
-
-/* Custom Dots */
-.customDot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  border: 1px solid black;
-  background: transparent;
-  margin: 0 5px;
-  cursor: pointer;
-
-  &:hover {
-    transform: scale(1.1);
-  }
-}
-
-.activeDot {
-  background: black;
-}
-
-.imageWrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-  height: 432px;
-  width: 100%;
-  max-width: 432px;
-  background-color: #f6f5ef;
-  overflow: hidden; // важно, чтобы элементы не вылезали при анимации
-  padding: 50px; // как в макете: отступы от краёв до изображения
-
-    @media (max-width: 768px) {
-    height: 316px;
-    padding: 32px;
-  }
-
-  // кнопки изначально скрыты
-  .addToCardWrapper {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    display: flex;
-    padding: 5px;
-    gap: 5px;
-    transform: translateY(100%);
-    opacity: 0;
-    transition:
-      transform 0.4s ease,
-      opacity 0.4s ease;
-  }
-
-  // при hover карточки — плавное появление блока кнопок
-  &:hover .addToCardWrapper {
-    transform: translateY(0);
-    opacity: 1;
-  }
-
-  .addToCart {
-    cursor: pointer;
-    height: 54px;
-    border: none;
-    width: 90%;
-    background-color: white;
-    font-weight: 500;
-    font-size: 16px;
-    text-transform: uppercase;
-    transition:
-      background-color 0.3s ease,
-      color 0.3s ease;
-
-    &:hover {
-      background-color: #000;
-      color: #fff;
-    }
-  }
-
-  .gift {
-    height: 54px;
-    width: 54px;
-    border: none;
-    background-color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s ease;
-
-    &:hover {
-      background-color: #000;
-    }
-
-    img {
-      width: 23px;
-      height: 23px;
-      transition: filter 0.3s ease;
-    }
-
-    &:hover img {
-      filter: brightness(0) invert(1);
-    }
-  }
-
-  img {
-    margin: 0 auto;
-    display: block;
-    transition: transform 0.5s ease;
-    width: 332px;
-    height: 332px;
-    object-fit: contain;
-  }
-
-  // лёгкий zoom картинки при наведении
-  &:hover img {
-    transform: scale(1.05);
-  }
-
-  .discount,
-  .label {
-    position: absolute;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    top: 0;
-    height: 43px;
-    font-size: 14px;
-    font-weight: 400;
-    color: white;
-  }
-
-  .discount {
-    left: 0;
-    width: 54px;
-    background: #297230;
-  }
-
-  .label {
-    right: 0;
-    width: 79px;
-    background: #0000003d;
-  }
-}
-
-.card {
-  @media (max-width: 768px) {
-    width: 360px;
-  }
-}
-
-
-.skeleton {
-  width: 400px;
-  min-height: 500px;
-  background-color: lightgray;
-  border-radius: 0;
 }

@@ -39,10 +39,9 @@
   gap: 6px;
   justify-content: flex-start;
   padding-bottom: 12px;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border: none;
 
   &:last-child {
-    border-bottom: none;
     padding-bottom: 0;
   }
 
@@ -50,6 +49,7 @@
     flex-direction: column;
     gap: 4px;
     padding-top: 12px;
+    padding-bottom: 0;
 
     &:first-child {
       padding-top: 0;

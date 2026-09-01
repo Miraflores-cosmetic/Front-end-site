@@ -19,10 +19,13 @@
   font-family: $font-avenir;
 }
 html {
-  /* Якоря (#faq и др.) под sticky header — запас для Safari */
-  scroll-padding-top: 168px;
+  /* Якоря под sticky header — синхрон с scroll-margin секций */
+  --scroll-anchor-extra: 24px;
+  scroll-padding-top: calc(var(--header-height, 72px) + var(--scroll-anchor-extra));
+
   @media (max-width: 768px) {
-    scroll-padding-top: 128px;
+    --scroll-anchor-extra: 96px;
+    scroll-padding-top: calc(var(--header-height, 54px) + var(--scroll-anchor-extra));
   }
 }
 
@@ -34,12 +37,20 @@ body {
   font-weight: 400;
   color: $black;
   background-color: #fff;
+  /* clip: без горизонтального скролла от bleed-лент; в отличие от hidden не ломает sticky header */
+  overflow-x: clip;
 
   /* 🔥 Мягкое сглаживание текста */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-smooth: always;
+}
+
+/* Preload: не показываем тяжёлый UI под loader (Hero, framer-motion, Redux init). */
+body:not(.--js-ready) [data-app-shell] {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Для заголовков — чётче, но без жирности */
@@ -90,10 +101,18 @@ html {
   display: flex;
 }
 
-/* Корзина и полноэкранное меню: iOS Safari — нижняя панель браузера (100vh ≠ видимая высота) */
-@media (max-width: 768px) {
-  nav.EZDrawer__container.basket-drawer,
+/* Полноэкранные дроеры: iOS Safari — 100vh ≠ видимая высота. Nav chrome до tablet. */
+@media (max-width: 1024px) {
   nav.EZDrawer__container.menu-drawer {
+    height: 100vh !important;
+    max-height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100dvh !important;
+  }
+}
+
+@media (max-width: 768px) {
+  nav.EZDrawer__container.basket-drawer {
     height: 100vh !important;
     max-height: 100vh !important;
     height: 100dvh !important;

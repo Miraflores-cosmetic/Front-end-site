@@ -1,8 +1,5 @@
 import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import Header from '@/components/Header/Header';
-import Footer from '@/components/Footer/Footer';
-import footerImage from '@/assets/images/footer-img.png';
 import goBackIcon from '@/assets/icons/go-back.svg';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { useQuizContent } from '@/contexts/QuizContentContext';
@@ -48,7 +45,6 @@ export const QuizLayout: React.FC<QuizLayoutProps> = ({
 
   return (
     <>
-      <Header />
       <div className={styles.pageShell}>
         <main className={styles.page}>
           <div className={styles.container}>
@@ -71,7 +67,6 @@ export const QuizLayout: React.FC<QuizLayoutProps> = ({
               children
             )}
           </div>
-          <Footer footerImage={footerImage} />
         </main>
       </div>
     </>

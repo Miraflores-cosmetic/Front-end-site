@@ -9,6 +9,7 @@ import {
 export function getFirstAllowedFaceStep(answers: FaceQuizAnswers): FaceStep {
   if (answers.skin_age === null) return 'age';
   if (answers.spf === null) return 'spf';
+  if (answers.skin_issues.length === 0) return 'issues';
   if (answers.skin_tasks.length === 0) return 'tasks';
   if (answers.swelling === null) return 'swelling';
   return 'photo';

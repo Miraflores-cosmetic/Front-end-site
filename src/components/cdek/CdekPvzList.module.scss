@@ -1,0 +1,388 @@
+@use '@/style/variables.scss' as *;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  font-family: $font-avenir, 'Avenir Next', sans-serif;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.label {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: $black;
+}
+
+.icon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: $gray-6e;
+}
+
+.iconSm {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  margin-top: 2px;
+  color: $gray-6e;
+}
+
+.iconXs {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: $gray-6e;
+}
+
+.iconLg {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 12px;
+  color: rgba(0, 0, 0, 0.2);
+}
+
+.spin {
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+}
+
+.spinLg {
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.cityDropdown {
+  position: relative;
+}
+
+.statusBox {
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.statusBoxError {
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid #fca5a5;
+  background: #fef2f2;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #dc2626;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.cityTrigger {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 16px;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: $white;
+  cursor: pointer;
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
+.cityTriggerText {
+  color: $black;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cityTriggerPlaceholder {
+  color: rgba(0, 0, 0, 0.4);
+}
+
+.chevron {
+  width: 20px;
+  height: 20px;
+  color: rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+
+.chevronOpen {
+  transform: rotate(180deg);
+}
+
+.dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin-top: 4px;
+  background: $white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  max-height: 320px;
+  overflow: hidden;
+}
+
+.dropdownSearch {
+  padding: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.searchWrap {
+  position: relative;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 16px;
+  height: 16px;
+  color: rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.searchInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 16px 0 36px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+
+  &:focus {
+    border-color: $green-297;
+  }
+}
+
+.dropdownList {
+  overflow-y: auto;
+  max-height: 240px;
+}
+
+.dropdownEmpty {
+  padding: 16px;
+  text-align: center;
+  color: rgba(0, 0, 0, 0.5);
+  font-size: 14px;
+}
+
+.dropdownItem {
+  width: 100%;
+  padding: 12px 16px;
+  text-align: left;
+  background: transparent;
+  font-weight: 400;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 15px;
+  color: $black;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.04);
+  }
+}
+
+.dropdownItemActive {
+  background: rgba(41, 114, 48, 0.08);
+  font-weight: 500;
+}
+
+.dropdownRegion {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+  flex-shrink: 0;
+}
+
+.modeToggle {
+  display: flex;
+  gap: 8px;
+}
+
+.modeBtn {
+  flex: 1;
+  height: 40px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: #f6f5ef;
+  color: rgba(0, 0, 0, 0.6);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, color 0.15s;
+}
+
+.modeBtnActive {
+  background: $green-297;
+  color: $white;
+}
+
+.textInput {
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  font-size: 16px;
+  outline: none;
+  box-sizing: border-box;
+  font-family: inherit;
+
+  &:focus {
+    border-color: $green-297;
+  }
+}
+
+.pvzList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.pvzLoading,
+.pvzEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px 16px;
+  color: rgba(0, 0, 0, 0.55);
+  text-align: center;
+}
+
+.pvzLoading {
+  flex-direction: row;
+}
+
+.pvzEmptyTitle {
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: $black;
+}
+
+.pvzEmptyHint {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+  margin-bottom: 12px;
+}
+
+.mapCta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: $green-297;
+  color: $white;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+
+  &:hover {
+    background: #1f5a24;
+  }
+}
+
+.pvzCount {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.4);
+  margin-bottom: 4px;
+}
+
+.pvzCard {
+  text-align: left;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  cursor: pointer;
+  background: $white;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: rgba(41, 114, 48, 0.45);
+    background: rgba(41, 114, 48, 0.03);
+  }
+}
+
+.pvzName {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: $black;
+  font-size: 15px;
+}
+
+.pvzAddress {
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.6);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.pvzMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.pvzMetaItem {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}

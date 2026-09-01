@@ -10,6 +10,9 @@ export function getDeliveryTypeLabelFromStreet2(street2: string | undefined | nu
     if (vm?.carrier === 'yandex') {
         return vm.dropoff === 'courier' ? 'Яндекс Доставка Курьер' : 'Яндекс Доставка ПВЗ';
     }
+    if (vm?.carrier === 'cdek') {
+        return vm.dropoff === 'courier' ? 'СДЭК Курьер' : 'СДЭК ПВЗ';
+    }
 
     const s = (street2 || '').trim();
     if (!s) return 'Адрес';

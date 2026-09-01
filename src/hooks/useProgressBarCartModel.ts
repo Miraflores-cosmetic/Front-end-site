@@ -5,9 +5,9 @@ import {
 } from '@/graphql/queries/pages.service';
 
 const DEFAULT_MODEL: ProgressBarCartModel = {
-  contentText: 'до бесплатной доставки',
+  contentText: 'до бесплатной доставки до ПВЗ',
   threshold: 15780,
-  successText: 'Бесплатная доставка!',
+  successText: 'Бесплатная доставка до ПВЗ!',
 };
 
 export function useProgressBarCartModel(): ProgressBarCartModel {

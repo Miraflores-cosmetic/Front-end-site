@@ -1,254 +1,180 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import styles from './FAQBlock.module.scss';
-import { getPageBySlug, PageNode, getAllFAQs } from '@/graphql/queries/pages.service';
-import { editorJsToHtml } from '@/utils/editorJsParser';
-import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
-import faqVideo from '@/assets/videos/faq-video.mp4';
+import { getFaqItems, type FaqItem } from '@/api/settingsApi';
+import { HomeSection } from '@/components/home-section/HomeSection';
+import { sanitizeCmsHtml } from '@/utils/sanitizeCmsHtml';
+import { faqAnswerPlainText, faqAnswerToHtml } from '@/utils/faqAnswerHtml';
+import { scrollToAnchorWhenReady } from '@/utils/scrollToAnchor';
 
-const FAQ_VIDEO_PAUSE_AFTER_FIRST_MS = 7000;
-
-interface FAQItem {
-  question: string;
-  answer: string;
-  image?: string;
+function renderFaqAnswerHtml(raw: string): string {
+  return sanitizeCmsHtml(faqAnswerToHtml(raw));
 }
 
-export const FAQBlock: React.FC = () => {
-  const [faqItems, setFaqItems] = useState<FAQItem[]>([]);
-  const [images, setImages] = useState<string[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-  const [isSectionLoaded, setIsSectionLoaded] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-  const leftColumnRef = useRef<HTMLDivElement>(null);
-  const rightColumnRef = useRef<HTMLDivElement>(null);
-  const faqVideoRef = useRef<HTMLVideoElement>(null);
-  const faqVideoFirstCycleDoneRef = useRef(false);
-  const faqVideoPauseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+function FaqSkeleton() {
+  return (
+    <div className={styles.faqContent} aria-hidden>
+      <div className={styles.skeletonTitle} />
+      {[0, 1, 2, 3].map((i) => (
+        <div key={i} className={styles.skeletonRow} />
+      ))}
+    </div>
+  );
+}
 
-  const clearFaqVideoPauseTimeout = useCallback(() => {
-    if (faqVideoPauseTimeoutRef.current != null) {
-      clearTimeout(faqVideoPauseTimeoutRef.current);
-      faqVideoPauseTimeoutRef.current = null;
+function FaqJsonLd({ items }: { items: FaqItem[] }) {
+  if (!items.length) return null;
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((it) => ({
+      '@type': 'Question',
+      name: it.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: faqAnswerPlainText(it.answer),
+      },
+    })),
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
+      }}
+    />
+  );
+}
+
+function resolveHashIndex(items: FaqItem[], hash: string): number {
+  const id = hash.replace(/^#/, '').trim();
+  if (!id) return -1;
+  const byCms = items.findIndex((it) => id === `faq-${it.id}` || id === it.id);
+  if (byCms >= 0) return byCms;
+  const m = /^faq-(\d+)$/.exec(id);
+  if (m) {
+    const n = Number(m[1]);
+    if (Number.isFinite(n) && n >= 1 && n <= items.length) return n - 1;
+  }
+  return -1;
+}
+
+export const FAQBlock: React.FC<{
+  /** home — секция с ритмом Home; page — flush под /faq */
+  variant?: 'home' | 'page';
+}> = ({ variant = 'home' }) => {
+  const location = useLocation();
+  const [faqItems, setFaqItems] = useState<FaqItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  const isPage = variant === 'page';
+  const HeadingTag = isPage ? 'h1' : 'h2';
+
+  const fetchFAQ = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(false);
+      setFaqItems(await getFaqItems());
+    } catch (err) {
+      console.error('Error fetching FAQ:', err);
+      setFaqItems([]);
+      setError(true);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    const fetchFAQ = async () => {
-      try {
-        setLoading(true);
-        // Загружаем все страницы типа FAQ
-        const items = await getAllFAQs();
+    void fetchFAQ();
+  }, [fetchFAQ]);
 
-        // Преобразуем в формат компонента
-        const formattedItems: FAQItem[] = items.map(item => ({
-          question: item.question,
-          answer: item.answer,
-          image: item.image
-        }));
-
-        // Собираем картинки в отдельный массив (для синхронизации индексов, как было)
-        const faqImages = formattedItems.map(item => item.image || '');
-
-        setFaqItems(formattedItems);
-        setImages(faqImages);
-      } catch (err: any) {
-        console.error('Error fetching FAQ:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFAQ();
-  }, []);
-
-  // Intersection Observer для анимации при скролле к секции
   useEffect(() => {
-    if (isSectionLoaded) return;
-    if (loading) return; // контент с .faqContent появляется только после загрузки
-
-    const setup = () => {
-      if (!sectionRef.current) return null;
-      const checkVisibility = () => {
-        const rect = sectionRef.current!.getBoundingClientRect();
-        return rect.top < window.innerHeight && rect.bottom > 0;
-      };
-      if (checkVisibility()) {
-        setIsSectionLoaded(true);
-        return null;
-      }
-      const observer = new IntersectionObserver(
-        (entries) => {
-          for (const e of entries) if (e.isIntersecting) setIsSectionLoaded(true);
-        },
-        { threshold: 0.2, rootMargin: '0px 0px -100px 0px' }
-      );
-      observer.observe(sectionRef.current);
-      return () => { sectionRef.current && observer.unobserve(sectionRef.current); };
-    };
-
-    let off = setup();
-    if (off) return off;
-    const id = setTimeout(() => { off = setup(); }, 120);
-    return () => { clearTimeout(id); off?.(); };
-  }, [isSectionLoaded, loading]);
+    if (loading || !faqItems.length) return;
+    const idx = resolveHashIndex(faqItems, location.hash);
+    if (idx < 0) return;
+    setExpandedIndex(idx);
+    const item = faqItems[idx]!;
+    return scrollToAnchorWhenReady(`faq-${item.id}`);
+  }, [loading, faqItems, location.hash]);
 
   const toggleQuestion = (index: number) => {
-    setExpandedIndex(expandedIndex === index ? null : index);
+    setExpandedIndex((prev) => (prev === index ? null : index));
   };
 
-  // Синхронизация высоты leftColumn с rightColumn (но не менее 860px)
-  useEffect(() => {
-    if (!leftColumnRef.current || !rightColumnRef.current || loading) return;
-
-    const syncHeights = () => {
-      if (!leftColumnRef.current || !rightColumnRef.current) return;
-
-      // Получаем реальную высоту rightColumn
-      const rightHeight = rightColumnRef.current.getBoundingClientRect().height;
-      const minHeight = 860;
-      const targetHeight = Math.max(rightHeight, minHeight);
-
-      // Устанавливаем фиксированную высоту для leftColumn
-      leftColumnRef.current.style.height = `${targetHeight}px`;
-      leftColumnRef.current.style.maxHeight = `${targetHeight}px`;
-      leftColumnRef.current.style.minHeight = `${targetHeight}px`;
-
-      // Также устанавливаем высоту для imageWrapper внутри
-      const imageWrapper = leftColumnRef.current.querySelector(`.${styles.imageWrapper}`) as HTMLElement;
-      if (imageWrapper) {
-        imageWrapper.style.height = `${targetHeight}px`;
-        imageWrapper.style.maxHeight = `${targetHeight}px`;
-      }
-    };
-
-    // Небольшая задержка для того, чтобы DOM успел обновиться
-    const timeoutId1 = setTimeout(syncHeights, 50);
-    const timeoutId2 = setTimeout(syncHeights, 200);
-    const timeoutId3 = setTimeout(syncHeights, 500);
-
-    // Синхронизация при изменении размера окна
-    window.addEventListener('resize', syncHeights);
-
-    // Используем MutationObserver для отслеживания изменений в rightColumn
-    const observer = new MutationObserver(() => {
-      setTimeout(syncHeights, 50);
-    });
-    if (rightColumnRef.current) {
-      observer.observe(rightColumnRef.current, {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: ['style', 'class'],
-        characterData: true
-      });
-    }
-
-    return () => {
-      clearTimeout(timeoutId1);
-      clearTimeout(timeoutId2);
-      clearTimeout(timeoutId3);
-      window.removeEventListener('resize', syncHeights);
-      observer.disconnect();
-    };
-  }, [expandedIndex, faqItems.length, loading, isSectionLoaded]);
-
-  // После первого полного проигрыша — пауза 7 с, затем снова видео и дальше обычный loop
-  useEffect(() => {
-    if (loading || faqItems.length === 0) return;
-    const video = faqVideoRef.current;
-    if (!video) return;
-
-    const onEnded = () => {
-      if (faqVideoFirstCycleDoneRef.current) return;
-      faqVideoFirstCycleDoneRef.current = true;
-      clearFaqVideoPauseTimeout();
-      faqVideoPauseTimeoutRef.current = setTimeout(() => {
-        faqVideoPauseTimeoutRef.current = null;
-        video.currentTime = 0;
-        video.loop = true;
-        void video.play();
-      }, FAQ_VIDEO_PAUSE_AFTER_FIRST_MS);
-    };
-
-    video.addEventListener('ended', onEnded);
-    return () => {
-      video.removeEventListener('ended', onEnded);
-      clearFaqVideoPauseTimeout();
-    };
-  }, [loading, faqItems.length, clearFaqVideoPauseTimeout, isSectionLoaded]);
-
-  if (loading) {
-    return (
-      <section
-        id="faq"
-        ref={sectionRef}
-        className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
-      >
-        <SpinnerLoader />
-      </section>
-    );
-  }
-
-  // Показываем FAQ даже если нет данных, но с сообщением
-  if (faqItems.length === 0) {
-    return (
-      <section
-        id="faq"
-        ref={sectionRef}
-        className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
-      >
-        <div className={styles.faqContent}>
-          <p>FAQ данные загружаются...</p>
-        </div>
-      </section>
-    );
-  }
-
   return (
-    <section
-      ref={sectionRef}
-      className={`${styles.faqContainer} ${isSectionLoaded ? styles.sectionAnimated : ''}`}
-      id="faq"
+    <HomeSection
+      className={`${styles.faqContainer} ${isPage ? styles.faqContainerPage : ''}`}
+      id={isPage ? undefined : 'faq'}
+      flush={isPage}
+      anchor={!isPage}
     >
-      <div className={styles.faqContent}>
-        <div ref={leftColumnRef} className={styles.leftColumn}>
-          <div className={styles.imageWrapper}>
-            <video
-              ref={faqVideoRef}
-              src={isSectionLoaded ? faqVideo : undefined}
-              className={styles.video}
-              autoPlay
-              muted
-              playsInline
-              preload="none"
-            />
-          </div>
-        </div>
+      {isPage && !loading && !error && faqItems.length > 0 ? (
+        <FaqJsonLd items={faqItems} />
+      ) : null}
 
-        <div ref={rightColumnRef} className={styles.rightColumn}>
-          <h2 className={styles.title}>FAQ</h2>
+      {loading ? (
+        <FaqSkeleton />
+      ) : error ? (
+        <div className={styles.faqContent}>
+          <HeadingTag className={styles.title}>FAQ</HeadingTag>
+          <p className={styles.statusMsg}>Не удалось загрузить FAQ.</p>
+          <button type="button" className={styles.retryBtn} onClick={() => void fetchFAQ()}>
+            Повторить
+          </button>
+        </div>
+      ) : faqItems.length === 0 ? (
+        <div className={styles.faqContent}>
+          <HeadingTag className={styles.title}>FAQ</HeadingTag>
+          <p className={styles.statusMsg}>Пока нет вопросов в FAQ.</p>
+        </div>
+      ) : (
+        <div className={styles.faqContent}>
+          <HeadingTag className={styles.title}>FAQ</HeadingTag>
           <div className={styles.faqList}>
-            {faqItems.map((item, index) => (
-              <div key={index} id={`faq-${index + 1}`} className={styles.faqItem}>
-                <button
-                  className={styles.question}
-                  onClick={() => toggleQuestion(index)}
-                >
-                  <span className={styles.questionText}>{item.question}</span>
-                  <span className={styles.arrow}>
-                    {expandedIndex === index ? '↑' : '↓'}
-                  </span>
-                </button>
-                <div
-                  className={`${styles.answer} ${expandedIndex === index ? styles.expanded : ''}`}
-                  dangerouslySetInnerHTML={{ __html: item.answer }}
-                />
-              </div>
-            ))}
+            {faqItems.map((item, index) => {
+              const expanded = expandedIndex === index;
+              const itemId = `faq-${item.id}`;
+              const panelId = `${itemId}-panel`;
+              const triggerId = `${panelId}-trigger`;
+              return (
+                <div key={item.id} id={itemId} className={styles.faqItem}>
+                  <button
+                    type="button"
+                    id={triggerId}
+                    className={styles.question}
+                    onClick={() => toggleQuestion(index)}
+                    aria-expanded={expanded}
+                    aria-controls={panelId}
+                  >
+                    <span className={styles.questionText}>{item.question}</span>
+                    <span
+                      className={`${styles.chevron} ${expanded ? styles.chevronOpen : ''}`}
+                      aria-hidden
+                    >
+                      <svg width="18" height="18" viewBox="0 0 22 22" fill="none">
+                        <path
+                          d="M11 4v14M4 11h14"
+                          stroke="currentColor"
+                          strokeWidth="1.3"
+                        />
+                      </svg>
+                    </span>
+                  </button>
+                  <div
+                    id={panelId}
+                    role="region"
+                    aria-labelledby={triggerId}
+                    hidden={!expanded}
+                    className={styles.answer}
+                    dangerouslySetInnerHTML={{ __html: renderFaqAnswerHtml(item.answer) }}
+                  />
+                </div>
+              );
+            })}
           </div>
         </div>
-      </div>
-    </section>
+      )}
+    </HomeSection>
   );
 };

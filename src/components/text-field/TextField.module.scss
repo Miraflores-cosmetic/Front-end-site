@@ -82,12 +82,12 @@
   font-weight: 350;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #3d83f6;
+  color: $green-297;
   cursor: pointer;
   line-height: 1.2;
 
   &:hover {
-    color: #3d83f6;
+    color: $green-297;
     text-decoration: underline;
   }
 }

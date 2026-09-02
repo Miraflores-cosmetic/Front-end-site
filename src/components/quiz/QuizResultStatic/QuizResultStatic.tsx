@@ -34,7 +34,7 @@ export const QuizResultStatic: React.FC<QuizResultStaticProps> = ({
           <QuizEndFaceCareFooter textBlock={endBlock.texts[0]} content={content} />
           {showActions && (
             <div className={styles.actions}>
-              <Button text="Перейти в каталог" onClick={() => navigate('/face')} />
+              <Button text="Перейти в каталог" onClick={() => navigate('/catalog/kozha')} />
               <button type="button" className={styles.secondaryLink} onClick={() => navigate('/quiz')}>
                 Пройти заново
               </button>

@@ -169,8 +169,8 @@
 .dot,
 .dotActive {
   box-sizing: content-box;
-  width: 8px;
-  height: 8px;
+  width: 5px;
+  height: 5px;
   padding: 18px;
   margin: -18px;
   border: none;
@@ -183,7 +183,7 @@
 
 .dotActive {
   background-color: $green-297;
-  transform: scale(1.15);
+  transform: scale(1.1);
 }
 
 .skeletonList {

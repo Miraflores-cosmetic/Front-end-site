@@ -27,8 +27,8 @@
   width: 100%;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  /* вертикаль — странице; горизонталь — pointer-handler в TS */
-  touch-action: pan-y;
+  /* native horizontal на таче; mouse-drag — pointer-handler в TS */
+  touch-action: pan-x pan-y;
   scrollbar-width: none;
   cursor: grab;
 
@@ -81,7 +81,7 @@
 .item {
   flex: 0 0 var(--strip-item-w, 432px);
   min-width: 0;
-  touch-action: pan-y;
+  touch-action: pan-x pan-y;
 
   > * {
     width: 100%;

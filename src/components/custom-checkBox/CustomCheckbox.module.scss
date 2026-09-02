@@ -1,3 +1,5 @@
+@use '@/style/variables.scss' as *;
+
 .wrapper {
   display: inline-flex;
   align-items: center;
@@ -34,7 +36,8 @@
 
 /* когда чекбокс отмечен */
 .input:checked + .box {
-  background: #008000; /* зелёный фон */
+  background: $green-297;
+  border-color: $green-297;
 }
 
 .input:checked + .box .check {

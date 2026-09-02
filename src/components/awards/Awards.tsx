@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import styles from './Awards.module.scss';
 
 import awardsVideo from '@/assets/videos/awards.mp4';
@@ -20,6 +20,42 @@ const AWARD_TEXTS = [
 
 export const Awards: React.FC = () => {
   const isMobile = useScreenMatch();
+  const videoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const tryPlay = () => {
+      video.muted = true;
+      void video.play().catch(() => {
+        /* autoplay policy — ignore */
+      });
+    };
+
+    tryPlay();
+
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') tryPlay();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    const io =
+      typeof IntersectionObserver !== 'undefined'
+        ? new IntersectionObserver(
+            (entries) => {
+              if (entries.some((e) => e.isIntersecting)) tryPlay();
+            },
+            { threshold: 0.15 },
+          )
+        : null;
+    io?.observe(video);
+
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      io?.disconnect();
+    };
+  }, [isMobile]);
 
   return (
     <HomeSection className={styles.awardsContainer} aria-labelledby="awards-title">
@@ -54,24 +90,26 @@ export const Awards: React.FC = () => {
           {isMobile ? (
             <div className={styles.bottomImageWrapper}>
               <video
+                ref={videoRef}
                 src={awardsVideo}
                 className={styles.awardImageMobile}
                 autoPlay
                 muted
                 loop
                 playsInline
-                preload="none"
+                preload="auto"
               />
             </div>
           ) : (
             <video
+              ref={videoRef}
               src={awardsVideo}
               className={styles.awardVideo}
               autoPlay
               muted
               loop
               playsInline
-              preload="none"
+              preload="auto"
             />
           )}
         </div>

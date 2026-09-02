@@ -425,7 +425,7 @@ const Catalog: React.FC = () => {
                 sale={sale}
                 priceMin={priceMin}
                 priceMax={priceMax}
-                showClearCategory={Boolean(selectedRoot || meta?.collection)}
+                showClearCategory={false}
                 clearCategoryLabel={
                   meta?.collection ? 'сбросить коллекцию' : 'сбросить категорию'
                 }
@@ -525,9 +525,7 @@ const Catalog: React.FC = () => {
                 >
                   Показать ещё
                 </button>
-              ) : (
-                <p className={styles.loadMoreStatus}>Все товары загружены</p>
-              )}
+              ) : null}
             </div>
           ) : null}
         </>

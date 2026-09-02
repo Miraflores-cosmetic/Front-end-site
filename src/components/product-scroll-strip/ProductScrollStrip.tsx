@@ -202,7 +202,9 @@ export function ProductScrollStrip({
     let dragged = false;
 
     const onPointerDown = (e: PointerEvent) => {
-      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      // Touch/pen: native overflow-x + touch-action: pan-x pan-y
+      if (e.pointerType !== 'mouse') return;
+      if (e.button !== 0) return;
       if (el.scrollWidth <= el.clientWidth + 1) return;
       pointerId = e.pointerId;
       startX = e.clientX;

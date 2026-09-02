@@ -120,6 +120,11 @@
     overflow: hidden;
     touch-action: pan-y;
 
+    &[data-gallery] {
+      touch-action: pan-y;
+      cursor: ew-resize;
+    }
+
     @media (max-width: $viewport-mobile-max) {
       width: 100%;
       height: auto;
@@ -198,15 +203,15 @@
       z-index: 4;
       display: flex;
       gap: 3px;
-      width: min(72px, 36%);
+      width: min(44px, 24%);
       opacity: 0;
       transition: opacity 0.15s ease;
       pointer-events: none;
 
       @media (max-width: $viewport-mobile-max) {
         bottom: 8px;
-        width: min(96px, 48%);
-        gap: 4px;
+        width: min(56px, 30%);
+        gap: 3px;
         pointer-events: auto;
       }
     }

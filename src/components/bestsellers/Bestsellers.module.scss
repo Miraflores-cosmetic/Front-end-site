@@ -97,13 +97,3 @@
     padding: 0;
   }
 }
-
-.atelierSection {
-  margin-top: 40px;
-  margin-bottom: 240px;
-  padding: 0;
-
-  @media (max-width: $viewport-mobile-max) {
-    margin-bottom: 120px;
-  }
-}

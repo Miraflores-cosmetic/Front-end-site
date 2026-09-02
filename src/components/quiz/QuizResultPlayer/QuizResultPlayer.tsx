@@ -194,7 +194,7 @@ export const QuizResultPlayer: React.FC<QuizResultPlayerProps> = ({
                 <QuizEndFaceCareFooter textBlock={endBlock?.texts[0]} content={content} />
 
                 <div className={styles.actions}>
-                  <Button text="Перейти в каталог" onClick={() => navigate('/face')} />
+                  <Button text="Перейти в каталог" onClick={() => navigate('/catalog/kozha')} />
                   <button type="button" className={styles.secondaryLink} onClick={onRestart}>
                     Пройти заново
                   </button>

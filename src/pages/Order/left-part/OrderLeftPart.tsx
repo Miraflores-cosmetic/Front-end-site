@@ -605,7 +605,6 @@ const OrderLeftPart: React.FC = () => {
 
       {isMobile && (
         <section>
-          <Certificate />
           <TotalAccordion
             total={mobileAccordionData.finalTotal}
             goodsTotal={mobileAccordionData.goodsTotal}
@@ -621,6 +620,7 @@ const OrderLeftPart: React.FC = () => {
             addressSelected={Boolean(selectedAddress)}
             hasPayableLines={mobileAccordionData.hasPayableLines}
           />
+          <Certificate />
         </section>
       )}
 

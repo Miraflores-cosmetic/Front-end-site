@@ -218,7 +218,7 @@
   padding: 40px 32px 28px;
   background: #f6f5ef;
   color: $black;
-  min-height: 240px;
+  min-height: 720px;
   overflow: visible;
 }
 
@@ -356,7 +356,7 @@
   }
 
   .right {
-    min-height: 160px;
+    min-height: 480px;
     padding: 24px max(16px, env(safe-area-inset-right, 0px)) 20px
       max(16px, env(safe-area-inset-left, 0px));
     gap: 10px;

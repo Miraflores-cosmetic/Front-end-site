@@ -27,10 +27,9 @@ export type BestsellersProps = {
   excludeProductSlug?: string;
   collectionId?: string;
   collectionTitle?: string;
-  isAtelierSection?: boolean;
   /**
    * Desktop bleed past parent right padding (→ ProductScrollStrip).
-   * Default: 32 on padded pages (PDP/catalog/profile/atelier), 0 on Home.
+   * Default: 32 on padded pages (PDP/catalog/profile), 0 on Home.
    */
   bleed?: number;
   /**
@@ -86,14 +85,13 @@ export default function Bestsellers({
   excludeProductSlug,
   collectionId,
   collectionTitle,
-  isAtelierSection = false,
   bleed,
   padInlineStart = 0,
   padInlineStartMobile = 0,
 }: BestsellersProps) {
   const stripBleed =
     bleed ??
-    (isProductPage || isCatalogPage || isProfilePage || isAtelierSection ? 32 : 0);
+    (isProductPage || isCatalogPage || isProfilePage ? 32 : 0);
   const stripSize = isCatalogPage ? 'md' : 'lg';
   const dispatch = useDispatch<AppDispatch>();
   const { bestSellers, loading, hasAttemptedLoad } = useSelector(
@@ -189,8 +187,7 @@ export default function Bestsellers({
       ? `/catalog?collection=${encodeURIComponent(collectionId)}`
       : '/catalog';
 
-  const isHomeStrip =
-    !isProductPage && !isCatalogPage && !isProfilePage && !isAtelierSection;
+  const isHomeStrip = !isProductPage && !isCatalogPage && !isProfilePage;
 
   return (
     <HomeSection
@@ -201,7 +198,6 @@ export default function Bestsellers({
         isProductPage ? styles.productPage : '',
         isCatalogPage ? styles.catalogPage : '',
         isProfilePage ? styles.profilePage : '',
-        isAtelierSection ? styles.atelierSection : '',
       ]
         .filter(Boolean)
         .join(' ')}

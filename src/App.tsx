@@ -20,7 +20,6 @@ import ForgotPassword from '@/pages/ForgotPassword/ForgotPassword';
 import EmailConfirmation from '@/pages/EmailConfirmation/EmailConfirmation';
 import ResetPassword from '@/pages/ResetPassword/ResetPassword';
 import ProductDetailPage from '@/pages/ProductDetail';
-import FacePage from './pages/Face/Face';
 import About from './pages/About/About';
 import Order from './pages/Order/Order';
 import ProfilePage from './pages/Profile/Profile';
@@ -255,7 +254,7 @@ const App: React.FC = () => {
         <Route path='/catalog/:cat?/:sub?' element={<Catalog />} />
         <Route path='/product/:slug' element={<ProductDetailPage />} />
         <Route path='/category/:slug' element={<CategoryToCatalogRedirect />} />
-        <Route path='/face' element={<FacePage />} />
+        <Route path='/face' element={<Navigate to='/catalog/kozha' replace />} />
         <Route element={<QuizRoutesLayout />}>
           <Route path='/quiz' element={<QuizZonePage />} />
           <Route path='/quiz/face' element={<QuizFacePage />} />

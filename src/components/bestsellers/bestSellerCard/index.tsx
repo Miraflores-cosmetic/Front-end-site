@@ -73,6 +73,8 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
   const [mediaHovered, setMediaHovered] = useState(false);
   const [unlockedThrough, setUnlockedThrough] = useState(0);
   const scrubMovedRef = useRef(false);
+  const galleryAxisRef = useRef<'x' | 'y' | null>(null);
+  const galleryPointerIdRef = useRef<number | null>(null);
 
   const gallery = useMemo(() => normalizeGallery(product), [product]);
   const galleryKey = gallery.join('\0');
@@ -147,7 +149,37 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!hasGallery || isMobile) return;
+      if (!hasGallery) return;
+
+      if (isMobile) {
+        if (galleryPointerIdRef.current !== e.pointerId) return;
+        const startX = (e.currentTarget as HTMLElement).dataset.galleryStartX;
+        const startY = (e.currentTarget as HTMLElement).dataset.galleryStartY;
+        if (startX == null || startY == null) return;
+        const dx = e.clientX - Number(startX);
+        const dy = e.clientY - Number(startY);
+
+        if (!galleryAxisRef.current) {
+          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+          galleryAxisRef.current = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+          if (galleryAxisRef.current === 'x') {
+            try {
+              e.currentTarget.setPointerCapture(e.pointerId);
+            } catch {
+              /* ignore */
+            }
+          }
+        }
+
+        if (galleryAxisRef.current !== 'x') return;
+        e.stopPropagation();
+        e.preventDefault();
+        scrubMovedRef.current = true;
+        setScrubbing(true);
+        scrubFromClientX(e.clientX, e.currentTarget);
+        return;
+      }
+
       if (e.pointerType !== 'mouse' && e.buttons === 0) return;
       if (e.pointerType !== 'mouse') scrubMovedRef.current = true;
       setScrubbing(true);
@@ -158,7 +190,17 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!hasGallery || isMobile) return;
+      if (!hasGallery) return;
+
+      if (isMobile) {
+        galleryPointerIdRef.current = e.pointerId;
+        galleryAxisRef.current = null;
+        scrubMovedRef.current = false;
+        e.currentTarget.dataset.galleryStartX = String(e.clientX);
+        e.currentTarget.dataset.galleryStartY = String(e.clientY);
+        return;
+      }
+
       scrubMovedRef.current = false;
       if (e.pointerType !== 'mouse') {
         setScrubbing(true);
@@ -169,9 +211,30 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
   );
 
   const endScrub = useCallback(() => {
+    if (isMobile) {
+      galleryPointerIdRef.current = null;
+      galleryAxisRef.current = null;
+      setScrubbing(false);
+      return;
+    }
     setScrubbing(false);
     setGalleryIndex(0);
-  }, []);
+  }, [isMobile]);
+
+  const onPointerUp = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (isMobile) {
+        if (galleryPointerIdRef.current === e.pointerId) {
+          galleryPointerIdRef.current = null;
+          galleryAxisRef.current = null;
+        }
+        setScrubbing(false);
+        return;
+      }
+      setScrubbing(false);
+    },
+    [isMobile],
+  );
 
   const onMediaClick = (e: React.MouseEvent) => {
     if (scrubMovedRef.current) {
@@ -278,13 +341,11 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
             onMouseLeave={() => {
               if (!isMobile) setMediaHovered(false);
             }}
-            onPointerDown={!isMobile && hasGallery ? onPointerDown : undefined}
-            onPointerMove={!isMobile && hasGallery ? onPointerMove : undefined}
-            onPointerLeave={!isMobile && hasGallery ? endScrub : undefined}
-            onPointerCancel={!isMobile && hasGallery ? endScrub : undefined}
-            onPointerUp={
-              !isMobile && hasGallery ? () => setScrubbing(false) : undefined
-            }
+            onPointerDown={hasGallery ? onPointerDown : undefined}
+            onPointerMove={hasGallery ? onPointerMove : undefined}
+            onPointerLeave={hasGallery ? endScrub : undefined}
+            onPointerCancel={hasGallery ? endScrub : undefined}
+            onPointerUp={hasGallery ? onPointerUp : undefined}
           >
             {isMobile && activeVariantId ? (
               <FavoriteButton productId={activeVariantId} />

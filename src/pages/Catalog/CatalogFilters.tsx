@@ -1,8 +1,6 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import type { CatalogTagPublic } from '@/api/catalogApi';
+import type { CatalogCollectionPublic, CatalogTagPublic } from '@/api/catalogApi';
 import { CatalogChipDropdown } from './CatalogChipDropdown';
-import { catalogHref } from './catalogHref';
 import styles from './Catalog.module.scss';
 
 const PRICE_PRESETS: { label: string; min: number | null; max: number | null }[] = [
@@ -19,25 +17,24 @@ function formatRub(n: number): string {
 export function CatalogFilters({
   tags,
   tag,
+  collections,
+  collection,
   sale,
   priceMin,
   priceMax,
-  showClearCategory,
-  clearCategoryLabel,
-  searchParams,
-  path,
   patchParams,
+  onSelectCollection,
 }: {
   tags: CatalogTagPublic[];
   tag: string;
+  collections: CatalogCollectionPublic[];
+  collection: string;
   sale: boolean;
   priceMin: number | null;
   priceMax: number | null;
-  showClearCategory: boolean;
-  clearCategoryLabel: string;
-  searchParams: URLSearchParams;
-  path: { cat?: string; sub?: string };
   patchParams: (patch: Record<string, string | null>) => void;
+  /** Сброс path cat/sub + ?collection= */
+  onSelectCollection: (slug: string | null) => void;
 }) {
   const [openChip, setOpenChip] = useState<string | null>(null);
 
@@ -55,6 +52,11 @@ export function CatalogFilters({
   const tagLabel = tag
     ? tags.find((t) => t.slug === tag)?.name ?? 'этапы ухода'
     : 'этапы ухода';
+
+  const collectionActive = Boolean(collection);
+  const collectionLabel = collection
+    ? collections.find((c) => c.slug === collection)?.name ?? 'коллекции'
+    : 'коллекции';
 
   return (
     <div className={styles.chipsRow}>
@@ -134,6 +136,52 @@ export function CatalogFilters({
         })}
       </CatalogChipDropdown>
 
+      {collections.length > 0 ? (
+        <CatalogChipDropdown
+          id="collection"
+          label={collectionLabel}
+          active={collectionActive}
+          open={openChip === 'collection'}
+          onToggle={() =>
+            setOpenChip((v) => (v === 'collection' ? null : 'collection'))
+          }
+          onClose={() => setOpenChip(null)}
+        >
+          <button
+            type="button"
+            role="option"
+            aria-selected={!collection}
+            className={styles.chipOption}
+            data-active={!collection || undefined}
+            onClick={() => {
+              onSelectCollection(null);
+              setOpenChip(null);
+            }}
+          >
+            Все
+          </button>
+          {collections.map((c) => {
+            const selected = collection === c.slug;
+            return (
+              <button
+                key={c.id}
+                type="button"
+                role="option"
+                aria-selected={selected}
+                className={styles.chipOption}
+                data-active={selected || undefined}
+                onClick={() => {
+                  onSelectCollection(selected ? null : c.slug);
+                  setOpenChip(null);
+                }}
+              >
+                {c.name}
+              </button>
+            );
+          })}
+        </CatalogChipDropdown>
+      ) : null}
+
       <button
         type="button"
         className={styles.chip}
@@ -142,19 +190,6 @@ export function CatalogFilters({
       >
         со скидкой
       </button>
-
-      {showClearCategory ? (
-        <Link
-          to={catalogHref(
-            searchParams,
-            { cat: null, sub: null, collection: null, q: null },
-            path,
-          )}
-          className={styles.clearCategory}
-        >
-          {clearCategoryLabel}
-        </Link>
-      ) : null}
     </div>
   );
 }

@@ -66,6 +66,9 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 
   &::-webkit-scrollbar {
     display: none;
@@ -74,6 +77,7 @@
   @media (max-width: $viewport-mobile-max) {
     margin-bottom: 12px;
     padding-right: max(1rem, env(safe-area-inset-right, 0px));
+    gap: 8px;
   }
 }
 
@@ -83,6 +87,7 @@
   padding: 0 0 4px;
   display: flex;
   flex-wrap: nowrap;
+  align-items: center;
   gap: 10px;
   width: max-content;
   min-width: 100%;
@@ -120,6 +125,35 @@
 
   @media (max-width: $viewport-mobile-max) {
     gap: 6px;
+  }
+}
+
+.bubbleKids {
+  gap: 8px;
+
+  @media (max-width: $viewport-mobile-max) {
+    gap: 6px;
+  }
+
+  .bubbleImg,
+  .bubblePh {
+    width: 52px;
+    height: 52px;
+
+    @media (max-width: $viewport-mobile-max) {
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  .bubbleLabel {
+    font-size: 14px;
+    padding-right: 12px;
+
+    @media (max-width: $viewport-mobile-max) {
+      font-size: 11px;
+      padding-right: 8px;
+    }
   }
 }
 

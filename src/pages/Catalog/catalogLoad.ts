@@ -1,10 +1,13 @@
 import {
-  adaptProductDetail,
+  cardToProductEdge,
+  clearCatalogApiCaches,
   fetchCatalogTags,
   fetchCategories,
   fetchCollections,
-  fetchProductBySlug,
+  fetchProductList,
   getProductEdges,
+  isStorefrontCollection,
+  type CatalogCollectionPublic,
   type CatalogTagPublic,
 } from '@/api/catalogApi';
 import { searchCatalog } from '@/api/cmsApi';
@@ -37,6 +40,7 @@ export type CatalogNotice =
 export type CatalogPageData = {
   categories: CatalogCategoryNode[];
   tags: CatalogTagPublic[];
+  collections: CatalogCollectionPublic[];
   products: BestSellersProduct[];
   total: number;
   page: number;
@@ -57,9 +61,10 @@ export type CatalogPageData = {
 type CatalogMeta = {
   categories: CatalogCategoryNode[];
   tags: CatalogTagPublic[];
+  collections: CatalogCollectionPublic[];
 };
 
-/** Session cache — categories/tags не перекачиваем на каждый filter/page. */
+/** Session cache — categories/tags/collections не перекачиваем на каждый filter/page. */
 let metaCache: CatalogMeta | null = null;
 let metaPromise: Promise<CatalogMeta> | null = null;
 
@@ -91,17 +96,20 @@ function mapCategories(
 }
 
 async function loadCatalogMeta(force = false): Promise<CatalogMeta> {
+  if (force) clearCatalogApiCaches();
   if (!force && metaCache) return metaCache;
   if (!force && metaPromise) return metaPromise;
 
   metaPromise = (async () => {
-    const [catsRes, tagsRes] = await Promise.all([
+    const [catsRes, tagsRes, colsRes] = await Promise.all([
       fetchCategories(),
       fetchCatalogTags(),
+      fetchCollections(),
     ]);
-    const next = {
+    const next: CatalogMeta = {
       categories: mapCategories(catsRes.items ?? []),
       tags: tagsRes.items ?? [],
+      collections: (colsRes.items ?? []).filter(isStorefrontCollection),
     };
     metaCache = next;
     return next;
@@ -114,10 +122,46 @@ async function loadCatalogMeta(force = false): Promise<CatalogMeta> {
   }
 }
 
-/** Invalidate after admin edits (optional hook). */
+/** Invalidate after admin edits / Retry. */
 export function clearCatalogMetaCache() {
   metaCache = null;
   metaPromise = null;
+  searchHitsCache.clear();
+  searchHitsInflight.clear();
+  clearCatalogApiCaches();
+}
+
+type SearchProductHit = {
+  id: string;
+  title: string;
+  href: string;
+  subtitle?: string | null;
+  imageUrl?: string | null;
+};
+
+/** Hits for one q — «Показать ещё» не повторяет GET /search. */
+const searchHitsCache = new Map<string, SearchProductHit[]>();
+const searchHitsInflight = new Map<string, Promise<SearchProductHit[]>>();
+
+async function loadSearchProductHits(q: string): Promise<SearchProductHit[]> {
+  const key = q.trim();
+  const cached = searchHitsCache.get(key);
+  if (cached) return cached;
+  let inflight = searchHitsInflight.get(key);
+  if (!inflight) {
+    inflight = searchCatalog(key)
+      .then((search) => {
+        const hits =
+          search.groups?.find((g) => g.key === 'products')?.items ?? [];
+        searchHitsCache.set(key, hits);
+        return hits;
+      })
+      .finally(() => {
+        searchHitsInflight.delete(key);
+      });
+    searchHitsInflight.set(key, inflight);
+  }
+  return inflight;
 }
 
 function emptyPage(
@@ -138,6 +182,7 @@ function emptyPage(
   return {
     categories: [],
     tags: [],
+    collections: [],
     products: [],
     total: 0,
     collectionName: null,
@@ -147,25 +192,37 @@ function emptyPage(
   };
 }
 
-/** Search hits → real catalog cards (price / variants / ATC). */
+/**
+ * Search hits → catalog cards.
+ * One GET /catalog/products?slugs=… instead of N× GET /products/:slug.
+ */
 async function hydrateSearchHits(
-  items: Array<{ id: string; title: string; href: string; subtitle?: string | null; imageUrl?: string | null }>,
+  items: Array<{
+    id: string;
+    title: string;
+    href: string;
+    subtitle?: string | null;
+    imageUrl?: string | null;
+  }>,
 ): Promise<BestSellersProduct[]> {
-  const results = await Promise.all(
-    items.map(async (item) => {
-      const slug =
-        item.href.replace(/^\/product\//, '').split('?')[0]?.trim() || '';
-      if (!slug) return null;
-      try {
-        const detail = await fetchProductBySlug(slug);
-        if (!detail) return null;
-        return mapProductNodeToBestSeller(adaptProductDetail(detail));
-      } catch {
-        return null;
-      }
-    }),
-  );
-  return results.filter((p): p is BestSellersProduct => Boolean(p));
+  const slugs = items
+    .map((item) => item.href.replace(/^\/product\//, '').split('?')[0]?.trim() || '')
+    .filter(Boolean);
+  if (!slugs.length) return [];
+
+  const res = await fetchProductList({
+    slugs,
+    limit: slugs.length,
+    page: 1,
+  });
+  const bySlug = new Map((res.items ?? []).map((c) => [c.slug, c]));
+  const products: BestSellersProduct[] = [];
+  for (const slug of slugs) {
+    const card = bySlug.get(slug);
+    if (!card) continue;
+    products.push(mapProductNodeToBestSeller(cardToProductEdge(card).node));
+  }
+  return products;
 }
 
 export async function loadCatalogPage(opts: {
@@ -179,7 +236,7 @@ export async function loadCatalogPage(opts: {
   page?: number;
   q?: string;
   limit?: number;
-  /** Force refetch categories/tags (Retry). */
+  /** Force refetch categories/tags/collections (Retry). */
   refreshMeta?: boolean;
 }): Promise<CatalogPageData> {
   const cat = opts.cat?.trim() || '';
@@ -208,6 +265,7 @@ export async function loadCatalogPage(opts: {
 
   let categories: CatalogCategoryNode[] = [];
   let tags: CatalogTagPublic[] = [];
+  let collections: CatalogCollectionPublic[] = [];
   let notice: CatalogNotice = null;
   let products: BestSellersProduct[] = [];
   let total = 0;
@@ -217,6 +275,7 @@ export async function loadCatalogPage(opts: {
     const meta = await loadCatalogMeta(Boolean(opts.refreshMeta));
     categories = meta.categories;
     tags = meta.tags;
+    collections = meta.collections;
   } catch {
     return emptyPage(baseOpts, { notice: 'api' });
   }
@@ -258,13 +317,15 @@ export async function loadCatalogPage(opts: {
   }
 
   if (collection) {
-    try {
-      const cols = await fetchCollections();
-      const col = (cols.items ?? []).find((c) => c.slug === collection);
-      if (!col) notice = notice ?? 'unknown_collection';
-      else collectionName = col.name;
-    } catch {
-      notice = notice ?? 'api';
+    const col = collections.find((c) => c.slug === collection);
+    if (!col) {
+      // служебные / скрытые — всё ещё валидны по API
+      const all = await fetchCollections().catch(() => null);
+      const raw = all?.items?.find((c) => c.slug === collection);
+      if (!raw) notice = notice ?? 'unknown_collection';
+      else collectionName = raw.name;
+    } else {
+      collectionName = col.name;
     }
   }
 
@@ -287,6 +348,7 @@ export async function loadCatalogPage(opts: {
     return {
       categories,
       tags,
+      collections,
       products: [],
       total: 0,
       collectionName,
@@ -298,19 +360,14 @@ export async function loadCatalogPage(opts: {
 
   try {
     if (q) {
-      const search = await searchCatalog(q);
-      const productGroup = search.groups?.find((g) => g.key === 'products');
-      const hrefs = productGroup?.items ?? [];
+      const hrefs = await loadSearchProductHits(q);
       total = hrefs.length;
       const start = (page - 1) * limit;
       const slice = hrefs.slice(start, start + limit);
       products = await hydrateSearchHits(slice);
-      // если гидрация частично упала — не подставляем stubs с price:0
       if (products.length === 0 && slice.length > 0) {
         notice = 'api';
         total = 0;
-      } else {
-        // total остаётся по search hits; страница может быть короче при fail отдельных slug
       }
     } else {
       const categorySlug = resolvedSub || resolvedCat || undefined;
@@ -337,6 +394,7 @@ export async function loadCatalogPage(opts: {
   return {
     categories,
     tags,
+    collections,
     products,
     total,
     collectionName,

@@ -38,7 +38,10 @@ const QuizZonePage: React.FC = () => {
         transition={{ duration: 0.35 }}
       >
         <h1 className={styles.heading}>Подбор ухода</h1>
-        <p className={styles.subheading}>{getQuizPlain(content, 'greeting')}</p>
+        <p className={styles.subheading}>
+          Пройдите квиз и получите персональный подбор косметики по задачам вашей кожи и
+          промокод для покупок!
+        </p>
         <p className={styles.question}>{getQuizPlain(content, 'choose_care')}</p>
         <QuizZoneSelector onSelect={handleZoneSelect} />
       </motion.div>

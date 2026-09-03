@@ -14,6 +14,7 @@ import {
   getFooterSupportLinks,
   type SiteNavLink,
 } from '@/config/siteNavLinks';
+import { isHiddenInNav } from '@/utils/navHide';
 import styles from './Footer.module.scss';
 
 /**
@@ -106,7 +107,7 @@ const Footer: React.FC = () => {
 
   const catalogLinks = useMemo(() => {
     const items = navItems
-      .filter((item) => item.category?.slug)
+      .filter((item) => item.category?.slug && !isHiddenInNav(item))
       .map((item) => ({
         href: `/catalog/${encodeURIComponent(item.category.slug)}`,
         label: item.name,

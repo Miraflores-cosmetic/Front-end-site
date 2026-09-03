@@ -9,6 +9,7 @@ import { getBestSellers } from '@/store/slices/bestsellersSlice';
 import { getProductsByCareStageRest } from '@/graphql/queries/products.service';
 import { getCollectionById } from '@/graphql/queries/collection.service';
 import { mapProductNodeToBestSeller } from '@/utils/mapProductNodeToBestSeller';
+import { BESTSELLERS_COLLECTION_SLUG } from '@/api/catalogApi';
 import type { AppDispatch, RootState } from '@/store/store';
 import type { BestSellersProduct } from '@/types/products';
 import MoreLink, { SectionTitleRow } from '@/components/MoreLink/MoreLink';
@@ -185,7 +186,7 @@ export default function Bestsellers({
   const moreHref =
     collectionId && !collectionId.includes('=')
       ? `/catalog?collection=${encodeURIComponent(collectionId)}`
-      : '/catalog';
+      : `/catalog?collection=${BESTSELLERS_COLLECTION_SLUG}`;
 
   const isHomeStrip = !isProductPage && !isCatalogPage && !isProfilePage;
 

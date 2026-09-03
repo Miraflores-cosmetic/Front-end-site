@@ -56,11 +56,23 @@ export function findSubcategoryInRoot(
   root: CategoryTreeNode,
   slug: string,
 ): CategoryTreeNode | null {
+  const chain = findSubcategoryChainInRoot(root, slug);
+  return chain[chain.length - 1] ?? null;
+}
+
+/**
+ * Цепочка от L2 к листу внутри корня.
+ * L2: [child]; L3: [child, grandchild] — для крошек.
+ */
+export function findSubcategoryChainInRoot(
+  root: CategoryTreeNode,
+  slug: string,
+): CategoryTreeNode[] {
   for (const child of root.children ?? []) {
-    if (child.slug === slug) return child;
+    if (child.slug === slug) return [child];
     for (const grand of child.children ?? []) {
-      if (grand.slug === slug) return grand;
+      if (grand.slug === slug) return [child, grand];
     }
   }
-  return null;
+  return [];
 }

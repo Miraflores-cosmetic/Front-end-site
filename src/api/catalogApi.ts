@@ -108,6 +108,18 @@ type JcosCollection = {
   coverImageUrl: string | null;
 };
 
+export type CatalogCollectionPublic = JcosCollection;
+
+/** Публичная коллекция «Бестселлеры» (чип каталога + «смотреть все»). */
+export const BESTSELLERS_COLLECTION_SLUG = 'bestsellery';
+
+/** Служебные коллекции — не в чипе витрины. */
+const HIDDEN_COLLECTION_SLUGS = new Set(['tovar-v-meniu']);
+
+export function isStorefrontCollection(c: { slug: string }): boolean {
+  return !HIDDEN_COLLECTION_SLUGS.has(c.slug);
+}
+
 export type CartSyncLine = { variantId: string; qty: number };
 
 export type CartSyncResponse = {
@@ -135,12 +147,15 @@ export type CartSyncResponse = {
 };
 
 const SALEOR_COLLECTION_HINTS: Record<string, string[]> = {
-  'Q29sbGVjdGlvbjo3': ['bestseller', 'bestsellers', 'хит', 'hit'],
+  'Q29sbGVjdGlvbjo3': ['bestsellery', 'bestseller', 'bestsellers', 'хит', 'hit'],
   'Q29sbGVjdGlvbjoxMQ==': ['nabory', 'nabor', 'sets', 'набор'],
   'Q29sbGVjdGlvbjoxMg==': ['menu', 'меню'],
 };
 
-let collectionsCache: JcosCollection[] | null = null;
+let collectionsCache: { items: JcosCollection[] } | null = null;
+let collectionsInflight: Promise<{ items: JcosCollection[] }> | null = null;
+let categoriesCache: { items: JcosCategory[] } | null = null;
+let categoriesInflight: Promise<{ items: JcosCategory[] }> | null = null;
 
 function pricingBlock(price: number, compareAt: number | null) {
   const discount =
@@ -186,7 +201,7 @@ function mapVariantNode(v: JcosVariant) {
   };
 }
 
-function cardToProductEdge(card: JcosProductCard): ProductEdge {
+export function cardToProductEdge(card: JcosProductCard): ProductEdge {
   const thumb = uploadsUrl(card.imageUrl) || card.imageUrl || '';
   const urls = (card.imageUrls ?? []).map((u) => uploadsUrl(u) || u).filter(Boolean);
   const variantId = card.variantId || card.id;
@@ -326,6 +341,8 @@ export async function fetchProductList(params: {
   priceMin?: number;
   priceMax?: number;
   sale?: boolean;
+  /** Batch hydrate — comma-joined on the wire. */
+  slugs?: string[];
 }): Promise<{ items: JcosProductCard[]; total: number; page: number; limit: number }> {
   return apiFetch('/catalog/products', {
     query: {
@@ -338,6 +355,7 @@ export async function fetchProductList(params: {
       priceMin: params.priceMin,
       priceMax: params.priceMax,
       sale: params.sale ? '1' : undefined,
+      slugs: params.slugs?.length ? params.slugs.join(',') : undefined,
     },
   });
 }
@@ -351,11 +369,34 @@ export async function fetchProductBySlug(slug: string): Promise<JcosProductDetai
 }
 
 export async function fetchCategories(): Promise<{ items: JcosCategory[] }> {
-  return apiFetch('/catalog/categories');
+  if (categoriesCache) return categoriesCache;
+  if (!categoriesInflight) {
+    categoriesInflight = apiFetch<{ items: JcosCategory[] }>('/catalog/categories')
+      .then((res) => {
+        categoriesCache = { items: res.items ?? [] };
+        return categoriesCache;
+      })
+      .finally(() => {
+        categoriesInflight = null;
+      });
+  }
+  return categoriesInflight;
 }
 
+/** Meta only (slug/name/cover). Backend default без products — чипы каталога. */
 export async function fetchCollections(): Promise<{ items: JcosCollection[] }> {
-  return apiFetch('/catalog/collections');
+  if (collectionsCache) return collectionsCache;
+  if (!collectionsInflight) {
+    collectionsInflight = apiFetch<{ items: JcosCollection[] }>('/catalog/collections')
+      .then((res) => {
+        collectionsCache = { items: res.items ?? [] };
+        return collectionsCache;
+      })
+      .finally(() => {
+        collectionsInflight = null;
+      });
+  }
+  return collectionsInflight;
 }
 
 export type CatalogTagPublic = {
@@ -389,22 +430,29 @@ export async function fetchCatalogTags(): Promise<{ items: CatalogTagPublic[] }>
   return catalogTagsInflight;
 }
 
+/** Invalidate tags/categories/collections memory caches (Retry / admin hook). */
+export function clearCatalogApiCaches() {
+  catalogTagsCache = null;
+  catalogTagsInflight = null;
+  categoriesCache = null;
+  categoriesInflight = null;
+  collectionsCache = null;
+  collectionsInflight = null;
+}
+
 export async function syncCart(lines: CartSyncLine[]): Promise<CartSyncResponse> {
   return apiJson('/catalog/cart/sync', 'POST', { lines });
 }
 
 export async function resolveCollectionSlug(saleorGid: string): Promise<string | null> {
-  if (!collectionsCache) {
-    const res = await fetchCollections();
-    collectionsCache = res.items ?? [];
-  }
+  const { items } = await fetchCollections();
   const patterns = SALEOR_COLLECTION_HINTS[saleorGid] ?? [];
-  for (const c of collectionsCache) {
+  for (const c of items) {
     const slugL = c.slug.toLowerCase();
     const nameL = c.name.toLowerCase();
     if (patterns.some((p) => slugL.includes(p) || nameL.includes(p))) return c.slug;
   }
-  return collectionsCache[0]?.slug ?? null;
+  return items[0]?.slug ?? null;
 }
 
 export async function getProductsByCollectionGid(

@@ -14,13 +14,30 @@ function asHtml(value?: string | null): string {
   return sanitizeCmsHtml(editorJsToHtml(value));
 }
 
+/** Строка характеристик PDP — без HTML-тегов (иначе React покажет `<p>…</p>` текстом). */
+function asPlainDetail(value?: string | null): string {
+  const html = asHtml(value);
+  if (!html) return '';
+  return html
+    .replace(/<br\s*\/?>/gi, ' ')
+    .replace(/<\/?[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function generateProductDetails(product: ProductSliceItem | null): DetailItem[] {
   if (!product) return [];
 
   const details: DetailItem[] = [];
   const push = (label: string, value?: string | null) => {
-    const html = asHtml(value);
-    if (html) details.push({ label, value: html });
+    const text = asPlainDetail(value);
+    if (text) details.push({ label, value: text });
   };
 
   push('тип продукта', product.productTypeName);

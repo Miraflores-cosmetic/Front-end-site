@@ -9,6 +9,10 @@ import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFal
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { isVariantOutOfStock } from '@/utils/stock';
 import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
+import {
+  glueRussianPrepositions,
+  glueRussianPrepositionsInHtml,
+} from '@/utils/glueRussianPrepositions';
 import { getVolumeFromVariant } from '@/utils/getVolumeFromVariant';
 import type { RootState } from '@/store/store';
 
@@ -18,15 +22,16 @@ const IMAGE_PLACEHOLDER =
 const renderCardDescription = (description?: string | null) => {
   const normalized = sanitizeProductCardDescription(description, { preserveHtml: true });
   if (!normalized) return null;
-  if (/<[^>]+>/.test(normalized)) {
+  const glued = glueRussianPrepositionsInHtml(normalized);
+  if (/<[^>]+>/.test(glued)) {
     return (
       <p
         className={styles.desc}
-        dangerouslySetInnerHTML={{ __html: normalized }}
+        dangerouslySetInnerHTML={{ __html: glued }}
       />
     );
   }
-  return <p className={styles.desc}>{normalized}</p>;
+  return <p className={styles.desc}>{glued}</p>;
 };
 
 function normalizeGallery(product: BestSellersProduct): string[] {
@@ -42,8 +47,10 @@ function normalizeGallery(product: BestSellersProduct): string[] {
 /** Mobile: объём / одна строка описания. */
 function mobileCardSubtitle(product: BestSellersProduct): string {
   const size = product.size?.trim();
-  if (size) return size;
-  return sanitizeProductCardDescription(product.description, { preserveHtml: false });
+  if (size) return glueRussianPrepositions(size);
+  return glueRussianPrepositions(
+    sanitizeProductCardDescription(product.description, { preserveHtml: false }),
+  );
 }
 
 type BestSellerProductCardProps = {
@@ -481,7 +488,9 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
                   }
                 }}
               >
-                <p className={styles.title}>{product.title}</p>
+                <p className={styles.title}>
+                  {glueRussianPrepositions(product.title)}
+                </p>
               </Link>
               <div className={styles.priceWrapper}>
                 {hasSellablePrice ? (

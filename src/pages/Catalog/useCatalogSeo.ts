@@ -83,7 +83,7 @@ export function useCatalogSeo(opts: {
         '@type': 'ListItem',
         position: i + 1,
         url: `${origin}/product/${encodeURIComponent(p.slug)}`,
-        name: p.name,
+        name: p.title,
       })),
     };
   }, [

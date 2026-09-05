@@ -12,6 +12,8 @@ export type ReviewCardProps = {
   mediaUrl?: string | null;
   title: string;
   subtitle?: string;
+  /** Подпись автора; пусто / «Покупатель» — не показываем на медиа */
+  authorName?: string | null;
   text: string;
   rating: number;
   date: string;
@@ -38,6 +40,7 @@ export const Review: React.FC<ReviewCardProps> = ({
   mediaUrl,
   title,
   subtitle,
+  authorName,
   text,
   rating,
   date,
@@ -48,30 +51,7 @@ export const Review: React.FC<ReviewCardProps> = ({
   const ratingLabel = Number.isFinite(rating) ? rating.toFixed(1) : '0.0';
   const mediaSrc = mediaUrl ? normalizeMediaUrl(mediaUrl) : null;
   const thumbSrc = productThumb ? normalizeMediaUrl(productThumb) : null;
-
-  if (kind === 'video' && mediaSrc) {
-    return (
-      <article className={`${styles.card} ${styles.mediaCard}`} aria-label="Видео-отзыв">
-        <video
-          className={styles.media}
-          src={mediaSrc}
-          muted
-          playsInline
-          loop
-          autoPlay
-          preload="metadata"
-        />
-      </article>
-    );
-  }
-
-  if (kind === 'image' && mediaSrc) {
-    return (
-      <article className={`${styles.card} ${styles.mediaCard}`} aria-label="Фото-отзыв">
-        <ImageWithFallback src={mediaSrc} alt="" className={styles.media} />
-      </article>
-    );
-  }
+  const authorLabel = authorName?.trim() || '';
 
   const productBlock = (
     <>
@@ -88,6 +68,53 @@ export const Review: React.FC<ReviewCardProps> = ({
       </div>
     </>
   );
+
+  const productEl = productSlug ? (
+    <Link to={`/product/${encodeURIComponent(productSlug)}`} className={styles.product}>
+      {productBlock}
+    </Link>
+  ) : (
+    <div className={styles.product}>{productBlock}</div>
+  );
+
+  const mediaFooter = (
+    <div className={styles.mediaFooter}>
+      {authorLabel ? <p className={styles.mediaAuthor}>{authorLabel}</p> : null}
+      {productEl}
+    </div>
+  );
+
+  if (kind === 'video' && mediaSrc) {
+    return (
+      <article
+        className={`${styles.card} ${styles.mediaCard}`}
+        aria-label="Видео-отзыв"
+      >
+        <video
+          className={styles.media}
+          src={mediaSrc}
+          muted
+          playsInline
+          loop
+          autoPlay
+          preload="metadata"
+        />
+        {mediaFooter}
+      </article>
+    );
+  }
+
+  if (kind === 'image' && mediaSrc) {
+    return (
+      <article
+        className={`${styles.card} ${styles.mediaCard}`}
+        aria-label="Фото-отзыв"
+      >
+        <ImageWithFallback src={mediaSrc} alt="" className={styles.media} />
+        {mediaFooter}
+      </article>
+    );
+  }
 
   return (
     <article className={`${styles.card} ${styles.textCard}`}>
@@ -112,13 +139,7 @@ export const Review: React.FC<ReviewCardProps> = ({
         <p className={styles.body}>{text}</p>
       </div>
 
-      {productSlug ? (
-        <Link to={`/product/${encodeURIComponent(productSlug)}`} className={styles.product}>
-          {productBlock}
-        </Link>
-      ) : (
-        <div className={styles.product}>{productBlock}</div>
-      )}
+      {productEl}
     </article>
   );
 };

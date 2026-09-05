@@ -20,6 +20,7 @@ type ReviewCardData = {
   mediaUrl: string | null;
   title: string;
   subtitle: string;
+  authorName: string | null;
   text: string;
   rating: number;
   date: string;
@@ -42,12 +43,14 @@ function formatReviewDate(iso: string): string {
 
 function mapReview(r: PublishedReview): ReviewCardData {
   const { kind, mediaUrl } = resolveReviewKind([r.image1, r.image2]);
+  const author = r.authorName?.trim() || '';
   return {
     id: r.id,
     kind,
     mediaUrl,
     title: r.product.name,
     subtitle: r.product.shortDescription?.trim() || '',
+    authorName: author && author !== 'Покупатель' ? author : null,
     text: r.text,
     rating: r.rating,
     date: formatReviewDate(r.createdAt),
@@ -63,6 +66,7 @@ function ReviewCardView({ review }: { review: ReviewCardData }) {
       mediaUrl={review.mediaUrl}
       title={review.title}
       subtitle={review.subtitle}
+      authorName={review.authorName}
       text={review.text}
       rating={review.rating}
       date={review.date}

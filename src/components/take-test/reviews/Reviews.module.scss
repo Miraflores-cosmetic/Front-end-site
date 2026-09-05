@@ -8,13 +8,9 @@
   &.reviewsContainerPage {
     margin-bottom: 140px;
     width: 100%;
-    padding-left: 32px;
-    padding-right: 32px;
 
     @media (max-width: $viewport-mobile-max) {
       padding-top: 24px;
-      padding-left: 16px;
-      padding-right: 16px;
       margin-bottom: 48px;
     }
   }
@@ -85,12 +81,13 @@
 
   @media (max-width: $viewport-mobile-max) {
     grid-template-columns: 1fr;
-    gap: 12px;
+    gap: 10px;
   }
 }
 
 .pageGridItem {
   min-width: 0;
+  width: 100%;
   height: 100%;
 }
 

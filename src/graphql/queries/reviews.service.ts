@@ -90,6 +90,7 @@ export type ProductReviewsListResponse = {
     slug: string;
     name: string;
     imageUrl?: string | null;
+    shortDescription?: string | null;
   } | null;
   ratingAvg: number | null;
   ratingCount: number;

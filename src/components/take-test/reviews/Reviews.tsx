@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import styles from './Reviews.module.scss';
-import { Review } from './review/Review';
+import { Review, resolveReviewKind } from './review/Review';
 import {
   getLatestPublishedReviews,
   getProductPublishedReviews,
@@ -9,45 +9,74 @@ import {
 } from '@/graphql/queries/reviewsAll.service';
 import MoreLink, { SectionTitleRow } from '@/components/MoreLink/MoreLink';
 import { HomeSection } from '@/components/home-section/HomeSection';
+import {
+  ProductScrollStrip,
+  ProductScrollStripItem,
+} from '@/components/product-scroll-strip/ProductScrollStrip';
 
-interface ReviewData {
+type ReviewCardData = {
   id: string;
-  images: string[];
+  kind: ReturnType<typeof resolveReviewKind>['kind'];
+  mediaUrl: string | null;
   title: string;
   subtitle: string;
   text: string;
   rating: number;
   date: string;
-}
+  productSlug?: string;
+  productThumb: string | null;
+};
 
 const PAGE_SIZE = 20;
-const PREVIEW_LIMIT = 3;
+const PREVIEW_LIMIT = 12;
 
-function mapReview(r: PublishedReview): ReviewData {
-  const reviewPhotos = [r.image1, r.image2].filter(Boolean) as string[];
-  const productThumb = r.product.thumbnail ? [r.product.thumbnail] : [];
+function formatReviewDate(iso: string): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yyyy = d.getFullYear();
+  return `${dd}.${mm}.${yyyy}`;
+}
+
+function mapReview(r: PublishedReview): ReviewCardData {
+  const { kind, mediaUrl } = resolveReviewKind([r.image1, r.image2]);
   return {
     id: r.id,
-    images: reviewPhotos.length > 0 ? reviewPhotos : productThumb,
+    kind,
+    mediaUrl,
     title: r.product.name,
-    subtitle: r.authorName?.trim() || '',
+    subtitle: r.product.shortDescription?.trim() || '',
     text: r.text,
     rating: r.rating,
-    date: r.createdAt
-      ? new Date(r.createdAt).toLocaleDateString('ru-RU', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })
-      : '',
+    date: formatReviewDate(r.createdAt),
+    productSlug: r.product.slug,
+    productThumb: r.product.thumbnail ?? null,
   };
+}
+
+function ReviewCardView({ review }: { review: ReviewCardData }) {
+  return (
+    <Review
+      kind={review.kind}
+      mediaUrl={review.mediaUrl}
+      title={review.title}
+      subtitle={review.subtitle}
+      text={review.text}
+      rating={review.rating}
+      date={review.date}
+      productSlug={review.productSlug}
+      productThumb={review.productThumb}
+    />
+  );
 }
 
 export const Reviews: React.FC<{
   variant?: 'preview' | 'page';
   productSlug?: string;
 }> = ({ variant = 'preview', productSlug }) => {
-  const [reviews, setReviews] = useState<ReviewData[]>([]);
+  const [reviews, setReviews] = useState<ReviewCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
@@ -102,6 +131,7 @@ export const Reviews: React.FC<{
   return (
     <HomeSection
       className={`${styles.reviewsContainer} ${showAll ? styles.reviewsContainerPage : ''}`}
+      bleed={!showAll}
       flush={showAll}
     >
       <div className={styles.titleWrapper}>
@@ -111,43 +141,70 @@ export const Reviews: React.FC<{
         </SectionTitleRow>
       </div>
 
-      <div className={styles.reviewsWrapper}>
-        <div>
-          {loading ? (
-            <>
-              {[1, 2, 3].map((i) => (
-                <div key={i} className={styles.reviewSkeleton} aria-hidden="true">
-                  <div className={styles.reviewSkeletonImage} />
-                  <div className={styles.reviewSkeletonContent}>
-                    <div className={styles.reviewSkeletonLine} />
-                    <div className={styles.reviewSkeletonLineShort} />
-                    <div className={styles.reviewSkeletonLineMid} />
-                  </div>
-                </div>
-              ))}
-            </>
-          ) : reviews.length > 0 ? (
-            reviews.map((review) => (
-              <Review key={review.id} {...review} wideContent />
-            ))
-          ) : (
-            <p className={styles.noReviews}>Пока нет отзывов</p>
-          )}
+      {loading ? (
+        <ProductScrollStrip
+          size="md"
+          itemWidth={400}
+          itemWidthMobile={280}
+          gap={16}
+          gapMobile={10}
+          bleed={32}
+          bleedMobile={16}
+          aria-label="Отзывы: загрузка"
+        >
+          {Array.from({ length: 4 }, (_, i) => (
+            <ProductScrollStripItem key={i}>
+              <div className={styles.cardSkeleton} aria-hidden />
+            </ProductScrollStripItem>
+          ))}
+        </ProductScrollStrip>
+      ) : null}
 
-          {hasMore ? (
-            <div className={styles.loadMoreWrap}>
-              <button
-                type="button"
-                className={styles.loadMoreBtn}
-                disabled={loadingMore}
-                onClick={() => void loadPage(page + 1, true)}
-              >
-                {loadingMore ? 'Загрузка…' : 'Показать ещё'}
-              </button>
+      {!loading && reviews.length > 0 && !showAll ? (
+        <ProductScrollStrip
+          size="md"
+          itemWidth={400}
+          itemWidthMobile={280}
+          gap={16}
+          gapMobile={10}
+          bleed={32}
+          bleedMobile={16}
+          aria-label="Отзывы"
+        >
+          {reviews.map((review) => (
+            <ProductScrollStripItem key={review.id}>
+              <ReviewCardView review={review} />
+            </ProductScrollStripItem>
+          ))}
+        </ProductScrollStrip>
+      ) : null}
+
+      {!loading && reviews.length > 0 && showAll ? (
+        <div className={styles.pageGrid}>
+          {reviews.map((review) => (
+            <div key={review.id} className={styles.pageGridItem}>
+              <ReviewCardView review={review} />
             </div>
-          ) : null}
+          ))}
         </div>
-      </div>
+      ) : null}
+
+      {!loading && reviews.length === 0 ? (
+        <p className={styles.noReviews}>Пока нет отзывов</p>
+      ) : null}
+
+      {hasMore ? (
+        <div className={styles.loadMoreWrap}>
+          <button
+            type="button"
+            className={styles.loadMoreBtn}
+            disabled={loadingMore}
+            onClick={() => void loadPage(page + 1, true)}
+          >
+            {loadingMore ? 'Загрузка…' : 'Показать ещё'}
+          </button>
+        </div>
+      ) : null}
     </HomeSection>
   );
 };

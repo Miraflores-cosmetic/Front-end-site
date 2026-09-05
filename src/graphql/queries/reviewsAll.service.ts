@@ -17,6 +17,7 @@ export interface PublishedReview {
     name: string;
     slug?: string;
     thumbnail?: string | null;
+    shortDescription?: string | null;
   };
 }
 
@@ -35,7 +36,12 @@ type LatestApiRow = {
   authorName?: string | null;
   image1Url?: string | null;
   image2Url?: string | null;
-  product?: { name: string; slug?: string; imageUrl?: string | null };
+  product?: {
+    name: string;
+    slug?: string;
+    imageUrl?: string | null;
+    shortDescription?: string | null;
+  };
 };
 
 type LatestApiPage = {
@@ -82,6 +88,7 @@ function mapRow(r: LatestApiRow): PublishedReview {
       name: r.product?.name || '',
       slug: r.product?.slug,
       thumbnail: normalizeMediaUrl(uploadsUrl(r.product?.imageUrl) || r.product?.imageUrl),
+      shortDescription: r.product?.shortDescription?.trim() || null,
     },
   };
 }
@@ -92,6 +99,7 @@ function mapProductPage(res: ProductReviewsListResponse): PublishedReviewsPage {
   const productThumb = normalizeMediaUrl(
     uploadsUrl(res.product?.imageUrl) || res.product?.imageUrl,
   );
+  const productSub = res.product?.shortDescription?.trim() || null;
   return {
     items: (res.items ?? []).map((r) => {
       const image1 = r.image1Url ?? r.image1 ?? null;
@@ -108,6 +116,7 @@ function mapProductPage(res: ProductReviewsListResponse): PublishedReviewsPage {
           name: productName,
           slug: productSlug,
           thumbnail: productThumb,
+          shortDescription: productSub,
         },
       };
     }),

@@ -1,62 +1,124 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import styles from './Review.module.scss';
-import star from '@/assets/icons/star.svg';
+import greenStar from '@/assets/icons/green-star.svg';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
 import { normalizeMediaUrl } from '@/utils/mediaUrl';
 
-interface ReviewProps {
-  images: string[];
+export type ReviewCardKind = 'text' | 'image' | 'video';
+
+export type ReviewCardProps = {
+  kind: ReviewCardKind;
+  mediaUrl?: string | null;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   text: string;
   rating: number;
   date: string;
-  /** Широкая колонка текста (главная и /reviews/) */
-  wideContent?: boolean;
+  productSlug?: string;
+  productThumb?: string | null;
+};
+
+function isVideoUrl(url: string): boolean {
+  return /\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(url);
 }
 
-export const Review: React.FC<ReviewProps> = ({
-  images,
+/** image1/2 → media card; video extension → reel; иначе текст. */
+export function resolveReviewKind(
+  mediaUrls: Array<string | null | undefined>,
+): { kind: ReviewCardKind; mediaUrl: string | null } {
+  const first = mediaUrls.map((u) => u?.trim() || '').find(Boolean) || null;
+  if (!first) return { kind: 'text', mediaUrl: null };
+  if (isVideoUrl(first)) return { kind: 'video', mediaUrl: first };
+  return { kind: 'image', mediaUrl: first };
+}
+
+export const Review: React.FC<ReviewCardProps> = ({
+  kind,
+  mediaUrl,
   title,
   subtitle,
   text,
   rating,
   date,
-  wideContent = false
+  productSlug,
+  productThumb,
 }) => {
-  const hasImages = Array.isArray(images) && images.length > 0;
+  const stars = Math.max(0, Math.min(5, Math.round(rating)));
+  const ratingLabel = Number.isFinite(rating) ? rating.toFixed(1) : '0.0';
+  const mediaSrc = mediaUrl ? normalizeMediaUrl(mediaUrl) : null;
+  const thumbSrc = productThumb ? normalizeMediaUrl(productThumb) : null;
+
+  if (kind === 'video' && mediaSrc) {
+    return (
+      <article className={`${styles.card} ${styles.mediaCard}`} aria-label="Видео-отзыв">
+        <video
+          className={styles.media}
+          src={mediaSrc}
+          muted
+          playsInline
+          loop
+          autoPlay
+          preload="metadata"
+        />
+      </article>
+    );
+  }
+
+  if (kind === 'image' && mediaSrc) {
+    return (
+      <article className={`${styles.card} ${styles.mediaCard}`} aria-label="Фото-отзыв">
+        <ImageWithFallback src={mediaSrc} alt="" className={styles.media} />
+      </article>
+    );
+  }
+
+  const productBlock = (
+    <>
+      <div className={styles.productThumb}>
+        {thumbSrc ? (
+          <ImageWithFallback src={thumbSrc} alt="" className={styles.productImg} />
+        ) : (
+          <span className={styles.productPh} aria-hidden />
+        )}
+      </div>
+      <div className={styles.productText}>
+        <p className={styles.productName}>{title}</p>
+        {subtitle ? <p className={styles.productSub}>{subtitle}</p> : null}
+      </div>
+    </>
+  );
 
   return (
-    <div className={`${styles.review} ${wideContent ? styles.reviewsWide : ''}`}>
-      {hasImages && (
-        <div className={styles.images}>
-          {images.map((img) => (
-            <ImageWithFallback
-              key={img}
-              src={normalizeMediaUrl(img)}
-              alt={title}
-              className={styles.reviewImage}
-            />
-          ))}
-        </div>
-      )}
-
-      <div className={styles.rating}>
-        <div>
-          {Array(rating)
-            .fill(null)
-            .map((_, i) => (
-              <img key={i} src={star} alt={`${title} ${i + 1}`} />
+    <article className={`${styles.card} ${styles.textCard}`}>
+      <header className={styles.meta}>
+        <div className={styles.rating} aria-label={`Оценка ${ratingLabel} из 5`}>
+          <span className={styles.stars} aria-hidden>
+            {Array.from({ length: 5 }, (_, i) => (
+              <img
+                key={i}
+                src={greenStar}
+                alt=""
+                className={i < stars ? styles.starOn : styles.starOff}
+              />
             ))}
+          </span>
+          <span className={styles.ratingValue}>{ratingLabel}</span>
         </div>
-        <p>{rating}.0</p>
+        {date ? <time className={styles.date}>{date}</time> : null}
+      </header>
+
+      <div className={styles.bodyWrap}>
+        <p className={styles.body}>{text}</p>
       </div>
-      <div className={styles.content}>
-        <h3 className={styles.title}>{title}</h3>
-        {subtitle ? <p className={styles.subtitle}>{subtitle}</p> : null}
-        <p className={styles.text}>{text}</p>
-        <p className={styles.date}>{date}</p>
-      </div>
-    </div>
+
+      {productSlug ? (
+        <Link to={`/product/${encodeURIComponent(productSlug)}`} className={styles.product}>
+          {productBlock}
+        </Link>
+      ) : (
+        <div className={styles.product}>{productBlock}</div>
+      )}
+    </article>
   );
 };

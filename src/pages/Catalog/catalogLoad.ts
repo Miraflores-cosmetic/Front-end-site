@@ -68,22 +68,31 @@ type CatalogMeta = {
 let metaCache: CatalogMeta | null = null;
 let metaPromise: Promise<CatalogMeta> | null = null;
 
+/** Служебный корень ETL — не в пузырях (см. backend PUBLIC_HIDDEN_CATEGORY_SLUGS). */
+const HIDDEN_CATEGORY_SLUGS = new Set(['uncategorized']);
+
+function isStorefrontCategory(c: { slug: string; name: string }): boolean {
+  if (HIDDEN_CATEGORY_SLUGS.has(c.slug)) return false;
+  if (c.name.trim().toLowerCase() === 'без категории') return false;
+  return true;
+}
+
 function mapCategories(
   items: Awaited<ReturnType<typeof fetchCategories>>['items'],
 ): CatalogCategoryNode[] {
-  return (items ?? []).map((c) => ({
+  return (items ?? []).filter(isStorefrontCategory).map((c) => ({
     id: c.id,
     name: c.name,
     slug: c.slug,
     parentId: c.parentId,
     imageUrl: c.imageUrl ? uploadsUrl(c.imageUrl) || c.imageUrl : null,
-    children: (c.children ?? []).map((ch) => ({
+    children: (c.children ?? []).filter(isStorefrontCategory).map((ch) => ({
       id: ch.id,
       name: ch.name,
       slug: ch.slug,
       parentId: ch.parentId,
       imageUrl: ch.imageUrl ? uploadsUrl(ch.imageUrl) || ch.imageUrl : null,
-      children: (ch.children ?? []).map((gr) => ({
+      children: (ch.children ?? []).filter(isStorefrontCategory).map((gr) => ({
         id: gr.id,
         name: gr.name,
         slug: gr.slug,

@@ -138,7 +138,7 @@ export function ProductScrollStrip({
     const flushScroll = () => {
       rafId = 0;
       if (pendingDelta === 0) return;
-      const maxScroll = el.scrollWidth - el.clientWidth;
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
       const next = Math.max(0, Math.min(maxScroll, el.scrollLeft + pendingDelta));
       pendingDelta = 0;
       if (next !== el.scrollLeft) {
@@ -149,13 +149,14 @@ export function ProductScrollStrip({
     /**
      * Горизонтальный жест тачпада (deltaX) / Shift+колёсико.
      * Axis-lock: после выбора оси X поглощаем и Y, чтобы страница не дёргалась.
+     * На краях ленты жест отпускаем — иначе «бесконечная» прокрутка в пустоту.
      * Capture: иначе horizontal wheel иногда «съедает» page latching.
      */
     const onWheel = (e: WheelEvent) => {
       const target = e.target;
       if (!(target instanceof Node) || !wrap.contains(target)) return;
 
-      const maxScroll = el.scrollWidth - el.clientWidth;
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
       if (maxScroll <= 1) return;
 
       const { x, y } = normalizeWheelDelta(e);
@@ -175,8 +176,16 @@ export function ProductScrollStrip({
       }
 
       if (axisLock === 'x' || shiftVertical) {
-        axisLockUntil = now + 180;
         const delta = shiftVertical ? y : x;
+        const atStart = el.scrollLeft <= 0.5;
+        const atEnd = el.scrollLeft >= maxScroll - 0.5;
+        // Дальше первого/последнего — не глотаем жест (иначе бесконечный «ход»)
+        if (delta !== 0 && ((atEnd && delta > 0) || (atStart && delta < 0))) {
+          axisLock = null;
+          pendingDelta = 0;
+          return;
+        }
+        axisLockUntil = now + 180;
         // Блокируем и «косой» deltaY, иначе страница едет вместе с лентой
         e.preventDefault();
         if (delta !== 0) {
@@ -234,7 +243,8 @@ export function ProductScrollStrip({
       if (axis !== 'x') return;
       dragged = true;
       pauseSnap();
-      el.scrollLeft = startScroll - dx;
+      const maxScroll = Math.max(0, el.scrollWidth - el.clientWidth);
+      el.scrollLeft = Math.max(0, Math.min(maxScroll, startScroll - dx));
       e.preventDefault();
     };
 

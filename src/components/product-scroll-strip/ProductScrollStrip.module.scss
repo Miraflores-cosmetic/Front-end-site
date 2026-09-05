@@ -26,7 +26,8 @@
   overflow-y: hidden;
   width: 100%;
   -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
+  /* none — без rubber-band за последний/первый кадр */
+  overscroll-behavior-x: none;
   /* native horizontal на таче; mouse-drag — pointer-handler в TS */
   touch-action: pan-x pan-y;
   scrollbar-width: none;

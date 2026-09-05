@@ -26,6 +26,10 @@ export type PublishedReviewsPage = {
   total: number;
   page: number;
   limit: number;
+  product?: {
+    name: string;
+    slug?: string;
+  } | null;
 };
 
 type LatestApiRow = {
@@ -123,6 +127,11 @@ function mapProductPage(res: ProductReviewsListResponse): PublishedReviewsPage {
     total: res.total ?? 0,
     page: res.page ?? 1,
     limit: res.limit ?? 20,
+    product: res.product
+      ? { name: res.product.name, slug: res.product.slug }
+      : productName
+        ? { name: productName, slug: productSlug }
+        : null,
   };
 }
 

@@ -33,6 +33,86 @@
   min-width: 0;
 }
 
+.filterRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: -16px 0 28px;
+
+  @media (max-width: $viewport-mobile-max) {
+    margin: -4px 0 16px;
+    gap: 6px;
+  }
+}
+
+.filterChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: min(100%, 520px);
+  height: 36px;
+  padding: 0 12px 0 14px;
+  box-sizing: border-box;
+  border: 1.5px solid $green-297;
+  border-radius: 999px;
+  background: $green-297;
+  color: $white;
+  text-decoration: none;
+  font-family: $font-avenir;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+  &:hover {
+    background: $white;
+    border-color: $green-297;
+    color: $green-297;
+
+    .filterChipClear {
+      background: rgba(41, 114, 48, 0.12);
+      color: $green-297;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid $green-297;
+    outline-offset: 2px;
+  }
+
+  @media (max-width: $viewport-mobile-max) {
+    height: 30px;
+    padding: 0 10px 0 12px;
+    font-size: 11px;
+    letter-spacing: 0.03em;
+  }
+}
+
+.filterChipLabel {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filterChipClear {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.22);
+  color: inherit;
+  font-size: 16px;
+  line-height: 1;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
 .title {
   font-family: $font-oceanic;
   text-transform: uppercase;

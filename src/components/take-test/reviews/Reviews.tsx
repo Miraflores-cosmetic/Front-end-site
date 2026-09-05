@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import styles from './Reviews.module.scss';
 import { Review, resolveReviewKind } from './review/Review';
 import {
@@ -85,6 +86,7 @@ export const Reviews: React.FC<{
   const [loadingMore, setLoadingMore] = useState(false);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [filterProductName, setFilterProductName] = useState<string | null>(null);
   const showAll = variant === 'page';
   const HeadingTag = showAll ? 'h1' : 'h2';
 
@@ -101,9 +103,17 @@ export const Reviews: React.FC<{
           setReviews((prev) => (append ? [...prev, ...mapped] : mapped));
           setTotal(data.total);
           setPage(data.page);
+          if (productSlug) {
+            setFilterProductName(
+              data.product?.name?.trim() || mapped[0]?.title || productSlug,
+            );
+          } else {
+            setFilterProductName(null);
+          }
         } catch (error) {
           console.error('Error loading reviews:', error);
           if (!append) setReviews([]);
+          if (productSlug) setFilterProductName(productSlug);
         } finally {
           setLoading(false);
           setLoadingMore(false);
@@ -116,6 +126,7 @@ export const Reviews: React.FC<{
         const data = await getLatestPublishedReviews(PREVIEW_LIMIT);
         setReviews(data.map(mapReview));
         setTotal(data.length);
+        setFilterProductName(null);
       } catch (error) {
         console.error('Error loading reviews:', error);
         setReviews([]);
@@ -131,6 +142,7 @@ export const Reviews: React.FC<{
   }, [loadPage]);
 
   const hasMore = showAll && reviews.length < total;
+  const chipLabel = filterProductName || productSlug || '';
 
   return (
     <HomeSection
@@ -144,6 +156,22 @@ export const Reviews: React.FC<{
           {!showAll ? <MoreLink to="/reviews/" /> : null}
         </SectionTitleRow>
       </div>
+
+      {showAll && productSlug ? (
+        <div className={styles.filterRow}>
+          <Link
+            to="/reviews"
+            className={styles.filterChip}
+            aria-label={`Сбросить фильтр по товару «${chipLabel}»`}
+            title="Показать все отзывы"
+          >
+            <span className={styles.filterChipLabel}>{chipLabel}</span>
+            <span className={styles.filterChipClear} aria-hidden>
+              ×
+            </span>
+          </Link>
+        </div>
+      ) : null}
 
       {loading ? (
         <ProductScrollStrip

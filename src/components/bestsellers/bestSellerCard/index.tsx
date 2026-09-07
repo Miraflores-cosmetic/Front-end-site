@@ -80,13 +80,10 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
   const [mediaHovered, setMediaHovered] = useState(false);
   const [unlockedThrough, setUnlockedThrough] = useState(0);
   const scrubMovedRef = useRef(false);
-  const galleryAxisRef = useRef<'x' | 'y' | null>(null);
-  const galleryPointerIdRef = useRef<number | null>(null);
-  const swipeStartRef = useRef<{ x: number; y: number; index: number } | null>(
-    null,
-  );
-  const swipeDeltaXRef = useRef(0);
-  const swipeOwnedRef = useRef(false);
+  const galleryIndexRef = useRef(galleryIndex);
+  const imageLinkRef = useRef<HTMLAnchorElement | null>(null);
+
+  galleryIndexRef.current = galleryIndex;
 
   const gallery = useMemo(() => normalizeGallery(product), [product]);
   const galleryKey = gallery.join('\0');
@@ -159,133 +156,119 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
     [gallery.length],
   );
 
-  const onPointerDown = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!hasGallery) return;
+  /** Mobile: native touch on imageLink (passive:false) — pan-y в CSS, горизонталь листает фото. */
+  useEffect(() => {
+    if (!isMobile || !hasGallery) return;
+    const el = imageLinkRef.current;
+    if (!el) return;
 
-      if (isMobile) {
-        scrubMovedRef.current = false;
-        galleryAxisRef.current = null;
-        galleryPointerIdRef.current = e.pointerId;
-        swipeStartRef.current = {
-          x: e.clientX,
-          y: e.clientY,
-          index: galleryIndex,
-        };
-        swipeDeltaXRef.current = 0;
-        swipeOwnedRef.current = false;
-        setScrubbing(true);
-        return;
+    let startX = 0;
+    let startY = 0;
+    let startIndex = 0;
+    let axis: 'x' | 'y' | null = null;
+    let deltaX = 0;
+    let owned = false;
+
+    const onTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0]!;
+      startX = t.clientX;
+      startY = t.clientY;
+      startIndex = galleryIndexRef.current;
+      axis = null;
+      deltaX = 0;
+      owned = false;
+      scrubMovedRef.current = false;
+    };
+
+    const onTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      const t = e.touches[0]!;
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+
+      if (axis === null) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        axis = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
       }
 
+      if (axis !== 'x') return;
+
+      owned = true;
+      deltaX = dx;
+      if (Math.abs(dx) > 8) scrubMovedRef.current = true;
+      if (e.cancelable) e.preventDefault();
+    };
+
+    const onTouchEnd = () => {
+      if (!owned || axis !== 'x') {
+        owned = false;
+        axis = null;
+        return;
+      }
+      const threshold = 36;
+      if (Math.abs(deltaX) >= threshold) {
+        const next =
+          deltaX < 0
+            ? Math.min(gallery.length - 1, startIndex + 1)
+            : Math.max(0, startIndex - 1);
+        if (next !== startIndex) {
+          scrubMovedRef.current = true;
+          setGalleryIndex(next);
+          setUnlockedThrough((u) => Math.max(u, next));
+        }
+      }
+      owned = false;
+      axis = null;
+      deltaX = 0;
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd);
+    el.addEventListener('touchcancel', onTouchEnd);
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+      el.removeEventListener('touchcancel', onTouchEnd);
+    };
+  }, [gallery.length, hasGallery, isMobile, loading]);
+
+  // Desktop: hover/scrub по X. Mobile swipe — через touch на imageLink.
+  const onPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!hasGallery || isMobile) return;
       scrubMovedRef.current = false;
       if (e.pointerType !== 'mouse') {
         setScrubbing(true);
         scrubFromClientX(e.clientX, e.currentTarget);
       }
     },
-    [galleryIndex, hasGallery, isMobile, scrubFromClientX],
+    [hasGallery, isMobile, scrubFromClientX],
   );
 
   const onPointerMove = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!hasGallery) return;
-
-      if (isMobile) {
-        if (galleryPointerIdRef.current !== e.pointerId) return;
-        const start = swipeStartRef.current;
-        if (!start) return;
-
-        const dx = e.clientX - start.x;
-        const dy = e.clientY - start.y;
-
-        if (galleryAxisRef.current === null) {
-          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-          galleryAxisRef.current = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
-          if (galleryAxisRef.current === 'x') {
-            const last = gallery.length - 1;
-            const atStart = start.index <= 0 && dx > 0;
-            const atEnd = start.index >= last && dx < 0;
-            // На краю — не захватываем жест, чтобы трек мог скроллиться.
-            if (atStart || atEnd) return;
-            swipeOwnedRef.current = true;
-            try {
-              e.currentTarget.setPointerCapture(e.pointerId);
-            } catch {
-              /* ignore */
-            }
-          }
-        }
-
-        if (galleryAxisRef.current !== 'x' || !swipeOwnedRef.current) return;
-
-        e.stopPropagation();
-        if (e.cancelable) e.preventDefault();
-        swipeDeltaXRef.current = dx;
-        if (Math.abs(dx) > 8) scrubMovedRef.current = true;
-        return;
-      }
-
+      if (!hasGallery || isMobile) return;
       if (e.pointerType !== 'mouse' && e.buttons === 0) return;
       if (e.pointerType !== 'mouse') scrubMovedRef.current = true;
       setScrubbing(true);
       scrubFromClientX(e.clientX, e.currentTarget);
     },
-    [gallery.length, hasGallery, isMobile, scrubFromClientX],
+    [hasGallery, isMobile, scrubFromClientX],
   );
-
-  const finishMobileSwipe = useCallback(() => {
-    const start = swipeStartRef.current;
-    const dx = swipeDeltaXRef.current;
-    const axis = galleryAxisRef.current;
-    const owned = swipeOwnedRef.current;
-
-    galleryPointerIdRef.current = null;
-    galleryAxisRef.current = null;
-    swipeStartRef.current = null;
-    swipeDeltaXRef.current = 0;
-    swipeOwnedRef.current = false;
-    setScrubbing(false);
-
-    if (!owned || !start || axis !== 'x') return;
-
-    const threshold = 40;
-    if (Math.abs(dx) < threshold) return;
-
-    // Свайп влево → следующее фото; вправо → предыдущее.
-    const next =
-      dx < 0
-        ? Math.min(gallery.length - 1, start.index + 1)
-        : Math.max(0, start.index - 1);
-    if (next === start.index) return;
-    scrubMovedRef.current = true;
-    setGalleryIndex(next);
-    setUnlockedThrough((u) => Math.max(u, next));
-  }, [gallery.length]);
 
   const endScrub = useCallback(() => {
-    if (isMobile) {
-      finishMobileSwipe();
-      return;
-    }
+    if (isMobile) return;
     setScrubbing(false);
     setGalleryIndex(0);
-  }, [finishMobileSwipe, isMobile]);
+  }, [isMobile]);
 
-  const onPointerUp = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      if (isMobile) {
-        if (galleryPointerIdRef.current === e.pointerId) {
-          finishMobileSwipe();
-          return;
-        }
-        setScrubbing(false);
-        return;
-      }
-      setScrubbing(false);
-    },
-    [finishMobileSwipe, isMobile],
-  );
+  const onPointerUp = useCallback(() => {
+    if (isMobile) return;
+    setScrubbing(false);
+  }, [isMobile]);
 
   const onMediaClick = (e: React.MouseEvent) => {
     if (scrubMovedRef.current) {
@@ -408,6 +391,7 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
 
             {gallery.length > 0 && (
               <Link
+                ref={imageLinkRef}
                 to={'/product/' + product.slug}
                 className={styles.imageLink}
                 aria-label={product.title}

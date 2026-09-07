@@ -124,10 +124,9 @@
       touch-action: pan-y;
       cursor: ew-resize;
 
-      // На мобилке разрешаем горизонтальный pan треку на краях галереи;
-      // mid-swipe перехватываем в JS (preventDefault).
+      // Горизонталь — только JS-свайп фото (не отдаём pan-x треку).
       @media (max-width: $viewport-mobile-max) {
-        touch-action: pan-x pan-y;
+        touch-action: pan-y;
       }
     }
 
@@ -165,11 +164,14 @@
       height: 100%;
       cursor: pointer;
       position: relative;
+      touch-action: pan-y;
+      -webkit-user-select: none;
+      user-select: none;
     }
 
     &[data-gallery] .imageLink {
       @media (max-width: $viewport-mobile-max) {
-        touch-action: pan-x pan-y;
+        touch-action: pan-y;
       }
     }
 
@@ -373,9 +375,20 @@
 
       @media (max-width: $viewport-mobile-max) {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
         height: auto;
         gap: 8px;
+
+        .titleLink {
+          flex: none;
+          width: 100%;
+          max-width: 100%;
+        }
+
+        .priceWrapper {
+          justify-content: flex-start;
+          width: 100%;
+        }
       }
 
       .titleLink {

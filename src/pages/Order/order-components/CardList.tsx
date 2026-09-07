@@ -1,6 +1,7 @@
 import React from 'react';
 import styles from '../right-part/OrderRightPart.module.scss';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
+import { uploadsUrl } from '@/api/apiClient';
 
 export interface OrderProduct {
   variantId: string;
@@ -42,7 +43,7 @@ const CardList: React.FC<OrderCartListProps> = ({ cartData }) => {
           {/* Image */}
           <figure className={styles.cartImageWrapper}>
             <ImageWithFallback 
-              src={item.thumbnail} 
+              src={uploadsUrl(item.thumbnail) || item.thumbnail || ''} 
               alt={item.title} 
               className={styles.kremImage}
             />

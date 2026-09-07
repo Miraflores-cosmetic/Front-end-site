@@ -19,7 +19,7 @@ import { AddressInfo } from '@/types/auth';
 import { formatPhoneNumber } from '@/utils/phoneFormatter';
 import { useOrderCheckout } from '../OrderCheckoutContext';
 import { createOrder, payOrder, abandonOrder, requestShippingQuote } from '@/api/ordersApi';
-import { getOrCreateGuestId } from '@/api/apiClient';
+import { getOrCreateGuestId, uploadsUrl } from '@/api/apiClient';
 import { resolveCheckoutShippingMethod } from '@/utils/checkoutShipping';
 import { extractPvzCodeFromStreet2 } from '@/lib/addressVspMeta';
 import { syncCartLines } from '@/store/slices/checkoutSlice';
@@ -579,7 +579,7 @@ const OrderLeftPart: React.FC = () => {
         price,
         oldPrice: old > price ? old : undefined,
         discount: discountLabel,
-        image: line.thumbnail || krem,
+        image: uploadsUrl(line.thumbnail) || line.thumbnail || krem,
         isGift: Boolean(line.isGift),
         quantity: Number(line.quantity ?? 1) || 1,
         isGiftDenom: Boolean(line.isGiftDenom),
@@ -594,7 +594,7 @@ const OrderLeftPart: React.FC = () => {
         price: 0,
         oldPrice: undefined,
         discount: undefined,
-        image: giftLine.thumbnail || krem,
+        image: uploadsUrl(giftLine.thumbnail) || giftLine.thumbnail || krem,
         isGift: true,
         quantity: giftLine.quantity,
         isGiftDenom: false,

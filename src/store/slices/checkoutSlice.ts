@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { uploadsUrl } from '@/api/apiClient';
 import { syncCart as apiSyncCart } from '@/api/catalogApi';
 import {
   CheckoutState,
@@ -10,6 +11,19 @@ import { effectiveLineQuantityCap } from '@/utils/checkoutLineLimits';
 import { cartWouldMixGiftAndPhysical } from '@/utils/giftDenomCart';
 
 const CART_STORAGE_KEY = 'checkout_cart';
+
+/** ETL/dev URL `http://127.0.0.1:3001/uploads/...` → `/uploads/...` (как на странице сертификатов). */
+function cartThumbnail(url: string | null | undefined): string | undefined {
+  const next = uploadsUrl(url) || (url ?? '').trim();
+  return next || undefined;
+}
+
+function withCartThumbnails(lines: CheckoutLine[]): CheckoutLine[] {
+  return lines.map((line) => ({
+    ...line,
+    thumbnail: cartThumbnail(line.thumbnail),
+  }));
+}
 
 /** Ключ линии корзины — только variantId (оттенки не используются). */
 export type CartLineKey = {
@@ -41,7 +55,7 @@ const loadCartFromStorage = (): PersistedCheckout => {
     }
     const parsed = JSON.parse(serializedCart) as Partial<PersistedCheckout>;
     return {
-      lines: parsed.lines || [],
+      lines: withCartThumbnails(parsed.lines || []),
       voucherCode: parsed.voucherCode ?? null,
       voucherDiscount: typeof parsed.voucherDiscount === 'number' ? parsed.voucherDiscount : 0,
       voucherKind:
@@ -121,7 +135,7 @@ export const syncCartLines = createAsyncThunk(
         price: item.price,
         oldPrice: item.listPrice > item.price ? item.listPrice : null,
         slug: item.slug,
-        thumbnail: item.imageUrl ?? undefined,
+        thumbnail: cartThumbnail(item.imageUrl),
         size: item.variantName || undefined,
         quantityLimitPerCustomer: item.maxQty > 0 ? item.maxQty : null,
         quantityAvailable: item.maxQty,
@@ -276,6 +290,7 @@ const checkoutSlice = createSlice({
           action.payload.variantId.startsWith('gift-denom:');
         state.lines.push({
           ...action.payload,
+          thumbnail: cartThumbnail(action.payload.thumbnail),
           quantity: startQty,
           oldPrice: action.payload.oldPrice ?? null,
           discount: action.payload.discount ?? null,

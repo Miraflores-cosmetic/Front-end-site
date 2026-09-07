@@ -8,6 +8,7 @@ import { editorJsToHtml } from '@/utils/editorJsParser';
 import { sanitizeCmsHtml } from '@/utils/sanitizeCmsHtml';
 import { openDrawer } from '@/store/slices/drawerSlice';
 import type { AppDispatch } from '@/store/store';
+import { uploadsUrl } from '@/api/apiClient';
 
 const TotalAccordion: React.FC<TotalAccordionProps> = ({
   total,
@@ -110,7 +111,11 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
                   <div className={styles.countWrapper}>
                     <p className={styles.count}>{item.quantity ?? 1}</p>
                   </div>
-                  <img src={item.image} alt={item.name} className={styles.image} />
+                  <img
+                    src={uploadsUrl(item.image) || item.image}
+                    alt={item.name}
+                    className={styles.image}
+                  />
                 </div>
                 <div className={styles.productInfo}>
                   <div className={styles.nameSize}>

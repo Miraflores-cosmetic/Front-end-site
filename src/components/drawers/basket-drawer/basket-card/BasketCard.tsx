@@ -16,6 +16,7 @@ import { isAtOrOverLineLimit } from '@/utils/checkoutLineLimits';
 import { isVariantOutOfStock } from '@/utils/stock';
 import { isGiftDenomVariantId } from '@/utils/giftDenomCart';
 import { SITE_GIFT_CERTIFICATES_HREF } from '@/config/siteNavLinks';
+import { uploadsUrl } from '@/api/apiClient';
 
 const BasketCard: React.FC<BasketCardProps> = ({
   variantId,
@@ -34,6 +35,7 @@ const BasketCard: React.FC<BasketCardProps> = ({
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  const thumbSrc = uploadsUrl(thumbnail) || thumbnail || '';
   const isGiftDenom = Boolean(isGiftDenomProp) || isGiftDenomVariantId(variantId);
   /** Gratitude gift: no link / qty / price. Gift-denom: link to certificates page. */
   const productHref = isGift
@@ -81,16 +83,16 @@ const BasketCard: React.FC<BasketCardProps> = ({
           onClick={handleProductNavigate}
           aria-label={title}
         >
-          {thumbnail ? (
-            <img src={thumbnail} alt="" className={styles.thumb} />
+          {thumbSrc ? (
+            <img src={thumbSrc} alt="" className={styles.thumb} />
           ) : (
             <span className={styles.thumbPlaceholder} aria-hidden />
           )}
         </button>
       ) : (
-        <div className={styles.thumbLink} aria-hidden={!thumbnail}>
-          {thumbnail ? (
-            <img src={thumbnail} alt="" className={styles.thumb} />
+        <div className={styles.thumbLink} aria-hidden={!thumbSrc}>
+          {thumbSrc ? (
+            <img src={thumbSrc} alt="" className={styles.thumb} />
           ) : (
             <span className={styles.thumbPlaceholder} aria-hidden />
           )}

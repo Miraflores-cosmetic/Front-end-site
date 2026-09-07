@@ -1,20 +1,26 @@
 .drawer {
   position: relative;
   height: 100%;
+  max-height: 100%;
   width: 100%;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   background-color: white;
+  overflow: hidden;
+  /* iOS: не даём карте/полям раздуть панель выше viewport */
+  min-height: 0;
 
   .contentWrapper {
     width: 100%;
-    flex: 1;
+    flex: 1 1 auto;
     min-height: 0;
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    /* запас под клавиатуру / safe area, чтобы последнее поле не пряталось за кнопкой */
+    padding-bottom: 8px;
 
     .headerWrapper {
       display: flex;
@@ -221,22 +227,30 @@
   }
 
   .buttonWrapper {
+    flex: 0 0 auto;
     flex-shrink: 0;
+    position: relative;
+    z-index: 5;
     padding: 16px 24px;
+    padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
     border-top: 1px solid #f0f0f0;
     background-color: white;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.04);
 
     @media (max-width: 550px) {
-      padding: 16px;
+      padding: 12px 16px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
     }
 
     @media (max-width: 393px) {
-      padding: 16px 12px;
+      padding: 12px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
     }
 
     .saveButton {
       width: 100%;
       height: 48px;
+      min-height: 48px;
       border-radius: 50px;
       background-color: black;
       color: white;
@@ -256,7 +270,8 @@
       }
 
       @media (max-width: 550px) {
-        height: 40px;
+        height: 44px;
+        min-height: 44px;
         font-size: 14px;
       }
     }

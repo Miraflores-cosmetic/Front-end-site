@@ -112,11 +112,13 @@ html {
 }
 
 @media (max-width: 768px) {
-  nav.EZDrawer__container.basket-drawer {
+  nav.EZDrawer__container.basket-drawer,
+  nav.EZDrawer__container.address-drawer {
     height: 100vh !important;
     max-height: 100vh !important;
     height: 100dvh !important;
     max-height: 100dvh !important;
+    overflow: hidden !important;
   }
 
   .EZDrawer .EZDrawer__overlay {

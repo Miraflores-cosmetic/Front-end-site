@@ -279,6 +279,7 @@ export function adaptProductDetail(p: JcosProductDetail): ProductDetailNode {
     slug: p.slug,
     isPublished: true,
     description: p.descriptionHtml || p.shortDescription || '',
+    shortDescription: p.shortDescription || '',
     pageShortDescriptionHtml: p.pageShortDescriptionHtml || '',
     actionEffectHtml: p.actionEffectHtml || '',
     applicationHtml: p.applicationHtml || '',

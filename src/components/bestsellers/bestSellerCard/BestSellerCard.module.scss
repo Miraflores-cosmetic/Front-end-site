@@ -123,6 +123,12 @@
     &[data-gallery] {
       touch-action: pan-y;
       cursor: ew-resize;
+
+      // На мобилке разрешаем горизонтальный pan треку на краях галереи;
+      // mid-swipe перехватываем в JS (preventDefault).
+      @media (max-width: $viewport-mobile-max) {
+        touch-action: pan-x pan-y;
+      }
     }
 
     @media (max-width: $viewport-mobile-max) {
@@ -159,6 +165,12 @@
       height: 100%;
       cursor: pointer;
       position: relative;
+    }
+
+    &[data-gallery] .imageLink {
+      @media (max-width: $viewport-mobile-max) {
+        touch-action: pan-x pan-y;
+      }
     }
 
     img,
@@ -575,9 +587,9 @@
         gap: 4px;
 
         .title {
-          font-size: 13px;
-          line-height: 17px;
-          min-height: 36px;
+          font-size: 12px;
+          line-height: 15px;
+          min-height: 30px;
         }
 
         .priceWrapper {
@@ -657,8 +669,8 @@
       }
 
       .title {
-        font-size: 13px;
-        line-height: 17px;
+        font-size: 12px;
+        line-height: 15px;
         min-height: auto;
       }
     }

@@ -76,15 +76,6 @@ export interface ProductDetailNode extends ProductNode {
   productVariants: {
     edges: ProductVariant[]
   }
-  /** Отзывы на PDP приходят через /reviews, не через detail-адаптер */
-  reviews?: Array<{
-    id: string;
-    rating: number;
-    text: string;
-    createdAt: string;
-    image1?: string | null;
-    image2?: string | null;
-  }>;
   thumbnail: {
     alt: string
     url: string

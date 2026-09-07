@@ -300,6 +300,11 @@
   font-size: 13px;
   line-height: 1.3;
   color: #6e6d67;
+
+  @media (max-width: 768px) {
+    font-size: 15px;
+    line-height: 1.35;
+  }
 }
 
 .breadcrumbLink {
@@ -318,6 +323,10 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: min(48vw, 320px);
+
+  @media (max-width: 768px) {
+    max-width: min(78vw, 420px);
+  }
 }
 
 .breadcrumbSep {

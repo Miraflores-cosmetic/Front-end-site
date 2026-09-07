@@ -1,7 +1,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './ReviewModal.module.scss';
-import { createProductReview } from '@/graphql/queries/reviews.service';
+import { createProductReview } from '@/api/reviewsApi';
 import { ApiError, getAccessToken } from '@/api/apiClient';
 import { useToast } from '@/components/toast/toast';
 import { focusablesIn, trapFocusKeydown } from '@/utils/focusTrap';

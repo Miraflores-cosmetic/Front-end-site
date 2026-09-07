@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getProductReviewsMeta } from '@/graphql/queries/reviewsAll.service';
+import { getProductReviewsMeta } from '@/api/reviewsApi';
 
 export type UseProductReviewsResult = {
   ratingAvg: number;

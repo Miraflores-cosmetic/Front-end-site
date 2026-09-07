@@ -178,6 +178,13 @@
   color: $gray-6e;
 }
 
+.errorState {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+}
+
 .loadMoreWrap {
   display: flex;
   justify-content: center;

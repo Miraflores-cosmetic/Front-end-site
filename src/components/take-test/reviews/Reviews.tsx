@@ -7,7 +7,7 @@ import {
   getProductPublishedReviews,
   getPublishedReviewsPage,
   type PublishedReview,
-} from '@/graphql/queries/reviewsAll.service';
+} from '@/api/reviewsApi';
 import MoreLink, { SectionTitleRow } from '@/components/MoreLink/MoreLink';
 import { HomeSection } from '@/components/home-section/HomeSection';
 import {
@@ -80,10 +80,13 @@ function ReviewCardView({ review }: { review: ReviewCardData }) {
 export const Reviews: React.FC<{
   variant?: 'preview' | 'page';
   productSlug?: string;
-}> = ({ variant = 'preview', productSlug }) => {
+  /** Имя товара для SEO / заголовка (обновляется после загрузки). */
+  onProductName?: (name: string | null) => void;
+}> = ({ variant = 'preview', productSlug, onProductName }) => {
   const [reviews, setReviews] = useState<ReviewCardData[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [filterProductName, setFilterProductName] = useState<string | null>(null);
@@ -95,6 +98,7 @@ export const Reviews: React.FC<{
       if (showAll) {
         if (append) setLoadingMore(true);
         else setLoading(true);
+        setError(null);
         try {
           const data = productSlug
             ? await getProductPublishedReviews(productSlug, nextPage, PAGE_SIZE)
@@ -104,16 +108,29 @@ export const Reviews: React.FC<{
           setTotal(data.total);
           setPage(data.page);
           if (productSlug) {
-            setFilterProductName(
-              data.product?.name?.trim() || mapped[0]?.title || productSlug,
-            );
+            const name =
+              data.product?.name?.trim() || mapped[0]?.title || productSlug;
+            setFilterProductName(name);
+            onProductName?.(name);
           } else {
             setFilterProductName(null);
+            onProductName?.(null);
           }
-        } catch (error) {
-          console.error('Error loading reviews:', error);
-          if (!append) setReviews([]);
-          if (productSlug) setFilterProductName(productSlug);
+        } catch (err) {
+          console.error('Error loading reviews:', err);
+          const message =
+            err instanceof Error && err.message
+              ? err.message
+              : 'Не удалось загрузить отзывы';
+          setError(message);
+          if (!append) {
+            setReviews([]);
+            setTotal(0);
+          }
+          if (productSlug) {
+            setFilterProductName(productSlug);
+            onProductName?.(null);
+          }
         } finally {
           setLoading(false);
           setLoadingMore(false);
@@ -122,26 +139,32 @@ export const Reviews: React.FC<{
       }
 
       setLoading(true);
+      setError(null);
       try {
         const data = await getLatestPublishedReviews(PREVIEW_LIMIT);
         setReviews(data.map(mapReview));
         setTotal(data.length);
         setFilterProductName(null);
-      } catch (error) {
-        console.error('Error loading reviews:', error);
+      } catch (err) {
+        console.error('Error loading reviews:', err);
+        setError(
+          err instanceof Error && err.message
+            ? err.message
+            : 'Не удалось загрузить отзывы',
+        );
         setReviews([]);
       } finally {
         setLoading(false);
       }
     },
-    [showAll, productSlug],
+    [showAll, productSlug, onProductName],
   );
 
   useEffect(() => {
     void loadPage(1, false);
   }, [loadPage]);
 
-  const hasMore = showAll && reviews.length < total;
+  const hasMore = showAll && !error && reviews.length < total;
   const chipLabel = filterProductName || productSlug || '';
 
   return (
@@ -192,7 +215,20 @@ export const Reviews: React.FC<{
         </ProductScrollStrip>
       ) : null}
 
-      {!loading && reviews.length > 0 && !showAll ? (
+      {!loading && error ? (
+        <div className={styles.errorState} role="alert">
+          <p className={styles.noReviews}>{error}</p>
+          <button
+            type="button"
+            className={styles.loadMoreBtn}
+            onClick={() => void loadPage(1, false)}
+          >
+            Повторить
+          </button>
+        </div>
+      ) : null}
+
+      {!loading && !error && reviews.length > 0 && !showAll ? (
         <ProductScrollStrip
           size="md"
           itemWidth={400}
@@ -211,7 +247,7 @@ export const Reviews: React.FC<{
         </ProductScrollStrip>
       ) : null}
 
-      {!loading && reviews.length > 0 && showAll ? (
+      {!loading && !error && reviews.length > 0 && showAll ? (
         <div className={styles.pageGrid}>
           {reviews.map((review) => (
             <div key={review.id} className={styles.pageGridItem}>
@@ -221,7 +257,7 @@ export const Reviews: React.FC<{
         </div>
       ) : null}
 
-      {!loading && reviews.length === 0 ? (
+      {!loading && !error && reviews.length === 0 ? (
         <p className={styles.noReviews}>Пока нет отзывов</p>
       ) : null}
 

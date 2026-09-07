@@ -82,6 +82,11 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
   const scrubMovedRef = useRef(false);
   const galleryAxisRef = useRef<'x' | 'y' | null>(null);
   const galleryPointerIdRef = useRef<number | null>(null);
+  const swipeStartRef = useRef<{ x: number; y: number; index: number } | null>(
+    null,
+  );
+  const swipeDeltaXRef = useRef(0);
+  const swipeOwnedRef = useRef(false);
 
   const gallery = useMemo(() => normalizeGallery(product), [product]);
   const galleryKey = gallery.join('\0');
@@ -154,57 +159,22 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
     [gallery.length],
   );
 
-  const onPointerMove = useCallback(
-    (e: React.PointerEvent<HTMLDivElement>) => {
-      if (!hasGallery) return;
-
-      if (isMobile) {
-        if (galleryPointerIdRef.current !== e.pointerId) return;
-        const startX = (e.currentTarget as HTMLElement).dataset.galleryStartX;
-        const startY = (e.currentTarget as HTMLElement).dataset.galleryStartY;
-        if (startX == null || startY == null) return;
-        const dx = e.clientX - Number(startX);
-        const dy = e.clientY - Number(startY);
-
-        if (!galleryAxisRef.current) {
-          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-          galleryAxisRef.current = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
-          if (galleryAxisRef.current === 'x') {
-            try {
-              e.currentTarget.setPointerCapture(e.pointerId);
-            } catch {
-              /* ignore */
-            }
-          }
-        }
-
-        if (galleryAxisRef.current !== 'x') return;
-        e.stopPropagation();
-        e.preventDefault();
-        scrubMovedRef.current = true;
-        setScrubbing(true);
-        scrubFromClientX(e.clientX, e.currentTarget);
-        return;
-      }
-
-      if (e.pointerType !== 'mouse' && e.buttons === 0) return;
-      if (e.pointerType !== 'mouse') scrubMovedRef.current = true;
-      setScrubbing(true);
-      scrubFromClientX(e.clientX, e.currentTarget);
-    },
-    [hasGallery, isMobile, scrubFromClientX],
-  );
-
   const onPointerDown = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (!hasGallery) return;
 
       if (isMobile) {
-        galleryPointerIdRef.current = e.pointerId;
-        galleryAxisRef.current = null;
         scrubMovedRef.current = false;
-        e.currentTarget.dataset.galleryStartX = String(e.clientX);
-        e.currentTarget.dataset.galleryStartY = String(e.clientY);
+        galleryAxisRef.current = null;
+        galleryPointerIdRef.current = e.pointerId;
+        swipeStartRef.current = {
+          x: e.clientX,
+          y: e.clientY,
+          index: galleryIndex,
+        };
+        swipeDeltaXRef.current = 0;
+        swipeOwnedRef.current = false;
+        setScrubbing(true);
         return;
       }
 
@@ -214,33 +184,107 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
         scrubFromClientX(e.clientX, e.currentTarget);
       }
     },
-    [hasGallery, isMobile, scrubFromClientX],
+    [galleryIndex, hasGallery, isMobile, scrubFromClientX],
   );
+
+  const onPointerMove = useCallback(
+    (e: React.PointerEvent<HTMLDivElement>) => {
+      if (!hasGallery) return;
+
+      if (isMobile) {
+        if (galleryPointerIdRef.current !== e.pointerId) return;
+        const start = swipeStartRef.current;
+        if (!start) return;
+
+        const dx = e.clientX - start.x;
+        const dy = e.clientY - start.y;
+
+        if (galleryAxisRef.current === null) {
+          if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+          galleryAxisRef.current = Math.abs(dx) >= Math.abs(dy) ? 'x' : 'y';
+          if (galleryAxisRef.current === 'x') {
+            const last = gallery.length - 1;
+            const atStart = start.index <= 0 && dx > 0;
+            const atEnd = start.index >= last && dx < 0;
+            // На краю — не захватываем жест, чтобы трек мог скроллиться.
+            if (atStart || atEnd) return;
+            swipeOwnedRef.current = true;
+            try {
+              e.currentTarget.setPointerCapture(e.pointerId);
+            } catch {
+              /* ignore */
+            }
+          }
+        }
+
+        if (galleryAxisRef.current !== 'x' || !swipeOwnedRef.current) return;
+
+        e.stopPropagation();
+        if (e.cancelable) e.preventDefault();
+        swipeDeltaXRef.current = dx;
+        if (Math.abs(dx) > 8) scrubMovedRef.current = true;
+        return;
+      }
+
+      if (e.pointerType !== 'mouse' && e.buttons === 0) return;
+      if (e.pointerType !== 'mouse') scrubMovedRef.current = true;
+      setScrubbing(true);
+      scrubFromClientX(e.clientX, e.currentTarget);
+    },
+    [gallery.length, hasGallery, isMobile, scrubFromClientX],
+  );
+
+  const finishMobileSwipe = useCallback(() => {
+    const start = swipeStartRef.current;
+    const dx = swipeDeltaXRef.current;
+    const axis = galleryAxisRef.current;
+    const owned = swipeOwnedRef.current;
+
+    galleryPointerIdRef.current = null;
+    galleryAxisRef.current = null;
+    swipeStartRef.current = null;
+    swipeDeltaXRef.current = 0;
+    swipeOwnedRef.current = false;
+    setScrubbing(false);
+
+    if (!owned || !start || axis !== 'x') return;
+
+    const threshold = 40;
+    if (Math.abs(dx) < threshold) return;
+
+    // Свайп влево → следующее фото; вправо → предыдущее.
+    const next =
+      dx < 0
+        ? Math.min(gallery.length - 1, start.index + 1)
+        : Math.max(0, start.index - 1);
+    if (next === start.index) return;
+    scrubMovedRef.current = true;
+    setGalleryIndex(next);
+    setUnlockedThrough((u) => Math.max(u, next));
+  }, [gallery.length]);
 
   const endScrub = useCallback(() => {
     if (isMobile) {
-      galleryPointerIdRef.current = null;
-      galleryAxisRef.current = null;
-      setScrubbing(false);
+      finishMobileSwipe();
       return;
     }
     setScrubbing(false);
     setGalleryIndex(0);
-  }, [isMobile]);
+  }, [finishMobileSwipe, isMobile]);
 
   const onPointerUp = useCallback(
     (e: React.PointerEvent<HTMLDivElement>) => {
       if (isMobile) {
         if (galleryPointerIdRef.current === e.pointerId) {
-          galleryPointerIdRef.current = null;
-          galleryAxisRef.current = null;
+          finishMobileSwipe();
+          return;
         }
         setScrubbing(false);
         return;
       }
       setScrubbing(false);
     },
-    [isMobile],
+    [finishMobileSwipe, isMobile],
   );
 
   const onMediaClick = (e: React.MouseEvent) => {

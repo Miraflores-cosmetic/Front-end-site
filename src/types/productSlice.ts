@@ -14,22 +14,9 @@ export interface GetProductInput {
   slug: string;
 }
 
-export interface ProductReview {
-  id?: string;
-  rating?: number;
-  text: string;
-  createdAt?: string;
-  image1?: string | null;
-  image2?: string | null;
-}
-
 export interface ProductSliceItem {
   id?: string;
   name: string;
-  /** @deprecated UI берёт рейтинг из useProductReviews */
-  rating?: number;
-  /** @deprecated UI берёт отзывы из useProductReviews */
-  reviews?: ProductReview[];
   description: string;
   pageShortDescriptionHtml?: string;
   actionEffectHtml?: string;

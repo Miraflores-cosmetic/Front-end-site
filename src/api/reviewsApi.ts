@@ -1,9 +1,52 @@
-import { apiFetch, uploadsUrl } from '@/api/apiClient';
+/**
+ * REST-клиент отзывов (Nest `/api/v1/reviews`).
+ * Раньше жил в `graphql/queries/` — Saleor GraphQL для отзывов не используется.
+ */
+import { apiFetch, apiJson, ApiError, uploadsUrl } from '@/api/apiClient';
 import { normalizeMediaUrl } from '@/utils/mediaUrl';
-import {
-  getProductReviews,
-  type ProductReviewsListResponse,
-} from '@/graphql/queries/reviews.service';
+
+export interface ProductReviewCreateInput {
+  product: string;
+  order?: string;
+  rating: number;
+  text: string;
+  image1?: File | null;
+  image2?: File | null;
+}
+
+export type CreateProductReviewResult = {
+  id: string;
+  rating: number;
+  text: string;
+  imagesAttached: boolean;
+  imagesError?: string;
+};
+
+export type ProductReviewsListResponse = {
+  product: {
+    id: string;
+    slug: string;
+    name: string;
+    imageUrl?: string | null;
+    shortDescription?: string | null;
+  } | null;
+  ratingAvg: number | null;
+  ratingCount: number;
+  items: Array<{
+    id: string;
+    rating: number;
+    text: string;
+    createdAt?: string;
+    authorName?: string | null;
+    image1?: string | null;
+    image2?: string | null;
+    image1Url?: string | null;
+    image2Url?: string | null;
+  }>;
+  total: number;
+  page: number;
+  limit: number;
+};
 
 export interface PublishedReview {
   id: string;
@@ -135,7 +178,70 @@ function mapProductPage(res: ProductReviewsListResponse): PublishedReviewsPage {
   };
 }
 
-/** Каталог /reviews и главная: пагинированный latest (TTL cache). */
+export async function createProductReview(
+  input: ProductReviewCreateInput,
+): Promise<CreateProductReviewResult> {
+  const files = [input.image1, input.image2].filter(Boolean) as File[];
+  for (const file of files) {
+    if (file.size > 5 * 1024 * 1024) {
+      throw new ApiError('Размер фото — максимум 5 МБ', 400);
+    }
+    if (!/^image\/(jpeg|png|webp|gif)$/.test(file.type)) {
+      throw new ApiError('Фото: только JPEG, PNG, WebP или GIF', 400);
+    }
+  }
+
+  const created = await apiJson<{ id: string; rating: number; text: string }>('/reviews', 'POST', {
+    productId: input.product,
+    orderId: input.order,
+    rating: input.rating,
+    text: input.text,
+  });
+
+  const hasImages = Boolean(input.image1 || input.image2);
+  if (!hasImages) {
+    return { ...created, imagesAttached: false };
+  }
+
+  const fd = new FormData();
+  if (input.image1) fd.append('files', input.image1);
+  if (input.image2) fd.append('files', input.image2);
+
+  try {
+    await apiFetch(`/reviews/${encodeURIComponent(created.id)}/images`, {
+      method: 'POST',
+      body: fd,
+    });
+    return { ...created, imagesAttached: true };
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 401) throw e;
+    const message =
+      e instanceof ApiError ? e.message : 'Не удалось загрузить фото';
+    return {
+      ...created,
+      imagesAttached: false,
+      imagesError: message,
+    };
+  }
+}
+
+/** Id товаров, по которым пользователь уже оставлял отзыв. */
+export async function getMyReviewedProductIds(): Promise<string[]> {
+  const data = await apiFetch<{ productIds: string[] }>('/reviews/mine/product-ids');
+  return Array.isArray(data.productIds) ? data.productIds : [];
+}
+
+export async function getProductReviews(
+  slug: string,
+  page = 1,
+  limit = 20,
+): Promise<ProductReviewsListResponse> {
+  return apiFetch(`/reviews/product/${encodeURIComponent(slug)}`, {
+    query: { page, limit },
+  });
+}
+
+/** Каталог /reviews и главная: пагинированный latest (TTL cache). Ошибки пробрасываются. */
 export async function getPublishedReviewsPage(
   page = 1,
   limit = 20,
@@ -144,32 +250,24 @@ export async function getPublishedReviewsPage(
   const cached = cacheGet(latestPageCache, key);
   if (cached) return cached;
 
-  try {
-    const data = await apiFetch<LatestApiPage>('/reviews/latest', {
-      query: { page, limit },
-    });
-    const mapped: PublishedReviewsPage = {
-      items: (data.items ?? []).map(mapRow),
-      total: data.total ?? 0,
-      page: data.page ?? page,
-      limit: data.limit ?? limit,
-    };
-    cacheSet(latestPageCache, key, mapped);
-    return mapped;
-  } catch {
-    return { items: [], total: 0, page, limit };
-  }
+  const data = await apiFetch<LatestApiPage>('/reviews/latest', {
+    query: { page, limit },
+  });
+  const mapped: PublishedReviewsPage = {
+    items: (data.items ?? []).map(mapRow),
+    total: data.total ?? 0,
+    page: data.page ?? page,
+    limit: data.limit ?? limit,
+  };
+  cacheSet(latestPageCache, key, mapped);
+  return mapped;
 }
 
-/**
- * Превью на главной: берёт page=1 limit=20 из кэша (общий с /reviews) и режет.
- */
 export async function getLatestPublishedReviews(limit = 12): Promise<PublishedReview[]> {
   const page = await getPublishedReviewsPage(1, Math.max(limit, 20));
   return page.items.slice(0, limit);
 }
 
-/** Отзывы конкретного товара: `/reviews/product/:slug` (+ meta cache для PDP). */
 export async function getProductPublishedReviews(
   slug: string,
   page = 1,
@@ -179,21 +277,16 @@ export async function getProductPublishedReviews(
   const cached = cacheGet(productPageCache, key);
   if (cached) return cached;
 
-  try {
-    const res = await getProductReviews(slug, page, limit);
-    const mapped = mapProductPage(res);
-    cacheSet(productPageCache, key, mapped);
-    cacheSet(productMetaCache, slug, {
-      ratingAvg: res.ratingAvg,
-      ratingCount: res.ratingCount ?? res.total ?? 0,
-    });
-    return mapped;
-  } catch {
-    return { items: [], total: 0, page, limit };
-  }
+  const res = await getProductReviews(slug, page, limit);
+  const mapped = mapProductPage(res);
+  cacheSet(productPageCache, key, mapped);
+  cacheSet(productMetaCache, slug, {
+    ratingAvg: res.ratingAvg,
+    ratingCount: res.ratingCount ?? res.total ?? 0,
+  });
+  return mapped;
 }
 
-/** Рейтинг для PDP — из meta-кэша или лёгкого product request. */
 export async function getProductReviewsMeta(slug: string): Promise<{
   ratingAvg: number | null;
   ratingCount: number;
@@ -206,9 +299,4 @@ export async function getProductReviewsMeta(slug: string): Promise<{
   if (meta) return meta;
 
   return { ratingAvg: null, ratingCount: page.total };
-}
-
-/** @deprecated */
-export async function getAllPublishedReviews(): Promise<PublishedReview[]> {
-  return getLatestPublishedReviews(50);
 }

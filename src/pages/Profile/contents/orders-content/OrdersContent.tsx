@@ -2,6 +2,9 @@ import React, { useEffect, useMemo, useState } from 'react';
 import styles from './OrdersContent.module.scss';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { TabId } from '../../side-bar/SideBar';
+import {
+  getMyReviewedProductIds,
+} from '@/api/reviewsApi';
 import { getOrders } from '@/graphql/queries/orders.service';
 import { useToast } from '@/components/toast/toast';
 import { ReviewModal } from '@/components/review-modal/ReviewModal';
@@ -45,9 +48,13 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
     async function loadOrders() {
       try {
         setLoading(true);
-        const ordersData = await getOrders(50);
+        const [ordersData, reviewedIds] = await Promise.all([
+          getOrders(50),
+          getMyReviewedProductIds().catch(() => [] as string[]),
+        ]);
         const ordersList = ordersData.edges.map((edge: any) => edge.node);
         setOrders(ordersList);
+        setReviewedProductIds(new Set(reviewedIds));
       } catch (error: any) {
         console.error('Error loading orders:', error);
         const errorMessage = error?.message || '';

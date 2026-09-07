@@ -7,6 +7,7 @@ import {
   VoucherKind,
 } from '@/types/checkout';
 import { effectiveLineQuantityCap } from '@/utils/checkoutLineLimits';
+import { cartWouldMixGiftAndPhysical } from '@/utils/giftDenomCart';
 
 const CART_STORAGE_KEY = 'checkout_cart';
 
@@ -124,6 +125,9 @@ export const syncCartLines = createAsyncThunk(
         size: item.variantName || undefined,
         quantityLimitPerCustomer: item.maxQty > 0 ? item.maxQty : null,
         quantityAvailable: item.maxQty,
+        isGiftDenom:
+          Boolean(item.isGiftDenom) ||
+          item.variantId.startsWith('gift-denom:'),
       }));
 
       const removed = res.removedLines?.length
@@ -140,7 +144,9 @@ export const syncCartLines = createAsyncThunk(
   },
 );
 
-export type ApplyVoucherArg = string | { code: string; email?: string };
+export type ApplyVoucherArg =
+  | string
+  | { code: string; email?: string; shippingRub?: number | null };
 
 /** Всегда ходит на API — без short-circuit по тому же code. */
 export const applyVoucherCode = createAsyncThunk(
@@ -149,6 +155,7 @@ export const applyVoucherCode = createAsyncThunk(
     try {
       const code = typeof arg === 'string' ? arg : arg.code;
       const email = typeof arg === 'string' ? undefined : arg.email;
+      const shippingRub = typeof arg === 'string' ? undefined : arg.shippingRub;
       const state = getState() as { checkout: CheckoutState };
       const lines = state.checkout.lines || [];
       if (lines.length === 0) {
@@ -163,6 +170,7 @@ export const applyVoucherCode = createAsyncThunk(
         undefined,
         cartSubtotal(lines),
         email,
+        shippingRub,
       );
 
       if (!validationResult.ok) {
@@ -181,10 +189,15 @@ export const applyVoucherCode = createAsyncThunk(
   },
 );
 
-/** Пересчёт текущего кода после правки корзины или смены email; при ошибке снимает voucher. */
+/** Пересчёт текущего кода после правки корзины / email / доставки; при ошибке снимает voucher. */
+export type RevalidateVoucherArg =
+  | string
+  | undefined
+  | { email?: string; shippingRub?: number | null };
+
 export const revalidateVoucher = createAsyncThunk(
   'checkout/revalidateVoucher',
-  async (emailOverride: string | undefined, { getState, dispatch }) => {
+  async (arg: RevalidateVoucherArg, { getState, dispatch }) => {
     const { voucherCode, voucherEmail, lines } = (getState() as { checkout: CheckoutState })
       .checkout;
     if (!voucherCode) return { ok: true as const };
@@ -192,12 +205,15 @@ export const revalidateVoucher = createAsyncThunk(
       dispatch(removeVoucherCode());
       return { ok: false as const };
     }
-    const email = emailOverride?.trim() || voucherEmail || undefined;
+    const email =
+      (typeof arg === 'string' ? arg : arg?.email)?.trim() || voucherEmail || undefined;
+    const shippingRub = typeof arg === 'object' && arg ? arg.shippingRub : undefined;
     try {
       await dispatch(
         applyVoucherCode({
           code: voucherCode,
           email,
+          shippingRub,
         }),
       ).unwrap();
       return { ok: true as const };
@@ -213,6 +229,17 @@ const checkoutSlice = createSlice({
   initialState,
   reducers: {
     addItemToCart(state, action: PayloadAction<CheckoutLine>) {
+      const isGiftDenomIncoming =
+        Boolean(action.payload.isGiftDenom) ||
+        action.payload.variantId.startsWith('gift-denom:');
+      if (
+        cartWouldMixGiftAndPhysical(state.lines, {
+          ...action.payload,
+          isGiftDenom: isGiftDenomIncoming,
+        })
+      ) {
+        return;
+      }
       const existingItemIndex = state.lines.findIndex(
         (item) => item.variantId === action.payload.variantId,
       );
@@ -244,11 +271,15 @@ const checkoutSlice = createSlice({
         if (action.payload.slug && !line.slug) line.slug = action.payload.slug;
       } else {
         const startQty = Math.min(action.payload.quantity || 1, maxQ);
+        const isGiftDenom =
+          Boolean(action.payload.isGiftDenom) ||
+          action.payload.variantId.startsWith('gift-denom:');
         state.lines.push({
           ...action.payload,
           quantity: startQty,
           oldPrice: action.payload.oldPrice ?? null,
           discount: action.payload.discount ?? null,
+          isGiftDenom: isGiftDenom || undefined,
         });
       }
       persistCheckout(state);

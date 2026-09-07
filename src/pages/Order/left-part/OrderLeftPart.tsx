@@ -27,6 +27,11 @@ import { AppDispatch } from '@/store/store';
 import { useToast } from '@/components/toast/toast';
 import { useApplicableGift } from '@/hooks/useApplicableGift';
 import { calcCartSubtotal } from '@/utils/freePvzShipping';
+import { isGiftDenomOnlyCart } from '@/utils/giftDenomCart';
+import {
+  GIFT_HOLD_CAPTURED_TOAST,
+  GIFT_HOLD_RESERVED,
+} from '@/utils/giftHoldCopy';
 import {
   buildCheckoutFingerprint,
   buildOrderSuccessReturnUrl,
@@ -105,6 +110,10 @@ const OrderLeftPart: React.FC = () => {
   const { voucherCode, voucherKind } = useSelector((state: RootState) => state.checkout);
   const dispatch = useDispatch<AppDispatch>();
   const giftSubtotal = React.useMemo(() => calcCartSubtotal(lines || []), [lines]);
+  const giftDenomOnly = React.useMemo(
+    () => isGiftDenomOnlyCart(lines || []),
+    [lines],
+  );
   const giftLine = useApplicableGift(giftSubtotal);
 
   /** Один раз подставляем ФИО/email/телефон из профиля. После смены ПВЗ вызывается getMe() — без этого снова затирало вручную введённые поля. */
@@ -199,18 +208,20 @@ const OrderLeftPart: React.FC = () => {
       errors.phone = 'Телефон в формате +7…';
     }
 
-    if (!selectedAddress) {
-      errors.address = 'Выберите или добавьте адрес доставки';
-    } else if (payable.hasPayableLines) {
-      const shippingMethod = resolveCheckoutShippingMethod(selectedAddress.streetAddress2);
-      if (!shippingMethod) {
-        errors.address = 'Выберите адрес со способом доставки (СДЭК или Яндекс Доставка)';
-      } else if (cdekShippingLoading) {
-        errors.general = 'Подождите, рассчитывается стоимость доставки';
-      } else if (!payable.shippingReady || payable.shippingRub == null || payable.payableTotal == null) {
-        errors.address =
-          cdekShippingError ||
-          'Не удалось рассчитать доставку. Укажите корректный индекс и способ доставки.';
+    if (!giftDenomOnly) {
+      if (!selectedAddress) {
+        errors.address = 'Выберите или добавьте адрес доставки';
+      } else if (payable.hasPayableLines) {
+        const shippingMethod = resolveCheckoutShippingMethod(selectedAddress.streetAddress2);
+        if (!shippingMethod) {
+          errors.address = 'Выберите адрес со способом доставки (СДЭК или Яндекс Доставка)';
+        } else if (cdekShippingLoading) {
+          errors.general = 'Подождите, рассчитывается стоимость доставки';
+        } else if (!payable.shippingReady || payable.shippingRub == null || payable.payableTotal == null) {
+          errors.address =
+            cdekShippingError ||
+            'Не удалось рассчитать доставку. Укажите корректный индекс и способ доставки.';
+        }
       }
     }
 
@@ -235,7 +246,7 @@ const OrderLeftPart: React.FC = () => {
 
     setValidationErrors({});
 
-    if (!selectedAddress) {
+    if (!giftDenomOnly && !selectedAddress) {
       return;
     }
 
@@ -246,9 +257,15 @@ const OrderLeftPart: React.FC = () => {
     }
 
     /** Один итог с summary/CTA: Nest order.total ≈ payableTotal. */
-    const shippingAmount = payable.hasPayableLines ? (payable.shippingRub ?? 0) : 0;
-    const shippingMethod = resolveCheckoutShippingMethod(selectedAddress.streetAddress2);
-    if (!shippingMethod) {
+    const shippingAmount = giftDenomOnly
+      ? 0
+      : payable.hasPayableLines
+        ? (payable.shippingRub ?? 0)
+        : 0;
+    const shippingMethod = giftDenomOnly
+      ? null
+      : resolveCheckoutShippingMethod(selectedAddress!.streetAddress2);
+    if (!giftDenomOnly && !shippingMethod) {
       toast.error('Выберите адрес со способом доставки (СДЭК или Яндекс Доставка)');
       return;
     }
@@ -277,35 +294,45 @@ const OrderLeftPart: React.FC = () => {
           qty: line.quantity,
         }));
 
-      const recipientName = [selectedAddress.firstName, selectedAddress.lastName]
-        .map((x) => (x || '').trim())
-        .filter(Boolean)
-        .join(' ');
-      const shippingAddress = {
-        city: selectedAddress.city,
-        address: selectedAddress.streetAddress1,
-        apartment: selectedAddress.apartment || undefined,
-        region: selectedAddress.countryArea || undefined,
-        district: selectedAddress.cityArea || undefined,
-        postalCode: selectedAddress.postalCode || undefined,
-        comment: selectedAddress.streetAddress2 || undefined,
-        pvzCode: extractPvzCodeFromStreet2(selectedAddress.streetAddress2),
-        phone: selectedAddress.phone?.trim() || undefined,
-        recipientName: recipientName || undefined,
-        ...(shippingQuoteMeta
-          ? {
-              carrierQuote: {
-                tariffId: shippingQuoteMeta.tariffId ?? null,
-                tariffName: shippingQuoteMeta.tariffName ?? null,
-                daysMin: shippingQuoteMeta.daysMin ?? null,
-                daysMax: shippingQuoteMeta.daysMax ?? null,
-                cost: shippingAmount,
-                method: shippingMethod,
-                source: 'client_estimate',
-              },
-            }
-          : {}),
-      };
+      const recipientName = giftDenomOnly
+        ? formData.name.trim()
+        : [selectedAddress!.firstName, selectedAddress!.lastName]
+            .map((x) => (x || '').trim())
+            .filter(Boolean)
+            .join(' ');
+      const shippingAddress = giftDenomOnly
+        ? {
+            city: '—',
+            address: 'Электронный сертификат',
+            comment: 'digital-gift',
+            phone: phoneE164,
+            recipientName: recipientName || undefined,
+          }
+        : {
+            city: selectedAddress!.city,
+            address: selectedAddress!.streetAddress1,
+            apartment: selectedAddress!.apartment || undefined,
+            region: selectedAddress!.countryArea || undefined,
+            district: selectedAddress!.cityArea || undefined,
+            postalCode: selectedAddress!.postalCode || undefined,
+            comment: selectedAddress!.streetAddress2 || undefined,
+            pvzCode: extractPvzCodeFromStreet2(selectedAddress!.streetAddress2),
+            phone: selectedAddress!.phone?.trim() || undefined,
+            recipientName: recipientName || undefined,
+            ...(shippingQuoteMeta
+              ? {
+                  carrierQuote: {
+                    tariffId: shippingQuoteMeta.tariffId ?? null,
+                    tariffName: shippingQuoteMeta.tariffName ?? null,
+                    daysMin: shippingQuoteMeta.daysMin ?? null,
+                    daysMax: shippingQuoteMeta.daysMax ?? null,
+                    cost: shippingAmount,
+                    method: shippingMethod,
+                    source: 'client_estimate',
+                  },
+                }
+              : {}),
+          };
 
       const promoCode = voucherKind === 'gift' ? null : voucherCode || null;
       const giftCertificateCode = voucherKind === 'gift' ? voucherCode || null : null;
@@ -318,7 +345,7 @@ const OrderLeftPart: React.FC = () => {
         phone: phoneE164,
         customerName: formData.name.trim(),
         customerNote,
-        shippingMethod,
+        shippingMethod: shippingMethod ?? 'DIGITAL',
         shippingAddress,
         promoCode,
         giftCertificateCode,
@@ -396,38 +423,58 @@ const OrderLeftPart: React.FC = () => {
         clearPendingCheckoutOrder();
       }
 
-      const quoteRes = await requestShippingQuote({
-        lines: orderLines,
-        shippingAddress,
-        shippingMethod,
-        clientEstimate: shippingAmount,
-        ...(shippingAddress.carrierQuote
-          ? { carrierQuote: shippingAddress.carrierQuote }
-          : {}),
-      });
-
       const idempotencyKey =
         typeof crypto !== 'undefined' && 'randomUUID' in crypto
           ? crypto.randomUUID()
           : `ik-${Date.now()}`;
 
-      const order = await createOrder({
-        lines: orderLines,
-        email: emailTrimmed,
-        phone: phoneE164,
-        customerName: formData.name.trim(),
-        customerNote,
-        guestId: getOrCreateGuestId(),
-        idempotencyKey,
-        promoCode,
-        giftCertificateCode,
-        shippingQuote: quoteRes.quote,
-        shippingMethod: quoteRes.method,
-        shippingAddress,
-      });
+      let order;
+      if (giftDenomOnly) {
+        order = await createOrder({
+          lines: orderLines,
+          email: emailTrimmed,
+          phone: phoneE164,
+          customerName: formData.name.trim(),
+          customerNote,
+          guestId: getOrCreateGuestId(),
+          idempotencyKey,
+          promoCode,
+          giftCertificateCode,
+          shippingAddress,
+        });
+      } else {
+        const quoteRes = await requestShippingQuote({
+          lines: orderLines,
+          shippingAddress,
+          shippingMethod: shippingMethod!,
+          clientEstimate: shippingAmount,
+          ...(shippingAddress.carrierQuote
+            ? { carrierQuote: shippingAddress.carrierQuote }
+            : {}),
+        });
+
+        order = await createOrder({
+          lines: orderLines,
+          email: emailTrimmed,
+          phone: phoneE164,
+          customerName: formData.name.trim(),
+          customerNote,
+          guestId: getOrCreateGuestId(),
+          idempotencyKey,
+          promoCode,
+          giftCertificateCode,
+          shippingQuote: quoteRes.quote,
+          shippingMethod: quoteRes.method,
+          shippingAddress,
+        });
+      }
 
       if (!order.payToken) {
         throw new Error('Сервер не вернул payToken');
+      }
+
+      if (giftCertificateCode) {
+        toast.success(GIFT_HOLD_CAPTURED_TOAST);
       }
 
       if (
@@ -506,13 +553,16 @@ const OrderLeftPart: React.FC = () => {
       return {
         id: line.variantId,
         name: line.title || 'Товар',
-        size: line.size || '',
+        size: line.isGiftDenom
+          ? 'Электронный сертификат'
+          : line.size || '',
         price,
         oldPrice: old > price ? old : undefined,
         discount: discountLabel,
         image: line.thumbnail || krem,
         isGift: Boolean(line.isGift),
         quantity: Number(line.quantity ?? 1) || 1,
+        isGiftDenom: Boolean(line.isGiftDenom),
       };
     });
 
@@ -559,8 +609,10 @@ const OrderLeftPart: React.FC = () => {
   const payDisabled =
     isCreatingPayment ||
     showYooKassaWidget ||
-    (payable.hasPayableLines &&
-      (cdekShippingLoading || !payable.shippingReady || payable.payableTotal == null));
+    (!giftDenomOnly &&
+      payable.hasPayableLines &&
+      (cdekShippingLoading || !payable.shippingReady || payable.payableTotal == null)) ||
+    (giftDenomOnly && payable.payableTotal == null);
 
   return (
     <section className={styles.left}>
@@ -655,13 +707,21 @@ const OrderLeftPart: React.FC = () => {
         />
       </section>
 
-      <section>
-        <DeliveryProfile
-          onSelectAddress={handleAddressSelect}
-          hasError={Boolean(validationErrors.address)}
-          errorMessage={validationErrors.address}
-        />
-      </section>
+      {!giftDenomOnly ? (
+        <section>
+          <DeliveryProfile
+            onSelectAddress={handleAddressSelect}
+            hasError={Boolean(validationErrors.address)}
+            errorMessage={validationErrors.address}
+          />
+        </section>
+      ) : (
+        <section className={styles.inputWrapper}>
+          <p style={{ margin: 0, opacity: 0.75, fontSize: 14, lineHeight: 1.4 }}>
+            Электронный сертификат придёт на email после оплаты — доставка не нужна.
+          </p>
+        </section>
+      )}
 
       <section className={styles.phoneWrapper}>
         <Input
@@ -712,6 +772,19 @@ const OrderLeftPart: React.FC = () => {
 
       {showYooKassaWidget && confirmationToken && (
         <div style={{ marginBottom: '24px' }}>
+          {voucherKind === 'gift' ? (
+            <p
+              role="status"
+              style={{
+                margin: '0 0 12px',
+                fontSize: 14,
+                lineHeight: 1.45,
+                opacity: 0.85,
+              }}
+            >
+              {GIFT_HOLD_RESERVED}
+            </p>
+          ) : null}
           <YooKassaWidget
             confirmationToken={confirmationToken}
             returnUrl={yooKassaReturnUrl}

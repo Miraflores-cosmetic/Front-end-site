@@ -115,7 +115,11 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
                 <div className={styles.productInfo}>
                   <div className={styles.nameSize}>
                     <p className={styles.name}>{item.name}</p>
-                    {item.size ? <p className={styles.size}>{item.size}</p> : null}
+                    {item.isGiftDenom ? (
+                      <p className={styles.size}>Электронный сертификат</p>
+                    ) : item.size ? (
+                      <p className={styles.size}>{item.size}</p>
+                    ) : null}
                   </div>
                   <div className={styles.priceBlock}>
                     {item.isGift ? (

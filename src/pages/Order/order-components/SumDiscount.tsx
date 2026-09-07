@@ -3,6 +3,7 @@ import styles from '../right-part/OrderRightPart.module.scss';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { useOrderCheckoutOptional } from '../OrderCheckoutContext';
+import { GIFT_HOLD_WILL_RESERVE } from '@/utils/giftHoldCopy';
 
 const SumDiscount = () => {
   const { voucherCode, voucherKind } = useSelector((state: RootState) => state.checkout);
@@ -60,6 +61,11 @@ const SumDiscount = () => {
           <p className={styles.value}>-{formatPrice(payable.voucherDiscount)}₽</p>
         </div>
       )}
+      {voucherKind === 'gift' ? (
+        <p className={styles.giftShippingNote} role="note">
+          {GIFT_HOLD_WILL_RESERVE}
+        </p>
+      ) : null}
       {payable.hasPayableLines && (
         <div className={styles.shippingWrapper}>
           <p className={styles.name}>Доставка</p>

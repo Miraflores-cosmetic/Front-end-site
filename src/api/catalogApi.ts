@@ -138,6 +138,7 @@ export type CartSyncResponse = {
     minQty: number;
     maxQty: number;
     qty: number;
+    isGiftDenom?: boolean;
   }>;
   removedKeys: string[];
   removedLines?: Array<{ key: string; reason: 'oos' | 'missing'; name?: string }>;

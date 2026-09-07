@@ -13,6 +13,7 @@ export interface OrderProduct {
   discount: number | string | null;
   quantity: number;
   isGift?: boolean;
+  isGiftDenom?: boolean;
 }
 
 interface OrderCartListProps {
@@ -54,9 +55,11 @@ const CardList: React.FC<OrderCartListProps> = ({ cartData }) => {
                 <p className={styles.name}>{item.title}</p>
                 
                 {/* Size - check to ensure it's not identical to title to avoid duplicate text */}
-                {item.size && item.size !== item.title && (
+                {item.isGiftDenom ? (
+                  <p className={styles.size}>Электронный сертификат</p>
+                ) : item.size && item.size !== item.title ? (
                    <p className={styles.size}>{item.size}</p>
-                )}
+                ) : null}
               </div>
 
               {/* Discount - render only if exists, в формате как в ProductCard: -X% */}

@@ -145,13 +145,17 @@
   text-transform: uppercase;
   letter-spacing: 0;
   color: $white;
+  /* underline всегда — без прыжка layout на hover */
   text-decoration: underline;
+  text-decoration-thickness: 1px;
   text-underline-offset: 0.14em;
-  transition: opacity 0.2s ease;
+  text-decoration-color: rgba(255, 255, 255, 0.45);
+  transition: text-decoration-color 0.2s ease, color 0.2s ease;
 }
 
 .partnerCtaLink:hover {
-  opacity: 0.8;
+  color: #f6f5ef;
+  text-decoration-color: #f6f5ef;
 }
 
 .leftBottomMeta {
@@ -260,6 +264,36 @@
   overflow: visible;
 }
 
+.coneSlot {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cone {
+  display: block;
+  width: min(72%, 420px);
+  max-width: 100%;
+  height: auto;
+  aspect-ratio: 1149 / 1147;
+  object-fit: contain;
+  opacity: 0;
+  will-change: opacity;
+  transition: opacity 0.05s linear;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cone {
+    opacity: 1;
+    transition: none;
+    will-change: auto;
+  }
+}
+
 .rightLogo {
   position: sticky;
   bottom: 6px;
@@ -267,6 +301,7 @@
   color: $green-297;
   line-height: 0;
   overflow: visible;
+  z-index: 1;
 }
 
 .rightLogoHome {
@@ -331,6 +366,10 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 24px 16px;
   }
+
+  .cone {
+    width: min(78%, 360px);
+  }
 }
 
 @media (max-width: $viewport-mobile-max) {
@@ -364,6 +403,10 @@
 
   .rightLogo {
     bottom: 2px;
+  }
+
+  .cone {
+    width: min(70%, 280px);
   }
 
   .leftBottom {

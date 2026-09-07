@@ -8,6 +8,7 @@ import {
   SITE_COPYRIGHT_YEAR,
   SITE_FOOTER_INFO_LINKS,
   SITE_FOOTER_LEGAL_LINKS,
+  SITE_GIFT_CERTIFICATES_LINK,
   SITE_GRATITUDE_HREF,
   SITE_PHONE,
   SITE_TELEGRAM_HREF,
@@ -41,6 +42,8 @@ const FOOTER_RIGHT_OTHER = [
   '#EDE4DC',
   '#E4EDE8',
 ] as const;
+
+const CONE_SRC = '/images/cone.svg';
 
 function hashPathname(pathname: string): number {
   let h = 0;
@@ -100,6 +103,7 @@ function FooterNavLink({
 const Footer: React.FC = () => {
   const { pathname } = useLocation();
   const logoRef = useRef<HTMLDivElement>(null);
+  const coneRef = useRef<HTMLImageElement>(null);
   const isAuth = useSelector((state: RootState) => state.authSlice.isAuth);
   const navItems = useSelector((state: RootState) => state.nav.items);
   const supportLinks = getFooterSupportLinks(isAuth);
@@ -112,10 +116,12 @@ const Footer: React.FC = () => {
         href: `/catalog/${encodeURIComponent(item.category.slug)}`,
         label: item.name,
       }));
-    return items.length ? items : [{ href: '/catalog', label: 'Каталог' }];
+    const base = items.length ? items : [{ href: '/catalog', label: 'Каталог' }];
+    if (base.some((l) => l.href === SITE_GIFT_CERTIFICATES_LINK.href)) return base;
+    return [...base, SITE_GIFT_CERTIFICATES_LINK];
   }, [navItems]);
 
-  /* Скролл: начало ведёт, конец догоняет (как в Jcos). */
+  /* Wordmark: начало ведёт, конец догоняет (как в Jcos). */
   useEffect(() => {
     const root = logoRef.current;
     if (!root) return;
@@ -167,6 +173,46 @@ const Footer: React.FC = () => {
       window.removeEventListener('scroll', onScroll);
       if (raf) cancelAnimationFrame(raf);
       for (const el of letters) el.style.transform = '';
+    };
+  }, []);
+
+  /** Cone opacity: ярче, когда ближе к центру viewport. */
+  useEffect(() => {
+    const cone = coneRef.current;
+    if (!cone) return;
+
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) {
+      cone.style.opacity = '1';
+      return;
+    }
+
+    let raf = 0;
+
+    const paint = () => {
+      raf = 0;
+      const rect = cone.getBoundingClientRect();
+      const viewH = window.innerHeight || 1;
+      const center = rect.top + rect.height / 2;
+      const viewCenter = viewH / 2;
+      const dist = Math.abs(center - viewCenter);
+      const maxDist = viewH * 0.75;
+      const t = Math.max(0, Math.min(1, 1 - dist / maxDist));
+      cone.style.opacity = String(t);
+    };
+
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(paint);
+    };
+
+    paint();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+      cone.style.opacity = '';
     };
   }, []);
 
@@ -286,6 +332,18 @@ const Footer: React.FC = () => {
           </div>
 
           <div className={styles.rightLogoSlot}>
+            <div className={styles.coneSlot} aria-hidden>
+              <img
+                ref={coneRef}
+                src={CONE_SRC}
+                alt=""
+                className={styles.cone}
+                width={320}
+                height={320}
+                decoding="async"
+              />
+            </div>
+
             <div ref={logoRef} className={styles.rightLogo}>
               <Link
                 to="/"

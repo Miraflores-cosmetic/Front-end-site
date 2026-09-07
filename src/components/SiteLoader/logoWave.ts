@@ -20,13 +20,16 @@ function logoWaveMeasureEl(root: HTMLElement): HTMLElement {
   return root.querySelector<HTMLElement>('.logo-wave') ?? root;
 }
 
-/** Distance that fully clears the clip — based on rendered logo-wave height. */
+/** Distance that fully clears the clip — based on brand stack / logo-wave height. */
 export function logoWaveDistance(root: HTMLElement): number {
-  const el = logoWaveMeasureEl(root);
-  let h = el.getBoundingClientRect().height || el.offsetHeight || 0;
+  let h = root.getBoundingClientRect().height || root.offsetHeight || 0;
   if (h <= 0) {
-    const w = el.getBoundingClientRect().width || el.offsetWidth || 0;
-    if (w > 0) h = w * LOGO_ASPECT;
+    const el = logoWaveMeasureEl(root);
+    h = el.getBoundingClientRect().height || el.offsetHeight || 0;
+    if (h <= 0) {
+      const w = el.getBoundingClientRect().width || el.offsetWidth || 0;
+      if (w > 0) h = w * LOGO_ASPECT;
+    }
   }
   if (h > 0) return Math.ceil(h * 1.5);
   return 80;

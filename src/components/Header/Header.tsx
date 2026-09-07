@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import AppLink from '@/components/AppLink/AppLink';
-import siteLogo from '@/assets/icons/Logo-mira.svg';
+import { LogoPaths } from '@/components/SiteLoader/LogoPaths';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { useScroll } from '@/hooks/useScroll';
 import { VIEWPORT_TABLET_MAX } from '@/constants/viewport';
@@ -85,20 +85,16 @@ const Header: React.FC = () => {
           )}
         </div>
 
-        <button
-          type="button"
-          className={isNavMobile ? styles.logoMobile : styles.logo}
-          onClick={() => navigate('/')}
-          aria-label="Miraflores — на главную"
-        >
-          <img
-            src={siteLogo}
-            alt="Miraflores"
-            width={isNavMobile ? 124 : 186}
-            height={isNavMobile ? 14 : 20}
-            decoding="async"
-          />
-        </button>
+        <div className={styles.center}>
+          <button
+            type="button"
+            className={isNavMobile ? styles.logoMobile : styles.logo}
+            onClick={() => navigate('/')}
+            aria-label="Miraflores — на главную"
+          >
+            <LogoPaths className={styles.logoMark} />
+          </button>
+        </div>
 
         <div className={styles.right}>
           {isNavMobile ? (

@@ -9,7 +9,7 @@
   /* всегда 0.5px — иначе transition none→solid даёт вспышку чёрной полосы */
   border-bottom: 0.5px solid transparent;
   transition: border-color 0.3s ease, z-index 0.3s ease;
-  --header-height: 86px; /* 24px padding * 2 + ~38px logo */
+  --header-height: 70px; /* 16px padding * 2 + ~38px logo */
   opacity: 0;
   transform: translateY(-100%);
   animation: slideDown 0.6s ease-out 0.1s forwards;
@@ -38,63 +38,146 @@
   width: 100%;
   max-width: 1536px;
   margin: 0 auto;
-  padding: 24px 32px;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  padding: 16px 32px;
+  display: flex;
   align-items: center;
-  column-gap: 16px;
+  gap: 16px;
 
   /* Nav mobile = tablet and below (same as JS VIEWPORT_TABLET_MAX) */
   @media (max-width: $viewport-tablet-max) {
-    padding: 24px 16px;
-    --header-height: 74px; /* 24px * 2 + ~26px mobile logo */
+    padding: 16px 16px;
+    --header-height: 58px; /* 16px * 2 + ~26px mobile logo */
   }
 }
 
-.left {
-  grid-column: 1;
-  justify-self: start;
+.left,
+.right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
   min-width: 0;
 }
 
+.left {
+  justify-content: flex-start;
+}
+
 .right {
-  grid-column: 3;
-  justify-self: end;
+  justify-content: flex-end;
+}
+
+/* Растягивается между left и right; лого по центру этого промежутка */
+.center {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   min-width: 0;
+}
+
+/* Моб/tablet: равные боковые колонки → лого строго по центру экрана */
+@media (max-width: $viewport-tablet-max) {
+  .left,
+  .right {
+    flex: 1 1 0;
+    width: 0;
+  }
+
+  .center {
+    flex: 0 0 auto;
+  }
 }
 
 .logo,
 .logoMobile {
-  grid-column: 2;
-  justify-self: center;
   margin: 0;
   padding: 0;
   border: none;
   background: transparent;
   cursor: pointer;
   line-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex-shrink: 0;
-  /* не даём grid сжимать wordmark до загрузки CSS/картинки */
-  min-width: 0;
-}
-
-.logo img,
-.logoMobile img {
-  display: block;
-  height: auto;
-  max-width: 100%;
-  aspect-ratio: 3401 / 374;
-  object-fit: contain;
-  object-position: center;
-  flex-shrink: 0;
-}
-
-.logo img {
+  color: $green-297;
+  /* Явная ширина: буквы logo-wave absolute и не дают intrinsic size */
   width: 186px;
 }
 
-.logoMobile img {
+.logoMobile {
   width: 124px;
+}
+
+.logoMark {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 179 / 36;
+  color: inherit;
+  overflow: visible;
+}
+
+.logo :global(.logo-wave),
+.logoMobile :global(.logo-wave),
+.logoMark:global(.logo-wave) {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 179 / 36;
+  overflow: visible;
+}
+
+.logo :global(path),
+.logoMobile :global(path) {
+  fill: currentColor;
+}
+
+.logo :global(.logo-wave__letter),
+.logoMobile :global(.logo-wave__letter) {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: block;
+  overflow: visible;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.logo :global(.logo-wave__img),
+.logoMobile :global(.logo-wave__img) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+/* Небольшая волна букв при hover */
+.logo:hover :global(.logo-wave__letter),
+.logoMobile:hover :global(.logo-wave__letter),
+.logo:focus-visible :global(.logo-wave__letter),
+.logoMobile:focus-visible :global(.logo-wave__letter) {
+  animation: headerLogoWave 0.55s ease both;
+  animation-delay: calc(var(--index, 0) * 28ms);
+}
+
+@keyframes headerLogoWave {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  45% {
+    transform: translate3d(0, -3px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logo:hover :global(.logo-wave__letter),
+  .logoMobile:hover :global(.logo-wave__letter),
+  .logo:focus-visible :global(.logo-wave__letter),
+  .logoMobile:focus-visible :global(.logo-wave__letter) {
+    animation: none;
+  }
 }
 
 /* ——— Left: categories / burger ——— */

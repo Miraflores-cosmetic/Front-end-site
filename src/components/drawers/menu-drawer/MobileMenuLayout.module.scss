@@ -67,9 +67,45 @@
   top: 50%;
   transform: translate(-50%, -50%);
   width: 118px;
-  height: 24px;
-  object-fit: contain;
+  color: $black;
+  line-height: 0;
   pointer-events: none;
+}
+
+.logoMark {
+  display: block;
+  width: 100%;
+  aspect-ratio: 179 / 36;
+  color: inherit;
+  overflow: visible;
+}
+
+.logo :global(.logo-wave),
+.logoMark:global(.logo-wave) {
+  position: relative;
+  display: block;
+  width: 100%;
+  aspect-ratio: 179 / 36;
+  overflow: visible;
+}
+
+.logo :global(path) {
+  fill: currentColor;
+}
+
+.logo :global(.logo-wave__letter) {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+.logo :global(.logo-wave__img) {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
 .nav {

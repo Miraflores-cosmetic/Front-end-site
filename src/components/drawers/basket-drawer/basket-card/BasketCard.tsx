@@ -14,6 +14,8 @@ import {
 } from '@/store/slices/checkoutSlice';
 import { isAtOrOverLineLimit } from '@/utils/checkoutLineLimits';
 import { isVariantOutOfStock } from '@/utils/stock';
+import { isGiftDenomVariantId } from '@/utils/giftDenomCart';
+import { SITE_GIFT_CERTIFICATES_HREF } from '@/config/siteNavLinks';
 
 const BasketCard: React.FC<BasketCardProps> = ({
   variantId,
@@ -25,23 +27,34 @@ const BasketCard: React.FC<BasketCardProps> = ({
   oldPrice,
   price,
   isGift = false,
+  isGiftDenom: isGiftDenomProp = false,
   quantityLimitPerCustomer,
   quantityAvailable,
   trackInventory,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const isProductLink = Boolean(slug && !isGift);
+  const isGiftDenom = Boolean(isGiftDenomProp) || isGiftDenomVariantId(variantId);
+  /** Gratitude gift: no link / qty / price. Gift-denom: link to certificates page. */
+  const productHref = isGift
+    ? null
+    : isGiftDenom
+      ? SITE_GIFT_CERTIFICATES_HREF
+      : slug
+        ? `/product/${slug}`
+        : null;
+  const isProductLink = Boolean(productHref);
   const lineKey = { variantId };
 
   const handleProductNavigate = () => {
-    if (!slug || isGift) return;
+    if (!productHref) return;
     dispatch(closeDrawer());
-    navigate(`/product/${slug}`);
+    navigate(productHref);
   };
 
   const lineOutOfStock =
     !isGift &&
+    !isGiftDenom &&
     isVariantOutOfStock({
       trackInventory,
       quantityAvailable,
@@ -49,7 +62,8 @@ const BasketCard: React.FC<BasketCardProps> = ({
 
   const plusDisabled =
     !isGift &&
-    (isAtOrOverLineLimit(quantity, quantityLimitPerCustomer, quantityAvailable) || lineOutOfStock);
+    (isAtOrOverLineLimit(quantity, quantityLimitPerCustomer, quantityAvailable) ||
+      lineOutOfStock);
 
   const lineTotal = Math.round((price ?? 0) * quantity);
   const unitPrice = Math.round(price ?? 0);
@@ -110,6 +124,8 @@ const BasketCard: React.FC<BasketCardProps> = ({
 
         {isGift ? (
           <span className={styles.giftChip}>Подарок</span>
+        ) : isGiftDenom ? (
+          <span className={styles.giftChip}>Сертификат</span>
         ) : size ? (
           <p className={styles.lineMeta}>{size}</p>
         ) : null}

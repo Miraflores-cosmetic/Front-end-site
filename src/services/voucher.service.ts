@@ -11,10 +11,12 @@ export interface VoucherValidationResult {
   discountPercent?: number;
   discountName?: string;
   error?: string;
-}
+};
 
 /**
  * Сначала подарочный сертификат, затем промокод (как в Jcos cart).
+ * Сертификат: payable = товары + доставка (если известна).
+ * Промокод: только товары.
  */
 export async function validateVoucher(
   promoCode: string,
@@ -23,9 +25,12 @@ export async function validateVoucher(
   _channel?: string,
   subtotal?: number,
   email?: string,
+  shippingRub?: number | null,
 ): Promise<VoucherValidationResult> {
   const code = promoCode.trim();
-  const payable = Math.max(0, Math.round(subtotal ?? 0));
+  const goods = Math.max(0, Math.round(subtotal ?? 0));
+  const ship = Math.max(0, Math.round(shippingRub ?? 0));
+  const giftPayable = goods + ship;
 
   try {
     const giftRes = await apiJson<{
@@ -34,7 +39,7 @@ export async function validateVoucher(
       applyAmount: number;
     }>('/gift-certificates/validate', 'POST', {
       code,
-      payableBeforeGift: payable,
+      payableBeforeGift: giftPayable,
     });
 
     if (giftRes.kind === 'gift' && giftRes.applyAmount >= 1) {
@@ -60,7 +65,7 @@ export async function validateVoucher(
       total: number;
     }>('/promo/validate', 'POST', {
       code,
-      subtotal: payable,
+      subtotal: goods,
       email,
       guestId: getOrCreateGuestId(),
     });

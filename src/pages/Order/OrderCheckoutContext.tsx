@@ -47,7 +47,9 @@ export function useOrderCheckoutOptional(): OrderCheckoutContextValue | null {
 
 export function OrderCheckoutProvider({ children }: { children: React.ReactNode }) {
     const dispatch = useDispatch<AppDispatch>();
-    const { lines, voucherDiscount, voucherCode } = useSelector((s: RootState) => s.checkout);
+    const { lines, voucherDiscount, voucherCode, voucherKind } = useSelector(
+        (s: RootState) => s.checkout,
+    );
     const isAuth = useSelector((s: RootState) => s.authSlice.isAuth);
     const [selectedAddress, setSelectedAddress] = useState<AddressInfo | null>(null);
     const [checkoutEmail, setCheckoutEmail] = useState('');
@@ -107,12 +109,27 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
             calcPayableTotals({
                 lines,
                 voucherDiscount,
+                voucherKind,
                 shippingRub: effectiveShippingRub,
                 shippingLoading: loading,
                 shippingError: error,
             }),
-        [lines, voucherDiscount, effectiveShippingRub, loading, error],
+        [lines, voucherDiscount, voucherKind, effectiveShippingRub, loading, error],
     );
+
+    // Gift validate зависит от shipping: пересчитываем applyAmount при смене тарифа.
+    const shippingForGiftKey =
+        voucherKind === 'gift' && effectiveShippingRub != null
+            ? String(effectiveShippingRub)
+            : '';
+    useEffect(() => {
+        if (voucherKind !== 'gift' || !voucherCode || !shippingForGiftKey) return;
+        void dispatch(
+            revalidateVoucher({
+                shippingRub: effectiveShippingRub,
+            }),
+        );
+    }, [voucherKind, voucherCode, shippingForGiftKey, effectiveShippingRub, dispatch]);
 
     const value = useMemo<OrderCheckoutContextValue>(
         () => ({

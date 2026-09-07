@@ -15,6 +15,7 @@ import {
 } from '@/utils/glueRussianPrepositions';
 import { getVolumeFromVariant } from '@/utils/getVolumeFromVariant';
 import type { RootState } from '@/store/store';
+import { SITE_GIFT_CERTIFICATES_HREF } from '@/config/siteNavLinks';
 
 const IMAGE_PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='332' height='332'%3E%3Crect width='100%25' height='100%25' fill='%23F6F5EF'/%3E%3Ctext x='50%25' y='50%25' text-anchor='middle' dy='.3em' fill='%236E6D67' font-family='Avenir Next' font-size='14'%3EИзображение%3C/text%3E%3C/svg%3E";
@@ -318,7 +319,12 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
   const typeStr = productTypeFromAttr || productTypeFromProduct;
   const isGiftCertificates =
     typeStr === 'ПОДАРОЧНЫЕ СЕРТИФИКАТЫ' ||
-    (typeStr.includes('ПОДАРОЧН') && typeStr.includes('СЕРТИФИКАТ'));
+    (typeStr.includes('ПОДАРОЧН') && typeStr.includes('СЕРТИФИКАТ')) ||
+    product.slug === 'gift-certificates';
+
+  const productHref = isGiftCertificates
+    ? SITE_GIFT_CERTIFICATES_HREF
+    : '/product/' + product.slug;
 
   const showDesktopAtc = !isMobile && (mediaHovered || inCart);
   const hasSellablePrice = Number(product.price) > 0;
@@ -334,7 +340,7 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
     discount: product.discount,
     size: activeVariant ? getVolumeFromVariant(activeVariant) : product.size || '',
     slug: product.slug,
-    productId: product.id,
+    productId: isGiftCertificates ? undefined : product.id,
     quantityLimitPerCustomer: quantityLimitForCard,
     quantityAvailable: stockNode?.quantityAvailable ?? product.quantityAvailable ?? null,
     trackInventory: stockNode?.trackInventory ?? product.trackInventory ?? null,
@@ -381,7 +387,7 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
             onPointerCancel={hasGallery ? endScrub : undefined}
             onPointerUp={hasGallery ? onPointerUp : undefined}
           >
-            {isMobile && activeVariantId ? (
+            {isMobile && activeVariantId && !isGiftCertificates ? (
               <FavoriteButton productId={activeVariantId} />
             ) : null}
 
@@ -392,7 +398,7 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
             {gallery.length > 0 && (
               <Link
                 ref={imageLinkRef}
-                to={'/product/' + product.slug}
+                to={productHref}
                 className={styles.imageLink}
                 aria-label={product.title}
                 onClick={onMediaClick}
@@ -502,7 +508,7 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
           <div className={styles.info}>
             <div className={styles.titleRow}>
               <Link
-                to={'/product/' + product.slug}
+                to={productHref}
                 className={styles.titleLink}
                 title={product.title}
                 onClick={(e) => {
@@ -544,7 +550,7 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
                   <AddToBasket {...addToBasketProps} variant="card" />
                 ) : (
                   <Link
-                    to={'/product/' + product.slug}
+                    to={productHref}
                     className={styles.openProductLink}
                     onClick={(e) => {
                       if (shouldBlockNavigation(e)) return;

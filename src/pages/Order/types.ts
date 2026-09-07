@@ -20,6 +20,7 @@ interface Product {
   discount?: string;
   image: string;
   isGift?: boolean;
+  isGiftDenom?: boolean;
   quantity?: number;
 }
 

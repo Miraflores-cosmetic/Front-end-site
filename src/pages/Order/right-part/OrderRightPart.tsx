@@ -46,6 +46,7 @@ const OrderRightPart: React.FC = () => {
         oldPrice: oldPrice > price ? oldPrice : null,
         discount: discountLabel,
         isGift: Boolean(line.isGift),
+        isGiftDenom: Boolean(line.isGiftDenom),
       };
     });
     if (giftLine) {

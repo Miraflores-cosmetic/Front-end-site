@@ -49,6 +49,14 @@ export const SITE_EMAIL = {
 /** Программа благодарности — только partnerCta в футере, не дублировать в колонках. */
 export const SITE_GRATITUDE_HREF = '/articles/programma-blagodarnosti-2';
 
+/** Подарочные сертификаты (лендинг покупки, не категория каталога). */
+export const SITE_GIFT_CERTIFICATES_HREF = '/gift-certificates';
+
+export const SITE_GIFT_CERTIFICATES_LINK: SiteNavLink = {
+  label: 'Сертификаты',
+  href: SITE_GIFT_CERTIFICATES_HREF,
+};
+
 export const SITE_ABOUT_LINKS: SiteNavLink[] = [
   { label: 'Наша история', href: '/about' },
   { label: 'Полезные статьи', href: '/articles' },

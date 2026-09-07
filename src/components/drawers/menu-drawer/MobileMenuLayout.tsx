@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import styles from './MobileMenuLayout.module.scss';
-import siteLogo from '@/assets/icons/Logo-mira.svg';
+import { LogoPaths } from '@/components/SiteLoader/LogoPaths';
 import centerImageMenu from '@/assets/images/centerImageMenu.png';
 import { MenuNavSections } from './MenuNavSections';
 import { closeDrawer, openDrawer } from '@/store/slices/drawerSlice';
@@ -26,7 +26,9 @@ export function MobileMenuLayout() {
         >
           <span className={styles.closeIcon} aria-hidden="true" />
         </button>
-        <img src={siteLogo} alt="Miraflores" className={styles.logo} />
+        <div className={styles.logo} aria-hidden>
+          <LogoPaths className={styles.logoMark} />
+        </div>
       </div>
 
       <nav className={styles.nav} aria-label="Разделы сайта">

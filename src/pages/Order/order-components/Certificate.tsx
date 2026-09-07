@@ -7,6 +7,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
 import { applyVoucherCode, removeVoucherCode } from '@/store/slices/checkoutSlice';
 import { useToast } from '@/components/toast/toast';
+import {
+  GIFT_HOLD_APPLIED_TOAST,
+  GIFT_HOLD_WILL_RESERVE,
+} from '@/utils/giftHoldCopy';
 import { useOrderCheckoutOptional } from '../OrderCheckoutContext';
 
 const Certificate = () => {
@@ -55,7 +59,9 @@ const Certificate = () => {
       setIsInputOpen(false);
       setPromoCode('');
       toast.success(
-        result.voucherKind === 'gift' ? 'Сертификат применён' : 'Промокод применён',
+        result.voucherKind === 'gift'
+          ? GIFT_HOLD_APPLIED_TOAST
+          : 'Промокод применён',
       );
     } catch (error: any) {
       toast.error(error?.message || 'Ошибка при применении кода');
@@ -110,9 +116,7 @@ const Certificate = () => {
 
       {(isInputOpen || voucherKind === 'gift') && (
         <p className={styles.giftShippingNote} role="note">
-          Сертификат списывается только с товаров — доставку не покрывает. Даже при полном
-          балансе курьер и платная доставка оплачиваются отдельно. Без оплаты остаётся только
-          бесплатная доставка до ПВЗ при сумме товаров от порога.
+          {GIFT_HOLD_WILL_RESERVE}
         </p>
       )}
     </section>

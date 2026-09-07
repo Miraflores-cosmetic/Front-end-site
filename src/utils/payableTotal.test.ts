@@ -29,3 +29,24 @@ describe('calcPayableTotals', () => {
     expect(t.shippingReady).toBe(false);
   });
 });
+
+  it('gift-denom-only: shippingReady without carrier quote', () => {
+    const t = calcPayableTotals({
+      lines: [
+        {
+          variantId: 'gift-denom:abc',
+          quantity: 1,
+          price: 3000,
+          title: 'Сертификат',
+          isGiftDenom: true,
+        },
+      ],
+      shippingRub: null,
+      shippingLoading: false,
+    });
+    expect(t.hasPayableLines).toBe(false);
+    expect(t.shippingReady).toBe(true);
+    expect(t.shippingRub).toBe(0);
+    expect(t.payableTotal).toBe(3000);
+  });
+

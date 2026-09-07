@@ -4,6 +4,7 @@ import type { AddressInfo } from '@/types/auth';
 import { fetchVariantsShippingData } from '@/graphql/queries/variantShipping.service';
 import { parseVspAddressMeta } from '@/lib/addressVspMeta';
 import { resolveCheckoutShippingMethod } from '@/utils/checkoutShipping';
+import { lineIsGiftDenom } from '@/utils/giftDenomCart';
 
 const FROM_CITY_CODE = Number(
     import.meta.env.VITE_CDEK_SHIP_FROM_CITY_CODE || '44',
@@ -40,7 +41,7 @@ function packageDimsForQuantity(
 function buildPackages(lines: CheckoutLine[], byVariant: Awaited<ReturnType<typeof fetchVariantsShippingData>>) {
     const packages: { weight: number; length: number; width: number; height: number }[] = [];
     for (const line of lines) {
-        if (line.isGift) continue;
+        if (line.isGift || lineIsGiftDenom(line)) continue;
         const row = byVariant.get(line.variantId);
         const q = Math.max(1, Math.floor(line.quantity || 1));
         const unitWeightG = row?.weightGrams ?? 300;
@@ -169,7 +170,7 @@ function useCdekOnlyEstimate(lines: CheckoutLine[], address: AddressInfo | null)
         const id = ++seq.current;
         const run = async () => {
             setError(null);
-            const payableLines = lines.filter((l) => !l.isGift);
+            const payableLines = lines.filter((l) => !l.isGift && !lineIsGiftDenom(l));
             if (payableLines.length === 0) {
                 setRub(null);
                 setQuoteMeta(null);
@@ -340,7 +341,7 @@ function useYandexOnlyEstimate(lines: CheckoutLine[], address: AddressInfo | nul
         const id = ++seq.current;
         const run = async () => {
             setError(null);
-            const payableLines = lines.filter((l) => !l.isGift);
+            const payableLines = lines.filter((l) => !l.isGift && !lineIsGiftDenom(l));
             if (payableLines.length === 0 || !address || !meta || meta.carrier !== 'yandex') {
                 setRub(null);
                 setQuoteMeta(null);

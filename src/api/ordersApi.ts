@@ -65,9 +65,10 @@ export type CreateOrderInput = {
   giftCertificateCode?: string | null;
   idempotencyKey: string;
   shippingAddress: ShippingAddressInput;
-  shippingMethod: 'CDEK' | 'YANDEX';
-  /** HMAC quote из requestShippingQuote */
-  shippingQuote: string;
+  /** Не нужен для digital gift-denom-only. */
+  shippingMethod?: 'CDEK' | 'YANDEX' | null;
+  /** HMAC quote из requestShippingQuote; не нужен для gift-denom-only. */
+  shippingQuote?: string | null;
 };
 
 export type CreatedOrder = {

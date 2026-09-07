@@ -11,6 +11,10 @@ import { useToast } from '@/components/toast/toast';
 import { TextField } from '@/components/text-field/TextField';
 import { useProgressBarCartModel } from '@/hooks/useProgressBarCartModel';
 import { useApplicableGift } from '@/hooks/useApplicableGift';
+import {
+  GIFT_HOLD_APPLIED_TOAST,
+  GIFT_HOLD_WILL_RESERVE,
+} from '@/utils/giftHoldCopy';
 
 function CloseIcon() {
   return (
@@ -178,7 +182,9 @@ const BasketDrawer: React.FC = () => {
         }),
       ).unwrap();
       toast.success(
-        result.voucherKind === 'gift' ? 'Сертификат применён' : 'Промокод применён',
+        result.voucherKind === 'gift'
+          ? GIFT_HOLD_APPLIED_TOAST
+          : 'Промокод применён',
       );
     } catch (error: unknown) {
       const msg = error instanceof Error ? error.message : String(error);
@@ -303,6 +309,12 @@ const BasketDrawer: React.FC = () => {
                 </button>
               )}
             </div>
+
+            {voucherKind === 'gift' ? (
+              <p className={styles.giftHoldNote} role="note">
+                {GIFT_HOLD_WILL_RESERVE}
+              </p>
+            ) : null}
 
             {voucherDiscount > 0 || totalFromPrice > totalToPrice ? (
               <div className={styles.totals}>

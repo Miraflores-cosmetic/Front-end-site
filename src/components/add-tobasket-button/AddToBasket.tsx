@@ -12,6 +12,10 @@ import { RootState } from '@/store/store';
 import { FavoriteButton } from '@/components/favorite-button/FavoriteButton';
 import { isAtOrOverLineLimit, effectiveLineQuantityCap } from '@/utils/checkoutLineLimits';
 import { isVariantOutOfStock } from '@/utils/stock';
+import {
+  cartWouldMixGiftAndPhysical,
+  isGiftDenomVariantId,
+} from '@/utils/giftDenomCart';
 
 interface AddToCartButtonProps {
   defaultText?: string;
@@ -59,6 +63,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
 
   const dispatch = useDispatch();
   const toast = useToast();
+  const cartLines = useSelector((state: RootState) => state.checkout.lines);
   const cartItem = useSelector((state: RootState) =>
     state.checkout.lines.find((item) => item.variantId === activeVariantId),
   );
@@ -84,6 +89,18 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
     }
 
     if (count === 0) {
+      const giftDenom = isGiftDenomVariantId(activeVariantId);
+      if (
+        cartWouldMixGiftAndPhysical(cartLines, {
+          variantId: activeVariantId,
+          isGiftDenom: giftDenom,
+        })
+      ) {
+        toast.error(
+          'Нельзя смешивать подарочные сертификаты и обычные товары — оформите отдельно',
+        );
+        return;
+      }
       dispatch(
         addItemToCart({
           variantId: activeVariantId,
@@ -97,10 +114,11 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
           slug,
           quantityLimitPerCustomer,
           quantityAvailable,
-          trackInventory
+          trackInventory,
+          isGiftDenom: giftDenom || undefined,
         })
       );
-      toast.success('Товар добавлен в корзину');
+      toast.success(giftDenom ? 'Сертификат добавлен в корзину' : 'Товар добавлен в корзину');
       return;
     }
 

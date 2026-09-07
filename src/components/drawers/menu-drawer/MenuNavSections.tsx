@@ -5,6 +5,7 @@ import type { RootState } from '@/store/store';
 import { isHiddenInNav } from '@/utils/navHide';
 import {
   SITE_ABOUT_LINKS,
+  SITE_GIFT_CERTIFICATES_LINK,
   SITE_INFO_LINKS,
   getMenuSupportLinks,
 } from '@/config/siteNavLinks';
@@ -14,12 +15,15 @@ export function MenuNavSections() {
   const { items, loading: navLoading } = useSelector((state: RootState) => state.nav);
   const { isAuth } = useSelector((state: RootState) => state.authSlice);
 
-  const catalogItems = items
-    .filter((item) => !isHiddenInNav(item))
-    .map((item) => ({
-      label: item.name,
-      href: '/catalog/' + item.category.slug,
-    }));
+  const catalogItems = [
+    ...items
+      .filter((item) => !isHiddenInNav(item))
+      .map((item) => ({
+        label: item.name,
+        href: '/catalog/' + item.category.slug,
+      })),
+    SITE_GIFT_CERTIFICATES_LINK,
+  ];
 
   return (
     <>
@@ -27,7 +31,7 @@ export function MenuNavSections() {
         title="Каталог"
         titleHref="/catalog"
         items={catalogItems}
-        loading={navLoading && catalogItems.length === 0}
+        loading={navLoading && catalogItems.length <= 1}
       />
       <MenuList title="О Компании" withColor items={SITE_ABOUT_LINKS} />
       <MenuList title="Информация" items={SITE_INFO_LINKS} />

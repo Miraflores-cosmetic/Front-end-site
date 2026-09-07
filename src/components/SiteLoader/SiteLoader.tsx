@@ -196,6 +196,18 @@ export function SiteLoader() {
     >
       <div className={styles.bg} ref={bgRef} />
       <div className={styles.logo} ref={logoRef}>
+        <div className={styles.coneWave} aria-hidden>
+          <span className={`logo-wave__letter ${styles.coneLetter}`}>
+            <img
+              src="/images/cone.svg"
+              alt=""
+              className={styles.coneImg}
+              width={160}
+              height={160}
+              decoding="async"
+            />
+          </span>
+        </div>
         <LogoPaths />
       </div>
     </div>

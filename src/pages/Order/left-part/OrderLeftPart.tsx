@@ -300,7 +300,27 @@ const OrderLeftPart: React.FC = () => {
             .map((x) => (x || '').trim())
             .filter(Boolean)
             .join(' ');
-      const shippingAddress = giftDenomOnly
+      const shippingAddress: {
+        city: string;
+        address: string;
+        apartment?: string;
+        region?: string;
+        district?: string;
+        postalCode?: string;
+        comment?: string;
+        pvzCode?: string;
+        phone?: string;
+        recipientName?: string;
+        carrierQuote?: {
+          tariffId: number | null;
+          tariffName: string | null;
+          daysMin: number | null;
+          daysMax: number | null;
+          cost: number;
+          method: 'CDEK' | 'YANDEX' | null;
+          source: string;
+        };
+      } = giftDenomOnly
         ? {
             city: '—',
             address: 'Электронный сертификат',
@@ -316,7 +336,7 @@ const OrderLeftPart: React.FC = () => {
             district: selectedAddress!.cityArea || undefined,
             postalCode: selectedAddress!.postalCode || undefined,
             comment: selectedAddress!.streetAddress2 || undefined,
-            pvzCode: extractPvzCodeFromStreet2(selectedAddress!.streetAddress2),
+            pvzCode: extractPvzCodeFromStreet2(selectedAddress!.streetAddress2) || undefined,
             phone: selectedAddress!.phone?.trim() || undefined,
             recipientName: recipientName || undefined,
             ...(shippingQuoteMeta
@@ -577,6 +597,7 @@ const OrderLeftPart: React.FC = () => {
         image: giftLine.thumbnail || krem,
         isGift: true,
         quantity: giftLine.quantity,
+        isGiftDenom: false,
       });
     }
 

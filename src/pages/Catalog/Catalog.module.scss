@@ -398,6 +398,31 @@
   }
 }
 
+@keyframes catalogCardHighlight {
+  0% {
+    box-shadow: 0 0 0 0 rgba($green-297, 0.35);
+  }
+  35% {
+    box-shadow: 0 0 0 3px rgba($green-297, 0.45);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba($green-297, 0);
+  }
+}
+
+.cardHighlight {
+  border-radius: 4px;
+  animation: catalogCardHighlight 1.5s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cardHighlight {
+    animation: none;
+    outline: 2px solid rgba($green-297, 0.55);
+    outline-offset: 2px;
+  }
+}
+
 .skeletonCard {
   display: flex;
   flex-direction: column;

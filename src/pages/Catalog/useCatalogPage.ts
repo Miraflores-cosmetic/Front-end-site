@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -15,14 +16,19 @@ import {
   clearCatalogMetaCache,
   loadCatalogPage,
   type CatalogCategoryNode,
-  type CatalogPageData,
 } from './catalogLoad';
 import {
   findCategoryInTree,
   findSubcategoryChainInRoot,
 } from '@/lib/categoryCatalogHref';
+import {
+  peekCatalogPlp,
+  readCatalogPlp,
+  saveCatalogPlp,
+  type CatalogPlpMeta,
+} from './catalogPlpCache';
 
-export type CatalogMeta = Omit<CatalogPageData, 'products' | 'page'>;
+export type CatalogMeta = CatalogPlpMeta;
 
 export type CatalogCrumb = {
   label: string;
@@ -72,31 +78,6 @@ export function useCatalogPage() {
   const pageSize = catalogPageSize(isMobile);
   const [, startTransition] = useTransition();
 
-  const [meta, setMeta] = useState<CatalogMeta | null>(null);
-  const [products, setProducts] = useState<BestSellersProduct[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [reloadToken, setReloadToken] = useState(0);
-
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const loadMoreLock = useRef(false);
-  const requestGen = useRef(0);
-  const loadMoreStateRef = useRef({
-    meta: null as CatalogMeta | null,
-    loading: true,
-    loadingMore: false,
-    productsLength: 0,
-    page: 1,
-  });
-  loadMoreStateRef.current = {
-    meta,
-    loading,
-    loadingMore,
-    productsLength: products.length,
-    page,
-  };
-
   const cat = catParam?.trim() || '';
   const sub = subParam?.trim() || '';
   const tag = searchParams.get('tag')?.trim() || '';
@@ -117,20 +98,51 @@ export function useCatalogPage() {
         priceMin ?? '',
         priceMax ?? '',
         q,
-        reloadToken,
       ].join('|'),
-    [
-      cat,
-      sub,
-      tag,
-      collection,
-      sale,
-      priceMin,
-      priceMax,
-      q,
-      reloadToken,
-    ],
+    [cat, sub, tag, collection, sale, priceMin, priceMax, q],
   );
+
+  const [reloadToken, setReloadToken] = useState(0);
+  const loadKey = `${filterKey}|${reloadToken}`;
+
+  const [meta, setMeta] = useState<CatalogMeta | null>(null);
+  const [products, setProducts] = useState<BestSellersProduct[]>([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [highlightProductId, setHighlightProductId] = useState<string | null>(
+    null,
+  );
+
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const loadMoreLock = useRef(false);
+  const requestGen = useRef(0);
+  const suppressScrollTopRef = useRef(false);
+  const pendingScrollYRef = useRef<number | null>(null);
+  /** Set on PDP click so unmount save does not wipe highlight. */
+  const leaveHighlightRef = useRef<string | null>(null);
+  const liveRef = useRef({
+    filterKey,
+    meta: null as CatalogMeta | null,
+    products: [] as BestSellersProduct[],
+    page: 1,
+  });
+  liveRef.current = { filterKey, meta, products, page };
+
+  const loadMoreStateRef = useRef({
+    meta: null as CatalogMeta | null,
+    loading: true,
+    loadingMore: false,
+    productsLength: 0,
+    page: 1,
+  });
+  loadMoreStateRef.current = {
+    meta,
+    loading,
+    loadingMore,
+    productsLength: products.length,
+    page,
+  };
 
   useEffect(() => {
     if (!searchParams.has('page')) return;
@@ -145,16 +157,32 @@ export function useCatalogPage() {
   }, [searchParams, setSearchParams]);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: isMobile ? 'auto' : 'smooth' });
-  }, [filterKey, isMobile]);
-
-  useEffect(() => {
     let cancelled = false;
     const gen = ++requestGen.current;
+
+    const cached = readCatalogPlp(filterKey);
+    if (cached && reloadToken === 0) {
+      suppressScrollTopRef.current = true;
+      pendingScrollYRef.current = cached.scrollY;
+      setMeta(cached.meta);
+      setProducts(cached.products);
+      setPage(cached.page);
+      setLoading(false);
+      setLoadingMore(false);
+      loadMoreLock.current = false;
+      if (cached.highlightProductId) {
+        setHighlightProductId(cached.highlightProductId);
+      }
+      return () => {
+        cancelled = true;
+      };
+    }
+
     setLoading(true);
-    // Не очищаем products до ответа — иначе ложный empty на смене фильтра.
     setPage(1);
     loadMoreLock.current = false;
+    setHighlightProductId(null);
+    pendingScrollYRef.current = null;
 
     loadCatalogPage({
       cat,
@@ -220,7 +248,66 @@ export function useCatalogPage() {
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filterKey]);
+  }, [loadKey]);
+
+  // После restore-эффекта: не скроллим наверх при Back.
+  useEffect(() => {
+    if (suppressScrollTopRef.current) {
+      suppressScrollTopRef.current = false;
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: isMobile ? 'auto' : 'smooth' });
+  }, [filterKey, isMobile]);
+
+  /** Persist PLP for Back from PDP (memory keep-alive). */
+  useEffect(() => {
+    return () => {
+      const live = liveRef.current;
+      if (!live.meta || live.products.length === 0) return;
+      saveCatalogPlp({
+        filterKey: live.filterKey,
+        meta: live.meta,
+        products: live.products,
+        page: live.page,
+        scrollY: window.scrollY,
+        highlightProductId: leaveHighlightRef.current,
+        at: Date.now(),
+      });
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+    const y = pendingScrollYRef.current;
+    if (y == null || loading) return;
+    pendingScrollYRef.current = null;
+    window.scrollTo({ top: y, behavior: 'auto' });
+
+    const id = highlightProductId;
+    if (!id) return;
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`catalog-product-${id}`);
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const inView = rect.top >= 0 && rect.bottom <= window.innerHeight;
+      if (!inView) {
+        el.scrollIntoView({ block: 'center', behavior: 'auto' });
+      }
+    });
+  }, [loading, products, highlightProductId]);
+
+  useEffect(() => {
+    if (!highlightProductId) return;
+    const id = highlightProductId;
+    const t = window.setTimeout(() => {
+      setHighlightProductId(null);
+      const live = liveRef.current;
+      const cached = peekCatalogPlp(live.filterKey);
+      if (cached?.highlightProductId === id) {
+        saveCatalogPlp({ ...cached, highlightProductId: null });
+      }
+    }, 1600);
+    return () => window.clearTimeout(t);
+  }, [highlightProductId]);
 
   const hasMore =
     Boolean(meta) &&
@@ -283,6 +370,21 @@ export function useCatalogPage() {
     io.observe(el);
     return () => io.disconnect();
   }, [hasMore, loading, loadNextPage]);
+
+  const rememberProductNavigation = useCallback((productId: string) => {
+    const live = liveRef.current;
+    if (!live.meta || live.products.length === 0) return;
+    leaveHighlightRef.current = productId;
+    saveCatalogPlp({
+      filterKey: live.filterKey,
+      meta: live.meta,
+      products: live.products,
+      page: live.page,
+      scrollY: window.scrollY,
+      highlightProductId: productId,
+      at: Date.now(),
+    });
+  }, []);
 
   const patchParams = useCallback(
     (patch: Record<string, string | null>, opts?: { scroll?: boolean }) => {
@@ -484,6 +586,8 @@ export function useCatalogPage() {
     selectedRoot,
     bubbles,
     sentinelRef,
+    highlightProductId,
+    rememberProductNavigation,
     patchParams,
     selectCollection,
     retryLoad,

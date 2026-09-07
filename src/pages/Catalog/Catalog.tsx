@@ -67,6 +67,8 @@ const Catalog: React.FC = () => {
     selectedRoot,
     bubbles,
     sentinelRef,
+    highlightProductId,
+    rememberProductNavigation,
     patchParams,
     selectCollection,
     retryLoad,
@@ -166,6 +168,8 @@ const Catalog: React.FC = () => {
               products={products}
               searchParams={searchParams}
               path={path}
+              highlightProductId={highlightProductId}
+              onProductNavigate={rememberProductNavigation}
               onRetry={retryLoad}
             />
           </div>

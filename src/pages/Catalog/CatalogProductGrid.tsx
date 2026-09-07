@@ -11,6 +11,8 @@ type Props = {
   products: BestSellersProduct[];
   searchParams: URLSearchParams;
   path: { cat: string; sub: string };
+  highlightProductId?: string | null;
+  onProductNavigate?: (productId: string) => void;
   onRetry: () => void;
 };
 
@@ -20,6 +22,8 @@ export function CatalogProductGrid({
   products,
   searchParams,
   path,
+  highlightProductId = null,
+  onProductNavigate,
   onRetry,
 }: Props) {
   if (notice === 'api') {
@@ -88,14 +92,27 @@ export function CatalogProductGrid({
 
   return (
     <>
-      {products.map((product) => (
-        <BestSellerProductCard
-          key={product.id}
-          product={product}
-          loading={false}
-          fluid
-        />
-      ))}
+      {products.map((product) => {
+        const highlighted = highlightProductId === product.id;
+        return (
+          <div
+            key={product.id}
+            id={`catalog-product-${product.id}`}
+            className={highlighted ? styles.cardHighlight : undefined}
+          >
+            <BestSellerProductCard
+              product={product}
+              loading={false}
+              fluid
+              onNavigate={
+                onProductNavigate
+                  ? () => onProductNavigate(product.id)
+                  : undefined
+              }
+            />
+          </div>
+        );
+      })}
     </>
   );
 }

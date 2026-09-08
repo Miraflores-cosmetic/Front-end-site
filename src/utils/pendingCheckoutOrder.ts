@@ -5,12 +5,12 @@
  * подтвердит оплату («подтвердите в этой вкладке»). Guest cross-device без
  * query-token осознанно невозможен (security tradeoff).
  */
-export const PENDING_ORDER_ID_KEY = 'jcos.pendingOrderId';
-export const PENDING_ORDER_NUMBER_KEY = 'jcos.pendingOrderNumber';
-export const PENDING_PAY_TOKEN_KEY = 'jcos.pendingPayToken';
-export const PENDING_PAYMENT_ID_KEY = 'jcos.pendingPaymentId';
-export const PENDING_IDEMPOTENCY_KEY = 'jcos.pendingIdempotencyKey';
-export const PENDING_CHECKOUT_FP_KEY = 'jcos.pendingCheckoutFp';
+export const PENDING_ORDER_ID_KEY = 'miraflores.pendingOrderId';
+export const PENDING_ORDER_NUMBER_KEY = 'miraflores.pendingOrderNumber';
+export const PENDING_PAY_TOKEN_KEY = 'miraflores.pendingPayToken';
+export const PENDING_PAYMENT_ID_KEY = 'miraflores.pendingPaymentId';
+export const PENDING_IDEMPOTENCY_KEY = 'miraflores.pendingIdempotencyKey';
+export const PENDING_CHECKOUT_FP_KEY = 'miraflores.pendingCheckoutFp';
 
 export type PendingCheckoutOrder = {
   orderId: string;

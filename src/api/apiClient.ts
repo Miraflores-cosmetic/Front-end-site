@@ -65,20 +65,15 @@ export function clearAuthStorage() {
   sessionStorage.removeItem('miraflores.register.completionToken');
   sessionStorage.removeItem('miraflores.register.otpSent');
   sessionStorage.removeItem('miraflores_auth_return');
-  // Guest id (miraflores.guest.v1 / legacy jcos) не трогаем — нужен для claim заказов.
+  // Guest id (miraflores.guest.v1) не трогаем — нужен для claim заказов.
   clearRegisterPassword();
 }
 
 const GUEST_KEY = 'miraflores.guest.v1';
-const LEGACY_GUEST_KEY = 'jcos.guest.v1';
 
 export function getOrCreateGuestId(): string {
   if (typeof window === 'undefined') return '';
-  let id = localStorage.getItem(GUEST_KEY) || localStorage.getItem(LEGACY_GUEST_KEY);
-  if (id && !localStorage.getItem(GUEST_KEY)) {
-    localStorage.setItem(GUEST_KEY, id);
-    localStorage.removeItem(LEGACY_GUEST_KEY);
-  }
+  let id = localStorage.getItem(GUEST_KEY)?.trim() || '';
   if (!id) {
     id =
       typeof crypto !== 'undefined' && 'randomUUID' in crypto

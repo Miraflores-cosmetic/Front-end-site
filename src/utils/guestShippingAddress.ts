@@ -2,7 +2,6 @@ import type { AddressInfo } from '@/types/auth';
 import type { AddressInput } from '@/graphql/types/address.types';
 
 const STORAGE_KEY = 'miraflores.guestShippingAddress.v1';
-const LEGACY_STORAGE_KEY = 'jcos.guestShippingAddress.v1';
 export const GUEST_SHIPPING_ADDRESS_EVENT = 'miraflores:guest-shipping-address';
 
 export const GUEST_SHIPPING_ADDRESS_ID = 'guest-shipping';
@@ -17,14 +16,8 @@ function emit(address: AddressInfo | null) {
 export function loadGuestShippingAddress(): AddressInfo | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw =
-      localStorage.getItem(STORAGE_KEY) ||
-      localStorage.getItem(LEGACY_STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    if (!localStorage.getItem(STORAGE_KEY)) {
-      localStorage.setItem(STORAGE_KEY, raw);
-      localStorage.removeItem(LEGACY_STORAGE_KEY);
-    }
     const parsed = JSON.parse(raw) as AddressInfo & { companyName?: string };
     if (!parsed || typeof parsed !== 'object' || !parsed.streetAddress1) return null;
     const apartment =

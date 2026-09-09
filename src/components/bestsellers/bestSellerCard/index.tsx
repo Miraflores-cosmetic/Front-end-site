@@ -334,6 +334,7 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
     hoverText: outOfStock ? 'НЕТ В НАЛИЧИИ' : 'В КОРЗИНУ',
     activeVariantId,
     title: product.title,
+    productType: (product.productType?.name || '').trim() || null,
     thumbnail: mainImage || '',
     price: product.price,
     oldPrice: product.oldPrice,
@@ -506,6 +507,9 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
           </div>
 
           <div className={styles.info}>
+            {typeStr ? (
+              <p className={styles.productType}>{typeStr}</p>
+            ) : null}
             <div className={styles.titleRow}>
               <Link
                 to={productHref}

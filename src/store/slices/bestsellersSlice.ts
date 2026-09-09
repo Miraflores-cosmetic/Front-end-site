@@ -100,6 +100,9 @@ const bestsellerSlice = createSlice({
             thumbnail: node.node.thumbnail?.url || '',
             slug: node.node.slug || '',
             attributes: node.node.attributes || [],
+            productType: node.node.productType
+              ? { name: node.node.productType.name }
+              : undefined,
             productVariants: (node.node.productVariants?.edges || []).map((v: any) => {
               let variantName = v.node?.name || '';
               

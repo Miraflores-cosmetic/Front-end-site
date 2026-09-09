@@ -132,6 +132,7 @@ export const syncCartLines = createAsyncThunk(
         variantId: item.variantId,
         quantity: item.qty,
         title: item.name,
+        productType: item.productType?.trim() || null,
         price: item.price,
         oldPrice: item.listPrice > item.price ? item.listPrice : null,
         slug: item.slug,
@@ -283,6 +284,9 @@ const checkoutSlice = createSlice({
         if (action.payload.oldPrice && !line.oldPrice) line.oldPrice = action.payload.oldPrice;
         if (action.payload.discount && !line.discount) line.discount = action.payload.discount;
         if (action.payload.slug && !line.slug) line.slug = action.payload.slug;
+        if (action.payload.productType && !line.productType) {
+          line.productType = action.payload.productType;
+        }
       } else {
         const startQty = Math.min(action.payload.quantity || 1, maxQ);
         const isGiftDenom =

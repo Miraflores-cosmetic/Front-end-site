@@ -628,7 +628,45 @@
           }
         }
 
-        .productMetaBlock {
+        
+.attrMeta {
+  margin: 8px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.attrMetaRow {
+  display: grid;
+  grid-template-columns: minmax(110px, 140px) minmax(0, 1fr);
+  gap: 8px 12px;
+  margin: 0;
+  font-family: 'Avenir Next', sans-serif;
+  font-size: 13px;
+  line-height: 18px;
+
+  dt {
+    margin: 0;
+    color: #6e6d67;
+    font-weight: 400;
+  }
+
+  dd {
+    margin: 0;
+    color: #000;
+    font-weight: 500;
+  }
+
+  @media (max-width: $viewport-mobile-max) {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    font-size: 12px;
+    line-height: 16px;
+  }
+}
+
+.productMetaBlock {
           display: flex;
           flex-direction: column;
           gap: 0;

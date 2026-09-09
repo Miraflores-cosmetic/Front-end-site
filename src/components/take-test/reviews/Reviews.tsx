@@ -20,6 +20,7 @@ type ReviewCardData = {
   kind: ReturnType<typeof resolveReviewKind>['kind'];
   mediaUrl: string | null;
   title: string;
+  productType?: string | null;
   subtitle: string;
   authorName: string | null;
   text: string;
@@ -50,6 +51,7 @@ function mapReview(r: PublishedReview): ReviewCardData {
     kind,
     mediaUrl,
     title: r.product.name,
+    productType: r.product.productType?.trim() || null,
     subtitle: r.product.shortDescription?.trim() || '',
     authorName: author && author !== 'Покупатель' ? author : null,
     text: r.text,
@@ -66,6 +68,7 @@ function ReviewCardView({ review }: { review: ReviewCardData }) {
       kind={review.kind}
       mediaUrl={review.mediaUrl}
       title={review.title}
+      productType={review.productType}
       subtitle={review.subtitle}
       authorName={review.authorName}
       text={review.text}

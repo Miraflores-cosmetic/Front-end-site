@@ -130,6 +130,7 @@ export interface OrderNode extends Node {
   lines?: Array<{
     id: string;
     productName: string;
+    productType?: string | null;
     quantity: number;
     variantName?: string;
     unitPrice?: {

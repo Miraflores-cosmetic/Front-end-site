@@ -29,6 +29,7 @@ export type ProductReviewsListResponse = {
     name: string;
     imageUrl?: string | null;
     shortDescription?: string | null;
+    productType?: string | null;
   } | null;
   ratingAvg: number | null;
   ratingCount: number;
@@ -61,6 +62,7 @@ export interface PublishedReview {
     slug?: string;
     thumbnail?: string | null;
     shortDescription?: string | null;
+    productType?: string | null;
   };
 }
 
@@ -88,6 +90,7 @@ type LatestApiRow = {
     slug?: string;
     imageUrl?: string | null;
     shortDescription?: string | null;
+    productType?: string | null;
   };
 };
 
@@ -136,6 +139,7 @@ function mapRow(r: LatestApiRow): PublishedReview {
       slug: r.product?.slug,
       thumbnail: normalizeMediaUrl(uploadsUrl(r.product?.imageUrl) || r.product?.imageUrl),
       shortDescription: r.product?.shortDescription?.trim() || null,
+      productType: r.product?.productType?.trim() || null,
     },
   };
 }
@@ -147,6 +151,7 @@ function mapProductPage(res: ProductReviewsListResponse): PublishedReviewsPage {
     uploadsUrl(res.product?.imageUrl) || res.product?.imageUrl,
   );
   const productSub = res.product?.shortDescription?.trim() || null;
+  const productType = res.product?.productType?.trim() || null;
   return {
     items: (res.items ?? []).map((r) => {
       const image1 = r.image1Url ?? r.image1 ?? null;
@@ -164,6 +169,7 @@ function mapProductPage(res: ProductReviewsListResponse): PublishedReviewsPage {
           slug: productSlug,
           thumbnail: productThumb,
           shortDescription: productSub,
+          productType,
         },
       };
     }),

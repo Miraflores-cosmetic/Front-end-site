@@ -55,6 +55,7 @@ export type HomepageSetProduct = {
   variantName?: string | null;
   slug: string;
   name: string;
+  productType?: string | null;
   shortDescription: string | null;
   price: number;
   oldPrice: number | null;
@@ -184,6 +185,7 @@ export type MenuSettingsProduct = {
   variantId: string | null;
   slug: string;
   name: string;
+  productType?: string | null;
   shortDescription: string | null;
   price: number;
   oldPrice: number | null;

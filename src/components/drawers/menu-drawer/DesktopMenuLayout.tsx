@@ -21,6 +21,7 @@ function menuProductToCard(
         ? [p.imageUrl]
         : [];
   const variantId = p.variantId?.trim() || p.id;
+  const typeName = p.productType?.trim();
   return {
     id: variantId,
     productId: p.id,
@@ -33,6 +34,7 @@ function menuProductToCard(
     discount: p.discountPercent ?? undefined,
     images,
     thumbnail: images[0] || '',
+    productType: typeName ? { name: typeName } : undefined,
     productVariants: [],
     collections: { id: '', name: '', slug: '' },
   };

@@ -2,9 +2,16 @@
 
 /* В одном стиле с TotalAccordion .productItem */
 .line {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: 116px minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  grid-template-areas:
+    'thumb body'
+    'thumb bottom';
+  column-gap: 10px;
+  row-gap: 8px;
+  align-items: stretch;
+  min-height: 116px;
   padding: 0 20px 0;
   margin: 0;
   box-sizing: border-box;
@@ -12,11 +19,12 @@
 }
 
 .thumbLink {
+  grid-area: thumb;
   position: relative;
   display: block;
-  flex-shrink: 0;
-  width: 96px;
-  height: 96px;
+  align-self: start;
+  width: 116px;
+  height: 116px;
   overflow: hidden;
   padding: 0;
   border: none;
@@ -38,13 +46,25 @@
 }
 
 .lineBody {
+  grid-area: body;
+  align-self: start;
   min-width: 0;
-  flex: 1;
-  min-height: 96px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 2px 0 0;
+}
+
+.productType {
+  margin: 0;
+  padding: 0;
+  font-family: $font-avenir, $font-onest, sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 12px;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: #000;
 }
 
 .lineTop {
@@ -126,7 +146,6 @@
   align-items: center;
   justify-content: center;
   margin: 0;
-  margin-top: auto;
   padding: 3px 8px;
   border-radius: 100px;
   background: #297230;
@@ -148,11 +167,13 @@
 }
 
 .lineBottom {
+  grid-area: bottom;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: auto;
+  min-width: 0;
+  align-self: end;
 }
 
 .qtyStepper {
@@ -251,6 +272,17 @@
 
 @media (max-width: 768px) {
   .line {
+    grid-template-columns: 116px minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      'thumb body'
+      'bottom bottom';
+    min-height: 0;
     padding: 0 16px 12px;
+    row-gap: 10px;
+  }
+
+  .lineBottom {
+    align-self: stretch;
   }
 }

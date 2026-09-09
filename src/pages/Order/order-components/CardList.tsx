@@ -7,6 +7,7 @@ export interface OrderProduct {
   variantId: string;
   lineKey?: string;
   title: string;
+  productType?: string | null;
   size: string;
   thumbnail: string;
   price: number;
@@ -52,6 +53,9 @@ const CardList: React.FC<OrderCartListProps> = ({ cartData }) => {
           <div className={styles.cardInfoWrapper}>
             <div className={styles.top}>
               <div className={styles.texts}>
+                {item.productType?.trim() ? (
+                  <p className={styles.productType}>{item.productType.trim()}</p>
+                ) : null}
                 {/* Title */}
                 <p className={styles.name}>{item.title}</p>
                 

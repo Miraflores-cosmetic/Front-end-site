@@ -11,6 +11,7 @@ export type ReviewCardProps = {
   kind: ReviewCardKind;
   mediaUrl?: string | null;
   title: string;
+  productType?: string | null;
   subtitle?: string;
   /** Подпись автора; пусто / «Покупатель» — не показываем на медиа */
   authorName?: string | null;
@@ -39,6 +40,7 @@ export const Review: React.FC<ReviewCardProps> = ({
   kind,
   mediaUrl,
   title,
+  productType,
   subtitle,
   authorName,
   text,
@@ -63,6 +65,9 @@ export const Review: React.FC<ReviewCardProps> = ({
         )}
       </div>
       <div className={styles.productText}>
+        {productType?.trim() ? (
+          <p className={styles.productType}>{productType.trim()}</p>
+        ) : null}
         <p className={styles.productName}>{title}</p>
         {subtitle ? <p className={styles.productSub}>{subtitle}</p> : null}
       </div>

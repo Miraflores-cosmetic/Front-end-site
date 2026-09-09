@@ -7,6 +7,7 @@ export interface CartItem {
   image: string;
   alt: string;
   name: string;
+  productType?: string | null;
   size: string;
   count: string;
   quantity?: number;
@@ -54,6 +55,9 @@ function OrderLineItem({
       </div>
 
       <div className={styles.lineBody}>
+        {item.productType?.trim() ? (
+          <p className={styles.productType}>{item.productType.trim()}</p>
+        ) : null}
         <div className={styles.lineTop}>
           <p className={styles.name}>{item.name}</p>
           {!item.isGift && item.price != null ? (

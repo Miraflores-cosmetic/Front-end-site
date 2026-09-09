@@ -73,14 +73,18 @@ export default function ProductDetailView() {
 
   const purposeValue = item?.purpose?.trim() || null;
   const productTypeValue = item?.productTypeName?.trim() || null;
+  const shelfLifeValue = item?.shelfLife?.trim() || null;
 
   const etapsData: Etap[] = [
     ...(currentEtapMeta
       ? [{ id: 1, title: currentEtapMeta.title, name: currentEtapMeta.name, icon: check }]
       : []),
-    ...(purposeValue ? [{ id: 2, title: 'Подходит для', name: purposeValue, icon: check }] : []),
     ...(productTypeValue
-      ? [{ id: 3, title: 'Тип продукта', name: productTypeValue, icon: check }]
+      ? [{ id: 2, title: 'Тип продукта', name: productTypeValue, icon: check }]
+      : []),
+    ...(purposeValue ? [{ id: 3, title: 'Для чего', name: purposeValue, icon: check }] : []),
+    ...(shelfLifeValue
+      ? [{ id: 4, title: 'Срок годности', name: shelfLifeValue, icon: check }]
       : []),
   ];
 

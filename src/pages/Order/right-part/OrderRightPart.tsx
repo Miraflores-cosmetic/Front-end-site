@@ -39,6 +39,7 @@ const OrderRightPart: React.FC = () => {
         variantId: line.variantId,
         lineKey: line.variantId,
         title: line.title || 'Product',
+        productType: line.productType?.trim() || null,
         size: line.size || '',
         thumbnail: line.thumbnail || '',
         quantity: line.quantity,

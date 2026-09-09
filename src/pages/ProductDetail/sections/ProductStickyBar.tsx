@@ -63,6 +63,7 @@ export function ProductStickyBar({
         <AddToCartButton
           activeVariantId={activeVariantId}
           title={item.name}
+          productType={item.productTypeName || null}
           thumbnail={item.thumbnail}
           price={currentPrice}
           oldPrice={oldPrice}

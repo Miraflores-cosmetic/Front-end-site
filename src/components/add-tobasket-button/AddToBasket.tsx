@@ -24,6 +24,7 @@ interface AddToCartButtonProps {
   activeVariantId: string | null;
   shadeId?: string | null;
   title: string;
+  productType?: string | null;
   thumbnail: string;
   price: number;
   oldPrice?: number | null;
@@ -46,6 +47,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   activeVariantId,
   shadeId = null,
   title,
+  productType,
   thumbnail,
   price,
   oldPrice = null,
@@ -106,6 +108,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
           variantId: activeVariantId,
           quantity: 1,
           title: title,
+          productType: productType?.trim() || null,
           thumbnail: thumbnail,
           price: price,
           oldPrice: oldPrice,

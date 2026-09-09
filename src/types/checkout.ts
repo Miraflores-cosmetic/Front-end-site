@@ -6,6 +6,8 @@ export interface CheckoutLine {
   quantity: number;
 
   title: string;
+  /** Тип продукта (выпадающий атрибут каталога) */
+  productType?: string | null;
   price: number;
   slug?: string;
 

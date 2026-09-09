@@ -31,6 +31,7 @@ type JcosOrderItem = {
   shadeName: string | null;
   productId?: string | null;
   productSlug?: string | null;
+  productType?: string | null;
   variantId?: string | null;
 };
 
@@ -166,6 +167,7 @@ function mapOrderToNode(o: JcosOrderSummary): OrderNode {
     lines: o.items.map((item) => ({
       id: item.id,
       productName: item.title,
+      productType: item.productType?.trim() || null,
       quantity: item.qty,
       variantName: item.variantName || item.shadeName || undefined,
       unitPrice: { gross: { amount: item.unitPrice, currency: 'RUB' } },

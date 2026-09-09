@@ -363,6 +363,20 @@
       width: 100%;
     }
 
+    .productType {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      font-family: 'Avenir Next', sans-serif;
+      font-style: normal;
+      font-weight: 600;
+      font-size: 11px;
+      line-height: 15px;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      color: #000000;
+    }
+
     .titleRow {
       display: flex;
       flex-direction: row;
@@ -596,6 +610,12 @@
     .info {
       gap: 4px;
 
+      .productType {
+        font-size: 10px;
+        line-height: 13px;
+        letter-spacing: 1.1px;
+      }
+
       .titleRow {
         gap: 4px;
 
@@ -670,6 +690,12 @@
 // Узкие колонки (квиз): компактная типографика
 .compact {
   .info {
+    .productType {
+      font-size: 9px;
+      line-height: 12px;
+      letter-spacing: 1.1px;
+    }
+
     .titleRow {
       flex-direction: column;
       align-items: flex-start;

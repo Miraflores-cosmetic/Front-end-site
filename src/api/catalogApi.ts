@@ -16,6 +16,7 @@ export type JcosProductCard = {
   slug: string;
   name: string;
   shortDescription: string | null;
+  productType?: string | null;
   price: number;
   oldPrice: number | null;
   discountPercent: number | null;
@@ -131,6 +132,7 @@ export type CartSyncResponse = {
     shadeName: string | null;
     slug: string;
     name: string;
+    productType?: string | null;
     variantName: string;
     imageUrl: string | null;
     price: number;
@@ -214,6 +216,7 @@ export function cardToProductEdge(card: JcosProductCard): ProductEdge {
       slug: card.slug,
       shortDescription,
       description: shortDescription,
+      productType: card.productType ? { name: card.productType } : undefined,
       thumbnail: { url: thumb, alt: card.name },
       media: urls.map((url) => ({ url, alt: card.name })),
       category: { id: '', name: '' },
@@ -291,7 +294,9 @@ export function adaptProductDetail(p: JcosProductDetail): ProductDetailNode {
     purpose: p.purpose || '',
     shelfLife: p.shelfLife || '',
     catalogTags: p.catalogTags ?? [],
-    productType: { name: p.productType || '' },
+    productType: p.productType?.trim()
+      ? { name: p.productType.trim() }
+      : undefined,
     category: p.category
       ? {
           id: p.category.id,

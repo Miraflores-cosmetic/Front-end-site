@@ -59,6 +59,10 @@
       color: $white;
     }
 
+    .productType {
+      color: $white;
+    }
+
     .productSub {
       color: rgba(255, 255, 255, 0.78);
     }
@@ -203,6 +207,17 @@
 .productText {
   min-width: 0;
   flex: 1;
+}
+
+.productType {
+  margin: 0 0 4px;
+  font-family: $font-avenir;
+  font-size: 9px;
+  font-weight: 600;
+  line-height: 12px;
+  letter-spacing: 1.1px;
+  text-transform: uppercase;
+  color: $black;
 }
 
 .productName {

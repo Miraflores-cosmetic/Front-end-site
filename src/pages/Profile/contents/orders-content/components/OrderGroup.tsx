@@ -47,6 +47,7 @@ export type OrderGroupProps = {
     lines?: {
       id?: string;
       productName?: string;
+      productType?: string | null;
       quantity?: number;
       variantName?: string;
       unitPrice?: { gross?: { amount?: number } };
@@ -77,6 +78,7 @@ export function OrderGroup({ order, onReview, reviewable, reviewedProductIds }: 
         image: line.thumbnail?.url || line.variant?.product?.thumbnail?.url || '',
         alt: line.productName || '',
         name: line.productName || '',
+        productType: line.productType?.trim() || null,
         size: line.variantName || '',
         count: `${qty} шт.`,
         quantity: qty,

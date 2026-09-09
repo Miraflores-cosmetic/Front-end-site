@@ -76,7 +76,12 @@ export function mapProductNodeToBestSeller(productNode: any): BestSellersProduct
     thumbnail: productNode.thumbnail?.url || '',
     slug: productNode.slug || '',
     attributes: productNode.attributes || [],
-    productType: productNode.productType ? { name: productNode.productType.name } : undefined,
+    productType: (() => {
+      const pt = productNode.productType;
+      if (!pt) return undefined;
+      const name = (typeof pt === 'string' ? pt : pt.name || '').trim();
+      return name ? { name } : undefined;
+    })(),
     productVariants: productVariantsFormatted,
     quantityLimitPerCustomer: qlimit,
     quantityAvailable: variant?.quantityAvailable ?? null,

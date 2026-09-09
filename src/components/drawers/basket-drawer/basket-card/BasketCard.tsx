@@ -22,6 +22,7 @@ const BasketCard: React.FC<BasketCardProps> = ({
   variantId,
   thumbnail,
   title,
+  productType,
   slug,
   size,
   quantity,
@@ -100,6 +101,9 @@ const BasketCard: React.FC<BasketCardProps> = ({
       )}
 
       <div className={styles.lineBody}>
+        {productType?.trim() ? (
+          <p className={styles.productType}>{productType.trim()}</p>
+        ) : null}
         <div className={styles.lineTop}>
           {isProductLink ? (
             <button
@@ -135,59 +139,59 @@ const BasketCard: React.FC<BasketCardProps> = ({
         {lineOutOfStock ? (
           <p className={styles.outOfStock}>Нет в наличии</p>
         ) : null}
+      </div>
 
-        <div className={styles.lineBottom}>
-          {!isGift ? (
-            <div className={styles.qtyStepper} aria-label="Количество">
-              <button
-                type="button"
-                className={styles.qtyBtn}
-                aria-label={quantity <= 1 ? 'Удалить' : 'Меньше'}
-                onClick={() => {
-                  if (quantity <= 1) dispatch(removeItemFromCart(lineKey));
-                  else dispatch(decreaseQuantity(lineKey));
-                }}
-              >
-                {quantity <= 1 ? '×' : '−'}
-              </button>
-              <span className={styles.qtyValue}>{quantity}</span>
-              <button
-                type="button"
-                className={styles.qtyBtn}
-                aria-label="Больше"
-                disabled={plusDisabled}
-                onClick={() => {
-                  if (!plusDisabled) dispatch(increaseQuantity(lineKey));
-                }}
-              >
-                +
-              </button>
-            </div>
-          ) : (
-            <span className={styles.giftQty}>×{quantity}</span>
-          )}
-
-          <div className={styles.linePrices}>
-            {isGift ? (
-              <span className={styles.linePrice}>0₽</span>
-            ) : (
-              <>
-                {listPrice != null ? (
-                  <span className={styles.listPrice}>
-                    {listPrice.toLocaleString('ru-RU')}₽
-                  </span>
-                ) : null}
-                {quantity > 1 ? (
-                  <span className={styles.unitPrice}>
-                    {unitPrice.toLocaleString('ru-RU')}₽
-                  </span>
-                ) : null}
-                <span className={styles.linePrice}>
-                  {lineTotal.toLocaleString('ru-RU')}₽
-                </span>
-              </>
-            )}
+      <div className={styles.lineBottom}>
+        {!isGift ? (
+          <div className={styles.qtyStepper} aria-label="Количество">
+            <button
+              type="button"
+              className={styles.qtyBtn}
+              aria-label={quantity <= 1 ? 'Удалить' : 'Меньше'}
+              onClick={() => {
+                if (quantity <= 1) dispatch(removeItemFromCart(lineKey));
+                else dispatch(decreaseQuantity(lineKey));
+              }}
+            >
+              {quantity <= 1 ? '×' : '−'}
+            </button>
+            <span className={styles.qtyValue}>{quantity}</span>
+            <button
+              type="button"
+              className={styles.qtyBtn}
+              aria-label="Больше"
+              disabled={plusDisabled}
+              onClick={() => {
+                if (!plusDisabled) dispatch(increaseQuantity(lineKey));
+              }}
+            >
+              +
+            </button>
           </div>
+        ) : (
+          <span className={styles.giftQty}>×{quantity}</span>
+        )}
+
+        <div className={styles.linePrices}>
+          {isGift ? (
+            <span className={styles.linePrice}>0₽</span>
+          ) : (
+            <>
+              {listPrice != null ? (
+                <span className={styles.listPrice}>
+                  {listPrice.toLocaleString('ru-RU')}₽
+                </span>
+              ) : null}
+              {quantity > 1 ? (
+                <span className={styles.unitPrice}>
+                  {unitPrice.toLocaleString('ru-RU')}₽
+                </span>
+              ) : null}
+              <span className={styles.linePrice}>
+                {lineTotal.toLocaleString('ru-RU')}₽
+              </span>
+            </>
+          )}
         </div>
       </div>
     </article>

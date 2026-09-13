@@ -99,6 +99,33 @@ export type ShippingEstimateMeta = {
 const CDEK_MODE_WAREHOUSE_DOOR = 3;
 const CDEK_MODE_WAREHOUSE_WAREHOUSE = 4;
 
+/** Фулфилмент СДЭК — не для отправлений с MSK12. */
+const CDEK_EXCLUDED_TARIFF_CODES = new Set<number>([358]);
+
+/** ПВЗ: стандарт ИМ (136), эконом (234), экспресс (366), дверь→ПВЗ (138). */
+const CDEK_PVZ_TARIFF_CODES = new Set<number>([136, 234, 366, 138]);
+
+/** Курьер: 137, 233, 184, 139. */
+const CDEK_COURIER_TARIFF_CODES = new Set<number>([137, 233, 184, 139]);
+
+function withoutExcluded(list: CdekTariffRow[]): CdekTariffRow[] {
+    return list.filter(
+        (t) =>
+            typeof t.tariff_code !== 'number' ||
+            !CDEK_EXCLUDED_TARIFF_CODES.has(t.tariff_code),
+    );
+}
+
+function preferKnownTariffs(
+    pool: CdekTariffRow[],
+    codes: Set<number>,
+): CdekTariffRow[] {
+    const byCode = pool.filter(
+        (t) => typeof t.tariff_code === 'number' && codes.has(t.tariff_code),
+    );
+    return byCode.length > 0 ? byCode : pool;
+}
+
 function tariffMatchesModes(t: CdekTariffRow, modes: number[]): boolean {
     if (typeof t.delivery_mode === 'number' && modes.includes(t.delivery_mode)) {
         return true;
@@ -119,7 +146,7 @@ function pickCheapestTariff(
 ): { sum: number; row: CdekTariffRow } | null {
     if (!data || typeof data !== 'object') return null;
     const raw = data as { tariff_codes?: CdekTariffRow[] };
-    const list = raw.tariff_codes;
+    const list = withoutExcluded(raw.tariff_codes || []);
     if (!Array.isArray(list) || list.length === 0) return null;
 
     const filtered = list.filter((t) => tariffMatchesModes(t, modes));
@@ -128,8 +155,15 @@ function pickCheapestTariff(
             typeof t.delivery_mode === 'number' ||
             /склад\s*[-–—]?\s*(склад|дверь)/i.test(t.tariff_name || ''),
     );
-    const pool = filtered.length > 0 ? filtered : anyTyped ? [] : list;
+    let pool = filtered.length > 0 ? filtered : anyTyped ? [] : list;
     if (pool.length === 0) return null;
+
+    pool = preferKnownTariffs(
+        pool,
+        modes.includes(CDEK_MODE_WAREHOUSE_WAREHOUSE)
+            ? CDEK_PVZ_TARIFF_CODES
+            : CDEK_COURIER_TARIFF_CODES,
+    );
 
     let best: CdekTariffRow | null = null;
     let min = Infinity;

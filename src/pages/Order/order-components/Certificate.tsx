@@ -12,6 +12,7 @@ import {
   GIFT_HOLD_WILL_RESERVE,
 } from '@/utils/giftHoldCopy';
 import { useOrderCheckoutOptional } from '../OrderCheckoutContext';
+import { MetrikaGoal, reachGoal } from '@/lib/metrika';
 
 const Certificate = () => {
   const [isInputOpen, setIsInputOpen] = useState(false);
@@ -32,7 +33,9 @@ const Certificate = () => {
       dispatch(removeVoucherCode());
       toast.success(voucherKind === 'gift' ? 'Сертификат удалён' : 'Промокод удалён');
     } else {
-      setIsInputOpen(!isInputOpen);
+      const next = !isInputOpen;
+      setIsInputOpen(next);
+      if (next) reachGoal(MetrikaGoal.promoFieldOpen);
     }
   };
 

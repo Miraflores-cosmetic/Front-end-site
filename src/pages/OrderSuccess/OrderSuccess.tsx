@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import styles from './OrderSuccess.module.scss';
 import { useDispatch } from 'react-redux';
@@ -11,12 +11,33 @@ import {
   PENDING_PAYMENT_ID_KEY,
   PENDING_PAY_TOKEN_KEY,
 } from '@/utils/pendingCheckoutOrder';
+import {
+  MetrikaGoal,
+  clearPurchaseSessionFlags,
+  hasVisitedPdp,
+  reachGoal,
+  wasCartFromFavorites,
+} from '@/lib/metrika';
 
 const OrderSuccess: React.FC = () => {
   const [isCompleting, setIsCompleting] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useDispatch<AppDispatch>();
   const [searchParams] = useSearchParams();
+  const purchaseTracked = useRef(false);
+
+  const trackPurchaseGoals = (orderId?: string) => {
+    if (purchaseTracked.current) return;
+    purchaseTracked.current = true;
+    reachGoal(MetrikaGoal.purchase, orderId ? { orderId } : undefined);
+    if (!hasVisitedPdp()) {
+      reachGoal(MetrikaGoal.purchaseWithoutPdp, orderId ? { orderId } : undefined);
+    }
+    if (wasCartFromFavorites()) {
+      reachGoal(MetrikaGoal.purchaseFromFavorites, orderId ? { orderId } : undefined);
+    }
+    clearPurchaseSessionFlags();
+  };
 
   useEffect(() => {
     const confirmPayment = async () => {
@@ -48,6 +69,7 @@ const OrderSuccess: React.FC = () => {
           if (payStatus.paid) {
             dispatch(clearCart());
             clearPendingCheckoutOrder();
+            trackPurchaseGoals(orderId || undefined);
             setIsCompleting(false);
             return;
           }
@@ -66,6 +88,7 @@ const OrderSuccess: React.FC = () => {
             if (status.paid) {
               dispatch(clearCart());
               clearPendingCheckoutOrder();
+              trackPurchaseGoals(orderId);
               setIsCompleting(false);
               return;
             }

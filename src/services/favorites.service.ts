@@ -228,6 +228,9 @@ export async function addToFavorites(variantId: string): Promise<boolean> {
     if (!ids.includes(variantId)) {
       await saveFavoriteIds([...ids, variantId]);
       if (localStorage.getItem('token')) await apiAddFavorite(variantId);
+      void import('@/lib/metrika').then(({ MetrikaGoal, reachGoal }) => {
+        reachGoal(MetrikaGoal.addToFavorites, { variantId });
+      });
     }
     return true;
   } catch {

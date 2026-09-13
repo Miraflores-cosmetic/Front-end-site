@@ -25,6 +25,7 @@ import { extractPvzCodeFromStreet2 } from '@/lib/addressVspMeta';
 import { syncCartLines } from '@/store/slices/checkoutSlice';
 import { AppDispatch } from '@/store/store';
 import { useToast } from '@/components/toast/toast';
+import { MetrikaGoal, reachGoal } from '@/lib/metrika';
 import { useApplicableGift } from '@/hooks/useApplicableGift';
 import { calcCartSubtotal } from '@/utils/freePvzShipping';
 import { isGiftDenomOnlyCart } from '@/utils/giftDenomCart';
@@ -289,10 +290,21 @@ const OrderLeftPart: React.FC = () => {
 
       const orderLines = syncResult.lines
         .filter((l: { isGift?: boolean }) => !l.isGift)
-        .map((line: { variantId: string; quantity: number }) => ({
-          variantId: line.variantId,
-          qty: line.quantity,
-        }));
+        .map(
+          (line: { variantId: string; quantity: number; price?: number }) => ({
+            variantId: line.variantId,
+            qty: line.quantity,
+            unitPrice: Math.max(0, Math.round(Number(line.price) || 0)),
+          }),
+        );
+
+      const goodsSubtotal = orderLines.reduce(
+        (sum, l) => sum + l.unitPrice * Math.max(0, Math.floor(Number(l.qty) || 0)),
+        0,
+      );
+
+      /** API create/quote — только variantId+qty (без unitPrice). */
+      const apiLines = orderLines.map(({ variantId, qty }) => ({ variantId, qty }));
 
       const recipientName = giftDenomOnly
         ? formData.name.trim()
@@ -370,6 +382,9 @@ const OrderLeftPart: React.FC = () => {
         promoCode,
         giftCertificateCode,
         shippingCost: shippingAmount,
+        goodsSubtotal,
+        voucherDiscount: payable.voucherDiscount,
+        clientPayableTotal: payable.payableTotal,
         // Не шлём gift в lines — Nest create аттачит через getApplicableGift.
         // В fingerprint — чтобы не reuse pending-заказа, созданного без подарка.
         gratitudeGiftVariantId: giftLine?.variantId ?? null,
@@ -415,6 +430,7 @@ const OrderLeftPart: React.FC = () => {
         if (payResult.confirmationToken) {
           setConfirmationToken(payResult.confirmationToken);
           setShowYooKassaWidget(true);
+          reachGoal(MetrikaGoal.paymentOpen, { orderId, orderNumber });
         } else {
           throw new Error('No confirmation token received');
         }
@@ -451,7 +467,7 @@ const OrderLeftPart: React.FC = () => {
       let order;
       if (giftDenomOnly) {
         order = await createOrder({
-          lines: orderLines,
+          lines: apiLines,
           email: emailTrimmed,
           phone: phoneE164,
           customerName: formData.name.trim(),
@@ -464,7 +480,7 @@ const OrderLeftPart: React.FC = () => {
         });
       } else {
         const quoteRes = await requestShippingQuote({
-          lines: orderLines,
+          lines: apiLines,
           shippingAddress,
           shippingMethod: shippingMethod!,
           clientEstimate: shippingAmount,
@@ -474,7 +490,7 @@ const OrderLeftPart: React.FC = () => {
         });
 
         order = await createOrder({
-          lines: orderLines,
+          lines: apiLines,
           email: emailTrimmed,
           phone: phoneE164,
           customerName: formData.name.trim(),
@@ -561,6 +577,34 @@ const OrderLeftPart: React.FC = () => {
   useEffect(() => {
     setChargedTotal(null);
   }, [payable.payableTotal]);
+
+  /**
+   * Корзина изменилась на чекауте → закрыть виджет ЮKassa.
+   * Pending уже инвалидирует checkoutListenerMiddleware; здесь только UI,
+   * чтобы не светить старую сумму confirmationToken.
+   */
+  const linesUiKey = React.useMemo(
+    () =>
+      (lines || [])
+        .map(
+          (l) =>
+            `${l.variantId}:${Number(l.quantity) || 0}:${Math.round(Number(l.price) || 0)}`,
+        )
+        .sort()
+        .join('|'),
+    [lines],
+  );
+  const prevLinesUiKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (prevLinesUiKeyRef.current === null) {
+      prevLinesUiKeyRef.current = linesUiKey;
+      return;
+    }
+    if (prevLinesUiKeyRef.current === linesUiKey) return;
+    prevLinesUiKeyRef.current = linesUiKey;
+    setConfirmationToken(null);
+    setShowYooKassaWidget(false);
+  }, [linesUiKey]);
 
   const mobileAccordionData = React.useMemo(() => {
     const safeLines = lines || [];

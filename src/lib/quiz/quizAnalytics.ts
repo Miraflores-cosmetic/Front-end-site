@@ -97,6 +97,15 @@ export function trackQuizEvent(payload: TrackPayload): void {
   if (typeof window === 'undefined') return;
   if (shouldSkipOnce(payload)) return;
 
+  if (payload.type === 'quiz_complete') {
+    // lazy import to keep quizAnalytics free of circular deps at module init
+    void import('@/lib/metrika').then(({ MetrikaGoal, reachGoal }) => {
+      reachGoal(MetrikaGoal.quizComplete, {
+        zone: payload.zone ?? undefined,
+      });
+    });
+  }
+
   queue.push({
     sessionId: getSessionId(),
     type: payload.type,

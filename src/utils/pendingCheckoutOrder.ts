@@ -21,7 +21,8 @@ export type PendingCheckoutOrder = {
 };
 
 export function buildCheckoutFingerprint(input: {
-  lines: Array<{ variantId: string; qty: number }>;
+  /** unitPrice обязателен для reuse: иначе смена цен при тех же qty:vid вернёт старый payment ЮKassa. */
+  lines: Array<{ variantId: string; qty: number; unitPrice?: number }>;
   email: string;
   phone: string;
   customerName: string;
@@ -42,12 +43,21 @@ export function buildCheckoutFingerprint(input: {
   promoCode?: string | null;
   giftCertificateCode?: string | null;
   shippingCost: number;
+  /** Сумма товаров после sync (₽). Меняет fingerprint при правке корзины / цен. */
+  goodsSubtotal?: number;
+  /** Скидка промо/сертификата (₽). */
+  voucherDiscount?: number;
+  /** Клиентский итог к оплате (₽), если уже посчитан. */
+  clientPayableTotal?: number | null;
   /** variantId подарка благодарности из UI (null если порог не достигнут). Меняет fingerprint → не reuse старого заказа без gift. */
   gratitudeGiftVariantId?: string | null;
 }): string {
   return JSON.stringify({
     lines: input.lines
-      .map((l) => `${l.variantId}:${l.qty}`)
+      .map((l) => {
+        const unit = Math.max(0, Math.round(Number(l.unitPrice) || 0));
+        return `${l.variantId}:${l.qty}:${unit}`;
+      })
       .sort(),
     email: input.email.trim().toLowerCase(),
     phone: input.phone.trim(),
@@ -67,6 +77,12 @@ export function buildCheckoutFingerprint(input: {
     promo: (input.promoCode ?? '').trim().toUpperCase(),
     gift: (input.giftCertificateCode ?? '').trim().toUpperCase(),
     shippingCost: input.shippingCost,
+    goodsSubtotal: Math.max(0, Math.round(Number(input.goodsSubtotal) || 0)),
+    voucherDiscount: Math.max(0, Math.round(Number(input.voucherDiscount) || 0)),
+    clientPayableTotal:
+      input.clientPayableTotal == null || !Number.isFinite(input.clientPayableTotal)
+        ? null
+        : Math.max(0, Math.round(input.clientPayableTotal)),
     gratitudeGiftVariantId: (input.gratitudeGiftVariantId ?? '').trim() || null,
   });
 }

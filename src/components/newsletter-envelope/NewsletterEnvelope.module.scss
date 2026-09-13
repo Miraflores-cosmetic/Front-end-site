@@ -1,0 +1,360 @@
+@use '@/style/variables.scss' as *;
+
+.section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.title {
+  font-family: $font-oceanic;
+  text-transform: uppercase;
+  font-weight: $font-light;
+  font-size: 64px;
+  color: $black;
+  margin: 0 0 16px;
+
+  @media (max-width: $viewport-mobile-max) {
+    font-size: 24px;
+    margin-bottom: 12px;
+  }
+}
+
+.lead {
+  margin: 0 0 48px;
+  max-width: 36rem;
+  font-family: $font-avenir;
+  font-size: 16px;
+  line-height: 1.45;
+  color: $gray-6e;
+
+  @media (max-width: $viewport-mobile-max) {
+    margin-bottom: 28px;
+    font-size: 14px;
+  }
+}
+
+.stage {
+  --env-w: min(560px, 90vw);
+  --env-h: calc(var(--env-w) * 0.66);
+  /* + вниз = утоплен в карман; − вверх = выехал */
+  --letter-y: 55%;
+  position: relative;
+  width: var(--env-w);
+  padding-top: calc(var(--env-w) * 0.36);
+  outline: none;
+}
+
+.stagePeek {
+  --letter-y: 28%;
+}
+
+.stageOpen {
+  --letter-y: -18%;
+}
+
+.hit {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+
+  .stageOpen & {
+    pointer-events: none;
+  }
+}
+
+.envelope {
+  position: relative;
+  width: 100%;
+  height: var(--env-h);
+  filter: drop-shadow(0 16px 28px rgb(30 41 59 / 14%)) drop-shadow(0 3px 6px rgb(30 41 59 / 08%));
+}
+
+/*
+  Shell: вкладыш не может вылезти снизу/с боков.
+  Сверху при open — отрицательный inset, письмо выглядывает из «рта».
+*/
+.shell {
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(180deg, #eef0f1 10%, #f9fafa 90%);
+  border: 1px solid rgb(71 85 105 / 7%);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 50%);
+  clip-path: inset(0 round 16px);
+  transition: clip-path 0.35s ease;
+
+  .stageOpen & {
+    /* разрешаем выезд только вверх */
+    clip-path: inset(-70% 0 0 0 round 16px);
+  }
+
+  .stagePeek & {
+    clip-path: inset(-12% 0 0 0 round 16px);
+  }
+}
+
+.back {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.interior {
+  position: absolute;
+  inset: 12px 14px 16px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #a78bfa 0%, #eea1d6 100%);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.interiorVisible {
+  opacity: 1;
+}
+
+.foldLeft,
+.foldRight {
+  position: absolute;
+  top: 0;
+  bottom: 42%;
+  width: 42%;
+  opacity: 0.35;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    rgb(51 65 85 / 14%) 0%,
+    rgb(51 65 85 / 0%) 55%
+  );
+}
+
+.foldLeft {
+  left: 0;
+  background: linear-gradient(115deg, rgb(51 65 85 / 12%) 0%, transparent 60%);
+}
+
+.foldRight {
+  right: 0;
+  background: linear-gradient(245deg, rgb(51 65 85 / 12%) 0%, transparent 60%);
+}
+
+.letterSlot {
+  position: absolute;
+  left: 50%;
+  bottom: 22%;
+  z-index: 2;
+  width: 74%;
+  max-height: 72%;
+  transform: translateX(-50%) translateY(var(--letter-y));
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+
+  .stageOpen & {
+    pointer-events: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.letter {
+  box-sizing: border-box;
+  max-height: inherit;
+  overflow: auto;
+  padding: clamp(12px, 2vw, 18px) clamp(12px, 1.8vw, 16px) clamp(10px, 1.6vw, 14px);
+  border-radius: 12px;
+  background: #1c1f24;
+  color: $white;
+  text-align: center;
+  box-shadow: 0 6px 16px rgb(17 24 39 / 16%);
+}
+
+/* Карман — поверх низа письма, сходится к центру */
+.pocket {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  height: 54%;
+  pointer-events: none;
+  background: linear-gradient(180deg, #f7f8f9 35%, #eef0f1 100%);
+  clip-path: polygon(0 100%, 0 12%, 50% 0, 100% 12%, 100% 100%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 65%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgb(51 65 85 / 6%) 0%,
+      transparent 28%
+    );
+    clip-path: inherit;
+  }
+}
+
+/* Клапан над shell */
+.flapPivot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 4;
+  height: 54%;
+  perspective: 1400px;
+  pointer-events: none;
+}
+
+.flap {
+  width: 100%;
+  height: 100%;
+  transform-origin: top center;
+  transform: rotateX(0deg);
+  backface-visibility: hidden;
+  background: linear-gradient(180deg, #fbfbfc 15%, #f1f3f4 100%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  box-shadow: 0 8px 16px rgb(30 41 59 / 10%);
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* лёгкая линия сгиба */
+  &::after {
+    content: '';
+    position: absolute;
+    left: 18%;
+    right: 18%;
+    bottom: 0;
+    height: 1px;
+    background: rgb(71 85 105 / 12%);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.flapPeek {
+  transform: rotateX(-38deg);
+}
+
+.flapOpen {
+  transform: rotateX(-132deg);
+}
+
+.badge {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 10%);
+  font-family: $font-avenir;
+  font-size: clamp(10px, 1.5vw, 12px);
+  color: rgb(255 255 255 / 82%);
+}
+
+.letterTitle {
+  margin: 0 0 6px;
+  font-family: $font-oceanic;
+  font-weight: $font-light;
+  font-size: clamp(18px, 3vw, 24px);
+  line-height: 1.15;
+  color: $white;
+}
+
+.letterSub {
+  margin: 0 0 12px;
+  font-family: $font-avenir;
+  font-size: clamp(11px, 1.6vw, 13px);
+  line-height: 1.35;
+  color: rgb(255 255 255 / 72%);
+}
+
+.form {
+  margin: 0;
+}
+
+.inputRow {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: $white;
+  box-shadow: 0 0 0 3px rgb(255 255 255 / 12%);
+}
+
+.input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  padding: 10px 12px;
+  font-family: $font-avenir;
+  font-size: clamp(12px, 1.7vw, 14px);
+  color: $gray-2b;
+  outline: none;
+
+  &::placeholder {
+    color: $gray-a3;
+  }
+}
+
+.submit {
+  flex-shrink: 0;
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 14px;
+  background: $black;
+  color: $white;
+  font-family: $font-avenir;
+  font-size: clamp(11px, 1.5vw, 13px);
+  font-weight: $font-medium;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    background: $green-297;
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+}
+
+.micro {
+  margin: 8px 0 0;
+  font-family: $font-avenir;
+  font-size: clamp(9px, 1.2vw, 10px);
+  line-height: 1.3;
+  color: rgb(255 255 255 / 45%);
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

@@ -11,6 +11,7 @@ import { GratitudeProgram } from '@/components/gratitude-program/GratitudeProgra
 import { Awards } from '@/components/awards/Awards';
 import { HomeHero } from '@/components/home-hero/HomeHero';
 import { FAQBlock } from '@/components/faq-block/FAQBlock';
+import { NewsletterEnvelope } from '@/components/newsletter-envelope/NewsletterEnvelope';
 import { scrollToAnchorWhenReady } from '@/utils/scrollToAnchor';
 import { useHomeSeo } from './useHomeSeo';
 
@@ -37,6 +38,7 @@ const Home: React.FC = () => {
         <GratitudeProgram />
         <Awards />
         <FAQBlock />
+        <NewsletterEnvelope />
       </main>
     </>
   );

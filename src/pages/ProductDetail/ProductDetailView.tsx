@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import check from '@/assets/icons/tick-circle.svg';
@@ -21,6 +21,7 @@ import { ProductCareSection } from './sections/ProductCareSection';
 import { ProductBreadcrumbs } from './sections/ProductBreadcrumbs';
 import { ProductDetailSkeleton } from './sections/ProductDetailSkeleton';
 import { ProductNotFound } from './sections/ProductNotFound';
+import { MetrikaGoal, markPdpVisited, reachGoal } from '@/lib/metrika';
 import styles from './ProductDetail.module.scss';
 
 export default function ProductDetailView() {
@@ -30,10 +31,19 @@ export default function ProductDetailView() {
   const { slug } = useParams();
   const dispatch = useDispatch<AppDispatch>();
   const isMobile = useScreenMatch();
+  const trackedPdpSlug = useRef<string | null>(null);
 
   useEffect(() => {
     dispatch(getProductBySlug({ slug: slug ?? '' }));
   }, [slug, dispatch]);
+
+  useEffect(() => {
+    if (!item?.slug || loading) return;
+    if (trackedPdpSlug.current === item.slug) return;
+    trackedPdpSlug.current = item.slug;
+    markPdpVisited();
+    reachGoal(MetrikaGoal.pdpOpen, { slug: item.slug, productId: item.id });
+  }, [item?.slug, item?.id, loading]);
 
   const { ratingAvg, ratingCount } = useProductReviews(item?.slug || slug);
 
@@ -73,7 +83,6 @@ export default function ProductDetailView() {
 
   const purposeValue = item?.purpose?.trim() || null;
   const productTypeValue = item?.productTypeName?.trim() || null;
-  const shelfLifeValue = item?.shelfLife?.trim() || null;
 
   const etapsData: Etap[] = [
     ...(currentEtapMeta
@@ -83,9 +92,6 @@ export default function ProductDetailView() {
       ? [{ id: 2, title: 'Тип продукта', name: productTypeValue, icon: check }]
       : []),
     ...(purposeValue ? [{ id: 3, title: 'Для чего', name: purposeValue, icon: check }] : []),
-    ...(shelfLifeValue
-      ? [{ id: 4, title: 'Срок годности', name: shelfLifeValue, icon: check }]
-      : []),
   ];
 
   const bestsellerTabOptions = useMemo(() => {

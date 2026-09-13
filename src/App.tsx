@@ -32,6 +32,7 @@ import GiftCertificates from './pages/GiftCertificates/GiftCertificates';
 import { Spinner } from '@/components/spinner/Spinner';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { SiteLoader } from '@/components/SiteLoader/SiteLoader';
+import { MetrikaRouteTracker } from '@/components/MetrikaRouteTracker';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
 import footerStyles from '@/components/Footer/Footer.module.scss';
@@ -239,6 +240,7 @@ const App: React.FC = () => {
 
   return (
     <>
+      <MetrikaRouteTracker />
       <SiteLoader />
       <AppShellGate>
       <Spinner />

@@ -16,6 +16,12 @@ import {
   cartWouldMixGiftAndPhysical,
   isGiftDenomVariantId,
 } from '@/utils/giftDenomCart';
+import {
+  MetrikaGoal,
+  isFavoritesPathStrict,
+  markCartFromFavorites,
+  reachGoal,
+} from '@/lib/metrika';
 
 interface AddToCartButtonProps {
   defaultText?: string;
@@ -121,6 +127,13 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
           isGiftDenom: giftDenom || undefined,
         })
       );
+      reachGoal(MetrikaGoal.addToCart, {
+        variantId: activeVariantId,
+        slug: slug ?? undefined,
+      });
+      if (isFavoritesPathStrict(window.location.pathname, window.location.search)) {
+        markCartFromFavorites();
+      }
       toast.success(giftDenom ? 'Сертификат добавлен в корзину' : 'Товар добавлен в корзину');
       return;
     }

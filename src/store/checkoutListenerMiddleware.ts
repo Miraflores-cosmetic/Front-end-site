@@ -1,5 +1,10 @@
 import { createListenerMiddleware, isAnyOf } from '@reduxjs/toolkit';
 import type { CheckoutState } from '@/types/checkout';
+import { abandonOrder } from '@/api/ordersApi';
+import {
+  clearPendingCheckoutOrder,
+  readPendingCheckoutOrder,
+} from '@/utils/pendingCheckoutOrder';
 import {
   addItemToCart,
   removeItemFromCart,
@@ -12,6 +17,35 @@ import {
 
 /** Revalidate voucher after cart mutations and hydrate from localStorage. */
 export const checkoutListenerMiddleware = createListenerMiddleware();
+
+/**
+ * Любая правка корзины → сбрасываем soft-kept pending order/payment.
+ * Иначе «Оплатить позже» + смена qty → pay reuse отдаёт confirmationToken
+ * ЮKassa со суммой предыдущей итерации.
+ */
+async function invalidatePendingAfterCartEdit() {
+  if (typeof sessionStorage === 'undefined') return;
+  const pending = readPendingCheckoutOrder();
+  if (!pending) return;
+  clearPendingCheckoutOrder();
+  try {
+    await abandonOrder(pending.orderId, pending.payToken);
+  } catch {
+    // TTL / expire подчистит; не блокируем UI корзины
+  }
+}
+
+checkoutListenerMiddleware.startListening({
+  matcher: isAnyOf(
+    addItemToCart,
+    removeItemFromCart,
+    increaseQuantity,
+    decreaseQuantity,
+  ),
+  effect: async () => {
+    await invalidatePendingAfterCartEdit();
+  },
+});
 
 checkoutListenerMiddleware.startListening({
   matcher: isAnyOf(

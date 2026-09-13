@@ -76,11 +76,16 @@ const BasketDrawer: React.FC = () => {
     setPromoError(undefined);
   }, [voucherCode]);
 
-  /** Свежие цены/остаток при открытии корзины (clamp без toast — только removed). */
   useEffect(() => {
     const opened = activeDrawer === 'basket' && prevDrawerRef.current !== 'basket';
     prevDrawerRef.current = activeDrawer;
-    if (!opened || lines.length === 0) return;
+    if (!opened) return;
+
+    void import('@/lib/metrika').then(({ MetrikaGoal, reachGoal }) => {
+      reachGoal(MetrikaGoal.cartView);
+    });
+
+    if (lines.length === 0) return;
 
     let cancelled = false;
     void (async () => {
@@ -276,6 +281,11 @@ const BasketDrawer: React.FC = () => {
                   onChange={(e) => {
                     setPromoCode(e.target.value);
                     setPromoError(undefined);
+                  }}
+                  onFocus={() => {
+                    void import('@/lib/metrika').then(({ MetrikaGoal, reachGoal }) => {
+                      reachGoal(MetrikaGoal.promoFieldOpen);
+                    });
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {

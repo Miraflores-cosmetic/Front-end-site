@@ -62,30 +62,6 @@ export function ProductBuyBox({
         <h1 className={styles.title} aria-hidden={titleAriaHidden || undefined}>
           {item.name}
         </h1>
-        {(item.productTypeName?.trim() ||
-          item.purpose?.trim() ||
-          item.shelfLife?.trim()) ? (
-          <dl className={styles.attrMeta}>
-            {item.productTypeName?.trim() ? (
-              <div className={styles.attrMetaRow}>
-                <dt>Тип продукта</dt>
-                <dd>{item.productTypeName.trim()}</dd>
-              </div>
-            ) : null}
-            {item.purpose?.trim() ? (
-              <div className={styles.attrMetaRow}>
-                <dt>Для чего</dt>
-                <dd>{item.purpose.trim()}</dd>
-              </div>
-            ) : null}
-            {item.shelfLife?.trim() ? (
-              <div className={styles.attrMetaRow}>
-                <dt>Срок годности</dt>
-                <dd>{item.shelfLife.trim()}</dd>
-              </div>
-            ) : null}
-          </dl>
-        ) : null}
         {skuValue || nazvanieValue ? (
           <div className={styles.productMetaBlock}>
             {nazvanieValue ? (

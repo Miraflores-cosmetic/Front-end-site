@@ -77,7 +77,15 @@ export function NewsletterEnvelope({ source = 'homepage' }: { source?: string })
         <div className={styles.backWall} aria-hidden />
 
         {/* Письмо / форма */}
-        <form className={styles.letter} onSubmit={(e) => void onSubmit(e)}>
+        <form
+          className={[
+            styles.letter,
+            email.length > 0 || name.length > 0 ? styles.letterRaised : '',
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          onSubmit={(e) => void onSubmit(e)}
+        >
           <label className={styles.srOnly} htmlFor={emailId}>
             Email
           </label>

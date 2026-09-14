@@ -290,10 +290,32 @@
   }
 
   .letter {
-    top: 20%;
+    top: 22%;
     left: 4%;
     right: 4%;
     padding-bottom: 110px;
+    /* в покое чуть утоплен в карман */
+    transform: rotate(-2.5deg) translateY(10px);
+
+    /* hover на тач-устройствах ненадёжен — не поднимаем */
+    &:hover {
+      transform: rotate(-2.5deg) translateY(10px);
+    }
+
+    /* выезд при вводе / фокусе */
+    &:focus-within,
+    &.letterRaised {
+      transform: rotate(0deg) translateY(-52px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .letter {
+      &:focus-within,
+      &.letterRaised {
+        transform: rotate(0deg) translateY(-52px);
+      }
+    }
   }
 
   .sideLeft {

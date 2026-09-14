@@ -68,7 +68,13 @@ const SumDiscount = () => {
       ) : null}
       {payable.hasPayableLines && (
         <div className={styles.shippingWrapper}>
-          <p className={styles.name}>Доставка</p>
+          <p className={styles.name}>
+            {/* Невидимый префикс = «К оплате • », чтобы «в том числе» совпало с «1 товар» */}
+            <span className={styles.shippingAlignPad} aria-hidden="true">
+              {sumLabel} •{' '}
+            </span>
+            в том числе Доставка
+          </p>
           <div className={styles.shippingValueCol}>
             {orderCheckout?.cdekShippingLoading && (
               <p className={styles.shippingValueMuted}>Расчёт…</p>

@@ -303,7 +303,16 @@
 
       .name {
         @include mixins.font(15px, 500);
-        flex-shrink: 0;
+        flex-shrink: 1;
+        min-width: 0;
+      }
+
+      /* Та же метрика, что у .sum — ширина «К оплате • » / «Товары • » */
+      .shippingAlignPad {
+        visibility: hidden;
+        pointer-events: none;
+        user-select: none;
+        @include mixins.font(20px, 600);
       }
 
       .shippingValueCol {

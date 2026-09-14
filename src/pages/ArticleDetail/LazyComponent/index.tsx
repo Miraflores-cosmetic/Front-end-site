@@ -7,6 +7,7 @@ import back from '@/assets/icons/go-back.svg';
 import MaskedImage from '@/components/masked-image/MaskedImage';
 import ArticleContent from '@/pages/ArticleDetail/ArticleContent/ArticleContent';
 import Bestsellers from '@/components/bestsellers/Bestsellers';
+import { NewsletterEnvelope } from '@/components/newsletter-envelope/NewsletterEnvelope';
 import {
   fetchArticleBySlug,
   fetchInfoPageBySlug,
@@ -124,6 +125,7 @@ const LazyComponent: React.FC = () => {
       {!isInfoPage ? (
         <section className={styles.bottomPart}>
           <Bestsellers bleed={32} />
+          <NewsletterEnvelope source={slug ? `article:${slug}` : 'article'} />
         </section>
       ) : null}
     </>

@@ -80,10 +80,10 @@
   Письмо → передние слои: sideL + sideR + bottomFlap (как у референса).
 */
 .envelope {
-  --paper: #f1f2f3;
-  --paper-hi: #fafbfc;
-  --paper-lo: #e8eaec;
-  --paper-side: #eef0f1;
+  --paper: rgb(246, 245, 239);
+  --paper-hi: rgb(252, 251, 247);
+  --paper-lo: rgb(236, 235, 228);
+  --paper-side: rgb(242, 241, 234);
   --edge: rgb(71 85 105 / 12%);
   --body-top: 36%;
   position: relative;

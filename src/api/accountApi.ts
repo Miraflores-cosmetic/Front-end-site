@@ -44,6 +44,9 @@ type JcosOrderSummary = {
   items: JcosOrderItem[];
   tracking: string | null;
   trackingProvider: string | null;
+  canPay?: boolean;
+  payToken?: string | null;
+  payExpiresAt?: string | null;
 };
 
 export function mapJcosAddressToInfo(a: JcosAddress): AddressInfo {
@@ -153,17 +156,24 @@ function mapOrderStatus(status: string): OrderNode['status'] {
 }
 
 function mapOrderToNode(o: JcosOrderSummary): OrderNode {
+  const statusUpper = o.status.toUpperCase();
+  const canPay =
+    o.canPay ??
+    (statusUpper === 'AWAITING_PAYMENT' || statusUpper === 'NEW');
   return {
     id: o.id,
     number: o.number,
     created: o.createdAt,
     status: mapOrderStatus(o.status),
     statusDisplay: o.status,
-    isPaid: !['AWAITING_PAYMENT', 'DRAFT', 'CANCELLED'].includes(o.status.toUpperCase()),
+    isPaid: !['AWAITING_PAYMENT', 'DRAFT', 'CANCELLED', 'NEW'].includes(statusUpper),
     total: { gross: { amount: o.total, currency: 'RUB' } },
     userEmail: '',
     tracking: o.tracking,
     trackingProvider: o.trackingProvider,
+    canPay,
+    payToken: o.payToken ?? null,
+    payExpiresAt: o.payExpiresAt ?? null,
     lines: o.items.map((item) => ({
       id: item.id,
       productName: item.title,

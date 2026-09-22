@@ -1,9 +1,17 @@
-import React from 'react';
-import { orderStatusBadgeClass, orderStatusLabel } from '@/lib/orderStatusLabels';
+import React, { useState } from 'react';
+import { orderStatusBadgeClass, orderStatusLabel, normalizeOrderStatus } from '@/lib/orderStatusLabels';
 import {
   orderTrackingProviderLabel,
   orderTrackingUrl,
 } from '@/lib/orderTracking';
+import { getOrder } from '@/api/accountApi';
+import { payOrder } from '@/api/ordersApi';
+import {
+  buildOrderSuccessReturnUrl,
+  writePendingCheckoutOrder,
+} from '@/utils/pendingCheckoutOrder';
+import YooKassaWidget from '@/components/yookassa/YooKassaWidget';
+import { useToast } from '@/components/toast/toast';
 import CardList, { type CartItem } from './card-list/CardList';
 import styles from '../OrdersContent.module.scss';
 
@@ -44,6 +52,9 @@ export type OrderGroupProps = {
     created: string;
     status?: string;
     statusDisplay?: string;
+    canPay?: boolean;
+    payToken?: string | null;
+    payExpiresAt?: string | null;
     lines?: {
       id?: string;
       productName?: string;
@@ -62,10 +73,23 @@ export type OrderGroupProps = {
   onReview?: (productId: string, productName: string, orderId: string) => void;
   reviewable?: boolean;
   reviewedProductIds?: Set<string>;
+  onPaid?: (orderId: string) => void;
 };
 
-export function OrderGroup({ order, onReview, reviewable, reviewedProductIds }: OrderGroupProps) {
+export function OrderGroup({
+  order,
+  onReview,
+  reviewable,
+  reviewedProductIds,
+  onPaid,
+}: OrderGroupProps) {
+  const toast = useToast();
   const status = order.statusDisplay || order.status;
+  const statusKey = normalizeOrderStatus(status);
+  const canPay =
+    Boolean(order.canPay) ||
+    statusKey === 'AWAITING_PAYMENT' ||
+    statusKey === 'NEW';
   const tracking = order.tracking?.trim() || '';
   const trackingHref = tracking ? orderTrackingUrl(order.trackingProvider, tracking) : null;
   const trackingProviderLabel = orderTrackingProviderLabel(order.trackingProvider);
@@ -87,6 +111,63 @@ export function OrderGroup({ order, onReview, reviewable, reviewedProductIds }: 
         productId: line.variant?.product?.id,
       };
     }) ?? [];
+
+  const [paying, setPaying] = useState(false);
+  const [confirmationToken, setConfirmationToken] = useState<string | null>(null);
+  const [returnUrl, setReturnUrl] = useState('');
+
+  const handlePay = async () => {
+    if (paying) return;
+    setPaying(true);
+    try {
+      let payToken = order.payToken?.trim() || '';
+      if (!payToken) {
+        const detail = await getOrder(order.id);
+        payToken = detail?.payToken?.trim() || '';
+      }
+
+      const payResult = await payOrder(order.id, payToken || null);
+
+      if (payResult.alreadyPaid) {
+        toast.success('Заказ уже оплачен');
+        onPaid?.(order.id);
+        return;
+      }
+
+      const sessionToken = payResult.payToken?.trim() || payToken;
+      if (!sessionToken) {
+        throw new Error('Не удалось получить токен оплаты');
+      }
+      if (!payResult.confirmationToken) {
+        throw new Error('Не получен токен ЮKassa');
+      }
+
+      const orderNumber = String(payResult.number || order.number);
+      writePendingCheckoutOrder({
+        orderId: payResult.orderId || order.id,
+        orderNumber,
+        payToken: sessionToken,
+        idempotencyKey:
+          typeof crypto !== 'undefined' && 'randomUUID' in crypto
+            ? crypto.randomUUID()
+            : `ik-${Date.now()}`,
+        fingerprint: `account-pay:${order.id}`,
+        paymentId: payResult.paymentId ?? null,
+      });
+
+      setReturnUrl(
+        buildOrderSuccessReturnUrl({
+          orderId: payResult.orderId || order.id,
+          orderNumber,
+        }),
+      );
+      setConfirmationToken(payResult.confirmationToken);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Не удалось начать оплату');
+    } finally {
+      setPaying(false);
+    }
+  };
 
   return (
     <article className={styles.orderGroup}>
@@ -136,6 +217,54 @@ export function OrderGroup({ order, onReview, reviewable, reviewedProductIds }: 
         <span>Итого</span>
         <span>{formatRub(getOrderTotal(order))}</span>
       </p>
+
+      {canPay && !confirmationToken ? (
+        <div className={styles.orderActions}>
+          <button
+            type="button"
+            className={styles.payBtn}
+            disabled={paying}
+            onClick={() => void handlePay()}
+          >
+            {paying ? 'Открываем оплату…' : 'Оплатить'}
+          </button>
+          {order.payExpiresAt ? (
+            <p className={styles.payHint}>
+              Оплатите до{' '}
+              {new Date(order.payExpiresAt).toLocaleString('ru-RU', {
+                day: 'numeric',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {confirmationToken ? (
+        <div className={styles.payWidget}>
+          <YooKassaWidget
+            confirmationToken={confirmationToken}
+            returnUrl={returnUrl}
+            onSuccess={() => {
+              window.location.href = returnUrl;
+            }}
+            onError={(err) => {
+              toast.error(err?.message || 'Ошибка оплаты');
+              setConfirmationToken(null);
+            }}
+            onClose={() => setConfirmationToken(null)}
+          />
+          <button
+            type="button"
+            className={styles.payCancel}
+            onClick={() => setConfirmationToken(null)}
+          >
+            Закрыть оплату
+          </button>
+        </div>
+      ) : null}
     </article>
   );
 }

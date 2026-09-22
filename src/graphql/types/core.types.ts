@@ -121,6 +121,10 @@ export interface OrderNode extends Node {
   isPaid?: boolean;
   paymentStatus?: 'NOT_CHARGED' | 'PENDING' | 'PARTIALLY_CHARGED' | 'FULLY_CHARGED' | 'PARTIALLY_REFUNDED' | 'FULLY_REFUNDED';
   paymentStatusDisplay?: string;
+  /** Неоплаченный заказ: можно открыть виджет ЮKassa из ЛК */
+  canPay?: boolean;
+  payToken?: string | null;
+  payExpiresAt?: string | null;
   total: {
     gross: { amount: number; currency: string };
   };

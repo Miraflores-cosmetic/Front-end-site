@@ -204,3 +204,61 @@
     font-weight: 600;
   }
 }
+
+.orderActions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.payBtn {
+  appearance: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 12px 24px;
+  background: #000;
+  color: #fff;
+  font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.55;
+    cursor: default;
+  }
+
+  &:hover:not(:disabled) {
+    background: #1f1f1f;
+  }
+}
+
+.payHint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: #6e6d67;
+}
+
+.payWidget {
+  margin-top: 16px;
+}
+
+.payCancel {
+  appearance: none;
+  display: block;
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: #6e6d67;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+
+  &:hover {
+    color: #000;
+  }
+}

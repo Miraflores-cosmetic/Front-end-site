@@ -49,7 +49,9 @@
 
       ym(112462177, 'init', {
         ssr: true,
-        webvisor: true,
+        // webvisor часто режется CORS/блокировщиками и сыпет в консоль —
+        // базовые цели/хиты оставляем без сессионной записи.
+        webvisor: false,
         clickmap: true,
         ecommerce: 'dataLayer',
         accurateTrackBounce: true,

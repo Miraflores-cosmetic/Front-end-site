@@ -124,6 +124,15 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
                   reviewable={isReviewableOrder(order)}
                   reviewedProductIds={reviewedProductIds}
                   onReview={handleReviewClick}
+                  onPaid={(orderId) => {
+                    setOrders((prev) =>
+                      prev.map((o) =>
+                        o.id === orderId
+                          ? { ...o, statusDisplay: 'PAID', status: 'PAID', canPay: false }
+                          : o,
+                      ),
+                    );
+                  }}
                 />
               ))}
             </div>

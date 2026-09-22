@@ -95,6 +95,8 @@ export type PayOrderResponse = {
   total: number;
   paymentId?: string;
   confirmationToken?: string;
+  /** HMAC для OrderSuccess / paymentStatus (если pay шёл по JWT buyer). */
+  payToken?: string | null;
   message?: string | string[];
 };
 
@@ -118,8 +120,15 @@ export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder
   });
 }
 
-export async function payOrder(orderId: string, payToken: string): Promise<PayOrderResponse> {
-  return apiJson(`/orders/${encodeURIComponent(orderId)}/pay`, 'POST', { payToken });
+export async function payOrder(
+  orderId: string,
+  payToken?: string | null,
+): Promise<PayOrderResponse> {
+  return apiJson(
+    `/orders/${encodeURIComponent(orderId)}/pay`,
+    'POST',
+    payToken ? { payToken } : {},
+  );
 }
 
 export async function abandonOrder(orderId: string, payToken: string): Promise<void> {

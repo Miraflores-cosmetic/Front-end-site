@@ -76,7 +76,11 @@ const OrderSuccess: React.FC = () => {
         }
 
         if (orderId) {
-          if (!payToken) {
+          // Гость: нужен payToken из session этой вкладки.
+          // Владелец в ЛК: JWT buyer достаточно (checkout-status без payToken).
+          const { getAccessToken } = await import('@/api/apiClient');
+          const loggedIn = Boolean(getAccessToken());
+          if (!payToken && !loggedIn) {
             setError(
               'Не удалось подтвердить оплату в этой вкладке (токен только в session браузера, где оформляли заказ). Если деньги списались — проверьте письмо с заказом или зайдите в профиль.',
             );
@@ -84,7 +88,7 @@ const OrderSuccess: React.FC = () => {
             return;
           }
           for (let i = 0; i < 8; i++) {
-            const status = await getCheckoutStatus(orderId, payToken);
+            const status = await getCheckoutStatus(orderId, payToken || null);
             if (status.paid) {
               dispatch(clearCart());
               clearPendingCheckoutOrder();

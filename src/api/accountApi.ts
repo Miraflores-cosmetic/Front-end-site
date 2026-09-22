@@ -40,6 +40,10 @@ type JcosOrderSummary = {
   number: string;
   status: string;
   total: number;
+  subtotal?: number;
+  shippingCost?: number;
+  discountTotal?: number;
+  giftCertificateAmount?: number;
   createdAt: string;
   items: JcosOrderItem[];
   tracking: string | null;
@@ -168,6 +172,10 @@ function mapOrderToNode(o: JcosOrderSummary): OrderNode {
     statusDisplay: o.status,
     isPaid: !['AWAITING_PAYMENT', 'DRAFT', 'CANCELLED', 'NEW'].includes(statusUpper),
     total: { gross: { amount: o.total, currency: 'RUB' } },
+    subtotal: o.subtotal,
+    shippingCost: o.shippingCost,
+    discountTotal: o.discountTotal,
+    giftCertificateAmount: o.giftCertificateAmount,
     userEmail: '',
     tracking: o.tracking,
     trackingProvider: o.trackingProvider,

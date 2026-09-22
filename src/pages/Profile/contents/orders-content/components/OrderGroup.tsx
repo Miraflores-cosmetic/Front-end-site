@@ -30,21 +30,6 @@ function formatRub(amount: number): string {
   return `${Math.round(amount).toLocaleString('ru-RU')} ₽`;
 }
 
-function getOrderTotal(order: {
-  lines?: { unitPrice?: { gross?: { amount?: number } }; quantity?: number }[];
-  total?: { gross?: { amount?: number | string } };
-}): number {
-  if (order.lines?.length) {
-    const fromLines = order.lines.reduce((sum, line) => {
-      const unit = Number(line.unitPrice?.gross?.amount ?? 0);
-      const qty = line.quantity ?? 1;
-      return sum + unit * qty;
-    }, 0);
-    if (fromLines > 0) return fromLines;
-  }
-  return Number(order.total?.gross?.amount ?? 0);
-}
-
 export type OrderGroupProps = {
   order: {
     id: string;
@@ -67,6 +52,9 @@ export type OrderGroupProps = {
       variant?: { product?: { id?: string; thumbnail?: { url?: string } } };
     }[];
     total?: { gross?: { amount?: number | string } };
+    shippingCost?: number;
+    discountTotal?: number;
+    giftCertificateAmount?: number;
     tracking?: string | null;
     trackingProvider?: string | null;
   };
@@ -213,9 +201,38 @@ export function OrderGroup({
         />
       </ul>
 
+      {typeof order.shippingCost === 'number' ||
+      (order.discountTotal ?? 0) > 0 ||
+      (order.giftCertificateAmount ?? 0) > 0 ? (
+        <div className={styles.orderBreakdown}>
+          {(order.discountTotal ?? 0) > 0 ? (
+            <p className={styles.orderBreakdownRow}>
+              <span>Скидка</span>
+              <span>−{formatRub(order.discountTotal ?? 0)}</span>
+            </p>
+          ) : null}
+          {(order.giftCertificateAmount ?? 0) > 0 ? (
+            <p className={styles.orderBreakdownRow}>
+              <span>Сертификат</span>
+              <span>−{formatRub(order.giftCertificateAmount ?? 0)}</span>
+            </p>
+          ) : null}
+          {typeof order.shippingCost === 'number' ? (
+            <p className={styles.orderBreakdownRow}>
+              <span>Доставка</span>
+              <span>
+                {order.shippingCost === 0
+                  ? 'бесплатно'
+                  : formatRub(order.shippingCost)}
+              </span>
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
       <p className={styles.orderTotal}>
         <span>Итого</span>
-        <span>{formatRub(getOrderTotal(order))}</span>
+        <span>{formatRub(Number(order.total?.gross?.amount ?? 0))}</span>
       </p>
 
       {canPay && !confirmationToken ? (

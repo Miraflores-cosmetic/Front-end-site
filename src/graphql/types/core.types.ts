@@ -128,6 +128,10 @@ export interface OrderNode extends Node {
   total: {
     gross: { amount: number; currency: string };
   };
+  subtotal?: number;
+  shippingCost?: number;
+  discountTotal?: number;
+  giftCertificateAmount?: number;
   userEmail: string;
   tracking?: string | null;
   trackingProvider?: string | null;

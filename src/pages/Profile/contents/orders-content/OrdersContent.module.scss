@@ -205,6 +205,25 @@
   }
 }
 
+.orderBreakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid rgba(110, 109, 103, 0.18);
+}
+
+.orderBreakdownRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 400;
+  color: #6e6d67;
+}
+
 .orderActions {
   display: flex;
   flex-direction: column;

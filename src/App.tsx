@@ -25,6 +25,7 @@ import Order from './pages/Order/Order';
 import ProfilePage from './pages/Profile/Profile';
 import ReviewsPage from './pages/Reviews/ReviewsPage';
 import OrderSuccess from './pages/OrderSuccess/OrderSuccess';
+import OrderPay from './pages/OrderPay/OrderPay';
 import FAQ from './pages/FAQ/FAQ';
 import Cookies from './pages/Cookies/Cookies';
 import Promocodes from './pages/Promocodes/Promocodes';
@@ -297,6 +298,7 @@ const App: React.FC = () => {
           }
         />
             <Route path='/order' element={<Order />} />
+            <Route path='/order/pay' element={<OrderPay />} />
             <Route path='/order/success' element={<OrderSuccess />} />
             <Route path='/checkout/success' element={<CheckoutSuccessAlias />} />
             <Route

@@ -164,21 +164,27 @@ export function OrderGroup({
           <p className={styles.orderDate}>{formatOrderDate(order.created)}</p>
           <p className={styles.orderNumber}>Заказ №{order.number}</p>
           {tracking ? (
-            <p className={styles.orderTracking}>
-              {trackingProviderLabel ? `${trackingProviderLabel}: ` : 'Трек: '}
-              {trackingHref ? (
-                <a
-                  href={trackingHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={styles.orderTrackingLink}
-                >
-                  {tracking}
-                </a>
-              ) : (
-                tracking
-              )}
-            </p>
+            trackingHref ? (
+              <a
+                href={trackingHref}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={styles.trackingChip}
+                title="Открыть отслеживание"
+              >
+                <span className={styles.trackingChipLabel}>
+                  {trackingProviderLabel || 'Трек'}
+                </span>
+                <span className={styles.trackingChipCode}>{tracking}</span>
+              </a>
+            ) : (
+              <span className={styles.trackingChip}>
+                <span className={styles.trackingChipLabel}>
+                  {trackingProviderLabel || 'Трек'}
+                </span>
+                <span className={styles.trackingChipCode}>{tracking}</span>
+              </span>
+            )
           ) : null}
         </div>
         <span

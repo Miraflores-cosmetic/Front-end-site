@@ -10,8 +10,11 @@
   }
 }
 
+$order-thumb: 120px;
+$order-thumb-mobile: 108px;
+
 .orderLine {
-  @include mixins.flex(flex-start, flex-start, row, 10px);
+  @include mixins.flex(flex-start, stretch, row, 12px);
   width: 100%;
   padding: 0 0 12px;
   border-bottom: 1px solid rgba(110, 109, 103, 0.12);
@@ -21,16 +24,16 @@
 .imageWrapper {
   position: relative;
   flex-shrink: 0;
-  width: 96px;
-  height: 96px;
+  align-self: flex-start;
+  width: $order-thumb;
+  aspect-ratio: 1 / 1;
   @include mixins.flex(center, center);
   background-color: $bg-light;
   overflow: hidden;
   border-radius: 0;
 
   @media (max-width: 768px) {
-    width: 72px;
-    height: 72px;
+    width: $order-thumb-mobile;
   }
 
   .image {
@@ -69,12 +72,13 @@
   @include mixins.flex(flex-start, stretch, column);
   flex: 1;
   min-width: 0;
-  min-height: 96px;
+  min-height: $order-thumb;
   gap: 6px;
   padding: 2px 0 0;
+  box-sizing: border-box;
 
   @media (max-width: 768px) {
-    min-height: 72px;
+    min-height: $order-thumb-mobile;
   }
 }
 

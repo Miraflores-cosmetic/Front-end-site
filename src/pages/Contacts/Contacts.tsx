@@ -6,6 +6,7 @@ import iconVk from '@/assets/icons/VK.svg';
 import iconDzen from '@/assets/icons/Yandex_Zen.svg';
 import iconRutube from '@/assets/icons/Rutube.svg';
 import styles from './Contacts.module.scss';
+import { openSupportChat } from '@/components/order-chat/openSupportChat';
 import { useDocumentSeo } from '@/hooks/useDocumentSeo';
 import {
   SITE_DZEN_HREF,
@@ -103,6 +104,16 @@ const Contacts: React.FC = () => {
         <a className={styles.link} href={SITE_EMAIL.href}>
           {SITE_EMAIL.label}
         </a>
+      </p>
+
+      <p className={styles.row}>
+        <span className={styles.label}>Чат</span>
+        <button type="button" className={styles.linkButton} onClick={() => openSupportChat()}>
+          Написать в поддержку
+        </button>
+        <span className={styles.note}>
+          Ответ в личном кабинете; вложения — JPEG, PNG, WebP, GIF или PDF до 35 МБ
+        </span>
       </p>
 
       <ul className={`${styles.iconList} ${styles.iconListAfterPhone}`}>

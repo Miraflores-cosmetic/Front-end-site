@@ -3,11 +3,10 @@ import styles from './MenuList.module.scss';
 import { useDispatch } from 'react-redux';
 import { closeDrawer } from '@/store/slices/drawerSlice';
 import AppLink from '@/components/AppLink/AppLink';
+import type { SiteNavLink } from '@/config/siteNavLinks';
+import { openSupportChat } from '@/components/order-chat/openSupportChat';
 
-type MenuItem = {
-  label: string;
-  href: string;
-};
+type MenuItem = SiteNavLink;
 
 type MenuListProps = {
   title: string;
@@ -55,9 +54,21 @@ const MenuList: React.FC<MenuListProps> = ({
         {!loading &&
           items.map((item) => (
             <li key={`${item.href}-${item.label}`} className={styles.menuItem}>
-              {item.href.startsWith('http') ||
-              item.href.startsWith('mailto') ||
-              item.href.startsWith('tel') ? (
+              {item.openSupportChat ? (
+                <button
+                  type="button"
+                  className={styles.menuLinkButton}
+                  title={item.title}
+                  onClick={() => {
+                    handleCloseDrawer();
+                    openSupportChat();
+                  }}
+                >
+                  {item.label}
+                </button>
+              ) : item.href.startsWith('http') ||
+                item.href.startsWith('mailto') ||
+                item.href.startsWith('tel') ? (
                 <a
                   href={item.href}
                   onClick={handleCloseDrawer}

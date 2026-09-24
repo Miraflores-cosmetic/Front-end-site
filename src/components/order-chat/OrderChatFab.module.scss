@@ -1,0 +1,55 @@
+.fab {
+  position: fixed;
+  z-index: 1190;
+  right: 20px;
+  bottom: calc(24px + var(--pdp-sticky-clearance, 0px));
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: 50%;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+  transition: transform 0.15s ease, background 0.15s ease;
+
+  &:hover {
+    background: #1f1f1f;
+    transform: scale(1.04);
+  }
+
+  @media (max-width: 768px) {
+    right: 16px;
+    bottom: calc(20px + var(--pdp-sticky-clearance, 0px));
+    width: 52px;
+    height: 52px;
+  }
+}
+
+.fabOnProductPdp {
+  --pdp-sticky-clearance: calc(72px + env(safe-area-inset-bottom, 0px));
+}
+
+.fabIcon {
+  width: 26px;
+  height: 26px;
+}
+
+.fabBadge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #b3261e;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 20px;
+  text-align: center;
+}

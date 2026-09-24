@@ -20,6 +20,8 @@ import { RootState, AppDispatch } from '@/store/store';
 import { translateAuthError } from '@/utils/translateAuthError';
 import { useDocumentSeo } from '@/hooks/useDocumentSeo';
 import { resolvePostAuthRedirect } from '@/utils/authRedirect';
+import { stashPostAuthOpenChat } from '@/lib/orderChat/postAuthOpenChat';
+import type { OrderChatOpenDetail } from '@/lib/orderChat/orderChatEvents';
 
 const validateEmail = (email: string): boolean => {
   if (!email?.trim()) return false;
@@ -38,7 +40,14 @@ const LazyComponent: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const location = useLocation();
-  const fromState = (location.state as { from?: string } | null) ?? null;
+  const fromState =
+    (location.state as { from?: string; openChat?: OrderChatOpenDetail } | null) ?? null;
+
+  useEffect(() => {
+    if (fromState?.openChat !== undefined) {
+      stashPostAuthOpenChat(fromState.openChat);
+    }
+  }, [fromState?.openChat]);
   const { email, signIn } = useSelector((state: RootState) => state.authSlice);
   const [pass, setPass] = useState('');
   const [emailError, setEmailError] = useState<string | null>(null);

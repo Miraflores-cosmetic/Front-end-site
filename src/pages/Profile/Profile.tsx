@@ -14,6 +14,7 @@ import { RootState, AppDispatch } from '@/store/store';
 import { getMe, logout, isAuthSessionInvalidMessage } from '@/store/slices/authSlice';
 import { LogoutConfirmationModal } from '@/components/logout-confirmation-modal/LogoutConfirmationModal';
 import { VIEWPORT_MOBILE_MAX } from '@/constants/viewport';
+import { openOrderChat } from '@/lib/orderChat/orderChatEvents';
 
 const VALID_PROFILE_TABS: TabId[] = ['info', 'orders', 'favorites', 'quiz'];
 
@@ -103,6 +104,25 @@ const ProfilePage: React.FC = () => {
       setOpenAccordion(tab);
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const chatOrderId = searchParams.get('chatOrder')?.trim();
+    if (chatOrderId && isAuth) {
+      openOrderChat({
+        selection: { kind: 'order', orderId: chatOrderId },
+      });
+      const next = new URLSearchParams(searchParams);
+      next.delete('chatOrder');
+      setSearchParams(next, { replace: true });
+      return;
+    }
+    if (searchParams.get('chatSupport') === '1' && isAuth) {
+      openOrderChat({ selection: { kind: 'support' } });
+      const next = new URLSearchParams(searchParams);
+      next.delete('chatSupport');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, isAuth, setSearchParams]);
 
   useEffect(() => {
     const checkAuth = async () => {

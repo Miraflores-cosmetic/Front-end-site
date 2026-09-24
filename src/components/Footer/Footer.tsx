@@ -17,6 +17,7 @@ import {
 } from '@/config/siteNavLinks';
 import { isHiddenInNav } from '@/utils/navHide';
 import styles from './Footer.module.scss';
+import { openSupportChat } from '@/components/order-chat/openSupportChat';
 
 /**
  * Footer chrome (см. AppFooter в App.tsx):
@@ -73,6 +74,19 @@ function FooterNavLink({
   className?: string;
 }) {
   const describedBy = item.consentNote && consentId ? consentId : undefined;
+
+  if (item.openSupportChat) {
+    return (
+      <button
+        type="button"
+        className={className ?? styles.supportChatBtn}
+        title={item.title}
+        onClick={() => openSupportChat()}
+      >
+        {item.label}
+      </button>
+    );
+  }
 
   if (item.isExternal) {
     return (

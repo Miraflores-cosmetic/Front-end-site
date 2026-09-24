@@ -10,6 +10,7 @@ import productSlice from '@/store/slices/productSlice';
 import categorySlice from '@/store/slices/categorySlice';
 import menuFeaturedSlice from '@/store/slices/menuFeaturedSlice';
 import { checkoutListenerMiddleware } from './checkoutListenerMiddleware';
+import { authListenerMiddleware } from './authListenerMiddleware';
 
 export const store = configureStore({
   reducer: {
@@ -25,7 +26,10 @@ export const store = configureStore({
     menuFeatured: menuFeaturedSlice,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware().prepend(checkoutListenerMiddleware.middleware),
+    getDefaultMiddleware().prepend(
+      checkoutListenerMiddleware.middleware,
+      authListenerMiddleware.middleware,
+    ),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

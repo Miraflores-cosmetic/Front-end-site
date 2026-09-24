@@ -259,6 +259,23 @@
   margin-top: 12px;
 }
 
+.chatBtn {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.35);
+  border-radius: 999px;
+  padding: 10px 20px;
+  background: transparent;
+  color: #000;
+  font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+
+  &:hover {
+    background: #f6f5ef;
+  }
+}
+
 .payBtn {
   appearance: none;
   border: 0;

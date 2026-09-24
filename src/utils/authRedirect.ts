@@ -38,7 +38,7 @@ function sanitizeInternalPath(path: unknown): string | null {
  */
 export function resolvePostAuthRedirect(
   fallback = '/',
-  locationState?: { from?: unknown } | null,
+  locationState?: { from?: unknown; openChat?: unknown } | null,
 ): string {
   return (
     consumeAuthReturnUrl() ||

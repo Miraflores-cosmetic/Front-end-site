@@ -111,7 +111,8 @@
       font-weight: 300;
       text-transform: uppercase;
 
-      a {
+      a,
+      .menuLinkButton {
         font-family: 'Onest', 'Avenir Next', sans-serif;
         font-weight: 300;
         text-transform: uppercase;
@@ -126,6 +127,15 @@
         &:hover {
           text-decoration: underline;
         }
+      }
+
+      .menuLinkButton {
+        appearance: none;
+        border: 0;
+        padding: 0;
+        background: none;
+        cursor: pointer;
+        text-align: left;
       }
     }
 

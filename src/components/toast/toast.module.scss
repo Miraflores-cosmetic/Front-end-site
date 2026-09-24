@@ -43,6 +43,10 @@
   }
 }
 
+:global(body.order-chat-modal-open) .toast {
+  z-index: 1400;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .toast {
     animation: none;

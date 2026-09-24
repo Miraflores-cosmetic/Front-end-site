@@ -14,6 +14,7 @@ import YooKassaWidget from '@/components/yookassa/YooKassaWidget';
 import { useToast } from '@/components/toast/toast';
 import CardList, { type CartItem } from './card-list/CardList';
 import styles from '../OrdersContent.module.scss';
+import { openOrderChat } from '@/lib/orderChat/orderChatEvents';
 
 function formatOrderDate(iso: string): string {
   const d = new Date(iso);
@@ -240,6 +241,24 @@ export function OrderGroup({
         <span>Итого</span>
         <span>{formatRub(Number(order.total?.gross?.amount ?? 0))}</span>
       </p>
+
+      <div className={styles.orderActions}>
+        <button
+          type="button"
+          className={styles.chatBtn}
+          onClick={() =>
+            openOrderChat({
+              selection: {
+                kind: 'order',
+                orderId: order.id,
+                title: `Заказ №${order.number}`,
+              },
+            })
+          }
+        >
+          Чат по заказу
+        </button>
+      </div>
 
       {canPay && !confirmationToken ? (
         <div className={styles.orderActions}>

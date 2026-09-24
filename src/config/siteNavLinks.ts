@@ -7,6 +7,8 @@ export type SiteNavLink = {
   title?: string;
   /** Видимая подпись согласия (не только title) */
   consentNote?: string;
+  /** Открыть модалку чата поддержки (Front), без перехода по href */
+  openSupportChat?: boolean;
 };
 
 export const SITE_BRAND_NAME = 'Miraflores';
@@ -120,6 +122,12 @@ export function orderStatusHref(isAuth: boolean): string {
 export function getMenuSupportLinks(isAuth: boolean): SiteNavLink[] {
   return [
     { label: 'Статус заказа', href: orderStatusHref(isAuth) },
+    {
+      label: 'Написать в поддержку',
+      href: '#support-chat',
+      openSupportChat: true,
+      title: 'Чат с командой Miraflores',
+    },
     { label: 'Контакты', href: '/contacts' },
   ];
 }
@@ -131,6 +139,12 @@ export function getMenuSupportLinks(isAuth: boolean): SiteNavLink[] {
 export function getFooterSupportLinks(isAuth: boolean): SiteNavLink[] {
   return [
     { label: 'Статус заказа', href: orderStatusHref(isAuth) },
+    {
+      label: 'Написать в поддержку',
+      href: '#support-chat',
+      openSupportChat: true,
+      title: 'Чат с командой Miraflores',
+    },
     {
       label: SITE_EMAIL.label,
       href: SITE_EMAIL.href,

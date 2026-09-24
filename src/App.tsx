@@ -47,6 +47,7 @@ import QuizResultPage from './pages/Quiz/QuizResult';
 import ProfileQuizResultPage from './pages/Profile/ProfileQuizResult';
 import { QuizContentProvider } from '@/contexts/QuizContentContext';
 import SearchDrawer from '@/components/drawer/SearchDrawer';
+import { OrderChatFab } from '@/components/order-chat/OrderChatFab';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe, isAuthSessionInvalidMessage, clearLocalSession } from '@/store/slices/authSlice';
 import { ProtectedRoute } from '@/components/ProtectedRoute/ProtectedRoute';
@@ -330,6 +331,7 @@ const App: React.FC = () => {
       <AppFooter />
       <DrawerWrapper />
       <SearchDrawer />
+      <OrderChatFab />
       </AppShellGate>
     </>
   );

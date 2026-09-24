@@ -49,6 +49,12 @@
     "slick-carousel": "^1.8.1",
     "socket.io-client": "^4.8.3"
   },
+  "overrides": {
+    "@miraflores/order-chat-ui": {
+      "react": "$react",
+      "react-dom": "$react-dom"
+    }
+  },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
     "@types/node": "^24.3.0",

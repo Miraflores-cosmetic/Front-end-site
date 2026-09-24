@@ -9,6 +9,8 @@ import svgr from 'vite-plugin-svgr';
 /** Vite/Rollup не разбирает named exports из CJS `dist` пакета (file:); бандлим исходники. */
 const orderChatCoreSrc = path.resolve(__dirname, '../packages/order-chat-core/src/index.ts');
 const orderChatUiSrc = path.resolve(__dirname, '../packages/order-chat-ui/src/index.ts');
+const frontReact = path.resolve(__dirname, 'node_modules/react');
+const frontReactDom = path.resolve(__dirname, 'node_modules/react-dom');
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -41,10 +43,15 @@ export default defineConfig({
     })
   ],
   resolve: {
+    dedupe: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
     alias: {
       '@': path.resolve(__dirname, './src'),
       '@miraflores/order-chat-core': orderChatCoreSrc,
       '@miraflores/order-chat-ui': orderChatUiSrc,
+      react: frontReact,
+      'react-dom': frontReactDom,
+      'react/jsx-runtime': path.join(frontReact, 'jsx-runtime.js'),
+      'react/jsx-dev-runtime': path.join(frontReact, 'jsx-dev-runtime.js'),
     },
   },
   build: {

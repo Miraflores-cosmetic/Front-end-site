@@ -158,8 +158,19 @@ export function OrderGroup({
     }
   };
 
+  const openChat = () =>
+    openOrderChat({
+      selection: {
+        kind: 'order',
+        orderId: order.id,
+        title: `Заказ №${order.number}`,
+      },
+    });
+
   return (
     <article className={styles.orderGroup}>
+      <div className={styles.orderGroupLayout}>
+        <div className={styles.orderGroupMain}>
       <header className={styles.orderHead}>
         <div>
           <p className={styles.orderDate}>{formatOrderDate(order.created)}</p>
@@ -242,24 +253,6 @@ export function OrderGroup({
         <span>{formatRub(Number(order.total?.gross?.amount ?? 0))}</span>
       </p>
 
-      <div className={styles.orderActions}>
-        <button
-          type="button"
-          className={styles.chatBtn}
-          onClick={() =>
-            openOrderChat({
-              selection: {
-                kind: 'order',
-                orderId: order.id,
-                title: `Заказ №${order.number}`,
-              },
-            })
-          }
-        >
-          Чат по заказу
-        </button>
-      </div>
-
       {canPay && !confirmationToken ? (
         <div className={styles.orderActions}>
           <button
@@ -307,6 +300,29 @@ export function OrderGroup({
           </button>
         </div>
       ) : null}
+        </div>
+
+        <aside className={styles.orderGroupChat}>
+          <button
+            type="button"
+            className={styles.chatBtnSide}
+            onClick={openChat}
+            aria-label={`Чат по заказу №${order.number}`}
+          >
+            <span className={styles.chatBtnIcon} aria-hidden>
+              <svg viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8A2.5 2.5 0 0 1 17.5 16H9l-4.5 3.5V16H6.5A2.5 2.5 0 0 1 4 13.5v-8Z"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+            <span className={styles.chatBtnLabel}>Чат по заказу</span>
+          </button>
+        </aside>
+      </div>
     </article>
   );
 }

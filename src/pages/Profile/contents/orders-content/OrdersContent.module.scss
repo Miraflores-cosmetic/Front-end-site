@@ -74,9 +74,6 @@
 }
 
 .orderGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
   padding-bottom: 32px;
   border-bottom: 1px solid rgba(110, 109, 103, 0.35);
 
@@ -87,6 +84,37 @@
 
   @media (max-width: 768px) {
     padding-bottom: 24px;
+  }
+}
+
+.orderGroupLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px 20px;
+  align-items: start;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.orderGroupMain {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.orderGroupChat {
+  flex-shrink: 0;
+  padding-top: 2px;
+
+  @media (max-width: 768px) {
+    order: -1;
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0;
+    margin-bottom: -4px;
   }
 }
 
@@ -259,20 +287,71 @@
   margin-top: 12px;
 }
 
-.chatBtn {
+.chatBtnSide {
   appearance: none;
-  border: 1px solid rgba(0, 0, 0, 0.35);
-  border-radius: 999px;
-  padding: 10px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 88px;
+  padding: 0;
+  border: 0;
   background: transparent;
-  color: #000;
-  font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 500;
+  color: #297230;
   cursor: pointer;
+  text-align: center;
 
-  &:hover {
-    background: #f6f5ef;
+  &:hover .chatBtnIcon {
+    background: #1f5a24;
+    transform: scale(1.04);
+  }
+
+  &:focus-visible .chatBtnIcon {
+    outline: 2px solid #297230;
+    outline-offset: 2px;
+  }
+
+  @media (max-width: 768px) {
+    flex-direction: row;
+    width: auto;
+    gap: 10px;
+  }
+}
+
+.chatBtnIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #297230;
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(41, 114, 48, 0.28);
+  transition: background 0.15s ease, transform 0.15s ease;
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  @media (max-width: 768px) {
+    width: 44px;
+    height: 44px;
+  }
+}
+
+.chatBtnLabel {
+  font-family: 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: #000;
+  max-width: 88px;
+
+  @media (max-width: 768px) {
+    max-width: none;
+    font-size: 13px;
   }
 }
 

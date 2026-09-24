@@ -72,9 +72,31 @@ function chatTitle(selection: ActiveSelection | null): string {
   return selection.title || 'Чат по заказу';
 }
 
-function chatSubtitle(selection: ActiveSelection | null): string {
-  if (!selection) return '';
-  return selection.kind === 'support' ? 'Общие вопросы' : 'Вопросы по заказу';
+function ChatSubtitle({ selection }: { selection: ActiveSelection | null }) {
+  if (!selection) return null;
+  if (selection.kind === 'support') {
+    return (
+      <p className={styles.shellSubtitle}>
+        <span className={styles.onlineStatus}>
+          <span className={styles.onlineDot} aria-hidden />
+          Онлайн
+        </span>
+        {' · Общие вопросы'}
+      </p>
+    );
+  }
+  return <p className={styles.shellSubtitle}>Вопросы по заказу</p>;
+}
+
+function ThreadAvatar({ support }: { support: boolean }) {
+  return (
+    <span
+      className={`${styles.threadAvatar} ${support ? styles.threadAvatarOnline : ''}`}
+      aria-hidden
+    >
+      {support ? <ChatSupportIcon /> : <ChatOrderIcon />}
+    </span>
+  );
 }
 
 function formatThreadPreview(preview: string | null): string {
@@ -266,9 +288,7 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
             <h2 id={shellTitleId} className={styles.shellTitle}>
               {mobileChatOpen ? chatTitle(selection) : 'Сообщения'}
             </h2>
-            {mobileChatOpen ? (
-              <p className={styles.shellSubtitle}>{chatSubtitle(selection)}</p>
-            ) : null}
+            {mobileChatOpen ? <ChatSubtitle selection={selection} /> : null}
           </div>
           <button type="button" className={styles.closeBtn} onClick={handleClose} aria-label="Закрыть">
             <ChatCloseIcon />
@@ -316,9 +336,7 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
                           aria-current={active ? 'true' : undefined}
                           onClick={() => pickThread(thread)}
                         >
-                          <span className={styles.threadAvatar} aria-hidden>
-                            {thread.kind === 'SUPPORT' ? <ChatSupportIcon /> : <ChatOrderIcon />}
-                          </span>
+                          <ThreadAvatar support={thread.kind === 'SUPPORT'} />
                           <span className={styles.threadMain}>
                             <span className={styles.threadRow}>
                               <span className={styles.threadTitle}>{thread.title}</span>
@@ -399,12 +417,10 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
             <section ref={chatPaneRef} className={styles.chatPane} aria-label={chatTitle(selection)}>
               {!isMobile && selection ? (
                 <div className={styles.chatPaneHead}>
-                  <span className={styles.threadAvatar} aria-hidden>
-                    {selection.kind === 'support' ? <ChatSupportIcon /> : <ChatOrderIcon />}
-                  </span>
+                  <ThreadAvatar support={selection.kind === 'support'} />
                   <div className={styles.shellTitleWrap}>
                     <p className={styles.chatPaneTitle}>{chatTitle(selection)}</p>
-                    <p className={styles.shellSubtitle}>{chatSubtitle(selection)}</p>
+                    <ChatSubtitle selection={selection} />
                   </div>
                 </div>
               ) : null}

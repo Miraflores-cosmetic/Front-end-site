@@ -1,292 +1,449 @@
 @use '@/style/variables.scss' as *;
 
+$chat-hairline: 1px solid rgba(110, 109, 103, 0.18);
+
 :global(body.order-chat-modal-open) {
   overflow: hidden;
 }
 
-.backdrop {
+/* ——— Оболочка: оверлей + панель (как AdminModal, в визуальном языке витрины) ——— */
+
+.overlay {
   position: fixed;
   inset: 0;
-  z-index: 1300;
+  z-index: 1310;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
   background: rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    align-items: flex-start;
+    padding: 0;
+  }
 }
 
 .shell {
-  position: fixed;
-  z-index: 1310;
-  inset: 24px;
+  width: 100%;
   max-width: 960px;
-  margin: 0 auto;
-  left: 24px;
-  right: 24px;
-  background: $white;
-  border-radius: 0;
-  overflow: hidden;
+  height: min(760px, 100%);
   display: flex;
   flex-direction: column;
+  background: $white;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+
+  &:focus {
+    outline: none;
+  }
 
   @media (max-width: 768px) {
-    inset: auto;
-    top: var(--order-chat-vv-offset-top, 0px);
-    left: 0;
-    right: 0;
-    bottom: 0;
-    width: 100%;
+    max-width: none;
+    margin-top: var(--order-chat-vv-offset-top, 0px);
     height: var(--order-chat-vvh, 100dvh);
     max-height: var(--order-chat-vvh, 100dvh);
-    border-radius: 0;
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
+    box-shadow: none;
     box-sizing: border-box;
   }
 }
 
+.shellCompact {
+  height: auto;
+  max-width: 480px;
+}
+
 .shellHead {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 20px 20px 14px;
-  border-bottom: 1px solid rgba(110, 109, 103, 0.15);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 16px 20px 16px 24px;
+  border-bottom: $chat-hairline;
+  box-sizing: border-box;
+
+  @media (max-width: 768px) {
+    min-height: 60px;
+    padding: 10px 12px 10px 16px;
+    gap: 8px;
+  }
+}
+
+.shellTitleWrap {
+  flex: 1;
+  min-width: 0;
 }
 
 .shellTitle {
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-family: $font-oceanic, $font-avenir;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: $font-light;
   line-height: 1.15;
   color: $black;
+
+  @media (max-width: 768px) {
+    font-size: 20px;
+  }
 }
 
-.wsSessionBanner {
-  margin: 0;
-  padding: 10px 16px;
-  font-size: 14px;
+.shellSubtitle {
+  margin: 2px 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: $font-onest, $font-avenir;
+  font-size: 12px;
   line-height: 1.35;
-  color: #664d03;
-  background: #fff3cd;
-  border-bottom: 1px solid rgba(102, 77, 3, 0.15);
-  flex-shrink: 0;
+  color: $gray-6e;
 }
 
+.iconBtn,
 .closeBtn {
   flex-shrink: 0;
   appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 36px;
   height: 36px;
   padding: 0;
-  border: 1px solid rgba(110, 109, 103, 0.25);
   border-radius: 50%;
   background: transparent;
-  cursor: pointer;
   color: $gray-6e;
-  font-size: 24px;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background-color 0.2s;
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
 
   &:hover {
     color: $black;
-    border-color: rgba(110, 109, 103, 0.45);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $black;
+    outline-offset: 2px;
   }
 }
+
+.closeBtn {
+  border: 1px solid rgba(110, 109, 103, 0.25);
+
+  &:hover {
+    border-color: $black;
+  }
+}
+
+.iconBtn {
+  border: 0;
+  margin-left: -8px;
+
+  &:hover {
+    background: $bg-light;
+  }
+}
+
+.wsSessionBanner {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 10px 24px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: #664d03;
+  background: #fff3cd;
+  border-bottom: 1px solid rgba(102, 77, 3, 0.15);
+
+  @media (max-width: 768px) {
+    padding: 10px 16px;
+  }
+}
+
+/* ——— Тело: список диалогов + переписка ——— */
 
 .body {
   flex: 1;
   min-height: 0;
   display: grid;
-  grid-template-columns: 280px 1fr;
-
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
+  grid-template-columns: 300px minmax(0, 1fr);
 }
 
-.threadsOnly {
-  grid-template-columns: 1fr;
+.bodySingle {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .threads {
-  border-right: 1px solid rgba(110, 109, 103, 0.2);
+  min-height: 0;
   overflow-y: auto;
-  padding: 8px 0;
+  overscroll-behavior: contain;
+  border-right: $chat-hairline;
   background: #faf9f5;
 
-  @media (max-width: 768px) {
+  .bodySingle & {
     border-right: 0;
   }
+}
+
+.threadList {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
 }
 
 .threadBtn {
   appearance: none;
   width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px 12px 20px;
   border: 0;
   background: transparent;
+  font: inherit;
+  color: inherit;
   text-align: left;
-  padding: 12px 16px;
   cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  transition: background-color 0.15s ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(0, 0, 0, 0.035);
+  }
+
+  &:focus-visible {
+    outline: 2px solid $black;
+    outline-offset: -2px;
   }
 }
 
-.threadBtnActive {
-  background: #fff;
-  box-shadow: inset 3px 0 0 #000;
+.threadBtnActive,
+.threadBtnActive:hover {
+  background: $white;
+  box-shadow: inset 2px 0 0 $black;
 }
 
-.threadTitleRow {
+.threadAvatar {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: $bg-light;
+  color: $black;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .threadBtnActive & {
+    background: #eeede5;
+  }
+}
+
+.threadMain {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.threadRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-width: 0;
 }
 
 .threadTitle {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: $font-onest, $font-avenir;
   font-size: 14px;
-  font-weight: 600;
-  color: #000;
+  font-weight: $font-medium;
+  color: $black;
+}
+
+.threadTime {
+  flex-shrink: 0;
+  font-family: $font-onest, $font-avenir;
+  font-size: 11px;
+  color: $gray-6e;
+  font-variant-numeric: tabular-nums;
+}
+
+.threadPreview {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: $font-onest, $font-avenir;
+  font-size: 12px;
+  color: $gray-6e;
+}
+
+.threadBtnUnread {
+  .threadTitle {
+    font-weight: $font-semibold;
+  }
+
+  .threadPreview {
+    color: $black;
+  }
 }
 
 .threadUnread {
+  flex-shrink: 0;
   min-width: 18px;
   height: 18px;
   padding: 0 5px;
   border-radius: 999px;
   background: #b3261e;
-  color: #fff;
+  color: $white;
   font-size: 10px;
-  font-weight: 600;
+  font-weight: $font-semibold;
   line-height: 18px;
   text-align: center;
-  flex-shrink: 0;
+  box-sizing: border-box;
 }
 
-.threadPreview {
+.threadsHint {
   margin: 0;
-  font-size: 12px;
-  color: #6e6d67;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.chatPane {
-  min-height: 0;
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden;
-}
-
-.mobileBack {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 0 16px 8px;
-  font-size: 13px;
-  color: #6e6d67;
-  cursor: pointer;
-  text-align: left;
-
-  &:hover {
-    color: #000;
-  }
+  padding: 24px 20px;
+  font-family: $font-onest, $font-avenir;
+  font-size: 14px;
+  line-height: 1.45;
+  color: $gray-6e;
 }
 
 .startable {
-  margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid rgba(110, 109, 103, 0.2);
+  border-top: $chat-hairline;
+
+  .threadList {
+    padding-top: 0;
+  }
 }
 
 .startableTitle {
   margin: 0;
-  padding: 8px 16px 4px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  padding: 12px 20px 6px;
+  font-family: $font-onest, $font-avenir;
+  font-size: 10px;
+  font-weight: $font-semibold;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: #6e6d67;
+  color: $gray-6e;
 }
 
 .startableBtn {
-  appearance: none;
-  width: 100%;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  padding: 10px 16px;
-  cursor: pointer;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  font: inherit;
-  color: inherit;
-
-  &:hover {
-    background: rgba(255, 255, 255, 0.7);
-  }
-
-  &:focus-visible {
-    outline: 2px solid #000;
-    outline-offset: -2px;
-  }
-}
-
-.startableNumber {
-  font-size: 14px;
-  color: #000;
-}
-
-.startableDate {
-  flex-shrink: 0;
-  font-size: 12px;
-  color: #6e6d67;
+  padding-top: 10px;
+  padding-bottom: 10px;
 }
 
 .startableToggle {
   appearance: none;
+  margin: 0 0 12px;
+  padding: 6px 20px;
   border: 0;
   background: transparent;
-  padding: 8px 16px;
-  font: inherit;
+  font-family: $font-onest, $font-avenir;
   font-size: 13px;
-  color: #6e6d67;
+  color: $gray-6e;
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
 
+  &:hover {
+    color: $black;
+  }
+
   &:focus-visible {
-    outline: 2px solid #000;
+    outline: 2px solid $black;
     outline-offset: 2px;
   }
 }
 
-.threadsLoading,
-.threadsEmpty {
-  padding: 24px 16px;
-  font-size: 14px;
-  color: #6e6d67;
+.chatPane {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
+.chatPaneHead {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 64px;
+  padding: 12px 24px;
+  border-bottom: $chat-hairline;
+  box-sizing: border-box;
+}
+
+.chatPaneTitle {
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: $font-onest, $font-avenir;
+  font-size: 15px;
+  font-weight: $font-medium;
+  color: $black;
+}
+
+.chatPaneBody {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ——— Ошибка рендера (OrderChatModalErrorBoundary) ——— */
+
 .chatLoadError {
-  padding: 24px 16px;
+  padding: 24px;
+  font-family: $font-onest, $font-avenir;
   font-size: 14px;
   line-height: 1.45;
-  color: #6e6d67;
+  color: $gray-6e;
 
   p {
-    margin: 0 0 12px;
+    margin: 0 0 16px;
+  }
+}
+
+.retryBtn {
+  appearance: none;
+  min-height: 40px;
+  padding: 0 24px;
+  border: 0;
+  border-radius: 999px;
+  background: $black;
+  color: $white;
+  font-family: $font-avenir;
+  font-size: 14px;
+  font-weight: $button-font-weight;
+  cursor: pointer;
+
+  &:hover {
+    background: #1f1f1f;
   }
 }

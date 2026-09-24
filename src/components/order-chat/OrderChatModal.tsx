@@ -18,6 +18,7 @@ import type {
   OrderChatThread,
   OrderChatThreadsResponse,
 } from '@/lib/orderChat/types';
+import { ChatCloseIcon, ChatBackIcon, ChatOrderIcon, ChatSupportIcon } from './orderChatIcons';
 import styles from './OrderChatWidget.module.scss';
 
 const STARTABLE_COLLAPSED = 3;
@@ -26,6 +27,22 @@ function formatOrderDate(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
   return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+/** «14:05», «вчера», «12 сент.», «03.02.2025». */
+function formatThreadTime(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const now = new Date();
+  const startOfDay = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const dayDiff = Math.round((startOfDay(now) - startOfDay(d)) / 86_400_000);
+  if (dayDiff === 0) return d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  if (dayDiff === 1) return 'вчера';
+  if (d.getFullYear() === now.getFullYear()) {
+    return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+  }
+  return d.toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
 type ActiveSelection =
@@ -55,9 +72,18 @@ function chatTitle(selection: ActiveSelection | null): string {
   return selection.title || 'Чат по заказу';
 }
 
+function chatSubtitle(selection: ActiveSelection | null): string {
+  if (!selection) return '';
+  return selection.kind === 'support' ? 'Общие вопросы' : 'Вопросы по заказу';
+}
+
 function formatThreadPreview(preview: string | null): string {
   const t = preview?.trim();
   return t && t.length > 0 ? t : 'Нет сообщений';
+}
+
+function unreadLabel(n: number): string {
+  return n > 99 ? '99+' : String(n);
 }
 
 export type OrderChatModalProps = {
@@ -67,6 +93,7 @@ export type OrderChatModalProps = {
 
 export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChatModalProps) {
   const shellTitleId = useId();
+  const startableTitleId = useId();
   const isMobile = useScreenMatch();
   const { isAuth, me } = useSelector((state: RootState) => state.authSlice);
 
@@ -121,6 +148,7 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
 
   const showThreadList = !isMobile || !mobileShowChat;
   const showChatPane = !isMobile || mobileShowChat;
+  const mobileChatOpen = isMobile && mobileShowChat;
   const chatPanelActive = Boolean(isAuth && target && showChatPane && selection);
   const chatPanelVisible = useOrderChatPanelVisible(chatPaneRef, chatPanelActive);
 
@@ -205,14 +233,16 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
     ? startableOrders
     : startableOrders.slice(0, STARTABLE_COLLAPSED);
 
-  const bodyClass =
-    isMobile && mobileShowChat ? `${styles.body} ${styles.threadsOnly}` : styles.body;
-
   if (typeof document === 'undefined') return null;
 
   return createPortal(
-    <>
-      <div className={styles.backdrop} role="presentation" onClick={handleClose} />
+    <div
+      className={styles.overlay}
+      role="presentation"
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget) handleClose();
+      }}
+    >
       <div
         ref={shellRef}
         className={styles.shell}
@@ -220,83 +250,134 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
         aria-modal="true"
         aria-labelledby={shellTitleId}
         tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
       >
         <header className={styles.shellHead}>
-          <h2 id={shellTitleId} className={styles.shellTitle}>
-            {isMobile && mobileShowChat ? chatTitle(selection) : 'Сообщения'}
-          </h2>
+          {mobileChatOpen ? (
+            <button
+              type="button"
+              className={styles.iconBtn}
+              onClick={() => setMobileShowChat(false)}
+              aria-label="Все диалоги"
+            >
+              <ChatBackIcon />
+            </button>
+          ) : null}
+          <div className={styles.shellTitleWrap}>
+            <h2 id={shellTitleId} className={styles.shellTitle}>
+              {mobileChatOpen ? chatTitle(selection) : 'Сообщения'}
+            </h2>
+            {mobileChatOpen ? (
+              <p className={styles.shellSubtitle}>{chatSubtitle(selection)}</p>
+            ) : null}
+          </div>
           <button type="button" className={styles.closeBtn} onClick={handleClose} aria-label="Закрыть">
-            ×
+            <ChatCloseIcon />
           </button>
         </header>
+
         {chat.chatError?.includes('Сессия чата') ? (
           <p className={styles.wsSessionBanner} role="status">
             {chat.chatError}
           </p>
         ) : null}
-        <div className={bodyClass}>
+
+        <div className={`${styles.body} ${isMobile ? styles.bodySingle : ''}`}>
           {showThreadList ? (
-            <aside className={styles.threads}>
+            <aside className={styles.threads} aria-label="Диалоги">
               {threadsLoading ? (
-                <p className={styles.threadsLoading}>Загрузка…</p>
+                <p className={styles.threadsHint}>Загрузка…</p>
               ) : threads.length === 0 ? (
-                <p className={styles.threadsEmpty}>
+                <p className={styles.threadsHint}>
                   Напишите в поддержку — мы ответим в этом окне.
                 </p>
               ) : (
-                threads.map((thread) => {
-                  const sel = threadToSelection(thread);
-                  const active =
-                    selection?.kind === sel.kind &&
-                    (sel.kind === 'support' ||
-                      (selection?.kind === 'order' &&
-                        sel.kind === 'order' &&
-                        selection.orderId === sel.orderId));
-                  return (
-                    <button
-                      key={`${thread.kind}-${thread.orderId ?? 'support'}`}
-                      type="button"
-                      className={`${styles.threadBtn} ${active ? styles.threadBtnActive : ''}`}
-                      aria-current={active ? 'true' : undefined}
-                      onClick={() => pickThread(thread)}
-                    >
-                      <span className={styles.threadTitleRow}>
-                        <span className={styles.threadTitle}>{thread.title}</span>
-                        {thread.unreadCount > 0 ? (
-                          <span className={styles.threadUnread}>
-                            {thread.unreadCount > 99 ? '99+' : thread.unreadCount}
-                          </span>
-                        ) : null}
-                      </span>
-                      <span className={styles.threadPreview}>
-                        {formatThreadPreview(thread.lastMessagePreview)}
-                      </span>
-                    </button>
-                  );
-                })
-              )}
-              {!threadsLoading && startableOrders.length > 0 ? (
-                <section className={styles.startable} aria-labelledby="order-chat-startable-title">
-                  <h3 id="order-chat-startable-title" className={styles.startableTitle}>
-                    Начать чат по заказу
-                  </h3>
-                  {visibleStartable.map((order) => {
+                <ul className={styles.threadList}>
+                  {threads.map((thread) => {
+                    const sel = threadToSelection(thread);
                     const active =
-                      selection?.kind === 'order' && selection.orderId === order.orderId;
+                      selection?.kind === sel.kind &&
+                      (sel.kind === 'support' ||
+                        (selection?.kind === 'order' &&
+                          sel.kind === 'order' &&
+                          selection.orderId === sel.orderId));
+                    const unread = thread.unreadCount > 0;
+                    const time = formatThreadTime(thread.lastMessageAt);
                     return (
-                      <button
-                        key={order.orderId}
-                        type="button"
-                        className={`${styles.startableBtn} ${active ? styles.threadBtnActive : ''}`}
-                        aria-current={active ? 'true' : undefined}
-                        onClick={() => pickStartableOrder(order)}
-                      >
-                        <span className={styles.startableNumber}>Заказ {order.orderNumber}</span>
-                        <span className={styles.startableDate}>{formatOrderDate(order.createdAt)}</span>
-                      </button>
+                      <li key={`${thread.kind}-${thread.orderId ?? 'support'}`}>
+                        <button
+                          type="button"
+                          className={[
+                            styles.threadBtn,
+                            active ? styles.threadBtnActive : '',
+                            unread ? styles.threadBtnUnread : '',
+                          ]
+                            .filter(Boolean)
+                            .join(' ')}
+                          aria-current={active ? 'true' : undefined}
+                          onClick={() => pickThread(thread)}
+                        >
+                          <span className={styles.threadAvatar} aria-hidden>
+                            {thread.kind === 'SUPPORT' ? <ChatSupportIcon /> : <ChatOrderIcon />}
+                          </span>
+                          <span className={styles.threadMain}>
+                            <span className={styles.threadRow}>
+                              <span className={styles.threadTitle}>{thread.title}</span>
+                              {time ? <span className={styles.threadTime}>{time}</span> : null}
+                            </span>
+                            <span className={styles.threadRow}>
+                              <span className={styles.threadPreview}>
+                                {formatThreadPreview(thread.lastMessagePreview)}
+                              </span>
+                              {unread ? (
+                                <span
+                                  className={styles.threadUnread}
+                                  aria-label={`${thread.unreadCount} непрочитанных`}
+                                >
+                                  {unreadLabel(thread.unreadCount)}
+                                </span>
+                              ) : null}
+                            </span>
+                          </span>
+                        </button>
+                      </li>
                     );
                   })}
+                </ul>
+              )}
+
+              {!threadsLoading && startableOrders.length > 0 ? (
+                <section className={styles.startable} aria-labelledby={startableTitleId}>
+                  <h3 id={startableTitleId} className={styles.startableTitle}>
+                    Начать чат по заказу
+                  </h3>
+                  <ul className={styles.threadList}>
+                    {visibleStartable.map((order) => {
+                      const active =
+                        selection?.kind === 'order' && selection.orderId === order.orderId;
+                      return (
+                        <li key={order.orderId}>
+                          <button
+                            type="button"
+                            className={`${styles.threadBtn} ${styles.startableBtn} ${active ? styles.threadBtnActive : ''}`}
+                            aria-current={active ? 'true' : undefined}
+                            onClick={() => pickStartableOrder(order)}
+                          >
+                            <span className={styles.threadAvatar} aria-hidden>
+                              <ChatOrderIcon />
+                            </span>
+                            <span className={styles.threadMain}>
+                              <span className={styles.threadRow}>
+                                <span className={styles.threadTitle}>Заказ {order.orderNumber}</span>
+                                <span className={styles.threadTime}>
+                                  {formatOrderDate(order.createdAt)}
+                                </span>
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
                   {startableOrders.length > STARTABLE_COLLAPSED ? (
                     <button
                       type="button"
@@ -315,48 +396,53 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
           ) : null}
 
           {showChatPane ? (
-            <div ref={chatPaneRef} className={styles.chatPane}>
-              {isMobile && mobileShowChat ? (
-                <button
-                  type="button"
-                  className={styles.mobileBack}
-                  onClick={() => setMobileShowChat(false)}
-                >
-                  ← Все диалоги
-                </button>
+            <section ref={chatPaneRef} className={styles.chatPane} aria-label={chatTitle(selection)}>
+              {!isMobile && selection ? (
+                <div className={styles.chatPaneHead}>
+                  <span className={styles.threadAvatar} aria-hidden>
+                    {selection.kind === 'support' ? <ChatSupportIcon /> : <ChatOrderIcon />}
+                  </span>
+                  <div className={styles.shellTitleWrap}>
+                    <p className={styles.chatPaneTitle}>{chatTitle(selection)}</p>
+                    <p className={styles.shellSubtitle}>{chatSubtitle(selection)}</p>
+                  </div>
+                </div>
               ) : null}
-              <ChatWindow
-                open
-                onClose={handleClose}
-                title={chatTitle(selection)}
-                threadKey={chatThreadKey}
-                variant="embedded"
-                embeddedLayout="fill"
-                hideCloseButton
-                messages={chat.chatMessages}
-                onSend={(text) => chat.sendChatText(text)}
-                errorText={chat.chatError}
-                composerDisabled={chat.chatComposerDisabled}
-                sendDisabled={chat.chatSendDisabled}
-                attachPickerDisabled={chat.chatAttachPickerDisabled}
-                attachmentsEnabled
-                pendingAttachmentsHint={chat.pendingAttachmentsHint}
-                pendingOutgoing={chat.pendingOutgoingAttachments}
-                onAttachFiles={(files) => void chat.attachChatFiles(files)}
-                onRemovePendingAttachment={chat.removePendingChatAttachment}
-                onDeleteMessage={(id) => void chat.deleteChatMessage(id)}
-                allowEmptySend={chat.canSendAttachmentMessage}
-                hasOlderHistory={chat.chatHasOlderHistory}
-                loadingOlderHistory={chat.chatLoadingOlderHistory}
-                onLoadOlderHistory={() => void chat.loadOlderChatMessages()}
-                messageEmptyHint={chat.chatLoading ? 'Загрузка сообщений…' : 'Напишите сообщение'}
-                inputPlaceholder="Сообщение…"
-              />
-            </div>
+              <div className={styles.chatPaneBody}>
+                <ChatWindow
+                  open
+                  onClose={handleClose}
+                  title=""
+                  threadKey={chatThreadKey}
+                  variant="embedded"
+                  embeddedLayout="fill"
+                  hideCloseButton
+                  frameless
+                  messages={chat.chatMessages}
+                  onSend={(text) => chat.sendChatText(text)}
+                  errorText={chat.chatError}
+                  composerDisabled={chat.chatComposerDisabled}
+                  sendDisabled={chat.chatSendDisabled}
+                  attachPickerDisabled={chat.chatAttachPickerDisabled}
+                  attachmentsEnabled
+                  pendingAttachmentsHint={chat.pendingAttachmentsHint}
+                  pendingOutgoing={chat.pendingOutgoingAttachments}
+                  onAttachFiles={(files) => void chat.attachChatFiles(files)}
+                  onRemovePendingAttachment={chat.removePendingChatAttachment}
+                  onDeleteMessage={(id) => void chat.deleteChatMessage(id)}
+                  allowEmptySend={chat.canSendAttachmentMessage}
+                  hasOlderHistory={chat.chatHasOlderHistory}
+                  loadingOlderHistory={chat.chatLoadingOlderHistory}
+                  onLoadOlderHistory={() => void chat.loadOlderChatMessages()}
+                  messageEmptyHint={chat.chatLoading ? 'Загрузка сообщений…' : 'Напишите сообщение — мы ответим здесь'}
+                  inputPlaceholder="Сообщение…"
+                />
+              </div>
+            </section>
           ) : null}
         </div>
       </div>
-    </>,
+    </div>,
     document.body,
   );
 }

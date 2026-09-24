@@ -63,7 +63,30 @@ export type OrderGroupProps = {
   reviewable?: boolean;
   reviewedProductIds?: Set<string>;
   onPaid?: (orderId: string) => void;
+  /** Непрочитанные ответы поддержки в чате по заказу. */
+  chatUnread?: number;
 };
+
+function ChatIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path
+        d="M5 4.75h14c.69 0 1.25.56 1.25 1.25v9.5c0 .69-.56 1.25-1.25 1.25h-8.5L6 20.25v-3.5H5c-.69 0-1.25-.56-1.25-1.25V6c0-.69.56-1.25 1.25-1.25Z"
+        stroke="currentColor"
+        strokeWidth="1.4"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function ChevronIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
 
 export function OrderGroup({
   order,
@@ -71,6 +94,7 @@ export function OrderGroup({
   reviewable,
   reviewedProductIds,
   onPaid,
+  chatUnread = 0,
 }: OrderGroupProps) {
   const toast = useToast();
   const status = order.statusDisplay || order.status;
@@ -167,162 +191,163 @@ export function OrderGroup({
       },
     });
 
+  const hasBreakdown =
+    typeof order.shippingCost === 'number' ||
+    (order.discountTotal ?? 0) > 0 ||
+    (order.giftCertificateAmount ?? 0) > 0;
+
+  const trackingContent = tracking ? (
+    <>
+      <span className={styles.trackingChipLabel}>{trackingProviderLabel || 'Трек'}</span>
+      <span className={styles.trackingChipCode}>{tracking}</span>
+    </>
+  ) : null;
+
   return (
     <article className={styles.orderGroup}>
-      <div className={styles.orderGroupLayout}>
-        <div className={styles.orderGroupMain}>
-      <header className={styles.orderHead}>
-        <div>
-          <p className={styles.orderDate}>{formatOrderDate(order.created)}</p>
-          <p className={styles.orderNumber}>Заказ №{order.number}</p>
-          {tracking ? (
-            trackingHref ? (
-              <a
-                href={trackingHref}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={styles.trackingChip}
-                title="Открыть отслеживание"
-              >
-                <span className={styles.trackingChipLabel}>
-                  {trackingProviderLabel || 'Трек'}
-                </span>
-                <span className={styles.trackingChipCode}>{tracking}</span>
-              </a>
-            ) : (
-              <span className={styles.trackingChip}>
-                <span className={styles.trackingChipLabel}>
-                  {trackingProviderLabel || 'Трек'}
-                </span>
-                <span className={styles.trackingChipCode}>{tracking}</span>
-              </span>
-            )
-          ) : null}
-        </div>
-        <span
-          className={`${styles.statusBadge} ${orderStatusBadgeClass(status, styles)}`}
-        >
-          {orderStatusLabel(status)}
-        </span>
-      </header>
+      <div className={styles.orderGroupMain}>
+        <header className={styles.orderHead}>
+          <div className={styles.orderHeadInfo}>
+            <p className={styles.orderDate}>{formatOrderDate(order.created)}</p>
+            <p className={styles.orderNumber}>Заказ №{order.number}</p>
+          </div>
+          <span className={`${styles.statusBadge} ${orderStatusBadgeClass(status, styles)}`}>
+            {orderStatusLabel(status)}
+          </span>
+        </header>
 
-      <ul className={styles.itemList}>
-        <CardList
-          asListItems
-          cartData={cartData}
-          reviewedProductIds={reviewedProductIds}
-          onReview={
-            reviewable && onReview
-              ? (productId, productName) => onReview(productId, productName, order.id)
-              : undefined
-          }
-        />
-      </ul>
+        {tracking ? (
+          trackingHref ? (
+            <a
+              href={trackingHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={styles.trackingChip}
+              title="Открыть отслеживание"
+            >
+              {trackingContent}
+            </a>
+          ) : (
+            <span className={styles.trackingChip}>{trackingContent}</span>
+          )
+        ) : null}
 
-      {typeof order.shippingCost === 'number' ||
-      (order.discountTotal ?? 0) > 0 ||
-      (order.giftCertificateAmount ?? 0) > 0 ? (
-        <div className={styles.orderBreakdown}>
-          {(order.discountTotal ?? 0) > 0 ? (
-            <p className={styles.orderBreakdownRow}>
-              <span>Скидка</span>
-              <span>−{formatRub(order.discountTotal ?? 0)}</span>
-            </p>
-          ) : null}
-          {(order.giftCertificateAmount ?? 0) > 0 ? (
-            <p className={styles.orderBreakdownRow}>
-              <span>Сертификат</span>
-              <span>−{formatRub(order.giftCertificateAmount ?? 0)}</span>
-            </p>
-          ) : null}
-          {typeof order.shippingCost === 'number' ? (
-            <p className={styles.orderBreakdownRow}>
-              <span>Доставка</span>
-              <span>
-                {order.shippingCost === 0
-                  ? 'бесплатно'
-                  : formatRub(order.shippingCost)}
-              </span>
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-      <p className={styles.orderTotal}>
-        <span>Итого</span>
-        <span>{formatRub(Number(order.total?.gross?.amount ?? 0))}</span>
-      </p>
-
-      {canPay && !confirmationToken ? (
-        <div className={styles.orderActions}>
-          <button
-            type="button"
-            className={styles.payBtn}
-            disabled={paying}
-            onClick={() => void handlePay()}
-          >
-            {paying ? 'Открываем оплату…' : 'Оплатить'}
-          </button>
-          {order.payExpiresAt ? (
-            <p className={styles.payHint}>
-              Оплатите до{' '}
-              {new Date(order.payExpiresAt).toLocaleString('ru-RU', {
-                day: 'numeric',
-                month: 'short',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
-            </p>
-          ) : null}
-        </div>
-      ) : null}
-
-      {confirmationToken ? (
-        <div className={styles.payWidget}>
-          <YooKassaWidget
-            confirmationToken={confirmationToken}
-            returnUrl={returnUrl}
-            onSuccess={() => {
-              window.location.href = returnUrl;
-            }}
-            onError={(err) => {
-              toast.error(err?.message || 'Ошибка оплаты');
-              setConfirmationToken(null);
-            }}
-            onClose={() => setConfirmationToken(null)}
+        <ul className={styles.itemList}>
+          <CardList
+            asListItems
+            cartData={cartData}
+            reviewedProductIds={reviewedProductIds}
+            onReview={
+              reviewable && onReview
+                ? (productId, productName) => onReview(productId, productName, order.id)
+                : undefined
+            }
           />
-          <button
-            type="button"
-            className={styles.payCancel}
-            onClick={() => setConfirmationToken(null)}
-          >
-            Закрыть оплату
-          </button>
-        </div>
-      ) : null}
+        </ul>
+
+        <div className={styles.orderSummary}>
+          {hasBreakdown ? (
+            <div className={styles.orderBreakdown}>
+              {(order.discountTotal ?? 0) > 0 ? (
+                <p className={styles.orderBreakdownRow}>
+                  <span>Скидка</span>
+                  <span>−{formatRub(order.discountTotal ?? 0)}</span>
+                </p>
+              ) : null}
+              {(order.giftCertificateAmount ?? 0) > 0 ? (
+                <p className={styles.orderBreakdownRow}>
+                  <span>Сертификат</span>
+                  <span>−{formatRub(order.giftCertificateAmount ?? 0)}</span>
+                </p>
+              ) : null}
+              {typeof order.shippingCost === 'number' ? (
+                <p className={styles.orderBreakdownRow}>
+                  <span>Доставка</span>
+                  <span>
+                    {order.shippingCost === 0 ? 'бесплатно' : formatRub(order.shippingCost)}
+                  </span>
+                </p>
+              ) : null}
+            </div>
+          ) : null}
+          <p className={styles.orderTotal}>
+            <span>Итого</span>
+            <span>{formatRub(Number(order.total?.gross?.amount ?? 0))}</span>
+          </p>
         </div>
 
-        <aside className={styles.orderGroupChat}>
-          <button
-            type="button"
-            className={styles.chatBtnSide}
-            onClick={openChat}
-            aria-label={`Чат по заказу №${order.number}`}
-          >
-            <span className={styles.chatBtnIcon} aria-hidden>
-              <svg viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8A2.5 2.5 0 0 1 17.5 16H9l-4.5 3.5V16H6.5A2.5 2.5 0 0 1 4 13.5v-8Z"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
-            <span className={styles.chatBtnLabel}>Чат по заказу</span>
-          </button>
-        </aside>
+        {canPay && !confirmationToken ? (
+          <div className={styles.orderActions}>
+            <button
+              type="button"
+              className={styles.payBtn}
+              disabled={paying}
+              onClick={() => void handlePay()}
+            >
+              {paying ? 'Открываем оплату…' : 'Оплатить'}
+            </button>
+            {order.payExpiresAt ? (
+              <p className={styles.payHint}>
+                Оплатите до{' '}
+                {new Date(order.payExpiresAt).toLocaleString('ru-RU', {
+                  day: 'numeric',
+                  month: 'short',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        {confirmationToken ? (
+          <div className={styles.payWidget}>
+            <YooKassaWidget
+              confirmationToken={confirmationToken}
+              returnUrl={returnUrl}
+              onSuccess={() => {
+                window.location.href = returnUrl;
+              }}
+              onError={(err) => {
+                toast.error(err?.message || 'Ошибка оплаты');
+                setConfirmationToken(null);
+              }}
+              onClose={() => setConfirmationToken(null)}
+            />
+            <button
+              type="button"
+              className={styles.payCancel}
+              onClick={() => setConfirmationToken(null)}
+            >
+              Закрыть оплату
+            </button>
+          </div>
+        ) : null}
       </div>
+
+      <button
+        type="button"
+        className={`${styles.orderChatBtn} ${chatUnread > 0 ? styles.orderChatBtnUnread : ''}`}
+        onClick={openChat}
+        aria-label={
+          chatUnread > 0
+            ? `Чат по заказу №${order.number}, непрочитанных: ${chatUnread}`
+            : `Чат по заказу №${order.number}`
+        }
+      >
+        <span className={styles.orderChatIcon}>
+          <ChatIcon />
+          {chatUnread > 0 ? (
+            <span className={styles.orderChatBadge} aria-hidden>
+              {chatUnread > 99 ? '99+' : chatUnread}
+            </span>
+          ) : null}
+        </span>
+        <span className={styles.orderChatLabel}>Чат по заказу</span>
+        <span className={styles.orderChatChevron}>
+          <ChevronIcon />
+        </span>
+      </button>
     </article>
   );
 }

@@ -20,6 +20,7 @@ import {
 } from '@/lib/orderStatusLabels';
 import { OrderTabs } from './components/OrderTabs';
 import { OrderGroup } from './components/OrderGroup';
+import { useBuyerOrderChatUnreadByOrder } from '@/hooks/useBuyerOrderChatUnreadByOrder';
 
 function isReviewableOrder(order: { status?: string; statusDisplay?: string }): boolean {
   const raw = String(order.statusDisplay || order.status || '').toUpperCase();
@@ -76,6 +77,7 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
     void loadOrders();
   }, [toast]);
 
+  const chatUnreadByOrder = useBuyerOrderChatUnreadByOrder(orders.length > 0);
   const counts = useMemo(() => countOrdersByTab(orders), [orders]);
 
   const filteredOrders = useMemo(
@@ -121,6 +123,7 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
                 <OrderGroup
                   key={order.id}
                   order={order}
+                  chatUnread={chatUnreadByOrder[order.id] ?? 0}
                   reviewable={isReviewableOrder(order)}
                   reviewedProductIds={reviewedProductIds}
                   onReview={handleReviewClick}

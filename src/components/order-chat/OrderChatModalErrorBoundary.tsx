@@ -26,11 +26,23 @@ export class OrderChatModalErrorBoundary extends Component<Props, State> {
     return (
       <>
         <div className={styles.backdrop} role="presentation" onClick={this.props.onClose} />
-        <div className={styles.shell} role="alert">
+        <div
+          className={styles.shell}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="order-chat-error-title"
+        >
         <header className={styles.shellHead}>
-          <h2 className={styles.shellTitle}>Сообщения</h2>
-          <button type="button" className={styles.closeBtn} onClick={this.props.onClose}>
-            Закрыть
+          <h2 id="order-chat-error-title" className={styles.shellTitle}>
+            Сообщения
+          </h2>
+          <button
+            type="button"
+            className={styles.closeBtn}
+            onClick={this.props.onClose}
+            aria-label="Закрыть"
+          >
+            ×
           </button>
         </header>
         <div className={styles.chatLoadError}>

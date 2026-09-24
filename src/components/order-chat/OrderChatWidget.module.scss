@@ -1,3 +1,5 @@
+@use '@/style/variables.scss' as *;
+
 :global(body.order-chat-modal-open) {
   overflow: hidden;
 }
@@ -17,12 +19,12 @@
   margin: 0 auto;
   left: 24px;
   right: 24px;
-  background: #fff;
-  border-radius: 16px;
+  background: $white;
+  border-radius: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.22);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
 
   @media (max-width: 768px) {
     inset: auto;
@@ -42,19 +44,21 @@
 
 .shellHead {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
-  padding: 14px 16px;
-  border-bottom: 1px solid rgba(110, 109, 103, 0.2);
+  gap: 16px;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid rgba(110, 109, 103, 0.15);
   flex-shrink: 0;
 }
 
 .shellTitle {
   margin: 0;
-  font-size: 17px;
-  font-weight: 600;
-  color: #000;
+  font-family: $font-oceanic, $font-avenir;
+  font-size: 22px;
+  font-weight: $font-light;
+  line-height: 1.15;
+  color: $black;
 }
 
 .wsSessionBanner {
@@ -69,16 +73,25 @@
 }
 
 .closeBtn {
+  flex-shrink: 0;
   appearance: none;
-  border: 0;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid rgba(110, 109, 103, 0.25);
+  border-radius: 50%;
   background: transparent;
-  padding: 8px;
   cursor: pointer;
-  color: #6e6d67;
-  font-size: 14px;
+  color: $gray-6e;
+  font-size: 24px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
-    color: #000;
+    color: $black;
+    border-color: rgba(110, 109, 103, 0.45);
   }
 }
 

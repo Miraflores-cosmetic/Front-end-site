@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
 import { apiFetch, uploadsUrl } from '@/api/apiClient';
@@ -66,6 +66,7 @@ export type OrderChatModalProps = {
 };
 
 export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChatModalProps) {
+  const shellTitleId = useId();
   const isMobile = useScreenMatch();
   const { isAuth, me } = useSelector((state: RootState) => state.authSlice);
 
@@ -217,14 +218,16 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
         className={styles.shell}
         role="dialog"
         aria-modal="true"
-        aria-label="Чат"
+        aria-labelledby={shellTitleId}
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
       >
         <header className={styles.shellHead}>
-          <h2 className={styles.shellTitle}>
+          <h2 id={shellTitleId} className={styles.shellTitle}>
             {isMobile && mobileShowChat ? chatTitle(selection) : 'Сообщения'}
           </h2>
-          <button type="button" className={styles.closeBtn} onClick={handleClose}>
-            Закрыть
+          <button type="button" className={styles.closeBtn} onClick={handleClose} aria-label="Закрыть">
+            ×
           </button>
         </header>
         {chat.chatError?.includes('Сессия чата') ? (

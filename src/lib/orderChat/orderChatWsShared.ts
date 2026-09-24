@@ -26,8 +26,10 @@ export type { OrderChatWsAuth, OrderChatSocket };
 
 export const disposeSharedOrderChatSocket = () => manager.disposeSharedOrderChatSocket('account');
 export const teardownOrderChatWsForLogout = () => manager.teardownOrderChatWsForLogout('account');
+export const ORDER_CHAT_WS_SESSION_EXPIRED_EVENT = manager.ORDER_CHAT_WS_SESSION_EXPIRED_EVENT;
 export const fetchBuyerOrderChatWsToken = () => manager.fetchWsToken('account');
 export const waitOrderChatSocketConnect = manager.waitOrderChatSocketConnect;
+export const emitOrderChatRoomJoin = manager.emitOrderChatRoomJoin;
 export const getOrCreateSharedOrderChatSocket = (auth: OrderChatWsAuth) =>
   manager.getOrCreateSharedOrderChatSocket('account', auth);
 export const registerOrderChatWsSession = (auth: OrderChatWsAuth) =>

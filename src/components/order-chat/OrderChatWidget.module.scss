@@ -57,6 +57,17 @@
   color: #000;
 }
 
+.wsSessionBanner {
+  margin: 0;
+  padding: 10px 16px;
+  font-size: 14px;
+  line-height: 1.35;
+  color: #664d03;
+  background: #fff3cd;
+  border-bottom: 1px solid rgba(102, 77, 3, 0.15);
+  flex-shrink: 0;
+}
+
 .closeBtn {
   appearance: none;
   border: 0;
@@ -179,9 +190,90 @@
   }
 }
 
+.startable {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(110, 109, 103, 0.2);
+}
+
+.startableTitle {
+  margin: 0;
+  padding: 8px 16px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: #6e6d67;
+}
+
+.startableBtn {
+  appearance: none;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 10px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font: inherit;
+  color: inherit;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.7);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #000;
+    outline-offset: -2px;
+  }
+}
+
+.startableNumber {
+  font-size: 14px;
+  color: #000;
+}
+
+.startableDate {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #6e6d67;
+}
+
+.startableToggle {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 8px 16px;
+  font: inherit;
+  font-size: 13px;
+  color: #6e6d67;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid #000;
+    outline-offset: 2px;
+  }
+}
+
 .threadsLoading,
 .threadsEmpty {
   padding: 24px 16px;
   font-size: 14px;
   color: #6e6d67;
+}
+
+.chatLoadError {
+  padding: 24px 16px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: #6e6d67;
+
+  p {
+    margin: 0 0 12px;
+  }
 }

@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@miraflores/order-chat-core": "file:../packages/order-chat-core",
+    "@miraflores/order-chat-ui": "file:../packages/order-chat-ui",
     "@reduxjs/toolkit": "^2.9.0",
     "animejs": "^4.5.0",
     "axios": "^1.13.1",

@@ -1,4 +1,5 @@
 import { Suspense, lazy, useCallback, useEffect, useState } from 'react';
+import { OrderChatModalErrorBoundary } from '@/components/order-chat/OrderChatModalErrorBoundary';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store/store';
@@ -43,6 +44,7 @@ export function OrderChatFab() {
 
   const [open, setOpen] = useState(false);
   const [initialOpenDetail, setInitialOpenDetail] = useState<OrderChatOpenDetail | undefined>();
+  const [modalLoadKey, setModalLoadKey] = useState(0);
 
   const { unreadCount } = useBuyerOrderChatUnreadCount(isAuth);
   const overlayBlocksChrome = useSiteOverlayBlocksUiChrome();
@@ -130,7 +132,13 @@ export function OrderChatFab() {
 
       {open && isAuth ? (
         <Suspense fallback={null}>
-          <OrderChatModal onClose={handleClose} initialOpenDetail={initialOpenDetail} />
+          <OrderChatModalErrorBoundary
+            key={modalLoadKey}
+            onClose={handleClose}
+            onRetry={() => setModalLoadKey((k) => k + 1)}
+          >
+            <OrderChatModal onClose={handleClose} initialOpenDetail={initialOpenDetail} />
+          </OrderChatModalErrorBoundary>
         </Suspense>
       ) : null}
     </>

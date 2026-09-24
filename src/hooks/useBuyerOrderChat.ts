@@ -27,9 +27,11 @@ import { mapOrderChatApiMessageToUi } from '@miraflores/order-chat-core';
 import { orderChatFileTooLargeUserMessage } from '@/lib/orderChat/orderChatUploadError';
 import { dispatchOrderChatUnreadRefresh } from '@/lib/orderChat/orderChatEvents';
 import {
+  emitOrderChatRoomJoin,
   getOrCreateSharedOrderChatSocket,
   registerOrderChatWsSession,
   fetchBuyerOrderChatWsToken,
+  ORDER_CHAT_WS_SESSION_EXPIRED_EVENT,
   waitOrderChatSocketConnect,
   type OrderChatSocket,
 } from '@/lib/orderChat/orderChatWsShared';
@@ -75,14 +77,34 @@ function mapApiToUi(
   });
 }
 
+function mergeTailMessages(
+  prev: ChatWindowMessage[],
+  incoming: ChatWindowMessage[],
+): ChatWindowMessage[] {
+  if (!incoming.length) return prev;
+  const seen = new Set(prev.map((x) => x.id));
+  const added = incoming.filter((m) => !seen.has(m.id));
+  if (!added.length) return prev;
+  return [...prev, ...added];
+}
+
 export function useBuyerOrderChat(opts: {
   target: BuyerOrderChatTarget | null;
   enabled: boolean;
   customerUserId?: string | null;
   customerAvatarUrl?: string | null;
   timeLocale?: string;
+  /** Панель чата видна (не скрытая вкладка / не список тредов на mobile). */
+  panelVisible?: boolean;
 }) {
-  const { target, enabled, customerUserId, customerAvatarUrl, timeLocale = 'ru-RU' } = opts;
+  const {
+    target,
+    enabled,
+    customerUserId,
+    customerAvatarUrl,
+    timeLocale = 'ru-RU',
+    panelVisible = false,
+  } = opts;
   const targetKey = target ? buyerChatTargetKey(target) : '';
   const targetRef = useRef<BuyerOrderChatTarget | null>(null);
   targetRef.current = target;
@@ -100,8 +122,28 @@ export function useBuyerOrderChat(opts: {
   const viewerRef = useRef<string | null>(customerUserId ?? null);
   const conversationIdRef = useRef<string | null>(null);
   const messagesRef = useRef<ChatWindowMessage[]>([]);
+  const panelVisibleRef = useRef(panelVisible);
+  panelVisibleRef.current = panelVisible;
+  const markReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   viewerRef.current = customerUserId ?? viewerRef.current;
+
+  const markReadIfVisible = useCallback(async () => {
+    if (!panelVisibleRef.current) return;
+    const t = targetRef.current;
+    if (!t) return;
+    await apiJson(buyerChatReadPath(t), 'POST', {}).catch(() => undefined);
+    dispatchOrderChatUnreadRefresh();
+  }, [targetKey]);
+
+  const scheduleMarkReadDebounced = useCallback(() => {
+    if (!panelVisibleRef.current) return;
+    if (markReadTimerRef.current != null) clearTimeout(markReadTimerRef.current);
+    markReadTimerRef.current = setTimeout(() => {
+      markReadTimerRef.current = null;
+      void markReadIfVisible();
+    }, 450);
+  }, [markReadIfVisible]);
 
   const revokeUploadedFile = useCallback(
     async (fileUrl: string) => {
@@ -190,6 +232,37 @@ export function useBuyerOrderChat(opts: {
   }, [hasOlderHistory, loadingOlderHistory, targetKey]);
 
   useEffect(() => {
+    if (panelVisible && enabled && target) {
+      void markReadIfVisible();
+    }
+  }, [panelVisible, enabled, targetKey, markReadIfVisible, target]);
+
+  const syncNewerMessages = useCallback(async () => {
+    const t = targetRef.current;
+    if (!t) return;
+    let tail = messagesRef.current;
+    for (;;) {
+      const lastId = tail[tail.length - 1]?.id;
+      if (!lastId) return;
+      const data = await apiFetch<OrderChatMessagesResponse>(
+        buyerChatMessagesListPath(t, {
+          limit: CHAT_MESSAGES_PAGE_DEFAULT,
+          after: lastId,
+        }),
+      );
+      if (data.conversationId) conversationIdRef.current = data.conversationId;
+      const mapped = (data.messages ?? []).map((m) =>
+        mapApiToUi(m, viewerRef.current, timeLocaleRef.current, customerAvatarRef.current),
+      );
+      if (!mapped.length) return;
+      tail = mergeTailMessages(tail, mapped);
+      messagesRef.current = tail;
+      setMessages(tail);
+      if (mapped.length < CHAT_MESSAGES_PAGE_DEFAULT) return;
+    }
+  }, [targetKey]);
+
+  useEffect(() => {
     const t = targetRef.current;
     if (!enabled || !t) {
       clearPendingAttachments();
@@ -202,9 +275,19 @@ export function useBuyerOrderChat(opts: {
       return undefined;
     }
 
+    clearPendingAttachments();
+    setMessages([]);
+    setError(null);
+    setHasOlderHistory(false);
+    setLoadingOlderHistory(false);
+    conversationIdRef.current = null;
+    setLoading(true);
+
     let disposed = false;
     let activeSocket: OrderChatSocket | null = null;
     let unregisterSession: (() => void) | null = null;
+    let socketListenersReady = false;
+    let onSocketReconnect: (() => void) | null = null;
 
     const joinEvent = t.kind === 'order' ? 'join_order_chat' : 'join_support_chat';
     const leaveEvent = t.kind === 'order' ? 'leave_order_chat' : 'leave_support_chat';
@@ -223,7 +306,10 @@ export function useBuyerOrderChat(opts: {
           mapApiToUi(payload, viewerRef.current, timeLocaleRef.current, customerAvatarRef.current),
         ];
       });
-      if (payload.authorRole === 'STAFF') dispatchOrderChatUnreadRefresh();
+      if (payload.authorRole === 'STAFF') {
+        dispatchOrderChatUnreadRefresh();
+        scheduleMarkReadDebounced();
+      }
     };
 
     const onDeleted = (payload: { id?: string }) => {
@@ -237,27 +323,56 @@ export function useBuyerOrderChat(opts: {
       );
     };
 
-    const detachSocketHandlers = () => {
-      if (!activeSocket) return;
-      activeSocket.off('message_created', onCreated as (...args: unknown[]) => void);
-      activeSocket.off('message_deleted', onDeleted as (...args: unknown[]) => void);
+    const onCreatedSocket = (...args: unknown[]) => {
+      onCreated(args[0] as OrderChatApiMessage);
+    };
+    const onDeletedSocket = (...args: unknown[]) => {
+      onDeleted(args[0] as { id?: string });
     };
 
-    const attachSocketHandlers = (socket: OrderChatSocket) => {
+    const detachSocketHandlers = () => {
+      if (!activeSocket) return;
+      activeSocket.off('message_created', onCreatedSocket);
+      activeSocket.off('message_deleted', onDeletedSocket);
+      if (onSocketReconnect) {
+        activeSocket.off('connect', onSocketReconnect);
+        onSocketReconnect = null;
+      }
+    };
+
+    const rejoinRoomAndSyncNewer = async (socket: OrderChatSocket) => {
+      await emitOrderChatRoomJoin(socket, joinEvent, joinPayload);
+      if (disposed) return;
+      await syncNewerMessages();
+    };
+
+    const bindSocketHandlers = (socket: OrderChatSocket) => {
       detachSocketHandlers();
       activeSocket = socket;
-      socket.on('message_created', onCreated as (...args: unknown[]) => void);
-      socket.on('message_deleted', onDeleted as (...args: unknown[]) => void);
-      socket.emit(joinEvent, joinPayload);
+      socket.on('message_created', onCreatedSocket);
+      socket.on('message_deleted', onDeletedSocket);
+      onSocketReconnect = () => {
+        if (!socketListenersReady || disposed) return;
+        void rejoinRoomAndSyncNewer(socket);
+      };
+      socket.on('connect', onSocketReconnect);
     };
 
     const onSocketLayerUpdated = ((ev: Event) => {
       const ce = ev as CustomEvent<{ variant?: string; socket?: OrderChatSocket }>;
       if (ce.detail?.variant !== 'account' || disposed || !ce.detail.socket) return;
-      attachSocketHandlers(ce.detail.socket);
+      bindSocketHandlers(ce.detail.socket);
+      void rejoinRoomAndSyncNewer(ce.detail.socket);
+    }) as EventListener;
+
+    const onSessionExpired = ((ev: Event) => {
+      const ce = ev as CustomEvent<{ variant?: string }>;
+      if (ce.detail?.variant !== 'account' || disposed) return;
+      setError('Сессия чата истекла. Обновите страницу или войдите снова.');
     }) as EventListener;
 
     window.addEventListener(ORDER_CHAT_SOCKET_UPDATED_EVENT, onSocketLayerUpdated);
+    window.addEventListener(ORDER_CHAT_WS_SESSION_EXPIRED_EVENT, onSessionExpired);
 
     const loadHistory = async (): Promise<boolean> => {
       const data = await apiFetch<OrderChatMessagesResponse>(
@@ -271,8 +386,7 @@ export function useBuyerOrderChat(opts: {
         ),
       );
       setHasOlderHistory(Boolean(data.hasOlder));
-      await apiJson(buyerChatReadPath(t), 'POST', {}).catch(() => undefined);
-      dispatchOrderChatUnreadRefresh();
+      if (panelVisibleRef.current) void markReadIfVisible();
       return true;
     };
 
@@ -281,14 +395,42 @@ export function useBuyerOrderChat(opts: {
       if (disposed) return;
       viewerRef.current = wsAuth.sub ?? customerUserId ?? null;
       unregisterSession = registerOrderChatWsSession(wsAuth);
+      if (disposed) {
+        unregisterSession();
+        unregisterSession = null;
+        return;
+      }
+
       const socket = await getOrCreateSharedOrderChatSocket(wsAuth);
-      await waitOrderChatSocketConnect(socket);
-      if (disposed) return;
-      attachSocketHandlers(socket);
+      if (disposed) {
+        unregisterSession?.();
+        unregisterSession = null;
+        return;
+      }
+
+      bindSocketHandlers(socket);
+      socketListenersReady = true;
+
+      const joinWhenConnected = async () => {
+        if (disposed || !socket.connected) return;
+        await emitOrderChatRoomJoin(socket, joinEvent, joinPayload);
+        if (disposed) return;
+        await syncNewerMessages();
+        if (disposed) return;
+        if (panelVisibleRef.current) void markReadIfVisible();
+      };
+
+      if (socket.connected) {
+        await joinWhenConnected();
+        return;
+      }
+
+      void waitOrderChatSocketConnect(socket)
+        .then(() => joinWhenConnected())
+        .catch(() => undefined);
     };
 
     void (async () => {
-      setLoading(true);
       setError(null);
       let historyOk = false;
       try {
@@ -319,12 +461,23 @@ export function useBuyerOrderChat(opts: {
 
     return () => {
       disposed = true;
+      socketListenersReady = false;
+      if (markReadTimerRef.current != null) clearTimeout(markReadTimerRef.current);
       window.removeEventListener(ORDER_CHAT_SOCKET_UPDATED_EVENT, onSocketLayerUpdated);
+      window.removeEventListener(ORDER_CHAT_WS_SESSION_EXPIRED_EVENT, onSessionExpired);
       detachSocketHandlers();
       activeSocket?.emit(leaveEvent, leavePayload);
       unregisterSession?.();
     };
-  }, [enabled, targetKey, customerUserId, clearPendingAttachments]);
+  }, [
+    enabled,
+    targetKey,
+    customerUserId,
+    clearPendingAttachments,
+    syncNewerMessages,
+    markReadIfVisible,
+    scheduleMarkReadDebounced,
+  ]);
 
   const sendText = useCallback(
     async (text: string): Promise<boolean> => {
@@ -398,8 +551,7 @@ export function useBuyerOrderChat(opts: {
           ];
         });
         clearPendingAttachments();
-        await apiJson(buyerChatReadPath(t), 'POST', {}).catch(() => undefined);
-        dispatchOrderChatUnreadRefresh();
+        await markReadIfVisible();
         return true;
       } catch (e) {
         setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
@@ -409,7 +561,7 @@ export function useBuyerOrderChat(opts: {
         setSending(false);
       }
     },
-    [targetKey, getReadyAttachments, clearPendingAttachments],
+    [targetKey, getReadyAttachments, clearPendingAttachments, markReadIfVisible],
   );
 
   const deleteMessage = useCallback(

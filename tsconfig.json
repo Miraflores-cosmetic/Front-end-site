@@ -16,7 +16,9 @@
     "noEmit": true,
     "jsx": "react-jsx",
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@miraflores/order-chat-core": ["../packages/order-chat-core/src/index.ts"],
+      "@miraflores/order-chat-ui": ["../packages/order-chat-ui/src/index.ts"]
     },
     "types": ["vite/client"]
   },

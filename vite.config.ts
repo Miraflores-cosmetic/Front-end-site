@@ -6,6 +6,10 @@ import tsconfigPaths from 'vite-tsconfig-paths';
 import viteCompression from 'vite-plugin-compression';
 import svgr from 'vite-plugin-svgr';
 
+/** Vite/Rollup не разбирает named exports из CJS `dist` пакета (file:); бандлим исходники. */
+const orderChatCoreSrc = path.resolve(__dirname, '../packages/order-chat-core/src/index.ts');
+const orderChatUiSrc = path.resolve(__dirname, '../packages/order-chat-ui/src/index.ts');
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -38,8 +42,10 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src')
-    }
+      '@': path.resolve(__dirname, './src'),
+      '@miraflores/order-chat-core': orderChatCoreSrc,
+      '@miraflores/order-chat-ui': orderChatUiSrc,
+    },
   },
   build: {
     assetsInlineLimit: 4096,

@@ -15,13 +15,15 @@ export function buyerChatMessagesPath(target: BuyerOrderChatTarget): string {
 
 export function buyerChatMessagesListPath(
   target: BuyerOrderChatTarget,
-  opts?: { limit?: number; before?: string },
+  opts?: { limit?: number; before?: string; after?: string },
 ): string {
   const base = buyerChatMessagesPath(target);
   const params = new URLSearchParams();
   if (opts?.limit != null) params.set('limit', String(opts.limit));
   const before = opts?.before?.trim();
   if (before) params.set('before', before);
+  const after = opts?.after?.trim();
+  if (after) params.set('after', after);
   const qs = params.toString();
   return qs ? `${base}?${qs}` : base;
 }

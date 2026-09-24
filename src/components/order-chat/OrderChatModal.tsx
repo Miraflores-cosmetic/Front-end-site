@@ -11,8 +11,22 @@ import type { OrderChatOpenDetail } from '@/lib/orderChat/orderChatEvents';
 import { buyerChatTargetKey } from '@/lib/orderChat/buyerChatPaths';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import { useOrderChatModalChrome } from '@/hooks/useOrderChatModalChrome';
-import type { OrderChatThread, OrderChatThreadsResponse } from '@/lib/orderChat/types';
+import { useOrderChatPanelVisible } from '@/hooks/useOrderChatPanelVisible';
+import { ORDER_CHAT_UNREAD_REFRESH_EVENT } from '@/lib/orderChat/orderChatEvents';
+import type {
+  OrderChatStartableOrder,
+  OrderChatThread,
+  OrderChatThreadsResponse,
+} from '@/lib/orderChat/types';
 import styles from './OrderChatWidget.module.scss';
+
+const STARTABLE_COLLAPSED = 3;
+
+function formatOrderDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+}
 
 type ActiveSelection =
   | { kind: 'support' }
@@ -58,7 +72,7 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
   const [selection, setSelection] = useState<ActiveSelection | null>(null);
   const [mobileShowChat, setMobileShowChat] = useState(false);
   const [threads, setThreads] = useState<OrderChatThread[]>([]);
-  const [threadsLoading, setThreadsLoading] = useState(false);
+  const [threadsLoading, setThreadsLoading] = useState(true);
 
   const customerUserId = me?.id ?? null;
   const customerAvatarUrl = uploadsUrl(me?.avatar?.url ?? null);
@@ -70,6 +84,7 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
   }, [onClose]);
 
   const shellRef = useRef<HTMLDivElement>(null);
+  const chatPaneRef = useRef<HTMLDivElement>(null);
   useFocusTrap(true, shellRef, handleClose);
 
   const applyOpenDetail = useCallback((detail: OrderChatOpenDetail | undefined) => {
@@ -103,33 +118,68 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
 
   const chatThreadKey = target ? buyerChatTargetKey(target) : 'none';
 
+  const showThreadList = !isMobile || !mobileShowChat;
+  const showChatPane = !isMobile || mobileShowChat;
+  const chatPanelActive = Boolean(isAuth && target && showChatPane && selection);
+  const chatPanelVisible = useOrderChatPanelVisible(chatPaneRef, chatPanelActive);
+
   const chat = useBuyerOrderChat({
     target,
     enabled: isAuth && Boolean(target),
     customerUserId,
     customerAvatarUrl,
+    panelVisible: chatPanelVisible,
   });
 
-  const loadThreads = useCallback(async () => {
-    if (!isAuth) return;
-    setThreadsLoading(true);
-    try {
-      const data = await apiFetch<OrderChatThreadsResponse>('/account/chat/threads');
-      setThreads(data.threads ?? []);
-    } catch {
-      setThreads([]);
-    } finally {
-      setThreadsLoading(false);
-    }
-  }, [isAuth]);
+  const [startableOrders, setStartableOrders] = useState<OrderChatStartableOrder[]>([]);
+  const [startableExpanded, setStartableExpanded] = useState(false);
+
+  const loadThreads = useCallback(
+    async (silent = false) => {
+      if (!isAuth) return;
+      if (!silent) setThreadsLoading(true);
+      try {
+        const data = await apiFetch<OrderChatThreadsResponse>('/account/chat/threads');
+        setThreads(data.threads ?? []);
+        setStartableOrders(data.startableOrders ?? []);
+      } catch {
+        if (!silent) {
+          setThreads([]);
+          setStartableOrders([]);
+        }
+      } finally {
+        if (!silent) setThreadsLoading(false);
+      }
+    },
+    [isAuth],
+  );
 
   useEffect(() => {
-    if (!isAuth) return;
+    if (!isAuth) {
+      setThreadsLoading(false);
+      return;
+    }
     void loadThreads();
+  }, [isAuth, loadThreads]);
+
+  // После отправки / прочтения / ответа поддержки — пересортировать список и обновить бейджи.
+  useEffect(() => {
+    if (!isAuth) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const onRefresh = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => void loadThreads(true), 400);
+    };
+    window.addEventListener(ORDER_CHAT_UNREAD_REFRESH_EVENT, onRefresh);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener(ORDER_CHAT_UNREAD_REFRESH_EVENT, onRefresh);
+    };
   }, [isAuth, loadThreads]);
 
   useEffect(() => {
     if (!isAuth || selection || threadsLoading) return;
+    if (initialOpenDetail?.selection) return;
     if (threads.length === 0) {
       setSelection({ kind: 'support' });
       setMobileShowChat(isMobile);
@@ -138,15 +188,21 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
     const first = threads[0];
     setSelection(threadToSelection(first));
     if (!isMobile) setMobileShowChat(true);
-  }, [isAuth, selection, threads, threadsLoading, isMobile]);
+  }, [isAuth, selection, threads, threadsLoading, isMobile, initialOpenDetail?.selection]);
 
   const pickThread = (thread: OrderChatThread) => {
     setSelection(threadToSelection(thread));
     setMobileShowChat(true);
   };
 
-  const showThreadList = !isMobile || !mobileShowChat;
-  const showChatPane = !isMobile || mobileShowChat;
+  const pickStartableOrder = (order: OrderChatStartableOrder) => {
+    setSelection({ kind: 'order', orderId: order.orderId, title: `Заказ ${order.orderNumber}` });
+    setMobileShowChat(true);
+  };
+
+  const visibleStartable = startableExpanded
+    ? startableOrders
+    : startableOrders.slice(0, STARTABLE_COLLAPSED);
 
   const bodyClass =
     isMobile && mobileShowChat ? `${styles.body} ${styles.threadsOnly}` : styles.body;
@@ -171,6 +227,11 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
             Закрыть
           </button>
         </header>
+        {chat.chatError?.includes('Сессия чата') ? (
+          <p className={styles.wsSessionBanner} role="status">
+            {chat.chatError}
+          </p>
+        ) : null}
         <div className={bodyClass}>
           {showThreadList ? (
             <aside className={styles.threads}>
@@ -212,11 +273,46 @@ export default function OrderChatModal({ onClose, initialOpenDetail }: OrderChat
                   );
                 })
               )}
+              {!threadsLoading && startableOrders.length > 0 ? (
+                <section className={styles.startable} aria-labelledby="order-chat-startable-title">
+                  <h3 id="order-chat-startable-title" className={styles.startableTitle}>
+                    Начать чат по заказу
+                  </h3>
+                  {visibleStartable.map((order) => {
+                    const active =
+                      selection?.kind === 'order' && selection.orderId === order.orderId;
+                    return (
+                      <button
+                        key={order.orderId}
+                        type="button"
+                        className={`${styles.startableBtn} ${active ? styles.threadBtnActive : ''}`}
+                        aria-current={active ? 'true' : undefined}
+                        onClick={() => pickStartableOrder(order)}
+                      >
+                        <span className={styles.startableNumber}>Заказ {order.orderNumber}</span>
+                        <span className={styles.startableDate}>{formatOrderDate(order.createdAt)}</span>
+                      </button>
+                    );
+                  })}
+                  {startableOrders.length > STARTABLE_COLLAPSED ? (
+                    <button
+                      type="button"
+                      className={styles.startableToggle}
+                      aria-expanded={startableExpanded}
+                      onClick={() => setStartableExpanded((v) => !v)}
+                    >
+                      {startableExpanded
+                        ? 'Свернуть'
+                        : `Ещё заказы (${startableOrders.length - STARTABLE_COLLAPSED})`}
+                    </button>
+                  ) : null}
+                </section>
+              ) : null}
             </aside>
           ) : null}
 
           {showChatPane ? (
-            <div className={styles.chatPane}>
+            <div ref={chatPaneRef} className={styles.chatPane}>
               {isMobile && mobileShowChat ? (
                 <button
                   type="button"

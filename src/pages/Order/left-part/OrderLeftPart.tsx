@@ -20,8 +20,14 @@ import { formatPhoneNumber } from '@/utils/phoneFormatter';
 import { useOrderCheckout } from '../OrderCheckoutContext';
 import { createOrder, payOrder, abandonOrder, requestShippingQuote } from '@/api/ordersApi';
 import { getOrCreateGuestId, uploadsUrl } from '@/api/apiClient';
-import { resolveCheckoutShippingMethod } from '@/utils/checkoutShipping';
+import {
+  disabledCarrierMessage,
+  resolveCheckoutShippingMethod,
+  type CheckoutShippingMethod,
+} from '@/utils/checkoutShipping';
 import { extractPvzCodeFromStreet2 } from '@/lib/addressVspMeta';
+import { checkoutCarriersLabel } from '@/lib/deliveryCarriers';
+import { refreshOzonAvailability } from '@/lib/carrierAvailability';
 import { syncCartLines } from '@/store/slices/checkoutSlice';
 import { AppDispatch } from '@/store/store';
 import { useToast } from '@/components/toast/toast';
@@ -215,7 +221,9 @@ const OrderLeftPart: React.FC = () => {
       } else if (payable.hasPayableLines) {
         const shippingMethod = resolveCheckoutShippingMethod(selectedAddress.streetAddress2);
         if (!shippingMethod) {
-          errors.address = 'Выберите адрес со способом доставки (СДЭК или Яндекс Доставка)';
+          errors.address =
+            disabledCarrierMessage(selectedAddress) ??
+            `Выберите адрес со способом доставки (${checkoutCarriersLabel()})`;
         } else if (cdekShippingLoading) {
           errors.general = 'Подождите, рассчитывается стоимость доставки';
         } else if (!payable.shippingReady || payable.shippingRub == null || payable.payableTotal == null) {
@@ -267,7 +275,10 @@ const OrderLeftPart: React.FC = () => {
       ? null
       : resolveCheckoutShippingMethod(selectedAddress!.streetAddress2);
     if (!giftDenomOnly && !shippingMethod) {
-      toast.error('Выберите адрес со способом доставки (СДЭК или Яндекс Доставка)');
+      toast.error(
+        disabledCarrierMessage(selectedAddress) ??
+          `Выберите адрес со способом доставки (${checkoutCarriersLabel()})`,
+      );
       return;
     }
 
@@ -329,7 +340,7 @@ const OrderLeftPart: React.FC = () => {
           daysMin: number | null;
           daysMax: number | null;
           cost: number;
-          method: 'CDEK' | 'YANDEX' | null;
+          method: CheckoutShippingMethod | null;
           source: string;
         };
       } = giftDenomOnly
@@ -534,6 +545,7 @@ const OrderLeftPart: React.FC = () => {
       await openPayWidget(order.id, order.number, order.payToken);
     } catch (error: unknown) {
       console.error('Error creating payment:', error);
+      if (shippingMethod === 'OZON') void refreshOzonAvailability(true);
       toast.error(
         error instanceof Error
           ? error.message

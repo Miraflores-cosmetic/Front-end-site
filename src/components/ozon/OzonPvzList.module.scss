@@ -1,0 +1,330 @@
+@use '@/style/variables.scss' as *;
+
+$ozon-blue: #005bff;
+
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: $font-medium;
+  color: $gray-6e;
+}
+
+.cityBox {
+  position: relative;
+}
+
+.cityButton {
+  width: 100%;
+  height: 48px;
+  padding: 0 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: $white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  color: #111;
+  cursor: pointer;
+  transition: border-color 0.2s;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.3);
+  }
+}
+
+.chevron {
+  width: 18px;
+  height: 18px;
+  opacity: 0.5;
+  transition: transform 0.2s;
+
+  &[data-open] {
+    transform: rotate(180deg);
+  }
+}
+
+.cityDropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  padding: 8px;
+  background: $white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+.cityInput,
+.searchInput {
+  width: 100%;
+  height: 44px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  font-size: 15px;
+  outline: none;
+  background: $white;
+
+  &:focus {
+    border-color: #000;
+  }
+}
+
+.cityList {
+  max-height: 240px;
+  overflow-y: auto;
+  margin-top: 6px;
+}
+
+.cityOption {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  text-align: left;
+  font-size: 14px;
+  cursor: pointer;
+
+  &:hover {
+    background: $gray-light;
+  }
+
+  &[data-active] {
+    font-weight: $font-semibold;
+    background: $bg-light;
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: progress;
+  }
+}
+
+.cityError {
+  margin: 6px 4px 0;
+  font-size: 13px;
+  color: $red-ff;
+}
+
+.optionIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.spin {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  animation: ozonSpin 0.8s linear infinite;
+}
+
+@keyframes ozonSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.modeSwitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.modeBtn {
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  font-size: 14px;
+  font-weight: $font-medium;
+  color: rgba(0, 0, 0, 0.6);
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    color 0.2s;
+
+  &[data-active] {
+    background: $white;
+    color: #000;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.modeCount {
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.error {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff4f5;
+  border: 1px solid rgba($red-ff, 0.35);
+  color: #a3122b;
+  font-size: 14px;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.retryBtn {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 380px;
+  overflow-y: auto;
+  padding-right: 2px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 4px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.point {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: $white;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+
+  &:hover {
+    border-color: rgba(0, 0, 0, 0.25);
+  }
+
+  &[data-active] {
+    border-color: #000;
+    box-shadow: inset 0 0 0 1px #000;
+  }
+}
+
+.pointIcon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: rgba($ozon-blue, 0.08);
+  color: $ozon-blue;
+
+  svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.pointBody {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  flex: 1;
+}
+
+.pointTitle {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: $font-semibold;
+  color: #111;
+  line-height: 1.35;
+}
+
+.badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: rgba($ozon-blue, 0.1);
+  color: $ozon-blue;
+  font-size: 11px;
+  font-weight: $font-medium;
+}
+
+.pointSub {
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.55);
+}
+
+.pointHours {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.5);
+
+  svg {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+.pointCheck {
+  flex-shrink: 0;
+  align-self: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: #000;
+  color: $white;
+  font-size: 12px;
+  font-weight: $font-medium;
+}

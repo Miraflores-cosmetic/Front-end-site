@@ -1,4 +1,5 @@
 import { apiJson, getOrCreateGuestId } from '@/api/apiClient';
+import type { CheckoutShippingMethod } from '@/utils/checkoutShipping';
 
 export type CreateOrderLine = {
   variantId: string;
@@ -25,7 +26,7 @@ export type ShippingAddressInput = {
   district?: string;
   postalCode?: string;
   comment?: string;
-  /** Код ПВЗ СДЭК (или id пункта Яндекс) — для фулфилмента */
+  /** Код ПВЗ СДЭК (или id пункта Яндекс / Ozon) — для фулфилмента */
   pvzCode?: string;
   /** Телефон получателя из адреса (отдельно от phone заказа) */
   phone?: string;
@@ -37,15 +38,15 @@ export type ShippingAddressInput = {
 export type ShippingQuoteInput = {
   lines: CreateOrderLine[];
   shippingAddress: ShippingAddressInput;
-  shippingMethod: 'CDEK' | 'YANDEX';
-  /** Оценка СДЭК/Яндекс с клиента; Nest подпишет (или 0 при free PVZ). */
+  shippingMethod: CheckoutShippingMethod;
+  /** Оценка с клиента; Nest подпишет (Ozon/СДЭК пересчитывает сам, 0 при free PVZ). */
   clientEstimate: number;
   carrierQuote?: ShippingCarrierQuoteInput;
 };
 
 export type ShippingQuoteResult = {
   cost: number;
-  method: 'CDEK' | 'YANDEX';
+  method: CheckoutShippingMethod;
   freePvz: boolean;
   quote: string;
   expiresAt: string;
@@ -66,7 +67,7 @@ export type CreateOrderInput = {
   idempotencyKey: string;
   shippingAddress: ShippingAddressInput;
   /** Не нужен для digital gift-denom-only. */
-  shippingMethod?: 'CDEK' | 'YANDEX' | null;
+  shippingMethod?: CheckoutShippingMethod | null;
   /** HMAC quote из requestShippingQuote; не нужен для gift-denom-only. */
   shippingQuote?: string | null;
 };
@@ -106,6 +107,19 @@ export type CheckoutStatusResponse = {
   paid?: boolean;
   message?: string;
 };
+
+export type OzonShippingEstimate = {
+  cost: number | null;
+  daysMin: number | null;
+  daysMax: number | null;
+};
+
+export async function requestOzonShippingEstimate(input: {
+  lines: Array<{ variantId: string; qty: number }>;
+  dropoff: 'pvz' | 'courier';
+}): Promise<OzonShippingEstimate> {
+  return apiJson('/orders/shipping-estimate/ozon', 'POST', input);
+}
 
 export async function requestShippingQuote(
   input: ShippingQuoteInput,

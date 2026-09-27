@@ -2,7 +2,7 @@
  * Метаданные доставки во `streetAddress2`: первая строка `__VSP:...__`, далее — человекочитаемое описание.
  */
 
-export type VspCarrier = 'yandex' | 'cdek';
+export type VspCarrier = 'yandex' | 'cdek' | 'ozon';
 
 export type VspDropoff = 'pvz' | 'courier';
 
@@ -10,7 +10,7 @@ export interface VspAddressMeta {
     carrier: VspCarrier;
     lon: string;
     lat: string;
-    /** id пункта: Яндекс UUID / код ПВЗ СДЭК */
+    /** id пункта: Яндекс UUID / код ПВЗ СДЭК / map_point_id Ozon */
     pvz: string;
     /**
      * Яндекс: point_id для Cargo.
@@ -66,7 +66,7 @@ export function parseVspAddressMeta(streetAddress2: string | null | undefined): 
         if (v.endsWith('__')) v = v.slice(0, -2);
         kv[k] = v;
     }
-    if (kv.carrier !== 'yandex' && kv.carrier !== 'cdek') return null;
+    if (kv.carrier !== 'yandex' && kv.carrier !== 'cdek' && kv.carrier !== 'ozon') return null;
     const dropoff = kv.dropoff === 'courier' ? 'courier' : 'pvz';
     return {
         carrier: kv.carrier,
@@ -104,7 +104,7 @@ export function buildStreetAddress2WithMeta(
     return `${first}\n${clipped}`;
 }
 
-/** Код ПВЗ для Order.shippingAddress.pvzCode (СДЭК code / Яндекс point id). */
+/** Код ПВЗ для Order.shippingAddress.pvzCode (СДЭК code / Яндекс point id / Ozon map_point_id). */
 export function extractPvzCodeFromStreet2(
     streetAddress2: string | null | undefined,
 ): string | undefined {

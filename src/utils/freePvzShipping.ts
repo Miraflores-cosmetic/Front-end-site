@@ -12,7 +12,7 @@ export function calcCartSubtotal(lines: CheckoutLine[]): number {
 
 /**
  * Доставка до ПВЗ: только при __VSP__/__JCOS__ с dropoff=pvz и кодом пункта.
- * Текст «…ПВЗ» без мета — не free (симметрия СДЭК/Яндекс).
+ * Текст «…ПВЗ» без мета — не free (симметрия СДЭК/Яндекс/Ozon).
  */
 export function isPvzDeliveryAddress(address: AddressInfo | null | undefined): boolean {
   if (!address) return false;
@@ -21,6 +21,7 @@ export function isPvzDeliveryAddress(address: AddressInfo | null | undefined): b
   if (meta.dropoff === 'courier') return false;
   if (meta.carrier === 'cdek') return Boolean(meta.pvz?.trim());
   if (meta.carrier === 'yandex') return Boolean((meta.pvz || meta.cid)?.trim());
+  if (meta.carrier === 'ozon') return Boolean(meta.pvz?.trim());
   return false;
 }
 

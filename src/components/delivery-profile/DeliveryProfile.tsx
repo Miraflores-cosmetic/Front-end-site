@@ -16,9 +16,13 @@ import {
   getDeliveryTypeLabelFromStreet2,
 } from '@/utils/deliveryAddressDisplay';
 import {
+  disabledCarrierMessage,
+  hasDisabledCarrier,
   isCheckoutReadyAddress,
   needsDeliveryPointReselection,
 } from '@/utils/checkoutShipping';
+import { checkoutCarriersLabel } from '@/lib/deliveryCarriers';
+import { useOzonAvailable } from '@/lib/carrierAvailability';
 import {
   clearGuestShippingAddress,
   loadGuestShippingAddress,
@@ -51,6 +55,7 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({
   const menuRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
   const reselectOpenedForId = useRef<string | null>(null);
   const isMobile = useScreenMatch();
+  const ozonAvailable = useOzonAvailable();
 
   useEffect(() => {
     if (isAuth && me) {
@@ -99,7 +104,7 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({
         if (!draft) clearSelectedAddress?.();
       }
     }
-  }, [me, isAuth, onSelectAddress, clearSelectedAddress]);
+  }, [me, isAuth, onSelectAddress, clearSelectedAddress, ozonAvailable]);
 
   useEffect(() => {
     if (isAuth) return;
@@ -149,9 +154,10 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({
 
     if (!isCheckoutReadyAddress(address)) {
       toast.error(
-        needsDeliveryPointReselection(address)
-          ? 'Перевыберите пункт выдачи — в адресе нет кода ПВЗ'
-          : 'Выберите адрес со способом доставки (СДЭК или Яндекс)',
+        disabledCarrierMessage(address) ??
+          (needsDeliveryPointReselection(address)
+            ? 'Перевыберите пункт выдачи — в адресе нет кода ПВЗ'
+            : `Выберите адрес со способом доставки (${checkoutCarriersLabel()})`),
       );
       dispatch(openAddressDrawer({ address }));
       return;
@@ -269,7 +275,11 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({
                         Тип доставки: {getDeliveryTypeLabelFromStreet2(address.streetAddress2)}
                       </p>
                       <p className={styles.address}>{formatProfileShippingAddressLine(address)}</p>
-                      {needsDeliveryPointReselection(address) ? (
+                      {hasDisabledCarrier(address) ? (
+                        <p className={styles.reselectHint} role="status">
+                          Служба сейчас недоступна — выберите другой способ доставки
+                        </p>
+                      ) : needsDeliveryPointReselection(address) ? (
                         <p className={styles.reselectHint} role="status">
                           Нужно заново выбрать пункт выдачи
                         </p>

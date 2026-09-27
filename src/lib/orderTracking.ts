@@ -18,6 +18,7 @@ export function orderTrackingProviderLabel(provider: string | null | undefined):
   const p = (provider || '').toUpperCase();
   if (p === 'CDEK') return 'СДЭК';
   if (p === 'YANDEX') return 'Яндекс Доставка';
+  if (p === 'OZON') return 'Ozon Доставка';
   if (p === 'PICKUP') return 'Самовывоз';
   return provider?.trim() || null;
 }

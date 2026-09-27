@@ -3,7 +3,14 @@ import type { CheckoutLine } from '@/types/checkout';
 import type { AddressInfo } from '@/types/auth';
 import { fetchVariantsShippingData } from '@/graphql/queries/variantShipping.service';
 import { parseVspAddressMeta } from '@/lib/addressVspMeta';
-import { resolveCheckoutShippingMethod } from '@/utils/checkoutShipping';
+import {
+    disabledCarrierMessage,
+    resolveCheckoutShippingMethod,
+    type CheckoutShippingMethod,
+} from '@/utils/checkoutShipping';
+import { requestOzonShippingEstimate } from '@/api/ordersApi';
+import { checkoutCarriersLabel } from '@/lib/deliveryCarriers';
+import { useOzonAvailable } from '@/lib/carrierAvailability';
 import { lineIsGiftDenom } from '@/utils/giftDenomCart';
 
 const FROM_CITY_CODE = Number(
@@ -92,7 +99,7 @@ export type ShippingEstimateMeta = {
     daysMin?: number | null;
     daysMax?: number | null;
     cost?: number | null;
-    method?: 'CDEK' | 'YANDEX' | null;
+    method?: CheckoutShippingMethod | null;
 };
 
 /** CDEK delivery_mode: 3 склад-дверь, 4 склад-склад */
@@ -224,7 +231,7 @@ function useCdekOnlyEstimate(lines: CheckoutLine[], address: AddressInfo | null)
                 setQuoteMeta(null);
                 setError(
                     method == null
-                        ? 'Выберите способ доставки (СДЭК или Яндекс) в адресе'
+                        ? `Выберите способ доставки (${checkoutCarriersLabel()}) в адресе`
                         : null,
                 );
                 setLoading(false);
@@ -521,28 +528,117 @@ function useYandexOnlyEstimate(lines: CheckoutLine[], address: AddressInfo | nul
     return { rub, loading, error, quoteMeta };
 }
 
+function useOzonOnlyEstimate(lines: CheckoutLine[], address: AddressInfo | null) {
+    const [rub, setRub] = useState<number | null>(null);
+    const [quoteMeta, setQuoteMeta] = useState<ShippingEstimateMeta | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const seq = useRef(0);
+
+    const meta = useMemo(
+        () => parseVspAddressMeta(address?.streetAddress2),
+        [address?.streetAddress2],
+    );
+
+    useEffect(() => {
+        const id = ++seq.current;
+        const run = async () => {
+            setError(null);
+            const payableLines = lines.filter((l) => !l.isGift && !lineIsGiftDenom(l));
+            if (payableLines.length === 0 || !address || meta?.carrier !== 'ozon') {
+                setRub(null);
+                setQuoteMeta(null);
+                setLoading(false);
+                return;
+            }
+            const courier = meta.dropoff === 'courier';
+            if (!courier && !meta.pvz.trim()) {
+                setRub(null);
+                setQuoteMeta(null);
+                setError('Выберите пункт выдачи Ozon');
+                setLoading(false);
+                return;
+            }
+            if (courier && !(address.streetAddress1 || '').trim()) {
+                setRub(null);
+                setQuoteMeta(null);
+                setError('Укажите адрес (улица, дом) для курьера Ozon');
+                setLoading(false);
+                return;
+            }
+
+            setLoading(true);
+            try {
+                const res = await requestOzonShippingEstimate({
+                    lines: payableLines.map((l) => ({
+                        variantId: l.variantId,
+                        qty: Math.max(1, Math.floor(l.quantity || 1)),
+                    })),
+                    dropoff: courier ? 'courier' : 'pvz',
+                });
+                if (id !== seq.current) return;
+                if (res.cost == null) {
+                    setRub(null);
+                    setQuoteMeta(null);
+                    setError('Не удалось рассчитать доставку Ozon');
+                    return;
+                }
+                setRub(res.cost);
+                setQuoteMeta({
+                    cost: res.cost,
+                    method: 'OZON',
+                    tariffId: null,
+                    tariffName: courier ? 'Ozon Курьер' : 'Ozon ПВЗ',
+                    daysMin: res.daysMin,
+                    daysMax: res.daysMax,
+                });
+            } catch (e: unknown) {
+                if (id === seq.current) {
+                    setRub(null);
+                    setQuoteMeta(null);
+                    setError(e instanceof Error ? e.message : 'Ошибка расчёта доставки Ozon');
+                }
+            } finally {
+                if (id === seq.current) setLoading(false);
+            }
+        };
+
+        const t = window.setTimeout(run, 300);
+        return () => window.clearTimeout(t);
+    }, [lines, address, meta]);
+
+    return { rub, loading, error, quoteMeta };
+}
+
 /**
- * Единый расчёт: СДЭК или Яндекс Доставка по явному типу в streetAddress2.
+ * Единый расчёт: СДЭК, Яндекс Доставка или Ozon по явному типу в streetAddress2.
  */
 export function useCdekShippingEstimate(lines: CheckoutLine[], address: AddressInfo | null) {
     const street2 = address?.streetAddress2;
-    const method = resolveCheckoutShippingMethod(street2);
+    const ozonAvailable = useOzonAvailable();
+    const method = resolveCheckoutShippingMethod(street2, { ozonAvailable });
     const isYandex = method === 'YANDEX';
     const isCdek = method === 'CDEK';
+    const isOzon = method === 'OZON';
 
     const cdekResult = useCdekOnlyEstimate(lines, isCdek ? address : null);
 
     const yandexResult = useYandexOnlyEstimate(lines, isYandex ? address : null);
 
+    const ozonResult = useOzonOnlyEstimate(lines, isOzon ? address : null);
+
     if (method == null && address) {
         return {
             rub: null as number | null,
             loading: false,
-            error: 'Выберите способ доставки (СДЭК или Яндекс) в адресе',
+            error:
+                disabledCarrierMessage(address) ??
+                `Выберите способ доставки (${checkoutCarriersLabel()}) в адресе`,
             quoteMeta: null as ShippingEstimateMeta | null,
         };
     }
 
     if (isYandex) return yandexResult;
+    if (isOzon) return ozonResult;
     return cdekResult;
 }

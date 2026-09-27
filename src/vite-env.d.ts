@@ -11,6 +11,8 @@ interface ImportMetaEnv {
   readonly VITE_QUIZ_PAGE_SLUG?: string;
   readonly VITE_MAX_LINE_QUANTITY?: string;
   readonly VITE_CDEK_SHIP_FROM_CITY_CODE?: string;
+  /** 'true' — показать Яндекс Доставку в чекауте (по умолчанию скрыта). */
+  readonly VITE_YANDEX_DELIVERY_ENABLED?: string;
   /** Яндекс.Метрика counter id (default 112462177). */
   readonly VITE_YANDEX_METRIKA_ID?: string;
 }

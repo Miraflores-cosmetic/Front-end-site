@@ -13,6 +13,9 @@ export function getDeliveryTypeLabelFromStreet2(street2: string | undefined | nu
     if (vm?.carrier === 'cdek') {
         return vm.dropoff === 'courier' ? 'СДЭК Курьер' : 'СДЭК ПВЗ';
     }
+    if (vm?.carrier === 'ozon') {
+        return vm.dropoff === 'courier' ? 'Ozon Курьер' : 'Ozon ПВЗ';
+    }
 
     const s = (street2 || '').trim();
     if (!s) return 'Адрес';

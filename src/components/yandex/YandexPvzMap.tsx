@@ -20,13 +20,46 @@ export interface YandexPvzBrief {
     region?: string;
     lat: number;
     lon: number;
+    /** Доп. строка (часы работы и т.п.) */
+    hint?: string;
 }
+
+export type PvzMapPalette = {
+    accent: string;
+    accentSoft: string;
+    accentBorder: string;
+    accentText: string;
+    clusterPreset: string;
+};
+
+const YANDEX_PALETTE: PvzMapPalette = {
+    accent: '#ea580c',
+    accentSoft: '#fff7ed',
+    accentBorder: '#fdba74',
+    accentText: '#9a3412',
+    clusterPreset: 'islands#orangeClusterIcons',
+};
+
+export const OZON_PVZ_PALETTE: PvzMapPalette = {
+    accent: '#005bff',
+    accentSoft: '#eef4ff',
+    accentBorder: '#a8c4ff',
+    accentText: '#0b3a99',
+    clusterPreset: 'islands#blueClusterIcons',
+};
 
 interface YandexPvzMapProps {
     pvzList: YandexPvzBrief[];
     selectedCity: { city: string; latitude?: number; longitude?: number } | null;
     onSelect: (pvz: YandexPvzBrief) => void;
     loading?: boolean;
+    palette?: PvzMapPalette;
+}
+
+function escapeHtml(s: string): string {
+    return s.replace(/[&<>"']/g, (c) =>
+        c === '&' ? '&amp;' : c === '<' ? '&lt;' : c === '>' ? '&gt;' : c === '"' ? '&quot;' : '&#39;',
+    );
 }
 
 const YANDEX_MAP_API_KEY = getYandexMapApiKey();
@@ -37,6 +70,7 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
     selectedCity,
     onSelect,
     loading = false,
+    palette = YANDEX_PALETTE,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<any>(null);
@@ -129,7 +163,7 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
             );
 
             clustererRef.current = new window.ymaps.Clusterer({
-                preset: 'islands#orangeClusterIcons',
+                preset: palette.clusterPreset,
                 groupByCoordinates: false,
                 clusterDisableClickZoom: false,
                 clusterHideIconOnBalloonOpen: false,
@@ -149,7 +183,7 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
                 mapRef.current = null;
             }
         };
-    }, [mapLoading, selectedCity]);
+    }, [mapLoading, selectedCity, palette.clusterPreset]);
 
     useEffect(() => {
         if (!mapReady || !mapRef.current || !clustererRef.current) {
@@ -168,17 +202,18 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
             const placemark = new window.ymaps.Placemark(
                 [pvz.lat, pvz.lon],
                 {
-                    balloonContentHeader: `<strong>${pvz.name || 'Пункт выдачи'}</strong>`,
+                    balloonContentHeader: `<strong>${escapeHtml(pvz.name || 'Пункт выдачи')}</strong>`,
                     balloonContentBody: `
             <div style="padding: 8px 0;">
-              <div style="color: #666; margin-bottom: 8px;">📍 ${pvz.addressLine || 'Адрес не указан'}</div>
+              <div style="color: #666; margin-bottom: 8px;">📍 ${escapeHtml(pvz.addressLine || 'Адрес не указан')}</div>
+              ${pvz.hint ? `<div style="color: #888; font-size: 12px;">${escapeHtml(pvz.hint)}</div>` : ''}
             </div>
           `,
                     balloonContentFooter: `
             <button 
               onclick="window.selectYandexPvz && window.selectYandexPvz('${safeId}')"
               style="
-                background: #ea580c; 
+                background: ${palette.accent}; 
                 color: white; 
                 border: none; 
                 padding: 8px 16px; 
@@ -194,8 +229,8 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
                     hintContent: pvz.name || 'ПВЗ',
                 },
                 {
-                    preset: 'islands#orangeDotIcon',
-                    iconColor: '#ea580c',
+                    preset: 'islands#dotIcon',
+                    iconColor: palette.accent,
                 },
             );
 
@@ -216,7 +251,7 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
                 })
                 .catch(() => {});
         }
-    }, [pvzList, mapReady]);
+    }, [pvzList, mapReady, palette.accent]);
 
     useEffect(() => {
         window.selectYandexPvz = (id: string) => {
@@ -292,7 +327,7 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
                                 gap: '12px',
                             }}
                         >
-                            <Loader2 className="animate-spin" style={{ width: '32px', height: '32px', color: '#ea580c' }} />
+                            <Loader2 className="animate-spin" style={{ width: '32px', height: '32px', color: palette.accent }} />
                             <span style={{ fontSize: '14px', color: 'rgba(0,0,0,0.6)' }}>
                                 {mapLoading ? 'Загрузка Яндекс Карт...' : 'Загрузка пунктов выдачи...'}
                             </span>
@@ -323,23 +358,28 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
             {selectedPvz && (
                 <div
                     style={{
-                        border: '1px solid #fdba74',
-                        background: '#fff7ed',
+                        border: `1px solid ${palette.accentBorder}`,
+                        background: palette.accentSoft,
                         borderRadius: '12px',
                         padding: '16px',
                     }}
                 >
                     <div style={{ display: 'flex', alignItems: 'start', gap: '12px' }}>
-                        <div style={{ padding: '8px', background: '#ffedd5', borderRadius: '8px', flexShrink: 0 }}>
-                            <MapPin style={{ width: '20px', height: '20px', color: '#ea580c' }} />
+                        <div style={{ padding: '8px', background: '#fff', borderRadius: '8px', flexShrink: 0 }}>
+                            <MapPin style={{ width: '20px', height: '20px', color: palette.accent }} />
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontWeight: 600, color: '#9a3412' }}>
+                            <div style={{ fontWeight: 600, color: palette.accentText }}>
                                 {selectedPvz.name || 'Пункт выдачи'}
                             </div>
-                            <div style={{ fontSize: '14px', color: '#c2410c', marginTop: '4px' }}>
+                            <div style={{ fontSize: '14px', color: palette.accentText, opacity: 0.85, marginTop: '4px' }}>
                                 {selectedPvz.addressLine}
                             </div>
+                            {selectedPvz.hint && (
+                                <div style={{ fontSize: '12px', color: 'rgba(0,0,0,0.55)', marginTop: '4px' }}>
+                                    {selectedPvz.hint}
+                                </div>
+                            )}
                         </div>
                     </div>
                     <button
@@ -349,7 +389,7 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
                             width: '100%',
                             marginTop: '12px',
                             height: '40px',
-                            background: '#ea580c',
+                            background: palette.accent,
                             color: 'white',
                             borderRadius: '8px',
                             fontWeight: 500,

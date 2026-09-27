@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styles from './AddressDrawer.module.scss'; // Reusing your existing styles
 
 import { useDispatch, useSelector } from 'react-redux';
@@ -9,8 +9,11 @@ import { AddressInput, AddressTypeEnum } from '@/graphql/types/address.types';
 import CdekPvzList, { CdekPvzInfo } from '@/components/cdek/CdekPvzList';
 import YandexPvzList, { type YandexPvzBrief } from '@/components/yandex/YandexPvzList';
 import DeliveryCourierMap from '@/components/yandex/DeliveryCourierMap';
+import OzonPvzList, { type OzonPickupPoint } from '@/components/ozon/OzonPvzList';
 import { buildStreetAddress2WithMeta, parseVspAddressMeta } from '@/lib/addressVspMeta';
 import { yandexPointIdForCargoOffers } from '@/lib/yandexPvzCargoId';
+import { YANDEX_DELIVERY_ENABLED } from '@/lib/deliveryCarriers';
+import { ozonUnavailableMessage, useOzonAvailable } from '@/lib/carrierAvailability';
 import { useToast } from '@/components/toast/toast';
 import { AppDispatch, RootState } from '@/store/store';
 import { getMe } from '@/store/slices/authSlice';
@@ -31,15 +34,35 @@ const DELIVERY_OPTIONS = [
   { id: 'cdek_courier', label: 'СДЭК Курьер' },
   { id: 'yandex_pvz', label: 'Яндекс ПВЗ' },
   { id: 'yandex_courier', label: 'Яндекс Курьер' },
+  { id: 'ozon_pvz', label: 'Ozon ПВЗ' },
+  { id: 'ozon_courier', label: 'Ozon Курьер' },
 ] as const;
 
 type DeliveryMethodId = (typeof DELIVERY_OPTIONS)[number]['id'];
+
+function isYandexMethod(id: DeliveryMethodId): boolean {
+    return id === 'yandex_pvz' || id === 'yandex_courier';
+}
+
+function isOzonMethod(id: DeliveryMethodId): boolean {
+    return id === 'ozon_pvz' || id === 'ozon_courier';
+}
+
+function visibleDeliveryOptions(ozonAvailable: boolean) {
+    return DELIVERY_OPTIONS.filter(
+        (opt) =>
+            (YANDEX_DELIVERY_ENABLED || !isYandexMethod(opt.id)) &&
+            (ozonAvailable || !isOzonMethod(opt.id)),
+    );
+}
 
 const DELIVERY_TYPE_LINE: Record<DeliveryMethodId, string> = {
     cdek_pvz: 'СДЭК ПВЗ',
     cdek_courier: 'СДЭК Курьер',
     yandex_pvz: 'Яндекс Доставка ПВЗ',
     yandex_courier: 'Яндекс Доставка Курьер',
+    ozon_pvz: 'Ozon ПВЗ',
+    ozon_courier: 'Ozon Курьер',
 };
 
 /** Nest UserAddress.comment / Order.shippingAddress.comment — до 500 */
@@ -119,8 +142,30 @@ function applyYandexPvzToForm(prev: AddressInput, info: YandexPvzBrief): Address
     };
 }
 
+function applyOzonPvzToForm(prev: AddressInput, p: OzonPickupPoint): AddressInput {
+    return {
+        ...prev,
+        city: (p.city || prev.city).trim() || prev.city,
+        streetAddress1: (p.address || p.name || prev.streetAddress1).trim() || prev.streetAddress1,
+        country: 'RU',
+        countryArea: (p.region || prev.countryArea || '').trim(),
+        postalCode: (p.postalCode || prev.postalCode || '').trim(),
+    };
+}
+
 function parseDeliveryMethodFromStreet2(street2: string | undefined | null): DeliveryMethodId {
+    const method = parseSavedDeliveryMethod(street2);
+    if (!YANDEX_DELIVERY_ENABLED && isYandexMethod(method)) {
+        return method === 'yandex_courier' ? 'cdek_courier' : 'cdek_pvz';
+    }
+    return method;
+}
+
+function parseSavedDeliveryMethod(street2: string | undefined | null): DeliveryMethodId {
     const vm = parseVspAddressMeta(street2);
+    if (vm?.carrier === 'ozon') {
+        return vm.dropoff === 'courier' ? 'ozon_courier' : 'ozon_pvz';
+    }
     if (vm?.carrier === 'yandex') {
         return vm.dropoff === 'courier' ? 'yandex_courier' : 'yandex_pvz';
     }
@@ -173,6 +218,15 @@ const AddressDrawer: React.FC = () => {
     const [yandexCourierLl, setYandexCourierLl] = useState<{ lon: string; lat: string } | null>(
         null,
     );
+    /** Пункт Ozon (map_point_id) */
+    const [ozonPvzDraft, setOzonPvzDraft] = useState<{
+        id: string;
+        lat: string;
+        lon: string;
+        label: string;
+    } | null>(null);
+    /** Точка на карте для курьера Ozon (необязательна) */
+    const [ozonCourierLl, setOzonCourierLl] = useState<{ lon: string; lat: string } | null>(null);
     const toast = useToast();
 
     const [formData, setFormData] = useState<AddressInput>({ ...EMPTY_FORM });
@@ -180,6 +234,23 @@ const AddressDrawer: React.FC = () => {
 
     const editingAddressId = addressDrawer?.editingAddressId ?? null;
     const isEditMode = Boolean(editingAddressId);
+
+    const ozonAvailable = useOzonAvailable();
+    const deliveryOptions = useMemo(() => visibleDeliveryOptions(ozonAvailable), [ozonAvailable]);
+    /** Выбранный Ozon стал недоступен — переключили на СДЭК и объясняем почему. */
+    const [ozonFellBack, setOzonFellBack] = useState(false);
+
+    useEffect(() => {
+        if (activeDrawer === 'address') setOzonFellBack(false);
+    }, [activeDrawer]);
+
+    useEffect(() => {
+        if (ozonAvailable || !isOzonMethod(deliveryMethod)) return;
+        setDeliveryMethod(deliveryMethod === 'ozon_courier' ? 'cdek_courier' : 'cdek_pvz');
+        setOzonPvzDraft(null);
+        setOzonCourierLl(null);
+        setOzonFellBack(true);
+    }, [ozonAvailable, deliveryMethod]);
 
     useEffect(() => {
         if (activeDrawer !== 'address') return;
@@ -231,12 +302,29 @@ const AddressDrawer: React.FC = () => {
             } else {
                 setYandexCourierLl(null);
             }
+            if (ym?.carrier === 'ozon' && ym.dropoff === 'pvz' && ym.pvz) {
+                setOzonPvzDraft({
+                    id: ym.pvz,
+                    lat: ym.lat || '',
+                    lon: ym.lon || '',
+                    label: seed.streetAddress1 || '',
+                });
+            } else {
+                setOzonPvzDraft(null);
+            }
+            setOzonCourierLl(
+                ym?.carrier === 'ozon' && ym.dropoff === 'courier' && ym.lat && ym.lon
+                    ? { lon: ym.lon, lat: ym.lat }
+                    : null,
+            );
         } else {
             setFormData({ ...EMPTY_FORM });
             setDeliveryMethod('cdek_pvz');
             setCdekPvzDraft(null);
             setYandexPvzDraft(null);
             setYandexCourierLl(null);
+            setOzonPvzDraft(null);
+            setOzonCourierLl(null);
         }
     }, [activeDrawer, addressDrawer?.editingAddressId, addressDrawer?.seed?.id]);
 
@@ -359,6 +447,37 @@ const AddressDrawer: React.FC = () => {
                         tail,
                         COMMENT_MAX,
                     );
+                } else if (deliveryMethod === 'ozon_pvz') {
+                    if (!ozonPvzDraft?.id) {
+                        toast.error('Выберите пункт выдачи Ozon в списке или на карте');
+                        setIsLoading(false);
+                        return;
+                    }
+                    payload.streetAddress2 = buildStreetAddress2WithMeta(
+                        {
+                            carrier: 'ozon',
+                            lon: ozonPvzDraft.lon,
+                            lat: ozonPvzDraft.lat,
+                            pvz: ozonPvzDraft.id,
+                            cid: '',
+                            dropoff: 'pvz',
+                        },
+                        tail,
+                        COMMENT_MAX,
+                    );
+                } else if (deliveryMethod === 'ozon_courier') {
+                    payload.streetAddress2 = buildStreetAddress2WithMeta(
+                        {
+                            carrier: 'ozon',
+                            lon: ozonCourierLl?.lon || '',
+                            lat: ozonCourierLl?.lat || '',
+                            pvz: '',
+                            cid: '',
+                            dropoff: 'courier',
+                        },
+                        tail,
+                        COMMENT_MAX,
+                    );
                 } else {
                     payload.streetAddress2 = clampAddressField(tail, COMMENT_MAX);
                 }
@@ -436,8 +555,13 @@ const AddressDrawer: React.FC = () => {
                         <>
                             <div className={styles.deliveryMethodSection}>
                                 <p className={styles.deliveryMethodLabel}>Способ доставки</p>
+                                {!ozonAvailable && ozonFellBack ? (
+                                    <p className={styles.carrierNotice} role="status">
+                                        {ozonUnavailableMessage()}
+                                    </p>
+                                ) : null}
                                 <div className={styles.deliveryMethodGrid} role="group" aria-label="Способ доставки">
-                                    {DELIVERY_OPTIONS.map((opt) => (
+                                    {deliveryOptions.map((opt) => (
                                         <button
                                             key={opt.id}
                                             type="button"
@@ -449,6 +573,8 @@ const AddressDrawer: React.FC = () => {
                                                 if (opt.id !== 'cdek_pvz') setCdekPvzDraft(null);
                                                 if (opt.id !== 'yandex_pvz') setYandexPvzDraft(null);
                                                 if (opt.id !== 'yandex_courier') setYandexCourierLl(null);
+                                                if (opt.id !== 'ozon_pvz') setOzonPvzDraft(null);
+                                                if (opt.id !== 'ozon_courier') setOzonCourierLl(null);
                                             }}
                                         >
                                             {opt.label}
@@ -539,6 +665,64 @@ const AddressDrawer: React.FC = () => {
                                                 lon: String(sel.lon),
                                                 lat: String(sel.lat),
                                             });
+                                            const g = sel.geoLine?.trim();
+                                            if (g) {
+                                                setFormData((prev) => ({
+                                                    ...prev,
+                                                    streetAddress1: prev.streetAddress1?.trim()
+                                                        ? prev.streetAddress1
+                                                        : clampAddressField(g, 256),
+                                                }));
+                                            }
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            {deliveryMethod === 'ozon_pvz' && (
+                                <div className={styles.widgetPanel}>
+                                    <div>
+                                        <h3 className={styles.widgetTitle}>Пункт выдачи Ozon</h3>
+                                        <p className={styles.widgetDescription}>
+                                            Выберите пункт или постамат Ozon — адрес ниже заполнится автоматически.
+                                        </p>
+                                    </div>
+                                    {ozonPvzDraft && (
+                                        <div className={styles.selectedPoint}>
+                                            <span className={styles.selectedPointLabel}>Выбран пункт</span>
+                                            <span className={styles.selectedPointValue}>
+                                                {ozonPvzDraft.label || formData.streetAddress1}
+                                            </span>
+                                        </div>
+                                    )}
+                                    <OzonPvzList
+                                        selectedId={ozonPvzDraft?.id ?? null}
+                                        onChoose={(p) => {
+                                            setOzonPvzDraft({
+                                                id: p.id,
+                                                lat: String(p.lat),
+                                                lon: String(p.lon),
+                                                label: p.address || p.name,
+                                            });
+                                            setFormData((prev) => applyOzonPvzToForm(prev, p));
+                                        }}
+                                        defaultCity={formData.city.trim() || 'Москва'}
+                                        initialMode="map"
+                                    />
+                                </div>
+                            )}
+
+                            {deliveryMethod === 'ozon_courier' && (
+                                <div className={styles.widgetPanel}>
+                                    <h3 className={styles.widgetTitle}>Курьер Ozon</h3>
+                                    <p className={styles.widgetDescription}>
+                                        Укажите ниже полный адрес: улицу, дом, квартиру. Можно отметить дом на карте —
+                                        улица подставится автоматически.
+                                    </p>
+                                    <DeliveryCourierMap
+                                        cityHint={formData.city.trim() || 'Москва'}
+                                        onChoose={(sel) => {
+                                            setOzonCourierLl({ lon: String(sel.lon), lat: String(sel.lat) });
                                             const g = sel.geoLine?.trim();
                                             if (g) {
                                                 setFormData((prev) => ({

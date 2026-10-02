@@ -74,7 +74,7 @@ function MobileCard({ card }: { card: PromoBannerCard }) {
       decoding="async"
     />
   );
-  const className = [styles.mobileCard, card.notch ? styles.cardNotch : ''].filter(Boolean).join(' ');
+  const className = styles.mobileCard;
   if (card.href) {
     return (
       <Link to={card.href} className={className} aria-label={card.alt}>
@@ -317,17 +317,15 @@ export function HomePromoBanners({
         </div>
 
         <div className={styles.mobileStage}>
-          <p className={styles.mobileTitle} aria-hidden>
-            <span>{wordLeft}</span>
-            <span className={styles.mobileTitleSep} aria-hidden>
-              {' '}
-            </span>
-            <span>{wordRight}</span>
-          </p>
+          <div className={styles.mobileTitleRow}>
+            <h2 className={styles.mobileTitle}>
+              {wordLeft} {wordRight}
+            </h2>
+          </div>
           <ProductScrollStrip
             aria-label={sectionLabel}
             size="md"
-            itemWidthMobile={260}
+            itemWidthMobile={300}
             gapMobile={12}
             bleedMobile={16}
             padInlineStartMobile={16}

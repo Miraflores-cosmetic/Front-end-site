@@ -16,8 +16,8 @@
   }
 }
 
-.sectionMobile {
-  overflow: visible;
+.root {
+  width: 100%;
 }
 
 .stage {
@@ -32,8 +32,40 @@
 }
 
 .mobileStage {
+  display: none;
   width: 100%;
-  padding: 0;
+  padding: 0 0 8px;
+  box-sizing: border-box;
+}
+
+.mobileTitle {
+  margin: 0 0 12px;
+  padding: 0 16px;
+  font-family: $font-oceanic;
+  font-weight: 300;
+  font-size: clamp(22px, 6vw, 32px);
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #000;
+}
+
+.mobileTitleSep {
+  opacity: 0.35;
+}
+
+@media (max-width: $viewport-mobile-max) {
+  .stage {
+    display: none;
+  }
+
+  .mobileStage {
+    display: block;
+  }
+
+  .section {
+    overflow: visible;
+  }
 }
 
 .word {

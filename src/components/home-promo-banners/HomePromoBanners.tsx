@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { getHomePromo } from '@/api/settingsApi';
 import { HomeSection } from '@/components/home-section/HomeSection';
 import { ProductScrollStrip, ProductScrollStripItem } from '@/components/product-scroll-strip/ProductScrollStrip';
-import { useScreenMatch } from '@/hooks/useScreenMatch';
 import styles from './HomePromoBanners.module.scss';
 
 export type PromoBannerCard = {
@@ -65,12 +64,36 @@ function fanStyle(index: number, total: number): React.CSSProperties {
   };
 }
 
+function MobileCard({ card }: { card: PromoBannerCard }) {
+  const img = (
+    <img
+      src={card.image}
+      alt={card.alt}
+      className={styles.mobileCardImg}
+      loading="lazy"
+      decoding="async"
+    />
+  );
+  const className = [styles.mobileCard, card.notch ? styles.cardNotch : ''].filter(Boolean).join(' ');
+  if (card.href) {
+    return (
+      <Link to={card.href} className={className} aria-label={card.alt}>
+        {img}
+      </Link>
+    );
+  }
+  return (
+    <div className={className} role="img" aria-label={card.alt}>
+      {img}
+    </div>
+  );
+}
+
 export function HomePromoBanners({
   wordLeft: wordLeftProp,
   wordRight: wordRightProp,
   cards: cardsProp,
 }: HomePromoBannersProps = {}) {
-  const isMobile = useScreenMatch();
   const rootRef = useRef<HTMLElement | null>(null);
   const cardRefs = useRef<Array<HTMLElement | null>>([]);
   const activeRef = useRef<number | null>(null);
@@ -80,10 +103,12 @@ export function HomePromoBanners({
   const [wordLeft, setWordLeft] = useState(wordLeftProp ?? 'НАШИ');
   const [wordRight, setWordRight] = useState(wordRightProp ?? 'АКЦИИ');
   const [cards, setCards] = useState<PromoBannerCard[]>(cardsProp ?? DEFAULT_CARDS);
+  const [promoFetched, setPromoFetched] = useState(Boolean(cardsProp));
 
   useEffect(() => {
     if (cardsProp) {
       setCards(cardsProp);
+      setPromoFetched(true);
       return;
     }
     let alive = true;
@@ -103,9 +128,13 @@ export function HomePromoBanners({
               notch: it.notch,
             })),
           );
+        } else {
+          setCards([]);
         }
       } catch {
         /* fallback DEFAULT_CARDS */
+      } finally {
+        if (alive) setPromoFetched(true);
       }
     })();
     return () => {
@@ -131,11 +160,11 @@ export function HomePromoBanners({
           io.disconnect();
         }
       },
-      { threshold: 0.2, rootMargin: '0px 0px -6% 0px' },
+      { threshold: 0.15, rootMargin: '0px 0px -4% 0px' },
     );
     io.observe(el);
     return () => io.disconnect();
-  }, [isMobile]);
+  }, [cards.length]);
 
   const commitActive = useCallback((next: number | null) => {
     if (next === activeRef.current) return;
@@ -174,72 +203,16 @@ export function HomePromoBanners({
     commitActive(null);
   }
 
-  if (isMobile) {
-    return (
-      <HomeSection
-        aria-label={`${wordLeft} ${wordRight}`}
-        className={[styles.section, styles.sectionMobile, visible ? styles.visible : '']
-          .filter(Boolean)
-          .join(' ')}
-      >
-        <div
-          ref={(node) => {
-            rootRef.current = node;
-          }}
-          className={styles.mobileStage}
-        >
-          <ProductScrollStrip
-            aria-label={`${wordLeft} ${wordRight}`}
-            size="md"
-            itemWidthMobile={260}
-            gapMobile={12}
-            bleedMobile={16}
-            padInlineStartMobile={16}
-            peek
-            snap
-          >
-            {cards.map((card) => {
-              const img = (
-                <img
-                  src={card.image}
-                  alt={card.alt}
-                  className={styles.mobileCardImg}
-                  loading="lazy"
-                  decoding="async"
-                />
-              );
-              const body = card.href ? (
-                <Link
-                  to={card.href}
-                  className={[styles.mobileCard, card.notch ? styles.cardNotch : '']
-                    .filter(Boolean)
-                    .join(' ')}
-                  aria-label={card.alt}
-                >
-                  {img}
-                </Link>
-              ) : (
-                <div
-                  className={[styles.mobileCard, card.notch ? styles.cardNotch : '']
-                    .filter(Boolean)
-                    .join(' ')}
-                  role="img"
-                  aria-label={card.alt}
-                >
-                  {img}
-                </div>
-              );
-              return <ProductScrollStripItem key={card.id}>{body}</ProductScrollStripItem>;
-            })}
-          </ProductScrollStrip>
-        </div>
-      </HomeSection>
-    );
+  if (promoFetched && cards.length === 0) {
+    return null;
   }
+
+  const sectionLabel = `${wordLeft} ${wordRight}`.trim();
 
   return (
     <HomeSection
-      aria-label={`${wordLeft} ${wordRight}`}
+      aria-label={sectionLabel}
+      bleed
       className={[
         styles.section,
         visible ? styles.visible : '',
@@ -252,95 +225,122 @@ export function HomePromoBanners({
         ref={(node) => {
           rootRef.current = node;
         }}
-        className={styles.stage}
+        className={styles.root}
       >
-        <p className={`${styles.word} ${styles.wordLeft}`} aria-hidden>
-          {wordLeft}
-        </p>
+        <div className={styles.stage}>
+          <p className={`${styles.word} ${styles.wordLeft}`} aria-hidden>
+            {wordLeft}
+          </p>
 
-        <div
-          className={[styles.stack, active != null ? styles.stackActive : '']
-            .filter(Boolean)
-            .join(' ')}
-          onMouseMove={(e) => resolveActive(e.clientX, e.clientY)}
-          onMouseLeave={clearActive}
-        >
-          {cards.map((card, index) => {
-            const isActive = active === index;
-            const isPushed = active != null && index > active;
-            const pushSteps = isPushed && active != null ? index - active : 0;
-            const base = fanStyle(index, cards.length);
-
-            const cardClass = [
-              styles.card,
-              card.notch ? styles.cardNotch : '',
-              isActive ? styles.cardActive : '',
-              isPushed ? styles.cardPushed : '',
-            ]
+          <div
+            className={[styles.stack, active != null ? styles.stackActive : '']
               .filter(Boolean)
-              .join(' ');
+              .join(' ')}
+            onMouseMove={(e) => resolveActive(e.clientX, e.clientY)}
+            onMouseLeave={clearActive}
+          >
+            {cards.map((card, index) => {
+              const isActive = active === index;
+              const isPushed = active != null && index > active;
+              const pushSteps = isPushed && active != null ? index - active : 0;
+              const base = fanStyle(index, cards.length);
 
-            const style = {
-              ...base,
-              ...(isActive
-                ? {
-                    /* inline --fan/--z иначе перебивают .cardActive */
-                    ['--fan' as string]: '0deg',
-                    ['--z' as string]: '240px',
-                    ['--scale' as string]: '1.08',
-                    ['--push' as string]: '0%',
-                  }
-                : {
-                    ['--push' as string]: isPushed ? `${pushSteps * 10}%` : '0%',
-                  }),
-              zIndex: isActive ? 16 : isPushed ? 5 + index : (base.zIndex as number),
-            } as React.CSSProperties;
+              const cardClass = [
+                styles.card,
+                card.notch ? styles.cardNotch : '',
+                isActive ? styles.cardActive : '',
+                isPushed ? styles.cardPushed : '',
+              ]
+                .filter(Boolean)
+                .join(' ');
 
-            const body = (
-              <img
-                src={card.image}
-                alt=""
-                className={styles.cardImg}
-                loading="lazy"
-                decoding="async"
-              />
-            );
+              const style = {
+                ...base,
+                ...(isActive
+                  ? {
+                      ['--fan' as string]: '0deg',
+                      ['--z' as string]: '240px',
+                      ['--scale' as string]: '1.08',
+                      ['--push' as string]: '0%',
+                    }
+                  : {
+                      ['--push' as string]: isPushed ? `${pushSteps * 10}%` : '0%',
+                    }),
+                zIndex: isActive ? 16 : isPushed ? 5 + index : (base.zIndex as number),
+              } as React.CSSProperties;
 
-            return card.href ? (
-              <Link
-                key={card.id}
-                ref={(node) => {
-                  cardRefs.current[index] = node;
-                }}
-                to={card.href}
-                className={cardClass}
-                style={style}
-                aria-label={card.alt}
-                onFocus={() => commitActive(index)}
-                onBlur={clearActive}
-              >
-                {body}
-              </Link>
-            ) : (
-              <div
-                key={card.id}
-                ref={(node) => {
-                  cardRefs.current[index] = node;
-                }}
-                className={cardClass}
-                style={style}
-                role="img"
-                aria-label={card.alt}
-              >
-                {body}
-              </div>
-            );
-          })}
+              const body = (
+                <img
+                  src={card.image}
+                  alt=""
+                  className={styles.cardImg}
+                  loading="lazy"
+                  decoding="async"
+                />
+              );
+
+              return card.href ? (
+                <Link
+                  key={card.id}
+                  ref={(node) => {
+                    cardRefs.current[index] = node;
+                  }}
+                  to={card.href}
+                  className={cardClass}
+                  style={style}
+                  aria-label={card.alt}
+                  onFocus={() => commitActive(index)}
+                  onBlur={clearActive}
+                >
+                  {body}
+                </Link>
+              ) : (
+                <div
+                  key={card.id}
+                  ref={(node) => {
+                    cardRefs.current[index] = node;
+                  }}
+                  className={cardClass}
+                  style={style}
+                  role="img"
+                  aria-label={card.alt}
+                >
+                  {body}
+                </div>
+              );
+            })}
+          </div>
+
+          <p className={`${styles.word} ${styles.wordRight}`} aria-hidden>
+            {wordRight}
+          </p>
         </div>
 
-        <p className={`${styles.word} ${styles.wordRight}`} aria-hidden>
-          {wordRight}
-        </p>
+        <div className={styles.mobileStage}>
+          <p className={styles.mobileTitle} aria-hidden>
+            <span>{wordLeft}</span>
+            <span className={styles.mobileTitleSep} aria-hidden>
+              {' '}
+            </span>
+            <span>{wordRight}</span>
+          </p>
+          <ProductScrollStrip
+            aria-label={sectionLabel}
+            size="md"
+            itemWidthMobile={260}
+            gapMobile={12}
+            bleedMobile={16}
+            padInlineStartMobile={16}
+            peek
+            snap
+          >
+            {cards.map((card) => (
+              <ProductScrollStripItem key={card.id}>
+                <MobileCard card={card} />
+              </ProductScrollStripItem>
+            ))}
+          </ProductScrollStrip>
+        </div>
       </div>
     </HomeSection>
   );

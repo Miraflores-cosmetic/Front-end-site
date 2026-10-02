@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getHomePromo } from '@/api/settingsApi';
 import { HomeSection } from '@/components/home-section/HomeSection';
-import { ProductScrollStrip } from '@/components/product-scroll-strip/ProductScrollStrip';
+import { ProductScrollStrip, ProductScrollStripItem } from '@/components/product-scroll-strip/ProductScrollStrip';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import styles from './HomePromoBanners.module.scss';
 
@@ -208,9 +208,8 @@ export function HomePromoBanners({
                   decoding="async"
                 />
               );
-              return card.href ? (
+              const body = card.href ? (
                 <Link
-                  key={card.id}
                   to={card.href}
                   className={[styles.mobileCard, card.notch ? styles.cardNotch : '']
                     .filter(Boolean)
@@ -221,7 +220,6 @@ export function HomePromoBanners({
                 </Link>
               ) : (
                 <div
-                  key={card.id}
                   className={[styles.mobileCard, card.notch ? styles.cardNotch : '']
                     .filter(Boolean)
                     .join(' ')}
@@ -231,6 +229,7 @@ export function HomePromoBanners({
                   {img}
                 </div>
               );
+              return <ProductScrollStripItem key={card.id}>{body}</ProductScrollStripItem>;
             })}
           </ProductScrollStrip>
         </div>

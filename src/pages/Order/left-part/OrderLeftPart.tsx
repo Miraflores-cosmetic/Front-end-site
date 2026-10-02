@@ -98,6 +98,7 @@ const OrderLeftPart: React.FC = () => {
     cdekShippingLoading,
     cdekShippingError,
     shippingQuoteMeta,
+    shippingQuoteClientEstimateRub,
     freePvzShippingApplied,
     payable,
   } = useOrderCheckout();
@@ -274,6 +275,10 @@ const OrderLeftPart: React.FC = () => {
     const shippingMethod = giftDenomOnly
       ? null
       : resolveCheckoutShippingMethod(selectedAddress!.streetAddress2);
+    const quoteClientEstimate =
+      giftDenomOnly || !shippingMethod
+        ? shippingAmount
+        : (shippingQuoteClientEstimateRub ?? shippingAmount);
     if (!giftDenomOnly && !shippingMethod) {
       toast.error(
         disabledCarrierMessage(selectedAddress) ??
@@ -369,7 +374,7 @@ const OrderLeftPart: React.FC = () => {
                     tariffName: shippingQuoteMeta.tariffName ?? null,
                     daysMin: shippingQuoteMeta.daysMin ?? null,
                     daysMax: shippingQuoteMeta.daysMax ?? null,
-                    cost: shippingAmount,
+                    cost: quoteClientEstimate,
                     method: shippingMethod,
                     source: 'client_estimate',
                   },
@@ -494,7 +499,7 @@ const OrderLeftPart: React.FC = () => {
           lines: apiLines,
           shippingAddress,
           shippingMethod: shippingMethod!,
-          clientEstimate: shippingAmount,
+          clientEstimate: quoteClientEstimate,
           ...(shippingAddress.carrierQuote
             ? { carrierQuote: shippingAddress.carrierQuote }
             : {}),

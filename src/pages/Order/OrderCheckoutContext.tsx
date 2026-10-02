@@ -16,6 +16,15 @@ import {
 } from '@/utils/guestShippingAddress';
 import { useCdekShippingEstimate, type ShippingEstimateMeta } from './useCdekShippingEstimate';
 import { revalidateVoucher } from '@/store/slices/checkoutSlice';
+import { apiFetch } from '@/api/apiClient';
+import { resolveCheckoutShippingMethod } from '@/utils/checkoutShipping';
+import {
+    clientEstimateBaseRub,
+    DELIVERY_SURCHARGE_DEFAULTS,
+    normalizeDeliverySurcharges,
+    type DeliverySurcharges,
+    withDeliverySurcharge,
+} from '@/utils/deliverySurcharge';
 
 const EMAIL_RE =
   /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
@@ -35,6 +44,8 @@ export type OrderCheckoutContextValue = {
     cdekShippingError: string | null;
     /** Мета последнего расчёта тарифа (СДЭК tariff_code / сроки). */
     shippingQuoteMeta: ShippingEstimateMeta | null;
+    /** Без добавочной стоимости — для requestShippingQuote.clientEstimate. */
+    shippingQuoteClientEstimateRub: number | null;
     freePvzShippingApplied: boolean;
     payable: PayableTotals;
 };
@@ -53,6 +64,9 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
     const isAuth = useSelector((s: RootState) => s.authSlice.isAuth);
     const [selectedAddress, setSelectedAddress] = useState<AddressInfo | null>(null);
     const [checkoutEmail, setCheckoutEmail] = useState('');
+    const [deliverySurcharges, setDeliverySurcharges] = useState<DeliverySurcharges>(
+        DELIVERY_SURCHARGE_DEFAULTS,
+    );
     const prevEmailRef = useRef('');
     const { rub, loading, error, quoteMeta } = useCdekShippingEstimate(lines, selectedAddress);
     const { threshold } = useProgressBarCartModel();
@@ -67,6 +81,22 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
 
     const clearSelectedAddress = useCallback(() => {
         setSelectedAddress(null);
+    }, []);
+
+    useEffect(() => {
+        let cancelled = false;
+        void apiFetch<Partial<DeliverySurcharges>>('/settings/delivery-surcharges', {
+            skipAuth: true,
+        })
+            .then((data) => {
+                if (!cancelled) setDeliverySurcharges(normalizeDeliverySurcharges(data));
+            })
+            .catch(() => {
+                if (!cancelled) setDeliverySurcharges(DELIVERY_SURCHARGE_DEFAULTS);
+            });
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     useEffect(() => {
@@ -98,11 +128,32 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
         );
     }, [loading, error, rub, selectedAddress, subtotal, threshold]);
 
+    const checkoutShippingMethod = useMemo(
+        () => resolveCheckoutShippingMethod(selectedAddress?.streetAddress2),
+        [selectedAddress?.streetAddress2],
+    );
+
     const effectiveShippingRub = useMemo(() => {
         if (rub == null) return null;
         if (freePvzShippingApplied) return 0;
-        return rub;
-    }, [rub, freePvzShippingApplied]);
+        return withDeliverySurcharge(rub, checkoutShippingMethod, deliverySurcharges) ?? rub;
+    }, [rub, freePvzShippingApplied, checkoutShippingMethod, deliverySurcharges]);
+
+    const shippingQuoteClientEstimateRub = useMemo(() => {
+        if (freePvzShippingApplied) return 0;
+        if (effectiveShippingRub == null) return null;
+        if (!checkoutShippingMethod) return effectiveShippingRub;
+        return clientEstimateBaseRub(
+            effectiveShippingRub,
+            checkoutShippingMethod,
+            deliverySurcharges,
+        );
+    }, [
+        freePvzShippingApplied,
+        effectiveShippingRub,
+        checkoutShippingMethod,
+        deliverySurcharges,
+    ]);
 
     const payable = useMemo(
         () =>
@@ -142,6 +193,7 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
             cdekShippingLoading: loading,
             cdekShippingError: error,
             shippingQuoteMeta: quoteMeta,
+            shippingQuoteClientEstimateRub,
             freePvzShippingApplied,
             payable,
         }),
@@ -154,6 +206,7 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
             loading,
             error,
             quoteMeta,
+            shippingQuoteClientEstimateRub,
             freePvzShippingApplied,
             payable,
         ],

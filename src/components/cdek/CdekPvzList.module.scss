@@ -357,6 +357,12 @@
   }
 }
 
+.pvzCardSelected {
+  border-color: $green-297;
+  background: rgba(41, 114, 48, 0.08);
+  box-shadow: 0 0 0 1px rgba(41, 114, 48, 0.2);
+}
+
 .pvzName {
   font-weight: 600;
   margin-bottom: 4px;

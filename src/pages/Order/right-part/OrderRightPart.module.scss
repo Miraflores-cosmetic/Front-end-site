@@ -449,27 +449,11 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      position: relative;
-      color: #000;
 
-      .minus {
+      .promoToggleIcon {
         width: 16px;
         height: 16px;
         display: block;
-      }
-
-      &::after {
-        content: '';
-        position: absolute;
-        width: 1.5px;
-        height: 12px;
-        background: currentColor;
-        transition: opacity 0.15s ease, transform 0.15s ease;
-      }
-
-      &.promoToggleOpen::after {
-        opacity: 0;
-        transform: scaleY(0);
       }
     }
   }

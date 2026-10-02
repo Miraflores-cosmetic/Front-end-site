@@ -100,6 +100,35 @@ export async function getHeroSlides(): Promise<HeroSlide[]> {
   }));
 }
 
+export type HomePromoBanner = {
+  id: string;
+  imageUrl: string;
+  href: string;
+  alt: string;
+  notch: boolean;
+};
+
+export type HomePromoPayload = {
+  titleLeft: string;
+  titleRight: string;
+  items: HomePromoBanner[];
+};
+
+export async function getHomePromo(): Promise<HomePromoPayload> {
+  const res = await apiFetch<HomePromoPayload>('/settings/home-promo');
+  return {
+    titleLeft: res.titleLeft?.trim() || 'НАШИ',
+    titleRight: res.titleRight?.trim() || 'АКЦИИ',
+    items: (res.items ?? []).map((it) => ({
+      ...it,
+      imageUrl: uploadsUrl(it.imageUrl) || it.imageUrl,
+      href: it.href?.trim() || '/catalog',
+      alt: it.alt ?? '',
+      notch: Boolean(it.notch),
+    })),
+  };
+}
+
 export async function getHomepageSets(): Promise<HomepageSetItem[]> {
   const res = await apiFetch<{ items: HomepageSetItem[] }>('/settings/homepage-sets');
   return (res.items ?? []).map((s) => {

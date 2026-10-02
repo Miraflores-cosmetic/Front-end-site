@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import styles from '../right-part/OrderRightPart.module.scss';
 import promocode from '@/assets/icons/promocode.svg';
+import add from '@/assets/icons/add.svg';
 import minus from '@/assets/icons/minus.svg';
 import { TextField } from '@/components/text-field/TextField';
 import { useDispatch, useSelector } from 'react-redux';
@@ -85,11 +86,12 @@ const Certificate = () => {
           <img src={promocode} alt="" className={styles.promocode} aria-hidden />
           <p className={styles.promoTxt}>Добавить промокод или сертификат</p>
         </div>
-        <span
-          className={`${styles.promoToggle} ${expanded ? styles.promoToggleOpen : ''}`}
-          aria-hidden
-        >
-          <img src={minus} alt="" className={styles.minus} />
+        <span className={styles.promoToggle} aria-hidden>
+          <img
+            src={expanded ? minus : add}
+            alt=""
+            className={styles.promoToggleIcon}
+          />
         </span>
       </button>
 

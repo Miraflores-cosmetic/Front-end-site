@@ -20,8 +20,8 @@ export interface VoucherValidationResult {
  */
 export async function validateVoucher(
   promoCode: string,
-  _variantIds: string[],
-  _quantities: number[],
+  variantIds: string[],
+  quantities: number[],
   _channel?: string,
   subtotal?: number,
   email?: string,
@@ -57,6 +57,13 @@ export async function validateVoucher(
   }
 
   try {
+    const lines = variantIds
+      .map((variantId, i) => ({
+        variantId,
+        qty: Math.max(1, Math.floor(quantities[i] ?? 1)),
+      }))
+      .filter((l) => l.variantId);
+
     const res = await apiJson<{
       code: string;
       type: string;
@@ -68,6 +75,7 @@ export async function validateVoucher(
       subtotal: goods,
       email,
       guestId: getOrCreateGuestId(),
+      ...(lines.length ? { lines } : {}),
     });
 
     const discountType =

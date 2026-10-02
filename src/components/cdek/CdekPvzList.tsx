@@ -24,6 +24,8 @@ interface CdekPvzListProps {
   onChoose: (info: CdekPvzInfo) => void;
   defaultCity?: string;
   initialMode?: 'list' | 'map';
+  /** Код выбранного ПВЗ (подсветка в списке). */
+  selectedPvzId?: string | null;
 }
 
 interface City {
@@ -149,6 +151,7 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
   onChoose,
   defaultCity = 'Москва',
   initialMode = 'list',
+  selectedPvzId = null,
 }) => {
   const [cities, setCities] = useState<City[]>([]);
   const [citiesLoading, setCitiesLoading] = useState(true);
@@ -554,7 +557,10 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
                         key={pvz.code}
                         type="button"
                         onClick={() => handlePvzSelect(pvz)}
-                        className={styles.pvzCard}
+                        className={`${styles.pvzCard} ${
+                          selectedPvzId && selectedPvzId === pvz.code ? styles.pvzCardSelected : ''
+                        }`}
+                        aria-pressed={selectedPvzId === pvz.code}
                       >
                         <div className={styles.pvzName}>{pvz.name || 'ПВЗ СДЭК'}</div>
                         <div className={styles.pvzAddress}>

@@ -180,8 +180,8 @@ export const applyVoucherCode = createAsyncThunk(
       const { validateVoucher } = await import('@/services/voucher.service');
       const validationResult = await validateVoucher(
         code,
-        [],
-        [],
+        lines.map((l) => l.variantId),
+        lines.map((l) => l.quantity),
         undefined,
         cartSubtotal(lines),
         email,

@@ -10,6 +10,7 @@ import { Reviews } from '@/components/take-test/reviews/Reviews';
 import { GratitudeProgram } from '@/components/gratitude-program/GratitudeProgram';
 import { Awards } from '@/components/awards/Awards';
 import { HomeHero } from '@/components/home-hero/HomeHero';
+import { HomePromoBanners } from '@/components/home-promo-banners/HomePromoBanners';
 import { FAQBlock } from '@/components/faq-block/FAQBlock';
 import { NewsletterEnvelope } from '@/components/newsletter-envelope/NewsletterEnvelope';
 import { scrollToAnchorWhenReady } from '@/utils/scrollToAnchor';
@@ -30,6 +31,7 @@ const Home: React.FC = () => {
       <HomeHero />
       <main className={styles.homeContainer}>
         <Bestsellers />
+        <HomePromoBanners />
         <AboutBlock />
         <StepsBlock />
         <InfoTest />

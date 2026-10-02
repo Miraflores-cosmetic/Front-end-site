@@ -206,6 +206,7 @@ const AddressDrawer: React.FC = () => {
         cityCode: string;
         lat: string;
         lon: string;
+        label: string;
     } | null>(null);
     /** Для сохранённой строки меты Яндекс ПВЗ */
     const [yandexPvzDraft, setYandexPvzDraft] = useState<{
@@ -278,6 +279,7 @@ const AddressDrawer: React.FC = () => {
                     cityCode: (ym.cid || '').trim(),
                     lat: ym.lat || '',
                     lon: ym.lon || '',
+                    label: seed.streetAddress1 || '',
                 });
             } else {
                 setCdekPvzDraft(null);
@@ -591,7 +593,16 @@ const AddressDrawer: React.FC = () => {
                                             Выберите ПВЗ в списке или на карте — поля адреса заполнятся автоматически.
                                         </p>
                                     </div>
+                                    {cdekPvzDraft && (
+                                        <div className={styles.selectedPoint}>
+                                            <span className={styles.selectedPointLabel}>Выбран пункт</span>
+                                            <span className={styles.selectedPointValue}>
+                                                {cdekPvzDraft.label || formData.streetAddress1}
+                                            </span>
+                                        </div>
+                                    )}
                                     <CdekPvzList
+                                        selectedPvzId={cdekPvzDraft?.id ?? null}
                                         onChoose={(info: CdekPvzInfo) => {
                                             setCdekPvzDraft({
                                                 id: info.id,
@@ -604,6 +615,7 @@ const AddressDrawer: React.FC = () => {
                                                     info.lon != null && Number.isFinite(info.lon)
                                                         ? String(info.lon)
                                                         : '',
+                                                label: info.address || info.name,
                                             });
                                             setFormData((prev) => applyCdekPvzToForm(prev, info));
                                         }}

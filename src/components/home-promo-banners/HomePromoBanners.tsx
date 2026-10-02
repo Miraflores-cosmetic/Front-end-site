@@ -283,7 +283,17 @@ export function HomePromoBanners({
 
             const style = {
               ...base,
-              ['--push' as string]: isPushed ? `${pushSteps * 10}%` : '0%',
+              ...(isActive
+                ? {
+                    /* inline --fan/--z иначе перебивают .cardActive */
+                    ['--fan' as string]: '0deg',
+                    ['--z' as string]: '240px',
+                    ['--scale' as string]: '1.08',
+                    ['--push' as string]: '0%',
+                  }
+                : {
+                    ['--push' as string]: isPushed ? `${pushSteps * 10}%` : '0%',
+                  }),
               zIndex: isActive ? 16 : isPushed ? 5 + index : (base.zIndex as number),
             } as React.CSSProperties;
 

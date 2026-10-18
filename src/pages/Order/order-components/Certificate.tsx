@@ -67,8 +67,15 @@ const Certificate = () => {
           ? GIFT_HOLD_APPLIED_TOAST
           : 'Промокод применён',
       );
-    } catch (error: any) {
-      toast.error(error?.message || 'Ошибка при применении кода');
+    } catch (error: unknown) {
+      // RTK unwrap rejects with rejectWithValue string, not Error
+      const msg =
+        typeof error === 'string'
+          ? error
+          : error instanceof Error
+            ? error.message
+            : 'Ошибка при применении кода';
+      toast.error(msg || 'Ошибка при применении кода');
     } finally {
       setIsApplying(false);
     }

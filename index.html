@@ -67,6 +67,50 @@
         /></div
     ></noscript>
     <!-- /Yandex.Metrika counter -->
+    <!-- YouRich / PRM Business: early ?yr= + official tracker snippet (TZ) -->
+    <script>
+      (function () {
+        try {
+          var p = new URLSearchParams(location.search);
+          var yr = (p.get('yr') || '').trim();
+          if (!yr && location.hash.indexOf('?') !== -1) {
+            yr = (
+              new URLSearchParams(location.hash.slice(location.hash.indexOf('?') + 1)).get(
+                'yr',
+              ) || ''
+            ).trim();
+          }
+          if (!yr || yr.length > 128) return;
+          localStorage.setItem(
+            'miraflores.yr.ref.v1',
+            JSON.stringify({
+              value: yr,
+              exp: Date.now() + 60 * 24 * 60 * 60 * 1000,
+            }),
+          );
+        } catch (e) {}
+      })();
+    </script>
+    <script>
+      !(function (y, o, u, r, i, c, h) {
+        (y.yourich =
+          y.yourich ||
+          function () {
+            (y.yourich.q = y.yourich.q || []), y.yourich.q.push(arguments);
+          }),
+          (r = o.getElementsByTagName(u)[0]),
+          ((i = o.createElement(u)).async = !0),
+          (i.src = 'https://cabinet.prmbusiness.ru/scripts/track.js'),
+          r.parentNode.insertBefore(i, r);
+      })(window, document, 'script');
+      yourich('config', 'ttl', 60);
+      yourich('config', 'forms', true);
+      yourich('config', 'utm', false);
+      yourich('config', 'links', false);
+      yourich('config', 'attr', 'lc');
+      yourich('init', 834);
+      yourich('track', 'FOLLOW');
+    </script>
   </head>
   <body>
     <div id="site-boot-loader" aria-hidden="true"></div>

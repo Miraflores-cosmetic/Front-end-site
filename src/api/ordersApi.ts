@@ -1,4 +1,5 @@
 import { apiJson, getOrCreateGuestId } from '@/api/apiClient';
+import { getYourichAffiliate } from '@/lib/yourichAffiliate';
 import type { CheckoutShippingMethod } from '@/utils/checkoutShipping';
 
 export type CreateOrderLine = {
@@ -70,6 +71,11 @@ export type CreateOrderInput = {
   shippingMethod?: CheckoutShippingMethod | null;
   /** HMAC quote из requestShippingQuote; не нужен для gift-denom-only. */
   shippingQuote?: string | null;
+  /** YouRich attribution (?yr= / cookies); обычно подставляется в createOrder. */
+  affiliate?: {
+    refHash?: string | null;
+    extUserId?: string | null;
+  } | null;
 };
 
 export type CreatedOrder = {
@@ -128,9 +134,19 @@ export async function requestShippingQuote(
 }
 
 export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder> {
+  const affiliate =
+    input.affiliate !== undefined ? input.affiliate : getYourichAffiliate();
   return apiJson('/orders', 'POST', {
     ...input,
     guestId: input.guestId ?? getOrCreateGuestId(),
+    ...(affiliate?.refHash || affiliate?.extUserId
+      ? {
+          affiliate: {
+            ...(affiliate.refHash ? { refHash: affiliate.refHash } : {}),
+            ...(affiliate.extUserId ? { extUserId: affiliate.extUserId } : {}),
+          },
+        }
+      : {}),
   });
 }
 

@@ -1,30 +1,58 @@
 import type { CheckoutShippingMethod } from '@/utils/checkoutShipping';
 
+export type DeliverySurchargeKind = 'FIXED' | 'PERCENT';
+
+export type CarrierSurcharge = {
+  kind: DeliverySurchargeKind;
+  value: number;
+};
+
 export type DeliverySurchargeCarrier = 'cdek' | 'ozon' | 'yandex';
 
 export type DeliverySurcharges = {
-  cdekSurchargeRub: number;
-  ozonSurchargeRub: number;
-  yandexSurchargeRub: number;
+  cdek: CarrierSurcharge;
+  ozon: CarrierSurcharge;
+  yandex: CarrierSurcharge;
 };
 
 export const DELIVERY_SURCHARGE_DEFAULTS: DeliverySurcharges = {
-  cdekSurchargeRub: 0,
-  ozonSurchargeRub: 0,
-  yandexSurchargeRub: 0,
+  cdek: { kind: 'FIXED', value: 0 },
+  ozon: { kind: 'FIXED', value: 0 },
+  yandex: { kind: 'FIXED', value: 0 },
 };
 
+function normalizeKind(raw: unknown): DeliverySurchargeKind {
+  return raw === 'PERCENT' ? 'PERCENT' : 'FIXED';
+}
+
+function normalizeCarrier(kindRaw: unknown, valueRaw: unknown, legacyRub?: unknown): CarrierSurcharge {
+  const kind = normalizeKind(kindRaw);
+  const n = Math.floor(Number(valueRaw ?? legacyRub ?? 0) || 0);
+  if (kind === 'PERCENT') return { kind, value: Math.max(0, Math.min(100, n)) };
+  return { kind, value: Math.max(0, Math.min(500_000, n)) };
+}
+
 export function normalizeDeliverySurcharges(
-  data: Partial<DeliverySurcharges> | null | undefined,
+  data: Partial<{
+    cdekSurchargeKind: unknown;
+    cdekSurchargeValue: unknown;
+    ozonSurchargeKind: unknown;
+    ozonSurchargeValue: unknown;
+    yandexSurchargeKind: unknown;
+    yandexSurchargeValue: unknown;
+    cdekSurchargeRub: unknown;
+    ozonSurchargeRub: unknown;
+    yandexSurchargeRub: unknown;
+  }> | null | undefined,
 ): DeliverySurcharges {
-  const clamp = (n: unknown) => {
-    const v = typeof n === 'number' && Number.isFinite(n) ? Math.floor(n) : 0;
-    return Math.max(0, Math.min(500_000, v));
-  };
   return {
-    cdekSurchargeRub: clamp(data?.cdekSurchargeRub),
-    ozonSurchargeRub: clamp(data?.ozonSurchargeRub),
-    yandexSurchargeRub: clamp(data?.yandexSurchargeRub),
+    cdek: normalizeCarrier(data?.cdekSurchargeKind, data?.cdekSurchargeValue, data?.cdekSurchargeRub),
+    ozon: normalizeCarrier(data?.ozonSurchargeKind, data?.ozonSurchargeValue, data?.ozonSurchargeRub),
+    yandex: normalizeCarrier(
+      data?.yandexSurchargeKind,
+      data?.yandexSurchargeValue,
+      data?.yandexSurchargeRub,
+    ),
   };
 }
 
@@ -36,13 +64,25 @@ export function checkoutMethodToSurchargeCarrier(
   return 'yandex';
 }
 
+function settingForCarrier(
+  carrier: DeliverySurchargeCarrier,
+  surcharges: DeliverySurcharges,
+): CarrierSurcharge {
+  return surcharges[carrier];
+}
+
 export function surchargeRubForCarrier(
   carrier: DeliverySurchargeCarrier,
   surcharges: DeliverySurcharges,
+  baseTariffRub: number,
 ): number {
-  if (carrier === 'cdek') return surcharges.cdekSurchargeRub;
-  if (carrier === 'ozon') return surcharges.ozonSurchargeRub;
-  return surcharges.yandexSurchargeRub;
+  const setting = settingForCarrier(carrier, surcharges);
+  const base = Math.max(0, Math.floor(baseTariffRub));
+  if (setting.kind === 'PERCENT') {
+    const p = Math.max(0, Math.min(100, Math.floor(setting.value)));
+    return Math.round((base * p) / 100);
+  }
+  return Math.max(0, Math.min(500_000, Math.floor(setting.value)));
 }
 
 /** Тариф перевозчика + добавочная стоимость (для отображения на checkout). */
@@ -54,7 +94,8 @@ export function withDeliverySurcharge(
   if (baseRub == null || !method) return baseRub;
   const base = Math.floor(baseRub);
   if (!Number.isFinite(base) || base < 1) return null;
-  return base + surchargeRubForCarrier(checkoutMethodToSurchargeCarrier(method), surcharges);
+  const carrier = checkoutMethodToSurchargeCarrier(method);
+  return base + surchargeRubForCarrier(carrier, surcharges, base);
 }
 
 /** База без добавки — для clientEstimate в shipping-quote. */
@@ -63,9 +104,19 @@ export function clientEstimateBaseRub(
   method: CheckoutShippingMethod,
   surcharges: DeliverySurcharges,
 ): number {
-  return Math.max(
-    0,
-    Math.floor(displayedRub) -
-      surchargeRubForCarrier(checkoutMethodToSurchargeCarrier(method), surcharges),
-  );
+  const displayed = Math.max(0, Math.floor(displayedRub));
+  const carrier = checkoutMethodToSurchargeCarrier(method);
+  const setting = settingForCarrier(carrier, surcharges);
+  if (setting.kind === 'FIXED') {
+    return Math.max(0, displayed - surchargeRubForCarrier(carrier, surcharges, displayed));
+  }
+  let lo = 0;
+  let hi = displayed;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    const withS = mid + surchargeRubForCarrier(carrier, surcharges, mid);
+    if (withS > displayed) hi = mid - 1;
+    else lo = mid;
+  }
+  return lo;
 }

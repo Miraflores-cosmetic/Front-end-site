@@ -9,6 +9,9 @@ import 'slick-carousel/slick/slick-theme.css';
 
 import App from './App';
 import { ToastProvider } from './components/toast/toast';
+import { captureYrFromUrl } from './lib/yourichAffiliate';
+
+captureYrFromUrl();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

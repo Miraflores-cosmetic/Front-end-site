@@ -1,5 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { SITE_EMAIL } from '@/config/siteNavLinks';
 import styles from './Cookies.module.scss';
 
 const COOKIE_ROWS = [
@@ -84,7 +85,7 @@ const Cookies: React.FC = () => {
         </p>
         <p className={styles.text}>
           Оператор: ИП Патрацкий Д.А., контакт:{' '}
-          <a href="mailto:info@miraflores.ru">info@miraflores.ru</a>.
+          <a href={SITE_EMAIL.href}>{SITE_EMAIL.label}</a>.
         </p>
         <p className={styles.meta}>
           Версия документа: 1 · Дата: 30.08.2026

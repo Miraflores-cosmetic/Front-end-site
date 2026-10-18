@@ -44,8 +44,8 @@ export const SITE_PHONE = {
 } as const;
 
 export const SITE_EMAIL = {
-  label: 'info@miraflores.ru',
-  href: 'mailto:info@miraflores.ru',
+  label: 'info@miraflores-shop.ru',
+  href: 'mailto:info@miraflores-shop.ru',
 } as const;
 
 /** Программа благодарности — только partnerCta в футере, не дублировать в колонках. */

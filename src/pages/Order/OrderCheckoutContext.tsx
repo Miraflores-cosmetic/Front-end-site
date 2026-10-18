@@ -85,7 +85,7 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
 
     useEffect(() => {
         let cancelled = false;
-        void apiFetch<Partial<DeliverySurcharges>>('/settings/delivery-surcharges', {
+        void apiFetch<Record<string, unknown>>('/settings/delivery-surcharges', {
             skipAuth: true,
         })
             .then((data) => {

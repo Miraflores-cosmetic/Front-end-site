@@ -43,6 +43,11 @@ export type ShippingQuoteInput = {
   /** Оценка с клиента; Nest подпишет (Ozon/СДЭК пересчитывает сам, 0 при free PVZ). */
   clientEstimate: number;
   carrierQuote?: ShippingCarrierQuoteInput;
+  /** Для порога бесплатной доставки до ПВЗ (скидка вычитается на сервере). */
+  promoCode?: string | null;
+  guestId?: string;
+  email?: string;
+  phone?: string;
 };
 
 export type ShippingQuoteResult = {

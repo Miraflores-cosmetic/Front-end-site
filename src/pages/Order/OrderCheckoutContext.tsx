@@ -5,6 +5,7 @@ import type { AddressInfo } from '@/types/auth';
 import { useProgressBarCartModel } from '@/hooks/useProgressBarCartModel';
 import {
     calcCartSubtotal,
+    goodsSubtotalForFreePvzThreshold,
     isPvzDeliveryAddress,
     qualifiesForFreePvzShipping,
 } from '@/utils/freePvzShipping';
@@ -119,14 +120,20 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
 
     const subtotal = useMemo(() => calcCartSubtotal(lines), [lines]);
 
-    // Free PVZ — по goods subtotal до промо (см. freePvzShipping / Nest computeFreePvzShipping).
+    const promoDiscountForFreePvz =
+        voucherKind === 'promo' ? Math.max(0, Math.floor(voucherDiscount || 0)) : 0;
+    const subtotalForFreePvz = useMemo(
+        () => goodsSubtotalForFreePvzThreshold(subtotal, promoDiscountForFreePvz),
+        [subtotal, promoDiscountForFreePvz],
+    );
+
     const freePvzShippingApplied = useMemo(() => {
         if (loading || error || rub == null || !selectedAddress) return false;
         return (
-            qualifiesForFreePvzShipping(subtotal, threshold) &&
+            qualifiesForFreePvzShipping(subtotalForFreePvz, threshold) &&
             isPvzDeliveryAddress(selectedAddress)
         );
-    }, [loading, error, rub, selectedAddress, subtotal, threshold]);
+    }, [loading, error, rub, selectedAddress, subtotalForFreePvz, threshold]);
 
     const checkoutShippingMethod = useMemo(
         () => resolveCheckoutShippingMethod(selectedAddress?.streetAddress2),

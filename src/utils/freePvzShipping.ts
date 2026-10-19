@@ -10,6 +10,16 @@ export function calcCartSubtotal(lines: CheckoutLine[]): number {
   );
 }
 
+/** Сумма товаров для порога free PVZ: после скидки промокода. */
+export function goodsSubtotalForFreePvzThreshold(
+  goodsSubtotalBeforePromo: number,
+  promoDiscountRub: number,
+): number {
+  const sub = Math.max(0, Math.floor(goodsSubtotalBeforePromo));
+  const disc = Math.max(0, Math.floor(promoDiscountRub));
+  return Math.max(0, sub - Math.min(disc, sub));
+}
+
 /**
  * Доставка до ПВЗ: только при __VSP__/__JCOS__ с dropoff=pvz и кодом пункта.
  * Текст «…ПВЗ» без мета — не free (симметрия СДЭК/Яндекс/Ozon).
@@ -26,15 +36,12 @@ export function isPvzDeliveryAddress(address: AddressInfo | null | undefined): b
 }
 
 /**
- * Порог бесплатной доставки до ПВЗ.
- *
- * Считается по **pre-promo / pre-gift subtotal** товаров (симметрия Front ↔ Nest
- * `computeFreePvzShipping` / shipping-quote). Промокод и сертификат **не**
- * открывают и **не** отменяют free PVZ: quote подписывается до apply промо.
+ * Порог бесплатной доставки до ПВЗ — по сумме товаров **после промокода**
+ * (симметрия Nest `computeFreePvzShipping` / shipping-quote).
  */
 export function qualifiesForFreePvzShipping(
-  goodsSubtotal: number,
+  goodsSubtotalAfterPromo: number,
   threshold: number,
 ): boolean {
-  return threshold > 0 && goodsSubtotal >= threshold;
+  return threshold > 0 && goodsSubtotalAfterPromo >= threshold;
 }

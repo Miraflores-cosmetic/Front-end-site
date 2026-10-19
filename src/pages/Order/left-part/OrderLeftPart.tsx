@@ -503,6 +503,14 @@ const OrderLeftPart: React.FC = () => {
           ...(shippingAddress.carrierQuote
             ? { carrierQuote: shippingAddress.carrierQuote }
             : {}),
+          ...(promoCode
+            ? {
+                promoCode,
+                guestId: getOrCreateGuestId(),
+                email: emailTrimmed,
+                phone: phoneE164,
+              }
+            : {}),
         });
 
         order = await createOrder({

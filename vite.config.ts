@@ -63,9 +63,24 @@ export default defineConfig({
             return 'assets/images/[name]-[hash][extname]';
           }
           return 'assets/[name]-[hash][extname]';
-        }
-      }
-    }
+        },
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          if (id.includes('framer-motion')) return 'vendor-motion';
+          if (id.includes('@reduxjs') || id.includes('react-redux')) return 'vendor-redux';
+          if (id.includes('react-router')) return 'vendor-router';
+          if (
+            id.includes('/react-dom/') ||
+            id.includes('/react/') ||
+            id.includes('scheduler')
+          ) {
+            return 'vendor-react';
+          }
+          if (id.includes('socket.io-client')) return 'vendor-socket';
+          return 'vendor-misc';
+        },
+      },
+    },
   },
   css: {
     devSourcemap: true

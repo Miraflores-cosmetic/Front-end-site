@@ -80,8 +80,7 @@ export const HomeHero: React.FC = () => {
   }, [slides.length, reduceMotion]);
 
   const current = slides[index] ?? slides[0] ?? FALLBACK_SLIDES[0];
-  /* мобилка — те же кадры, что на десктопе */
-  const mainSrc = current.large;
+  const mainSrc = isMobile ? current.mobile : current.large;
 
   const onCta = (href: string) => {
     if (href.startsWith('#')) {
@@ -121,6 +120,7 @@ export const HomeHero: React.FC = () => {
                 src={mainSrc}
                 alt="Miraflores"
                 loading="eager"
+                fetchPriority="high"
               />
             </motion.div>
           </AnimatePresence>

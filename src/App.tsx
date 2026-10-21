@@ -12,24 +12,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import 'react-modern-drawer/dist/index.css';
 import Home from '@/pages/Home/Home';
-import Catalog from '@/pages/Catalog/Catalog';
 import DrawerWrapper from './components/drawers/DrawerWrapper';
-import SignIn from '@/pages/SignIn/SignIn';
-import SignUp from '@/pages/SignUp/SignUp';
-import ForgotPassword from '@/pages/ForgotPassword/ForgotPassword';
-import EmailConfirmation from '@/pages/EmailConfirmation/EmailConfirmation';
-import ResetPassword from '@/pages/ResetPassword/ResetPassword';
-import ProductDetailPage from '@/pages/ProductDetail';
-import About from './pages/About/About';
-import Order from './pages/Order/Order';
-import ProfilePage from './pages/Profile/Profile';
-import ReviewsPage from './pages/Reviews/ReviewsPage';
-import OrderSuccess from './pages/OrderSuccess/OrderSuccess';
-import OrderPay from './pages/OrderPay/OrderPay';
-import FAQ from './pages/FAQ/FAQ';
-import Cookies from './pages/Cookies/Cookies';
-import Promocodes from './pages/Promocodes/Promocodes';
-import GiftCertificates from './pages/GiftCertificates/GiftCertificates';
 import { Spinner } from '@/components/spinner/Spinner';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { SiteLoader } from '@/components/SiteLoader/SiteLoader';
@@ -38,13 +21,6 @@ import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
 import footerStyles from '@/components/Footer/Footer.module.scss';
 import { resolvePostAuthRedirect } from '@/utils/authRedirect';
-import NotFound from './pages/NotFound/NotFound';
-import Contacts from './pages/Contacts/Contacts';
-import QuizZonePage from './pages/Quiz/QuizZone';
-import QuizFacePage from './pages/Quiz/QuizFace';
-import QuizHairPage from './pages/Quiz/QuizHair';
-import QuizResultPage from './pages/Quiz/QuizResult';
-import ProfileQuizResultPage from './pages/Profile/ProfileQuizResult';
 import { QuizContentProvider } from '@/contexts/QuizContentContext';
 import SearchDrawer from '@/components/drawer/SearchDrawer';
 import { OrderChatFab } from '@/components/order-chat/OrderChatFab';
@@ -56,6 +32,30 @@ import { initializeCart } from '@/store/slices/checkoutSlice';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { VIEWPORT_MOBILE_MAX } from '@/constants/viewport';
 
+const Catalog = lazy(() => import('@/pages/Catalog/Catalog'));
+const SignIn = lazy(() => import('@/pages/SignIn/SignIn'));
+const SignUp = lazy(() => import('@/pages/SignUp/SignUp'));
+const ForgotPassword = lazy(() => import('@/pages/ForgotPassword/ForgotPassword'));
+const EmailConfirmation = lazy(() => import('@/pages/EmailConfirmation/EmailConfirmation'));
+const ResetPassword = lazy(() => import('@/pages/ResetPassword/ResetPassword'));
+const ProductDetailPage = lazy(() => import('@/pages/ProductDetail'));
+const About = lazy(() => import('./pages/About/About'));
+const Order = lazy(() => import('./pages/Order/Order'));
+const ProfilePage = lazy(() => import('./pages/Profile/Profile'));
+const ReviewsPage = lazy(() => import('./pages/Reviews/ReviewsPage'));
+const OrderSuccess = lazy(() => import('./pages/OrderSuccess/OrderSuccess'));
+const OrderPay = lazy(() => import('./pages/OrderPay/OrderPay'));
+const FAQ = lazy(() => import('./pages/FAQ/FAQ'));
+const Cookies = lazy(() => import('./pages/Cookies/Cookies'));
+const Promocodes = lazy(() => import('./pages/Promocodes/Promocodes'));
+const GiftCertificates = lazy(() => import('./pages/GiftCertificates/GiftCertificates'));
+const NotFound = lazy(() => import('./pages/NotFound/NotFound'));
+const Contacts = lazy(() => import('./pages/Contacts/Contacts'));
+const QuizZonePage = lazy(() => import('./pages/Quiz/QuizZone'));
+const QuizFacePage = lazy(() => import('./pages/Quiz/QuizFace'));
+const QuizHairPage = lazy(() => import('./pages/Quiz/QuizHair'));
+const QuizResultPage = lazy(() => import('./pages/Quiz/QuizResult'));
+const ProfileQuizResultPage = lazy(() => import('./pages/Profile/ProfileQuizResult'));
 const Articles = lazy(() => import('./pages/Articles/Articles'));
 const ArticleDetail = lazy(() => import('./pages/ArticleDetail/ArticleDetail'));
 
@@ -249,28 +249,28 @@ const App: React.FC = () => {
       <AppHeader />
       <Routes>
         <Route path='/' element={<Home />} />
-        <Route path='/sign-in' element={<SignIn />} />
-        <Route path='/sign-up' element={<SignUp />} />
-        <Route path='/forgot-password' element={<ForgotPassword />} />
-        <Route path='/email-confirmation' element={<EmailConfirmation />} />
-        <Route path='/reset-password' element={<ResetPassword />} />
+        <Route path='/sign-in' element={<LazyRoute><SignIn /></LazyRoute>} />
+        <Route path='/sign-up' element={<LazyRoute><SignUp /></LazyRoute>} />
+        <Route path='/forgot-password' element={<LazyRoute><ForgotPassword /></LazyRoute>} />
+        <Route path='/email-confirmation' element={<LazyRoute><EmailConfirmation /></LazyRoute>} />
+        <Route path='/reset-password' element={<LazyRoute><ResetPassword /></LazyRoute>} />
         <Route path='/login/reset-password' element={<LegacyResetPasswordRedirect />} />
-        <Route path='/catalog/:cat?/:sub?' element={<Catalog />} />
-        <Route path='/product/:slug' element={<ProductDetailPage />} />
+        <Route path='/catalog/:cat?/:sub?' element={<LazyRoute><Catalog /></LazyRoute>} />
+        <Route path='/product/:slug' element={<LazyRoute><ProductDetailPage /></LazyRoute>} />
         <Route path='/category/:slug' element={<CategoryToCatalogRedirect />} />
         <Route path='/face' element={<Navigate to='/catalog/kozha' replace />} />
         <Route element={<QuizRoutesLayout />}>
-          <Route path='/quiz' element={<QuizZonePage />} />
-          <Route path='/quiz/face' element={<QuizFacePage />} />
-          <Route path='/quiz/face/spf' element={<QuizFacePage />} />
-          <Route path='/quiz/face/issues' element={<QuizFacePage />} />
-          <Route path='/quiz/face/tasks' element={<QuizFacePage />} />
-          <Route path='/quiz/face/swelling' element={<QuizFacePage />} />
-          <Route path='/quiz/face/photo' element={<QuizFacePage />} />
-          <Route path='/quiz/face/result' element={<QuizResultPage />} />
-          <Route path='/quiz/hair' element={<QuizHairPage />} />
+          <Route path='/quiz' element={<LazyRoute><QuizZonePage /></LazyRoute>} />
+          <Route path='/quiz/face' element={<LazyRoute><QuizFacePage /></LazyRoute>} />
+          <Route path='/quiz/face/spf' element={<LazyRoute><QuizFacePage /></LazyRoute>} />
+          <Route path='/quiz/face/issues' element={<LazyRoute><QuizFacePage /></LazyRoute>} />
+          <Route path='/quiz/face/tasks' element={<LazyRoute><QuizFacePage /></LazyRoute>} />
+          <Route path='/quiz/face/swelling' element={<LazyRoute><QuizFacePage /></LazyRoute>} />
+          <Route path='/quiz/face/photo' element={<LazyRoute><QuizFacePage /></LazyRoute>} />
+          <Route path='/quiz/face/result' element={<LazyRoute><QuizResultPage /></LazyRoute>} />
+          <Route path='/quiz/hair' element={<LazyRoute><QuizHairPage /></LazyRoute>} />
         </Route>
-        <Route path='/about' element={<About />} />
+        <Route path='/about' element={<LazyRoute><About /></LazyRoute>} />
         <Route path='/atelier' element={<Navigate to='/' replace />} />
         <Route
           path='/articles'
@@ -298,15 +298,17 @@ const App: React.FC = () => {
             </LazyRoute>
           }
         />
-            <Route path='/order' element={<Order />} />
-            <Route path='/order/pay' element={<OrderPay />} />
-            <Route path='/order/success' element={<OrderSuccess />} />
+            <Route path='/order' element={<LazyRoute><Order /></LazyRoute>} />
+            <Route path='/order/pay' element={<LazyRoute><OrderPay /></LazyRoute>} />
+            <Route path='/order/success' element={<LazyRoute><OrderSuccess /></LazyRoute>} />
             <Route path='/checkout/success' element={<CheckoutSuccessAlias />} />
             <Route
               path='/profile'
               element={
                 <ProtectedRoute>
-                  <ProfilePage />
+                  <LazyRoute>
+                    <ProfilePage />
+                  </LazyRoute>
                 </ProtectedRoute>
               }
             />
@@ -315,18 +317,20 @@ const App: React.FC = () => {
           element={
             <ProtectedRoute>
               <QuizContentProvider>
-                <ProfileQuizResultPage />
+                <LazyRoute>
+                  <ProfileQuizResultPage />
+                </LazyRoute>
               </QuizContentProvider>
             </ProtectedRoute>
           }
         />
-            <Route path='/reviews' element={<ReviewsPage />} />
-            <Route path='/contacts' element={<Contacts />} />
-        <Route path='/faq' element={<FAQ />} />
-        <Route path='/cookies' element={<Cookies />} />
-            <Route path='/promocodes' element={<Promocodes />} />
-            <Route path='/gift-certificates' element={<GiftCertificates />} />
-            <Route path='/*' element={<NotFound />} />
+            <Route path='/reviews' element={<LazyRoute><ReviewsPage /></LazyRoute>} />
+            <Route path='/contacts' element={<LazyRoute><Contacts /></LazyRoute>} />
+        <Route path='/faq' element={<LazyRoute><FAQ /></LazyRoute>} />
+        <Route path='/cookies' element={<LazyRoute><Cookies /></LazyRoute>} />
+            <Route path='/promocodes' element={<LazyRoute><Promocodes /></LazyRoute>} />
+            <Route path='/gift-certificates' element={<LazyRoute><GiftCertificates /></LazyRoute>} />
+            <Route path='/*' element={<LazyRoute><NotFound /></LazyRoute>} />
       </Routes>
       <AppFooter />
       <DrawerWrapper />

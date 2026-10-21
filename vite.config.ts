@@ -69,15 +69,9 @@ export default defineConfig({
           if (id.includes('framer-motion')) return 'vendor-motion';
           if (id.includes('@reduxjs') || id.includes('react-redux')) return 'vendor-redux';
           if (id.includes('react-router')) return 'vendor-router';
-          if (
-            id.includes('/react-dom/') ||
-            id.includes('/react/') ||
-            id.includes('scheduler')
-          ) {
-            return 'vendor-react';
-          }
           if (id.includes('socket.io-client')) return 'vendor-socket';
-          return 'vendor-misc';
+          // React не выносим в отдельный chunk: иначе Rollup кладёт interop-хелперы в
+          // vendor-misc, react импортирует misc, misc импортирует react → X undefined (Safari).
         },
       },
     },

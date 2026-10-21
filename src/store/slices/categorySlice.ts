@@ -3,6 +3,7 @@ import { getCategoryBySlug, getCategoryTabsBySlug } from '@/graphql/queries/cate
 import { categorySliceState, CategoryTab, getCategoryProductsArgs } from '@/types/category';
 import { BestSellersProduct } from '@/types/products';
 import { extractProductCardDescription } from '@/utils/productCardDescription';
+import { getVolumeFromVariant } from '@/utils/getVolumeFromVariant';
 
 const initialState: categorySliceState = {
   tabs: [],
@@ -224,32 +225,14 @@ const categorySlice = createSlice({
             { preserveHtml: true },
           );
           
-          // Обрабатываем варианты: извлекаем объем из атрибутов (как в bestsellersSlice)
           const variants = (node.productVariants?.edges || []).map((v: any) => {
-            // Извлекаем название варианта (может быть в атрибутах или в name)
-            let variantName = v.node?.name || '';
-            
-            // Ищем атрибут "Объем" или "Volume" в варианте
-            if (v.node?.attributes && Array.isArray(v.node.attributes)) {
-              const volumeAttr = v.node.attributes.find((attr: any) => 
-                attr.attribute?.slug === 'obem' || 
-                attr.attribute?.slug === 'volume' ||
-                attr.attribute?.name?.toLowerCase().includes('объем') ||
-                attr.attribute?.name?.toLowerCase().includes('volume')
-              );
-              if (volumeAttr?.values?.[0]?.name) {
-                variantName = volumeAttr.values[0].name;
-              } else if (volumeAttr?.values?.[0]?.plainText) {
-                variantName = volumeAttr.values[0].plainText;
-              }
-            }
-            
+            const variantName = getVolumeFromVariant(v) || v.node?.name || '';
             return {
               ...v,
               node: {
                 ...v.node,
-                name: variantName
-              }
+                name: variantName,
+              },
             };
           });
           // Вычисляем цены и скидку

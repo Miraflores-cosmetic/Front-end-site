@@ -53,6 +53,7 @@ export interface ProductVariant {
     id: string;
     sku: string;
     name: string;
+    orderMinQty?: number | null;
     quantityAvailable?: number | null;
     trackInventory?: boolean | null;
     quantityLimitPerCustomer?: number | null;

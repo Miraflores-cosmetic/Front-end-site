@@ -1,4 +1,5 @@
 import { extractProductCardDescription } from '@/utils/productCardDescription';
+import { getVolumeFromVariant } from '@/utils/getVolumeFromVariant';
 import type { BestSellersProduct } from '@/types/products';
 
 /** Маппинг узла Saleor Product → карточка каталога. */
@@ -12,17 +13,7 @@ export function mapProductNodeToBestSeller(productNode: any): BestSellersProduct
     }
   }
   const variantId = variant?.id || productNode.id;
-  let variantName = variant?.name || '';
-  if (variant?.attributes && Array.isArray(variant.attributes)) {
-    const volumeAttr = variant.attributes.find((attr: any) =>
-      attr.attribute?.slug === 'obem' ||
-      attr.attribute?.slug === 'volume' ||
-      attr.attribute?.name?.toLowerCase().includes('объем') ||
-      attr.attribute?.name?.toLowerCase().includes('volume'),
-    );
-    if (volumeAttr?.values?.[0]?.name) variantName = volumeAttr.values[0].name;
-    else if (volumeAttr?.values?.[0]?.plainText) variantName = volumeAttr.values[0].plainText;
-  }
+  const variantName = getVolumeFromVariant(variant) || variant?.name || '';
   const variantPrice = variant?.pricing?.price?.gross?.amount || 0;
   const variantUndiscountedPrice = variant?.pricing?.priceUndiscounted?.gross?.amount;
   let oldPrice: number | undefined;
@@ -46,17 +37,7 @@ export function mapProductNodeToBestSeller(productNode: any): BestSellersProduct
   }
   const productVariantsFormatted = productVariants.map((v: any) => {
     const variantNode = v.node || v;
-    let vName = variantNode?.name || '';
-    if (variantNode?.attributes && Array.isArray(variantNode.attributes)) {
-      const volumeAttr = variantNode.attributes.find((attr: any) =>
-        attr.attribute?.slug === 'obem' ||
-        attr.attribute?.slug === 'volume' ||
-        attr.attribute?.name?.toLowerCase().includes('объем') ||
-        attr.attribute?.name?.toLowerCase().includes('volume'),
-      );
-      if (volumeAttr?.values?.[0]?.name) vName = volumeAttr.values[0].name;
-      else if (volumeAttr?.values?.[0]?.plainText) vName = volumeAttr.values[0].plainText;
-    }
+    const vName = getVolumeFromVariant(variantNode) || variantNode?.name || '';
     return { node: { ...variantNode, name: vName } };
   });
   const qlimit =

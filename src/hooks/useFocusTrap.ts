@@ -22,8 +22,22 @@ export function useFocusTrap(
     const initial = focusablesIn(root);
     initial[0]?.focus();
 
+    const restoreFocus = () => {
+      const el = previouslyFocused;
+      if (!el || typeof el.focus !== 'function') return;
+      // Элемент мог уйти из DOM (карточка в слайдере и т.п.).
+      if (!document.contains(el)) return;
+      try {
+        el.focus({ preventScroll: true });
+      } catch {
+        el.focus();
+      }
+    };
+
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
         onEscape?.();
         return;
       }
@@ -47,10 +61,11 @@ export function useFocusTrap(
       }
     };
 
-    root.addEventListener('keydown', onKeyDown);
+    // Esc на document — срабатывает даже если фокус ещё не внутри диалога.
+    document.addEventListener('keydown', onKeyDown, true);
     return () => {
-      root.removeEventListener('keydown', onKeyDown);
-      previouslyFocused?.focus();
+      document.removeEventListener('keydown', onKeyDown, true);
+      restoreFocus();
     };
   }, [active, containerRef, onEscape]);
 }

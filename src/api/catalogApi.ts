@@ -7,6 +7,17 @@ import type { ProductEdge } from '@/types/products';
 
 // ——— Jcos raw types ———
 
+/** Объём на карточке каталога (все sellable-варианты товара). */
+export type JcosProductCardVariant = {
+  id: string;
+  name: string;
+  price: number;
+  oldPrice: number | null;
+  available: number;
+  minQty: number;
+  maxQty: number;
+};
+
 export type JcosProductCard = {
   id: string;
   variantId: string | null;
@@ -27,6 +38,8 @@ export type JcosProductCard = {
   imageUrl: string | null;
   imageUrls: string[];
   mediaType: 'image' | 'video';
+  /** Все объёмы товара (если API отдал); иначе — только default. */
+  variants?: JcosProductCardVariant[];
 };
 
 type JcosVariantImage = {
@@ -181,6 +194,7 @@ function mapVariantNode(v: JcosVariant) {
       id: v.id,
       sku: v.sku || '',
       name: v.name,
+      orderMinQty: Math.max(1, v.orderMinQty ?? 1),
       quantityLimitPerCustomer: v.orderMaxQty,
       trackInventory: true,
       quantityAvailable: v.available,
@@ -242,26 +256,42 @@ export function cardToProductEdge(card: JcosProductCard): ProductEdge {
         quantityAvailable: card.available,
         pricing: pricingBlock(card.price, card.oldPrice),
       },
-      productVariants: [mapVariantNode({
-        id: variantId,
-        name: card.variantName || card.name,
-        slug: card.slug,
-        volumeMl: null,
-        sku: '',
-        price: card.price,
-        compareAt: card.oldPrice,
-        orderMinQty: card.minQty,
-        orderMaxQty: card.maxQty > 0 ? card.maxQty : null,
-        stock: card.available,
-        stockReserve: 0,
-        available: card.available,
-        images: urls.map((url, i) => ({
-          id: `img-${i}`,
-          url,
-          mediaType: 'image' as const,
-          sortOrder: i,
-        })),
-      })],
+      productVariants: (
+        card.variants?.length
+          ? card.variants
+          : [
+              {
+                id: variantId,
+                name: card.variantName || card.name,
+                price: card.price,
+                oldPrice: card.oldPrice,
+                available: card.available,
+                minQty: card.minQty,
+                maxQty: card.maxQty,
+              },
+            ]
+      ).map((v) =>
+        mapVariantNode({
+          id: v.id,
+          name: v.name || card.name,
+          slug: card.slug,
+          volumeMl: null,
+          sku: '',
+          price: v.price,
+          compareAt: v.oldPrice,
+          orderMinQty: v.minQty,
+          orderMaxQty: v.maxQty > 0 ? v.maxQty : null,
+          stock: v.available,
+          stockReserve: 0,
+          available: v.available,
+          images: urls.map((url, i) => ({
+            id: `img-${i}`,
+            url,
+            mediaType: 'image' as const,
+            sortOrder: i,
+          })),
+        }),
+      ),
     } as unknown as ProductEdge['node'],
   };
 }

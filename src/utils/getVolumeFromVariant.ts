@@ -12,37 +12,51 @@ type VolumeAttr = {
   values?: VolumeAttrValue[] | null;
 };
 
-/** Минимальная форма варианта (productSlice / bestsellers card). */
-type VolumeVariantLike = {
-  node?: {
-    name?: string | null;
-    attributes?: VolumeAttr[] | null;
-  } | null;
+/** Узел варианта (атрибуты / name). */
+export type VolumeNodeLike = {
+  name?: string | null;
+  attributes?: VolumeAttr[] | null;
 } | null | undefined;
 
-/** Объём / имя варианта для PDP, карточек, ATC. */
+/** Edge `{ node }` или сам узел — для mapProductNode / slices / карточек. */
+export type VolumeVariantLike =
+  | { node?: VolumeNodeLike }
+  | NonNullable<VolumeNodeLike>
+  | null
+  | undefined;
+
+function asVolumeNode(variant: VolumeVariantLike): VolumeNodeLike {
+  if (!variant || typeof variant !== 'object') return null;
+  if ('node' in variant) {
+    return (variant as { node?: VolumeNodeLike }).node ?? null;
+  }
+  return variant as NonNullable<VolumeNodeLike>;
+}
+
+/** Объём / имя варианта для PDP, карточек, ATC, slices. */
 export function getVolumeFromVariant(variant: VolumeVariantLike): string {
-  if (!variant?.node?.attributes || !Array.isArray(variant.node.attributes)) {
-    return variant?.node?.name || '';
+  const node = asVolumeNode(variant);
+  if (!node) return '';
+
+  if (node.attributes && Array.isArray(node.attributes)) {
+    const volumeAttr = node.attributes.find((attr) => {
+      const slug = attr.attribute?.slug?.toLowerCase() || '';
+      const name = attr.attribute?.name?.toLowerCase() || '';
+      return (
+        slug === 'obem' ||
+        slug === 'volume' ||
+        name.includes('объем') ||
+        name.includes('volume')
+      );
+    });
+
+    if (volumeAttr) {
+      const value = volumeAttr.values?.[0];
+      if (value?.name) return value.name;
+      if (value?.plainText) return value.plainText;
+      if (value?.slug) return value.slug;
+    }
   }
 
-  const volumeAttr = variant.node.attributes.find((attr) => {
-    const slug = attr.attribute?.slug?.toLowerCase() || '';
-    const name = attr.attribute?.name?.toLowerCase() || '';
-    return (
-      slug === 'obem' ||
-      slug === 'volume' ||
-      name.includes('объем') ||
-      name.includes('volume')
-    );
-  });
-
-  if (volumeAttr) {
-    const value = volumeAttr.values?.[0];
-    if (value?.name) return value.name;
-    if (value?.plainText) return value.plainText;
-    if (value?.slug) return value.slug;
-  }
-
-  return variant?.node?.name || '';
+  return node.name || '';
 }

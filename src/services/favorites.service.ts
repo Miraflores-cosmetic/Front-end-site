@@ -187,6 +187,70 @@ export async function getFavorites(): Promise<FavoriteProduct[]> {
             const thumb = item.imageUrl || '';
             const gallery =
               item.imageUrls.length > 0 ? item.imageUrls : thumb ? [thumb] : [];
+            const volumeRows =
+              item.variants.length > 0
+                ? item.variants
+                : [
+                    {
+                      id: item.variantId,
+                      name: item.variantName || item.name,
+                      price: item.price,
+                      oldPrice: item.listPrice,
+                      available: 1,
+                      minQty: 1,
+                      maxQty: 1,
+                    },
+                  ];
+            const productVariants = volumeRows.map((v) => {
+              const vPrice = v.price;
+              const vOld =
+                v.oldPrice != null && v.oldPrice > vPrice ? v.oldPrice : null;
+              return {
+                node: {
+                  id: v.id,
+                  sku: '',
+                  name: v.name,
+                  orderMinQty: Math.max(1, v.minQty ?? 1),
+                  quantityLimitPerCustomer: v.maxQty > 0 ? v.maxQty : null,
+                  quantityAvailable: v.available,
+                  trackInventory: true,
+                  attributes: v.name
+                    ? [
+                        {
+                          attribute: {
+                            id: 'volume',
+                            name: 'Объём',
+                            slug: 'obem',
+                          },
+                          values: [
+                            {
+                              name: v.name,
+                              slug: v.name,
+                              plainText: v.name,
+                            },
+                          ],
+                        },
+                      ]
+                    : [],
+                  pricing: {
+                    discount: {
+                      net: {
+                        amount:
+                          vOld != null && vOld > vPrice ? vOld - vPrice : 0,
+                        currency: 'RUB',
+                      },
+                    },
+                    price: {
+                      gross: { amount: vPrice, currency: 'RUB' },
+                    },
+                    priceUndiscounted:
+                      vOld != null
+                        ? { gross: { amount: vOld, currency: 'RUB' } }
+                        : undefined,
+                  },
+                },
+              };
+            });
             return {
               id: item.variantId,
               productId: item.productId,
@@ -205,7 +269,7 @@ export async function getFavorites(): Promise<FavoriteProduct[]> {
                   ? Math.round(((oldPrice - price) / oldPrice) * 100)
                   : undefined),
               variantId: item.variantId,
-              productVariants: [],
+              productVariants,
               collections: { id: '', name: '', slug: '' },
               attributes: [],
             };

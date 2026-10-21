@@ -44,6 +44,15 @@ interface AddToCartButtonProps {
   quantityLimitPerCustomer?: number | null;
   quantityAvailable?: number | null;
   trackInventory?: boolean | null;
+  /** orderMinQty варианта при первом добавлении (по умолчанию 1). */
+  minQuantity?: number | null;
+  /**
+   * Карточка с несколькими объёмами: вместо добавления default-варианта
+   * открывает выбор объёма. На PDP не передавать.
+   */
+  onRequestAdd?: () => void;
+  /** Всегда кнопка «В корзину» (без степпера) — для мульти-объёмных карточек. */
+  preferAddButton?: boolean;
 }
 
 const AddToCartButton: React.FC<AddToCartButtonProps> = ({
@@ -65,7 +74,10 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   variant = 'home',
   quantityLimitPerCustomer = null,
   quantityAvailable = null,
-  trackInventory = null
+  trackInventory = null,
+  minQuantity = 1,
+  onRequestAdd,
+  preferAddButton = false,
 }) => {
   const [isHovered, setIsHovered] = useState(false);
 
@@ -89,7 +101,14 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   });
 
   const handleAdd = () => {
-    if (disabled || !activeVariantId || !lineKey) return;
+    if (disabled) return;
+
+    if (preferAddButton && onRequestAdd) {
+      onRequestAdd();
+      return;
+    }
+
+    if (!activeVariantId || !lineKey) return;
 
     if (lineOutOfStock) {
       toast.error('Нет в наличии');
@@ -97,6 +116,10 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
     }
 
     if (count === 0) {
+      if (onRequestAdd) {
+        onRequestAdd();
+        return;
+      }
       const giftDenom = isGiftDenomVariantId(activeVariantId);
       if (
         cartWouldMixGiftAndPhysical(cartLines, {
@@ -109,10 +132,14 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
         );
         return;
       }
+      const qty =
+        typeof minQuantity === 'number' && Number.isFinite(minQuantity) && minQuantity > 0
+          ? Math.floor(minQuantity)
+          : 1;
       dispatch(
         addItemToCart({
           variantId: activeVariantId,
-          quantity: 1,
+          quantity: qty,
           title: title,
           productType: productType?.trim() || null,
           thumbnail: thumbnail,
@@ -158,7 +185,12 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
     }
   };
 
-  const buttonText = count === 0 ? (isHovered ? hoverText : defaultText) : activeText;
+  const showAddButton = preferAddButton || count === 0;
+  const buttonText = showAddButton
+    ? isHovered
+      ? hoverText
+      : defaultText
+    : activeText;
   const isProductPage = variant === 'product';
   const isCard = variant === 'card';
 
@@ -170,7 +202,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
         isCard ? styles.cardWrapper : ''
       ].filter(Boolean).join(' ')}
     >
-      {count === 0 ? (
+      {showAddButton ? (
         <button
           onClick={handleAdd}
           className={[
@@ -181,7 +213,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           type='button'
-          disabled={disabled || lineOutOfStock}
+          disabled={disabled || (!preferAddButton && lineOutOfStock)}
         >
           {buttonText}
         </button>

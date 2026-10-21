@@ -323,8 +323,8 @@
       pointer-events: none;
     }
 
-    .sizePill,
-    .sizePillActive {
+    /** Объёмы: без «active» default; клик открывает модалку выбора. */
+    .sizePill {
       display: flex;
       flex-direction: row;
       justify-content: center;
@@ -332,21 +332,18 @@
       padding: 12px 10px;
       gap: 10px;
       height: 43px;
+      min-width: 57px;
       font-family: 'Avenir Next', sans-serif;
       font-style: normal;
       font-weight: 400;
       font-size: 14px;
       line-height: 19px;
       color: #FFFFFF;
+      background: rgba(0, 0, 0, 0.18);
       border: none;
       cursor: pointer;
       box-sizing: border-box;
-    }
-
-    .sizePill,
-    .sizePillActive {
-      background: rgba(0, 0, 0, 0.18);
-      min-width: 57px;
+      user-select: none;
     }
   }
 
@@ -555,8 +552,11 @@
       line-height: 16px;
       color: #6e6d67;
       overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      word-break: break-word;
     }
 
     .openProductLink {

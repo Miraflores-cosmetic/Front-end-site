@@ -244,6 +244,34 @@ export async function removeFavorite(variantId: string): Promise<void> {
   await apiJson(`/account/favorites/${encodeURIComponent(variantId)}`, 'DELETE');
 }
 
+/** Объём на карточке избранного — паритет с JcosProductCard.variants. */
+export type FavoriteCardVariant = {
+  id: string;
+  name: string;
+  price: number;
+  oldPrice: number | null;
+  available: number;
+  minQty: number;
+  maxQty: number;
+};
+
+type FavoriteItemRaw = {
+  variantId: string;
+  productId?: string;
+  id?: string;
+  slug: string;
+  name: string;
+  price: number;
+  oldPrice?: number | null;
+  listPrice?: number | null;
+  imageUrl: string | null;
+  imageUrls?: string[];
+  variantName: string | null;
+  shortDescription?: string | null;
+  discountPercent?: number | null;
+  variants?: FavoriteCardVariant[];
+};
+
 export async function fetchFavoriteItems(): Promise<
   Array<{
     variantId: string;
@@ -257,44 +285,14 @@ export async function fetchFavoriteItems(): Promise<
     variantName: string | null;
     shortDescription: string | null;
     discountPercent: number | null;
+    variants: FavoriteCardVariant[];
   }>
 > {
-  const res = await apiFetch<
-    | Array<{
-        variantId: string;
-        productId?: string;
-        id?: string;
-        slug: string;
-        name: string;
-        price: number;
-        oldPrice?: number | null;
-        listPrice?: number | null;
-        imageUrl: string | null;
-        imageUrls?: string[];
-        variantName: string | null;
-        shortDescription?: string | null;
-        discountPercent?: number | null;
-      }>
-    | {
-        items?: Array<{
-          variantId: string;
-          productId?: string;
-          id?: string;
-          slug: string;
-          name: string;
-          price: number;
-          oldPrice?: number | null;
-          listPrice?: number | null;
-          imageUrl: string | null;
-          imageUrls?: string[];
-          variantName: string | null;
-          shortDescription?: string | null;
-          discountPercent?: number | null;
-        }>;
-      }
-  >('/account/favorites/items');
+  const res = await apiFetch<FavoriteItemRaw[] | { items?: FavoriteItemRaw[] }>(
+    '/account/favorites/items',
+  );
   const rows = Array.isArray(res) ? res : (res.items ?? []);
-  return rows.map(r => ({
+  return rows.map((r) => ({
     variantId: r.variantId,
     productId: r.productId || r.id || '',
     slug: r.slug,
@@ -303,10 +301,11 @@ export async function fetchFavoriteItems(): Promise<
     listPrice: r.listPrice ?? r.oldPrice ?? null,
     imageUrl: r.imageUrl ? uploadsUrl(r.imageUrl) || r.imageUrl : null,
     imageUrls: (r.imageUrls ?? [])
-      .map(url => (url ? uploadsUrl(url) || url : ''))
+      .map((url) => (url ? uploadsUrl(url) || url : ''))
       .filter(Boolean),
     variantName: r.variantName,
     shortDescription: r.shortDescription ?? null,
     discountPercent: r.discountPercent ?? null,
+    variants: Array.isArray(r.variants) ? r.variants : [],
   }));
 }

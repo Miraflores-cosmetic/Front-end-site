@@ -81,6 +81,7 @@ export function ProductStickyBar({
           }
           quantityAvailable={activeVariant.node.quantityAvailable ?? null}
           trackInventory={activeVariant.node.trackInventory ?? null}
+          minQuantity={activeVariant.node.orderMinQty ?? 1}
         />
       </div>
     </div>

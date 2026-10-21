@@ -6,6 +6,8 @@ import { BestSellersProduct } from '@/types/products';
 import { FavoriteButton } from '@/components/favorite-button/FavoriteButton';
 import AddToBasket from '@/components/add-tobasket-button/AddToBasket';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
+import { VolumePickerModal } from '@/components/volume-picker-modal/VolumePickerModal';
+import { useCardVolumeCart } from '@/hooks/useCardVolumeCart';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { isVariantOutOfStock } from '@/utils/stock';
 import { sanitizeProductCardDescription } from '@/utils/productCardDescription';
@@ -14,6 +16,7 @@ import {
   glueRussianPrepositionsInHtml,
 } from '@/utils/glueRussianPrepositions';
 import { getVolumeFromVariant } from '@/utils/getVolumeFromVariant';
+import { formatVolumesSubtitle } from '@/utils/cardVolumes';
 import type { RootState } from '@/store/store';
 import { SITE_GIFT_CERTIFICATES_HREF } from '@/config/siteNavLinks';
 
@@ -45,10 +48,22 @@ function normalizeGallery(product: BestSellersProduct): string[] {
   return product.thumbnail ? [product.thumbnail] : [];
 }
 
-/** Mobile: объём / одна строка описания. */
-function mobileCardSubtitle(product: BestSellersProduct): string {
+function cardVolumeLabels(product: BestSellersProduct): string[] {
+  const variants = product.productVariants ?? [];
+  const labels = variants
+    .map((v) => getVolumeFromVariant(v)?.trim())
+    .filter((v): v is string => Boolean(v));
+  if (labels.length > 0) return labels;
   const size = product.size?.trim();
-  if (size) return glueRussianPrepositions(size);
+  return size ? [size] : [];
+}
+
+/** Mobile: объёмы (с сокращением при 4+), иначе краткое описание. */
+function mobileCardSubtitle(product: BestSellersProduct): string {
+  const volumes = cardVolumeLabels(product);
+  if (volumes.length > 0) {
+    return glueRussianPrepositions(formatVolumesSubtitle(volumes));
+  }
   return glueRussianPrepositions(
     sanitizeProductCardDescription(product.description, { preserveHtml: false }),
   );
@@ -322,6 +337,26 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
     (typeStr.includes('ПОДАРОЧН') && typeStr.includes('СЕРТИФИКАТ')) ||
     product.slug === 'gift-certificates';
 
+  const {
+    volumeOptions,
+    needsVolumePick,
+    volumeModalOpen,
+    openVolumeModal,
+    closeVolumeModal,
+    onVolumeSelect,
+    addToBasketProps: volumeAtcProps,
+  } = useCardVolumeCart({
+    product,
+    mainImage,
+    isGiftCertificates,
+    activeVariant,
+    outOfStock,
+    quantityLimitForCard,
+    quantityAvailable: stockNode?.quantityAvailable ?? product.quantityAvailable ?? null,
+    trackInventory: stockNode?.trackInventory ?? product.trackInventory ?? null,
+    productIdForFavorite: product.id,
+  });
+
   const productHref = isGiftCertificates
     ? SITE_GIFT_CERTIFICATES_HREF
     : '/product/' + product.slug;
@@ -330,22 +365,8 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
   const hasSellablePrice = Number(product.price) > 0;
 
   const addToBasketProps = {
-    defaultText: outOfStock ? 'НЕТ В НАЛИЧИИ' : 'В КОРЗИНУ',
-    hoverText: outOfStock ? 'НЕТ В НАЛИЧИИ' : 'В КОРЗИНУ',
+    ...volumeAtcProps,
     activeVariantId,
-    title: product.title,
-    productType: (product.productType?.name || '').trim() || null,
-    thumbnail: mainImage || '',
-    price: product.price,
-    oldPrice: product.oldPrice,
-    discount: product.discount,
-    size: activeVariant ? getVolumeFromVariant(activeVariant) : product.size || '',
-    slug: product.slug,
-    productId: isGiftCertificates ? undefined : product.id,
-    quantityLimitPerCustomer: quantityLimitForCard,
-    quantityAvailable: stockNode?.quantityAvailable ?? product.quantityAvailable ?? null,
-    trackInventory: stockNode?.trackInventory ?? product.trackInventory ?? null,
-    disabled: outOfStock,
   };
 
   return (
@@ -466,29 +487,30 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
               </div>
             ) : null}
 
-            {!isMobile &&
-              product.productVariants &&
-              product.productVariants.length > 0 &&
-              !isGiftCertificates && (
+            {!isMobile && volumeOptions.length > 0 && !isGiftCertificates && (
                 <div
                   className={`${styles.sizeRow} ${showDesktopAtc ? styles.sizeRowHidden : ''}`}
+                  aria-label="Доступные объёмы"
                 >
-                  {product.productVariants.map((variant, index) => {
-                    const volume = getVolumeFromVariant(variant);
-                    return (
-                      <button
-                        key={variant.node.id || index}
-                        type="button"
-                        className={
-                          variant.node.id === product.id
-                            ? styles.sizePillActive
-                            : styles.sizePill
-                        }
-                      >
-                        {volume || `${index + 1}`}
-                      </button>
-                    );
-                  })}
+                  {volumeOptions.map((opt, index) => (
+                    <button
+                      key={opt.id || index}
+                      type="button"
+                      className={styles.sizePill}
+                      aria-label={
+                        needsVolumePick
+                          ? `Выбрать объём: ${opt.label}`
+                          : opt.label || `Объём ${index + 1}`
+                      }
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        if (needsVolumePick) openVolumeModal();
+                      }}
+                    >
+                      {opt.label || `${index + 1}`}
+                    </button>
+                  ))}
                 </div>
               )}
 
@@ -569,6 +591,15 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
               renderCardDescription(product.description)
             )}
           </div>
+
+          {needsVolumePick ? (
+            <VolumePickerModal
+              open={volumeModalOpen}
+              options={volumeOptions}
+              onSelect={onVolumeSelect}
+              onClose={closeVolumeModal}
+            />
+          ) : null}
         </>
       )}
     </div>

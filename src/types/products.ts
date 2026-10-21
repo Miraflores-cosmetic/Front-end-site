@@ -114,6 +114,8 @@ export interface ProductVariant {
     id: string;
     sku: string;
     name: string;
+    /** Минимальное кол-во при добавлении в корзину (orderMinQty). */
+    orderMinQty?: number | null;
     quantityLimitPerCustomer?: number | null;
     quantityAvailable?: number | null;
     trackInventory?: boolean | null;

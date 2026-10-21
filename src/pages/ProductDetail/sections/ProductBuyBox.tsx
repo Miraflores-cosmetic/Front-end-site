@@ -116,6 +116,7 @@ export function ProductBuyBox({
             }
             quantityAvailable={activeVariant.node.quantityAvailable ?? null}
             trackInventory={activeVariant.node.trackInventory ?? null}
+            minQuantity={activeVariant.node.orderMinQty ?? 1}
           />
         ) : null}
       </div>

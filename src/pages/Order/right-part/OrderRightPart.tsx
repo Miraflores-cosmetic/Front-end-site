@@ -9,22 +9,28 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store/store';
 import { useApplicableGift } from '@/hooks/useApplicableGift';
 import { openDrawer } from '@/store/slices/drawerSlice';
+import { goodsSubtotalForFreePvzThreshold } from '@/utils/freePvzShipping';
 
 const OrderRightPart: React.FC = () => {
   /** Правый блок скрыт на узком экране (ширина меньше порога mobile из useScreenMatch). */
   const hideOrderRightColumn = useScreenMatch();
   const dispatch = useDispatch<AppDispatch>();
-  const { lines } = useSelector((state: RootState) => state.checkout);
+  const { lines, voucherDiscount, voucherKind } = useSelector(
+    (state: RootState) => state.checkout,
+  );
 
-  const subtotal = useMemo(() => {
+  const giftThresholdBase = useMemo(() => {
     if (!lines?.length) return 0;
-    return lines.reduce(
+    const goods = lines.reduce(
       (sum, line) => sum + (line.isGift ? 0 : (line.price ?? 0) * line.quantity),
       0,
     );
-  }, [lines]);
+    const promoDisc =
+      voucherKind === 'promo' ? Math.max(0, Math.floor(voucherDiscount || 0)) : 0;
+    return goodsSubtotalForFreePvzThreshold(goods, promoDisc);
+  }, [lines, voucherDiscount, voucherKind]);
 
-  const giftLine = useApplicableGift(subtotal);
+  const giftLine = useApplicableGift(giftThresholdBase);
 
   const formattedCartData: OrderProduct[] = useMemo(() => {
     if (!lines) return [];

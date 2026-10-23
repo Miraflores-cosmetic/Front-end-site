@@ -13,18 +13,19 @@ export type ApplicableGiftLine = {
 
 /**
  * Подарок благодарности по порогу с бэка (без клиентского хардкода minRub).
+ * `goodsAfterPromo` — сумма товаров после промокода (как Nest create).
  */
-export function useApplicableGift(subtotal: number): ApplicableGiftLine | null {
+export function useApplicableGift(goodsAfterPromo: number): ApplicableGiftLine | null {
   const [gift, setGift] = useState<ApplicableGiftLine | null>(null);
 
   useEffect(() => {
-    if (subtotal <= 0) {
+    if (goodsAfterPromo <= 0) {
       setGift(null);
       return;
     }
 
     let cancelled = false;
-    getApplicableGift(subtotal)
+    getApplicableGift(goodsAfterPromo)
       .then((res) => {
         if (cancelled) return;
         if (res.applicable && res.variantId && res.productName) {
@@ -47,7 +48,7 @@ export function useApplicableGift(subtotal: number): ApplicableGiftLine | null {
     return () => {
       cancelled = true;
     };
-  }, [subtotal]);
+  }, [goodsAfterPromo]);
 
   return gift;
 }

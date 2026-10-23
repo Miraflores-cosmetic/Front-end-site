@@ -11,6 +11,7 @@ import { useToast } from '@/components/toast/toast';
 import { TextField } from '@/components/text-field/TextField';
 import { useProgressBarCartModel } from '@/hooks/useProgressBarCartModel';
 import { useApplicableGift } from '@/hooks/useApplicableGift';
+import { goodsSubtotalForFreePvzThreshold } from '@/utils/freePvzShipping';
 import {
   GIFT_HOLD_APPLIED_TOAST,
   GIFT_HOLD_WILL_RESERVE,
@@ -55,7 +56,13 @@ const BasketDrawer: React.FC = () => {
     return { totalFromPrice: totalFrom, totalToPrice: totalTo };
   }, [lines]);
 
-  const giftLine = useApplicableGift(totalToPrice);
+  /** Порог подарка благодарности — товары после промокода (как Nest create). */
+  const giftThresholdBase = useMemo(() => {
+    const promoDisc =
+      voucherKind === 'promo' ? Math.max(0, Math.floor(voucherDiscount || 0)) : 0;
+    return goodsSubtotalForFreePvzThreshold(totalToPrice, promoDisc);
+  }, [totalToPrice, voucherDiscount, voucherKind]);
+  const giftLine = useApplicableGift(giftThresholdBase);
 
   const itemCount = lines.reduce((sum, l) => sum + (l.quantity || 0), 0);
   const finalPrice = Math.max(0, totalToPrice - (voucherDiscount || 0));

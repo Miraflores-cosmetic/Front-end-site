@@ -33,7 +33,10 @@ import { AppDispatch } from '@/store/store';
 import { useToast } from '@/components/toast/toast';
 import { MetrikaGoal, reachGoal } from '@/lib/metrika';
 import { useApplicableGift } from '@/hooks/useApplicableGift';
-import { calcCartSubtotal } from '@/utils/freePvzShipping';
+import {
+  calcCartSubtotal,
+  goodsSubtotalForFreePvzThreshold,
+} from '@/utils/freePvzShipping';
 import { isGiftDenomOnlyCart } from '@/utils/giftDenomCart';
 import {
   GIFT_HOLD_CAPTURED_TOAST,
@@ -115,9 +118,16 @@ const OrderLeftPart: React.FC = () => {
     general?: string;
   }>({});
   const { lines } = useSelector((state: RootState) => state.checkout);
-  const { voucherCode, voucherKind } = useSelector((state: RootState) => state.checkout);
+  const { voucherCode, voucherKind, voucherDiscount } = useSelector(
+    (state: RootState) => state.checkout,
+  );
   const dispatch = useDispatch<AppDispatch>();
-  const giftSubtotal = React.useMemo(() => calcCartSubtotal(lines || []), [lines]);
+  const giftSubtotal = React.useMemo(() => {
+    const goods = calcCartSubtotal(lines || []);
+    const promoDisc =
+      voucherKind === 'promo' ? Math.max(0, Math.floor(voucherDiscount || 0)) : 0;
+    return goodsSubtotalForFreePvzThreshold(goods, promoDisc);
+  }, [lines, voucherDiscount, voucherKind]);
   const giftDenomOnly = React.useMemo(
     () => isGiftDenomOnlyCart(lines || []),
     [lines],

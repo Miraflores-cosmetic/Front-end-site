@@ -132,7 +132,7 @@ const OrderLeftPart: React.FC = () => {
     () => isGiftDenomOnlyCart(lines || []),
     [lines],
   );
-  const giftLine = useApplicableGift(giftSubtotal);
+  const giftLines = useApplicableGift(giftSubtotal);
 
   /** Один раз подставляем ФИО/email/телефон из профиля. После смены ПВЗ вызывается getMe() — без этого снова затирало вручную введённые поля. */
   const didHydrateFormFromMeRef = useRef(false);
@@ -413,7 +413,7 @@ const OrderLeftPart: React.FC = () => {
         clientPayableTotal: payable.payableTotal,
         // Не шлём gift в lines — Nest create аттачит через getApplicableGift.
         // В fingerprint — чтобы не reuse pending-заказа, созданного без подарка.
-        gratitudeGiftVariantId: giftLine?.variantId ?? null,
+        gratitudeGiftVariantIds: giftLines.map((g) => g.variantId),
       });
 
       const openPayWidget = async (orderId: string, orderNumber: string, payToken: string) => {
@@ -547,14 +547,22 @@ const OrderLeftPart: React.FC = () => {
         toast.success(GIFT_HOLD_CAPTURED_TOAST);
       }
 
-      if (
-        giftLine?.variantId &&
-        !(order.items || []).some((i) => i.isGratitudeGift && i.variantId === giftLine.variantId)
-      ) {
-        // Nest soft-skip при OOS — не блокируем оплату.
-        toast.warning(
-          'Подарок благодарности временно недоступен — оформляем заказ без него',
+      if (giftLines.length > 0) {
+        const attached = new Set(
+          (order.items || [])
+            .filter((i) => i.isGratitudeGift)
+            .map((i) => i.variantId),
         );
+        const missing = giftLines.filter((g) => !attached.has(g.variantId));
+        if (missing.length === giftLines.length) {
+          toast.warning(
+            'Подарки благодарности временно недоступны — оформляем заказ без них',
+          );
+        } else if (missing.length > 0) {
+          toast.warning(
+            'Часть подарков благодарности недоступна — оформляем заказ с доступными',
+          );
+        }
       }
 
       writePendingCheckoutOrder({
@@ -665,7 +673,7 @@ const OrderLeftPart: React.FC = () => {
       };
     });
 
-    if (giftLine) {
+    for (const giftLine of giftLines) {
       products.push({
         id: `${giftLine.variantId}:gift`,
         name: giftLine.title,
@@ -680,8 +688,9 @@ const OrderLeftPart: React.FC = () => {
       });
     }
 
+    const giftQty = giftLines.reduce((s, g) => s + g.quantity, 0);
     return {
-      totalItems: payable.totalItems + (giftLine ? giftLine.quantity : 0),
+      totalItems: payable.totalItems + giftQty,
       finalTotal: payable.payableTotal,
       goodsTotal: payable.goodsTotal,
       totalOldPrice: payable.totalOldPrice,
@@ -691,7 +700,7 @@ const OrderLeftPart: React.FC = () => {
       hasPayableLines: payable.hasPayableLines,
       shippingReady: payable.shippingReady,
     };
-  }, [lines, payable, giftLine]);
+  }, [lines, payable, giftLines]);
 
   const payLabel = React.useMemo(() => {
     if (isCreatingPayment) return 'Создание платежа...';

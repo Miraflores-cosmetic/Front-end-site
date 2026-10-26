@@ -30,7 +30,7 @@ const OrderRightPart: React.FC = () => {
     return goodsSubtotalForFreePvzThreshold(goods, promoDisc);
   }, [lines, voucherDiscount, voucherKind]);
 
-  const giftLine = useApplicableGift(giftThresholdBase);
+  const giftLines = useApplicableGift(giftThresholdBase);
 
   const formattedCartData: OrderProduct[] = useMemo(() => {
     if (!lines) return [];
@@ -56,7 +56,7 @@ const OrderRightPart: React.FC = () => {
         isGiftDenom: Boolean(line.isGiftDenom),
       };
     });
-    if (giftLine) {
+    for (const giftLine of giftLines) {
       cart.push({
         variantId: giftLine.variantId,
         lineKey: `${giftLine.variantId}:gift`,
@@ -71,7 +71,7 @@ const OrderRightPart: React.FC = () => {
       });
     }
     return cart;
-  }, [lines, giftLine]);
+  }, [lines, giftLines]);
 
   return (
     <>

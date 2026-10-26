@@ -12,6 +12,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
 import { getMe, logout, isAuthSessionInvalidMessage } from '@/store/slices/authSlice';
+import { useHydrateMeExtras } from '@/hooks/useHydrateMeExtras';
 import { LogoutConfirmationModal } from '@/components/logout-confirmation-modal/LogoutConfirmationModal';
 import { VIEWPORT_MOBILE_MAX } from '@/constants/viewport';
 import { openOrderChat } from '@/lib/orderChat/orderChatEvents';
@@ -32,6 +33,7 @@ const ProfilePage: React.FC = () => {
   const { isAuth, me } = useSelector((state: RootState) => state.authSlice);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
+  useHydrateMeExtras(isAuth);
 
   const isMobile = useScreenMatch();
 

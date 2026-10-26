@@ -58,6 +58,8 @@ export interface AuthState {
   isAuth: boolean;
   token: string | null;
   me: MeInfo | null;
+  /** Адреса/orders total подгружены (lazy после lean getMe). */
+  meExtrasLoaded: boolean;
 }
 
 interface ResultSignUp {

@@ -1,5 +1,8 @@
-import { useEffect, useMemo, useState } from 'react';
-import { fetchCatalogTags, type CatalogTagPublic } from '@/api/catalogApi';
+import { useEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { getCatalogTags } from '@/store/slices/navSlice';
+import type { NavCatalogTag } from '@/types/nav';
+import type { AppDispatch, RootState } from '@/store/store';
 import type { BestSellerEtap } from '@/components/bestseller-card/bestseller-etaps/BestsellerEtaps';
 
 export const CARE_STAGE_SLUGS = [
@@ -34,27 +37,27 @@ export function nextCareStageSlug(current: string | null, ordered: string[]): st
   return ordered[Math.min(idx + 1, ordered.length - 1)];
 }
 
+/** Care-stage labels from Redux nav.tags (shared with Header / Steps). */
 export function useCareStageTabs(productTagSlugs: string[] | undefined) {
-  const [careTags, setCareTags] = useState<CatalogTagPublic[]>([]);
+  const dispatch = useDispatch<AppDispatch>();
+  const navTags = useSelector((state: RootState) => state.nav.tags);
+  const tagsLoading = useSelector((state: RootState) => state.nav.tagsLoading);
 
   useEffect(() => {
-    let cancelled = false;
-    void fetchCatalogTags().then((res) => {
-      if (cancelled) return;
-      const bySlug = new Map((res.items ?? []).map((t) => [t.slug, t]));
-      const ordered = CARE_STAGE_SLUGS.map((s) => bySlug.get(s)).filter(
-        Boolean,
-      ) as CatalogTagPublic[];
-      setCareTags(
-        ordered.length
-          ? ordered
-          : (res.items ?? []).filter((t) => isCareStageTag(t.slug)),
-      );
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+    if (navTags.length === 0 && !tagsLoading) {
+      void dispatch(getCatalogTags());
+    }
+  }, [dispatch, navTags.length, tagsLoading]);
+
+  const careTags = useMemo((): NavCatalogTag[] => {
+    if (!navTags.length) return [];
+    const bySlug = new Map(navTags.map((t) => [t.slug, t]));
+    const ordered = CARE_STAGE_SLUGS.map((s) => bySlug.get(s)).filter(
+      (t): t is NavCatalogTag => t != null,
+    );
+    if (ordered.length) return ordered;
+    return navTags.filter((t) => isCareStageTag(t.slug));
+  }, [navTags]);
 
   const availableEtaps: BestSellerEtap[] = useMemo(() => {
     if (!careTags.length) return CARE_STAGE_FALLBACK;

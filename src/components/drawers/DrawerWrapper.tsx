@@ -23,7 +23,18 @@ const DrawerWrapper: React.FC = () => {
   const isAddress = activeDrawer === 'address';
 
   const isOpenBasket = activeDrawer === 'basket' ? true : false;
-  const isOpenMenu = activeDrawer === 'menu' ? true : false;
+  const isOpenMenu = activeDrawer === 'menu';
+  const [menuDrawerMounted, setMenuDrawerMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isOpenMenu) {
+      setMenuDrawerMounted(true);
+      return;
+    }
+    if (!menuDrawerMounted) return;
+    const t = window.setTimeout(() => setMenuDrawerMounted(false), 450);
+    return () => window.clearTimeout(t);
+  }, [isOpenMenu, menuDrawerMounted]);
   const isOpenAbout = activeDrawer === 'about' ? true : false;
   const isMobileBasket = useScreenMatch();
 
@@ -59,7 +70,7 @@ const DrawerWrapper: React.FC = () => {
         direction='right'
         zIndex={DRAWER_Z_INDEX}
       >
-        <MenuDrawer />
+        {menuDrawerMounted ? <MenuDrawer /> : null}
       </Drawer>
       <Drawer
         className={styles.drawerContainer}

@@ -4,6 +4,7 @@ import BestSellerTabs from '@/components/bestseller-card/bestseller-tabs/BestSel
 import BestSellerEtaps, {
   type BestSellerEtap,
 } from '@/components/bestseller-card/bestseller-etaps/BestsellerEtaps';
+import { HomeNearViewport } from '@/components/home-section/HomeNearViewport';
 import styles from '../ProductDetail.module.scss';
 
 type TabOption = {
@@ -36,25 +37,27 @@ export function ProductCareSection({
     : 'Следующий этап ухода';
 
   return (
-    <>
-      <div className={styles.productSections}>
-        {tabOptions.length > 0 ? (
-          <BestSellerTabs key={`product-tabs-${productId}`} options={tabOptions} />
-        ) : null}
-        <BestSellerEtaps
-          items={availableEtaps}
-          activeEtap={activeEtap}
-          onEtapClick={onEtapClick}
+    <HomeNearViewport minHeight={320} rootMargin="400px 0px">
+      <>
+        <div className={styles.productSections}>
+          {tabOptions.length > 0 ? (
+            <BestSellerTabs key={`product-tabs-${productId}`} options={tabOptions} />
+          ) : null}
+          <BestSellerEtaps
+            items={availableEtaps}
+            activeEtap={activeEtap}
+            onEtapClick={onEtapClick}
+          />
+        </div>
+        <Bestsellers
+          isProductPage
+          isTitleHidden
+          collectionTitle={relatedTitle}
+          filterByEtap={activeEtap}
+          excludeProductId={productId}
+          excludeProductSlug={productSlug}
         />
-      </div>
-      <Bestsellers
-        isProductPage
-        isTitleHidden
-        collectionTitle={relatedTitle}
-        filterByEtap={activeEtap}
-        excludeProductId={productId}
-        excludeProductSlug={productSlug}
-      />
-    </>
+      </>
+    </HomeNearViewport>
   );
 }

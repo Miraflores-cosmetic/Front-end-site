@@ -19,8 +19,24 @@ export function useBuyerOrderChatUnreadCount(enabled: boolean) {
   }, [enabled]);
 
   useEffect(() => {
-    void refresh();
-  }, [refresh]);
+    if (!enabled) return;
+    let cancelled = false;
+    const run = () => {
+      if (!cancelled) void refresh();
+    };
+    if (typeof requestIdleCallback !== 'undefined') {
+      const idleId = requestIdleCallback(run, { timeout: 4000 });
+      return () => {
+        cancelled = true;
+        cancelIdleCallback(idleId);
+      };
+    }
+    const t = window.setTimeout(run, 2500);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(t);
+    };
+  }, [enabled, refresh]);
 
   useEffect(() => {
     if (!enabled) return undefined;
@@ -35,7 +51,6 @@ export function useBuyerOrderChatUnreadCount(enabled: boolean) {
     const tick = () => {
       if (document.visibilityState === 'visible') void refresh();
     };
-    tick();
     const id = window.setInterval(tick, pollMs);
     const onVis = () => tick();
     const onFocus = () => tick();

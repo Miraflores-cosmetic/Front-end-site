@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import styles from './AboutBlock.module.scss';
 import AvoutCenter from '@/assets/images/AvoutCenter.webp';
 import aboutVideo from '@/assets/videos/about-center.mp4';
@@ -23,6 +23,40 @@ const AboutImage: React.FC<{
 const AboutBlock: React.FC = () => {
   const isTablet = useScreenMatch(VIEWPORT_TABLET_MAX);
   const isMobile = useScreenMatch();
+  const lazyRootRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [loadVideo, setLoadVideo] = useState(false);
+
+  useEffect(() => {
+    const root = lazyRootRef.current;
+    if (!root || loadVideo) return;
+
+    const io =
+      typeof IntersectionObserver !== 'undefined'
+        ? new IntersectionObserver(
+            (entries) => {
+              if (entries.some((e) => e.isIntersecting)) {
+                setLoadVideo(true);
+                io?.disconnect();
+              }
+            },
+            { rootMargin: '200px', threshold: 0.01 },
+          )
+        : null;
+    io?.observe(root);
+
+    return () => io?.disconnect();
+  }, [loadVideo]);
+
+  useEffect(() => {
+    if (!loadVideo) return;
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = true;
+    void video.play().catch(() => {
+      /* autoplay policy */
+    });
+  }, [loadVideo]);
 
   return (
     <HomeSection className={styles.about} aria-label="О нас">
@@ -53,15 +87,16 @@ const AboutBlock: React.FC = () => {
           </div>
         </div>
 
-        <div className={styles.center}>
+        <div ref={lazyRootRef} className={styles.center}>
           <video
-            src={aboutVideo}
+            ref={videoRef}
+            src={loadVideo ? aboutVideo : undefined}
             poster={AvoutCenter}
             muted
-            autoPlay
+            autoPlay={loadVideo}
             loop
             playsInline
-            preload="none"
+            preload={loadVideo ? 'metadata' : 'none'}
             className={styles.centerVideo}
             aria-label="О компании Miraflores"
           />

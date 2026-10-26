@@ -49,9 +49,17 @@ export function buildCheckoutFingerprint(input: {
   voucherDiscount?: number;
   /** Клиентский итог к оплате (₽), если уже посчитан. */
   clientPayableTotal?: number | null;
-  /** variantId подарка благодарности из UI (null если порог не достигнут). Меняет fingerprint → не reuse старого заказа без gift. */
-  gratitudeGiftVariantId?: string | null;
+  /**
+   * variantId подарков благодарности из UI (sorted join).
+   * Меняет fingerprint → не reuse старого заказа без gift / с другим набором.
+   */
+  gratitudeGiftVariantIds?: string[] | null;
 }): string {
+  const giftIds = [...(input.gratitudeGiftVariantIds ?? [])]
+    .map((id) => id.trim())
+    .filter(Boolean)
+    .sort()
+    .join(',');
   return JSON.stringify({
     lines: input.lines
       .map((l) => {
@@ -83,7 +91,7 @@ export function buildCheckoutFingerprint(input: {
       input.clientPayableTotal == null || !Number.isFinite(input.clientPayableTotal)
         ? null
         : Math.max(0, Math.round(input.clientPayableTotal)),
-    gratitudeGiftVariantId: (input.gratitudeGiftVariantId ?? '').trim() || null,
+    gratitudeGiftVariantIds: giftIds || null,
   });
 }
 

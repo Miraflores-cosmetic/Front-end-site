@@ -58,6 +58,12 @@ export default defineConfig({
   },
   build: {
     assetsInlineLimit: 4096,
+    /** framer-motion не выносим в shared chunk — Rollup тащит туда jsx-runtime (Safari/X). */
+    modulePreload: {
+      resolveDependencies(_filename, deps) {
+        return deps.filter((dep) => !dep.includes('vendor-motion'));
+      },
+    },
     rollupOptions: {
       output: {
         assetFileNames: assetInfo => {
@@ -68,7 +74,7 @@ export default defineConfig({
         },
         manualChunks(id) {
           if (!id.includes('node_modules')) return;
-          if (id.includes('framer-motion')) return 'vendor-motion';
+          if (id.includes('framer-motion')) return undefined;
           if (id.includes('@reduxjs') || id.includes('react-redux')) return 'vendor-redux';
           if (id.includes('react-router')) return 'vendor-router';
           if (id.includes('socket.io-client')) return 'vendor-socket';

@@ -2,6 +2,7 @@ import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import {
   signUpService,
   getToken,
+  fetchMeExtras,
   getMeInfo,
   updateAccount,
   revokeSession,
@@ -48,6 +49,7 @@ function applyLoggedOut(state: AuthState) {
   state.isAuth = false;
   state.token = null;
   state.me = null;
+  state.meExtrasLoaded = false;
   state.email = '';
   state.signIn.success = false;
   state.signUp.success = false;
@@ -75,6 +77,18 @@ export const getMe = createAsyncThunk<MeInfo>('auth/getMe', async () => {
     }
   }
   return result;
+});
+
+/** Адреса + total заказов — lazy (checkout / profile), не на cold home/catalog. */
+export const hydrateMeExtras = createAsyncThunk<
+  { addresses: MeInfo['addresses']; ordersTotal: number },
+  void,
+  { state: { authSlice: AuthState } }
+>('auth/hydrateMeExtras', async () => fetchMeExtras(), {
+  condition: (_, { getState }) => {
+    const { me, isAuth, meExtrasLoaded } = getState().authSlice;
+    return Boolean(isAuth && me && !meExtrasLoaded);
+  },
 });
 
 /** Revoke JWT на сервере + очистка local/session storage. */
@@ -127,6 +141,7 @@ const initialState: AuthState = {
   isAuth: !!getStoredToken(),
   token: getStoredToken(),
   me: null,
+  meExtrasLoaded: false,
 };
 
 const authSlice = createSlice({
@@ -209,6 +224,7 @@ const authSlice = createSlice({
       .addCase(getMe.fulfilled, (state, action) => {
         if (action.payload) {
           state.me = action.payload;
+          state.meExtrasLoaded = false;
           state.isAuth = true;
           const storedToken = localStorage.getItem('token');
           if (storedToken && storedToken !== 'null' && storedToken !== 'undefined') {
@@ -256,6 +272,13 @@ const authSlice = createSlice({
       })
       .addCase(updateAccountAction.rejected, (_state, action) => {
         console.error('Update account rejected:', action.payload);
+      })
+      .addCase(hydrateMeExtras.fulfilled, (state, action) => {
+        if (state.me && action.payload) {
+          state.me.addresses = action.payload.addresses;
+          state.me.orders = { totalCount: action.payload.ordersTotal };
+        }
+        state.meExtrasLoaded = true;
       });
   },
 });

@@ -6,8 +6,8 @@ import {
   fetchProductBySlug,
   getAllProductEdges,
   getFilteredProducts as catalogGetFilteredProducts,
+  BESTSELLERS_COLLECTION_SLUG,
   getProductEdges,
-  getProductsByCollectionGid,
   getProductsForContextSearch as catalogContextSearch,
   getWarehouses as catalogGetWarehouses,
 } from '@/api/catalogApi';
@@ -44,7 +44,12 @@ export async function updateProductName(_productId: string, _newName: string): P
 }
 
 export async function getBestsellerProducts(): Promise<{ edges: ProductEdge[] }> {
-  return getProductsByCollectionGid('Q29sbGVjdGlvbjo3', 50);
+  const { edges } = await getProductEdges({
+    collection: BESTSELLERS_COLLECTION_SLUG,
+    limit: 12,
+    page: 1,
+  });
+  return { edges };
 }
 
 export async function getAllProducts(maxLimit = 100): Promise<{ edges: ProductEdge[] }> {

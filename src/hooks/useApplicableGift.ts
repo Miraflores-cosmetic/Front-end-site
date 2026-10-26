@@ -12,15 +12,15 @@ export type ApplicableGiftLine = {
 };
 
 /**
- * Подарок благодарности по порогу с бэка (без клиентского хардкода minRub).
+ * Подарки благодарности по порогу с бэка (без клиентского хардкода minRub).
  * `goodsAfterPromo` — сумма товаров после промокода (как Nest create).
  */
-export function useApplicableGift(goodsAfterPromo: number): ApplicableGiftLine | null {
-  const [gift, setGift] = useState<ApplicableGiftLine | null>(null);
+export function useApplicableGift(goodsAfterPromo: number): ApplicableGiftLine[] {
+  const [gifts, setGifts] = useState<ApplicableGiftLine[]>([]);
 
   useEffect(() => {
     if (goodsAfterPromo <= 0) {
-      setGift(null);
+      setGifts([]);
       return;
     }
 
@@ -28,21 +28,38 @@ export function useApplicableGift(goodsAfterPromo: number): ApplicableGiftLine |
     getApplicableGift(goodsAfterPromo)
       .then((res) => {
         if (cancelled) return;
-        if (res.applicable && res.variantId && res.productName) {
-          setGift({
-            variantId: res.variantId,
-            title: res.productName,
-            thumbnail: normalizeMediaUrl(res.thumbnailUrl || ''),
-            quantity: res.quantity ?? 1,
-            price: 0,
-            isGift: true,
-          });
-        } else {
-          setGift(null);
-        }
+        const rawItems =
+          res.applicable && res.items && res.items.length > 0
+            ? res.items
+            : res.applicable && res.variantId && res.productName
+              ? [
+                  {
+                    variantId: res.variantId,
+                    productName: res.productName,
+                    variantName: undefined as string | undefined,
+                    thumbnailUrl: res.thumbnailUrl,
+                    quantity: res.quantity ?? 1,
+                  },
+                ]
+              : [];
+
+        setGifts(
+          rawItems
+            .filter((it) => it.variantId && it.productName)
+            .map((it) => ({
+              variantId: it.variantId!,
+              title: it.variantName
+                ? `${it.productName} — ${it.variantName}`
+                : it.productName!,
+              thumbnail: normalizeMediaUrl(it.thumbnailUrl || ''),
+              quantity: it.quantity ?? 1,
+              price: 0,
+              isGift: true as const,
+            })),
+        );
       })
       .catch(() => {
-        if (!cancelled) setGift(null);
+        if (!cancelled) setGifts([]);
       });
 
     return () => {
@@ -50,5 +67,5 @@ export function useApplicableGift(goodsAfterPromo: number): ApplicableGiftLine |
     };
   }, [goodsAfterPromo]);
 
-  return gift;
+  return gifts;
 }

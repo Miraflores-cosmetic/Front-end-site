@@ -7,6 +7,7 @@ import {
   type HomepageSetItem,
   type HomepageSetProduct,
 } from '@/api/settingsApi';
+import { useHomeCms } from '@/contexts/HomeCmsContext';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
 import { ProductCard } from '@/components/product-card';
 import type { BestSellersProduct } from '@/types/products';
@@ -69,10 +70,16 @@ function SetsSkeleton({ showCircle }: { showCircle: boolean }) {
 
 export const Sets: React.FC = () => {
   const isMobile = useScreenMatch();
+  const homeCms = useHomeCms();
   const [item, setItem] = useState<HomepageSetItem | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (homeCms?.sets) {
+      setItem(homeCms.sets[0] ?? null);
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -89,7 +96,7 @@ export const Sets: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [homeCms]);
 
   if (!loading && !item?.product?.slug) return null;
 

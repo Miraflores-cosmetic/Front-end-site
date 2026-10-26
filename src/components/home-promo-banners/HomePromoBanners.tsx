@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getHomePromo } from '@/api/settingsApi';
+import { useHomeCms } from '@/contexts/HomeCmsContext';
 import { HomeSection } from '@/components/home-section/HomeSection';
 import { ProductScrollStrip, ProductScrollStripItem } from '@/components/product-scroll-strip/ProductScrollStrip';
 import styles from './HomePromoBanners.module.scss';
@@ -104,10 +105,31 @@ export function HomePromoBanners({
   const [wordRight, setWordRight] = useState(wordRightProp ?? 'АКЦИИ');
   const [cards, setCards] = useState<PromoBannerCard[]>(cardsProp ?? DEFAULT_CARDS);
   const [promoFetched, setPromoFetched] = useState(Boolean(cardsProp));
+  const homeCms = useHomeCms();
 
   useEffect(() => {
     if (cardsProp) {
       setCards(cardsProp);
+      setPromoFetched(true);
+      return;
+    }
+    if (homeCms?.promo) {
+      const data = homeCms.promo;
+      setWordLeft(wordLeftProp ?? data.titleLeft);
+      setWordRight(wordRightProp ?? data.titleRight);
+      if (data.items.length > 0) {
+        setCards(
+          data.items.map((it) => ({
+            id: it.id,
+            image: it.imageUrl,
+            alt: it.alt || 'Промо',
+            href: it.href,
+            notch: it.notch,
+          })),
+        );
+      } else {
+        setCards([]);
+      }
       setPromoFetched(true);
       return;
     }
@@ -140,7 +162,7 @@ export function HomePromoBanners({
     return () => {
       alive = false;
     };
-  }, [cardsProp, wordLeftProp, wordRightProp]);
+  }, [cardsProp, wordLeftProp, wordRightProp, homeCms]);
 
   useEffect(() => {
     activeRef.current = active;

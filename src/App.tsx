@@ -11,11 +11,9 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation } from 'react-router-dom';
 import 'react-modern-drawer/dist/index.css';
-import Home from '@/pages/Home/Home';
 import DrawerWrapper from './components/drawers/DrawerWrapper';
 import { Spinner } from '@/components/spinner/Spinner';
 import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
-import { SiteLoader } from '@/components/SiteLoader/SiteLoader';
 import { MetrikaRouteTracker } from '@/components/MetrikaRouteTracker';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
@@ -58,6 +56,10 @@ const QuizResultPage = lazy(() => import('./pages/Quiz/QuizResult'));
 const ProfileQuizResultPage = lazy(() => import('./pages/Profile/ProfileQuizResult'));
 const Articles = lazy(() => import('./pages/Articles/Articles'));
 const ArticleDetail = lazy(() => import('./pages/ArticleDetail/ArticleDetail'));
+const Home = lazy(() => import('@/pages/Home/Home'));
+const SiteLoader = lazy(() =>
+  import('@/components/SiteLoader/SiteLoader').then((m) => ({ default: m.SiteLoader })),
+);
 
 function LazyRoute({ children }: { children: ReactNode }) {
   return <Suspense fallback={<SpinnerLoader />}>{children}</Suspense>;
@@ -145,7 +147,32 @@ function isHomePath(pathname: string) {
   return pathname === '/' || pathname === '';
 }
 
-/** Home preload: не монтируем UI пока SiteLoader не разрешит (после wave-in). */
+const BOOT_LOADER_ID = 'site-boot-loader';
+
+/** Home: lazy SiteLoader (Hero/motion prefetch). Остальные маршруты — без loader-модуля. */
+const AppBootLoader: React.FC = () => {
+  const { pathname } = useLocation();
+  const isHome = isHomePath(pathname);
+
+  useLayoutEffect(() => {
+    if (isHome) return;
+    try {
+      document.getElementById(BOOT_LOADER_ID)?.remove();
+    } catch {
+      /* ignore */
+    }
+    document.body.classList.add('--js-ready');
+  }, [isHome]);
+
+  if (!isHome) return null;
+  return (
+    <Suspense fallback={null}>
+      <SiteLoader />
+    </Suspense>
+  );
+};
+
+/** Home: UI монтируется после wave-in hold (под шторкой), до wave-out / collapse. */
 const AppShellGate: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const deferForLoader = useRef(isHomePath(window.location.pathname)).current;
   const [ready, setReady] = useState(
@@ -243,12 +270,12 @@ const App: React.FC = () => {
   return (
     <>
       <MetrikaRouteTracker />
-      <SiteLoader />
+      <AppBootLoader />
       <AppShellGate>
       <Spinner />
       <AppHeader />
       <Routes>
-        <Route path='/' element={<Home />} />
+        <Route path='/' element={<LazyRoute><Home /></LazyRoute>} />
         <Route path='/sign-in' element={<LazyRoute><SignIn /></LazyRoute>} />
         <Route path='/sign-up' element={<LazyRoute><SignUp /></LazyRoute>} />
         <Route path='/forgot-password' element={<LazyRoute><ForgotPassword /></LazyRoute>} />

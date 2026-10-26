@@ -9,6 +9,7 @@ import flowerSmall from '@/assets/images/flowerSmall.webp';
 import lineTo from '@/assets/icons/lineTo.svg';
 import { scrollToAnchor } from '@/utils/scrollToAnchor';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
+import { useHomeCms } from '@/contexts/HomeCmsContext';
 import styles from './HomeHero.module.scss';
 
 const SLIDE_MS = 9000;
@@ -49,12 +50,18 @@ function toView(slides: HeroSlide[]): SlideView[] {
 export const HomeHero: React.FC = () => {
   const navigate = useNavigate();
   const reduceMotion = useReducedMotion();
+  const homeCms = useHomeCms();
   // Статичный flower сразу — без спиннера на first viewport (CLS)
   const isMobile = useScreenMatch();
   const [slides, setSlides] = useState<SlideView[]>(FALLBACK_SLIDES);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
+    if (homeCms?.hero?.length) {
+      setSlides(toView(homeCms.hero));
+      setIndex(0);
+      return;
+    }
     let alive = true;
     void (async () => {
       try {
@@ -69,7 +76,7 @@ export const HomeHero: React.FC = () => {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [homeCms]);
 
   useEffect(() => {
     if (slides.length < 2 || reduceMotion) return;

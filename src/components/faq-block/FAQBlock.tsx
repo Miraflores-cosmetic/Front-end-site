@@ -6,6 +6,7 @@ import { HomeSection } from '@/components/home-section/HomeSection';
 import { sanitizeCmsHtml } from '@/utils/sanitizeCmsHtml';
 import { faqAnswerPlainText, faqAnswerToHtml } from '@/utils/faqAnswerHtml';
 import { scrollToAnchorWhenReady } from '@/utils/scrollToAnchor';
+import { useHomeCms } from '@/contexts/HomeCmsContext';
 
 function renderFaqAnswerHtml(raw: string): string {
   return sanitizeCmsHtml(faqAnswerToHtml(raw));
@@ -64,6 +65,7 @@ export const FAQBlock: React.FC<{
   variant?: 'home' | 'page';
 }> = ({ variant = 'home' }) => {
   const location = useLocation();
+  const homeCms = useHomeCms();
   const [faqItems, setFaqItems] = useState<FaqItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -86,8 +88,14 @@ export const FAQBlock: React.FC<{
   }, []);
 
   useEffect(() => {
+    if (variant === 'home' && homeCms?.faq) {
+      setFaqItems(homeCms.faq);
+      setLoading(false);
+      setError(false);
+      return;
+    }
     void fetchFAQ();
-  }, [fetchFAQ]);
+  }, [fetchFAQ, variant, homeCms]);
 
   useEffect(() => {
     if (loading || !faqItems.length) return;

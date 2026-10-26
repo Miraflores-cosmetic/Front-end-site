@@ -9,6 +9,7 @@ import {
 } from '@/api/settingsApi';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
 import { normalizeMediaUrl } from '@/utils/mediaUrl';
+import { useHomeCms } from '@/contexts/HomeCmsContext';
 import { HomeSection } from '@/components/home-section/HomeSection';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 
@@ -62,6 +63,7 @@ function GratitudeSkeleton() {
 
 export const GratitudeProgram: React.FC = () => {
   const isMobile = useScreenMatch();
+  const homeCms = useHomeCms();
   const [tiers, setTiers] = useState<GratitudeTierPublic[]>([]);
   const [articleSlug, setArticleSlug] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -69,6 +71,12 @@ export const GratitudeProgram: React.FC = () => {
   const trackRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (homeCms?.gratitude) {
+      setTiers(homeCms.gratitude.tiers ?? []);
+      setArticleSlug(homeCms.gratitude.articleSlug);
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
     (async () => {
       try {
@@ -90,7 +98,7 @@ export const GratitudeProgram: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [homeCms]);
 
   const moreTo = useMemo(() => articleHref(articleSlug), [articleSlug]);
 

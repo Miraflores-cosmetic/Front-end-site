@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import styles from './BestSellerCard.module.scss';
@@ -6,7 +6,11 @@ import { BestSellersProduct } from '@/types/products';
 import { FavoriteButton } from '@/components/favorite-button/FavoriteButton';
 import AddToBasket from '@/components/add-tobasket-button/AddToBasket';
 import { ImageWithFallback } from '@/components/image-with-fallback/ImageWithFallback';
-import { VolumePickerModal } from '@/components/volume-picker-modal/VolumePickerModal';
+const VolumePickerModal = lazy(() =>
+  import('@/components/volume-picker-modal/VolumePickerModal').then((m) => ({
+    default: m.VolumePickerModal,
+  })),
+);
 import { useCardVolumeCart } from '@/hooks/useCardVolumeCart';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { isVariantOutOfStock } from '@/utils/stock';
@@ -592,13 +596,15 @@ const BestSellerProductCardInner: React.FC<BestSellerProductCardProps> = ({
             )}
           </div>
 
-          {needsVolumePick ? (
-            <VolumePickerModal
-              open={volumeModalOpen}
-              options={volumeOptions}
-              onSelect={onVolumeSelect}
-              onClose={closeVolumeModal}
-            />
+          {needsVolumePick && volumeModalOpen ? (
+            <Suspense fallback={null}>
+              <VolumePickerModal
+                open={volumeModalOpen}
+                options={volumeOptions}
+                onSelect={onVolumeSelect}
+                onClose={closeVolumeModal}
+              />
+            </Suspense>
           ) : null}
         </>
       )}

@@ -62,7 +62,8 @@ type JcosVariant = {
   stock: number;
   stockReserve: number;
   available: number;
-  images: JcosVariantImage[];
+  /** Omit when variant uses product-level gallery. */
+  images?: JcosVariantImage[];
 };
 
 export type JcosProductDetail = {
@@ -103,7 +104,20 @@ export type JcosProductDetail = {
   ogImageUrl: string | null;
   canonicalPath: string | null;
   seoNoIndex: boolean;
+  contentDeferred?: boolean;
 };
+
+export type JcosProductContent = Pick<
+  JcosProductDetail,
+  | 'descriptionHtml'
+  | 'actionEffectHtml'
+  | 'applicationHtml'
+  | 'compositionHtml'
+  | 'importantNoteHtml'
+  | 'mirafloresNoteHtml'
+  | 'storageHtml'
+  | 'extraHtml'
+>;
 
 type JcosCategory = {
   id: string;
@@ -188,7 +202,8 @@ function pricingBlock(price: number, compareAt: number | null) {
   };
 }
 
-function mapVariantNode(v: JcosVariant) {
+function mapVariantNode(v: JcosVariant, productImages: JcosVariantImage[]) {
+  const imageSource = v.images?.length ? v.images : productImages;
   return {
     node: {
       id: v.id,
@@ -206,7 +221,7 @@ function mapVariantNode(v: JcosVariant) {
             },
           ]
         : [],
-      media: v.images.map((img) => ({
+      media: imageSource.map((img) => ({
         id: img.id,
         url: uploadsUrl(img.url) || img.url,
         alt: v.name,
@@ -270,28 +285,32 @@ export function cardToProductEdge(card: JcosProductCard): ProductEdge {
                 maxQty: card.maxQty,
               },
             ]
-      ).map((v) =>
-        mapVariantNode({
-          id: v.id,
-          name: v.name || card.name,
-          slug: card.slug,
-          volumeMl: null,
-          sku: '',
-          price: v.price,
-          compareAt: v.oldPrice,
-          orderMinQty: v.minQty,
-          orderMaxQty: v.maxQty > 0 ? v.maxQty : null,
-          stock: v.available,
-          stockReserve: 0,
-          available: v.available,
-          images: urls.map((url, i) => ({
-            id: `img-${i}`,
-            url,
-            mediaType: 'image' as const,
-            sortOrder: i,
-          })),
-        }),
-      ),
+      ).map((v) => {
+        const cardImages = urls.map((url, i) => ({
+          id: `img-${i}`,
+          url,
+          mediaType: 'image' as const,
+          sortOrder: i,
+        }));
+        return mapVariantNode(
+          {
+            id: v.id,
+            name: v.name || card.name,
+            slug: card.slug,
+            volumeMl: null,
+            sku: '',
+            price: v.price,
+            compareAt: v.oldPrice,
+            orderMinQty: v.minQty,
+            orderMaxQty: v.maxQty > 0 ? v.maxQty : null,
+            stock: v.available,
+            stockReserve: 0,
+            available: v.available,
+            images: cardImages,
+          },
+          cardImages,
+        );
+      }),
     } as unknown as ProductEdge['node'],
   };
 }
@@ -305,7 +324,7 @@ export function adaptProductDetail(p: JcosProductDetail): ProductDetailNode {
     mediaType: img.mediaType === 'video' ? 'video' : 'image',
   }));
   const thumbUrl = media[0]?.url || '';
-  const edges = p.variants.map(mapVariantNode);
+  const edges = p.variants.map((v) => mapVariantNode(v, p.images));
 
   return {
     id: p.id,
@@ -399,7 +418,21 @@ export async function fetchProductList(params: {
 
 export async function fetchProductBySlug(slug: string): Promise<JcosProductDetail | null> {
   try {
-    return await apiFetch<JcosProductDetail>(`/catalog/products/${encodeURIComponent(slug)}`);
+    return await apiFetch<JcosProductDetail>(`/catalog/products/${encodeURIComponent(slug)}`, {
+      query: { fields: 'hero' },
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function fetchProductContentBySlug(
+  slug: string,
+): Promise<JcosProductContent | null> {
+  try {
+    return await apiFetch<JcosProductContent>(
+      `/catalog/products/${encodeURIComponent(slug)}/content`,
+    );
   } catch {
     return null;
   }

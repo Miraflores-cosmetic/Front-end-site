@@ -162,8 +162,57 @@ function mapAddress(a: {
   };
 }
 
+function buildMeFromAuth(
+  authMe: {
+    id: string;
+    email: string;
+    displayName: string | null;
+    isActive: boolean;
+    phone?: string | null;
+  },
+  account: {
+    id: string;
+    email: string;
+    displayName: string | null;
+    phone: string | null;
+    birthday?: string | null;
+    marketingConsent?: boolean;
+    hasGiftCertificates?: boolean;
+  } | null,
+  extras?: { addresses?: AddressInfo[]; ordersTotal?: number },
+): MeInfo {
+  const displayName = account?.displayName ?? authMe.displayName;
+  const { firstName, lastName } = splitDisplayName(displayName);
+  const phone = account?.phone ?? authMe.phone ?? null;
+  const birthday = account?.birthday ?? null;
+  const marketingConsent = account?.marketingConsent === true;
+
+  return {
+    id: authMe.id,
+    email: account?.email ?? authMe.email,
+    firstName,
+    lastName,
+    isActive: authMe.isActive,
+    isConfirmed: Boolean(authMe.id && authMe.isActive),
+    addresses: extras?.addresses ?? [],
+    giftCards: { totalCount: account?.hasGiftCertificates ? 1 : 0 },
+    orders:
+      extras?.ordersTotal != null ? { totalCount: extras.ordersTotal } : undefined,
+    avatar: null,
+    phone,
+    birthday,
+    marketingConsent,
+    metadata: [
+      ...(phone ? [{ key: 'phone', value: phone }] : []),
+      ...(birthday ? [{ key: 'birthday', value: birthday }] : []),
+      { key: 'receiveGreetings', value: marketingConsent ? 'true' : 'false' },
+    ],
+  };
+}
+
+/** Cold start: только профиль (без адресов/заказов). */
 export async function getMeInfo(): Promise<MeInfo> {
-  const [authMe, account, addresses, orders] = await Promise.all([
+  const [authMe, account] = await Promise.all([
     apiFetch<{
       id: string;
       email: string;
@@ -180,49 +229,35 @@ export async function getMeInfo(): Promise<MeInfo> {
       marketingConsent?: boolean;
       hasGiftCertificates?: boolean;
     }>('/account/me').catch(() => null),
-    apiFetch<Array<Parameters<typeof mapAddress>[0]> | { items?: Array<Parameters<typeof mapAddress>[0]> }>(
-      '/account/addresses',
-    ).catch(() => []),
-    apiFetch<{ items?: unknown[]; total?: number } | unknown[]>('/account/orders', {
-      query: { page: 1, limit: 1 },
-    }).catch(() => []),
   ]);
 
-  const displayName = account?.displayName ?? authMe.displayName;
-  const { firstName, lastName } = splitDisplayName(displayName);
-  const addressRows = Array.isArray(addresses)
-    ? addresses
-    : (addresses?.items ?? []);
+  return buildMeFromAuth(authMe, account);
+}
+
+export async function fetchMeAddresses(): Promise<AddressInfo[]> {
+  const addresses = await apiFetch<
+    Array<Parameters<typeof mapAddress>[0]> | { items?: Array<Parameters<typeof mapAddress>[0]> }
+  >('/account/addresses').catch(() => []);
+  const addressRows = Array.isArray(addresses) ? addresses : (addresses?.items ?? []);
+  return addressRows.map(mapAddress);
+}
+
+export async function fetchMeOrdersTotal(): Promise<number> {
+  const orders = await apiFetch<{ items?: unknown[]; total?: number } | unknown[]>(
+    '/account/orders',
+    { query: { page: 1, limit: 1 } },
+  ).catch(() => []);
   const orderRows = Array.isArray(orders) ? orders : (orders?.items ?? []);
-  const orderTotal = Array.isArray(orders)
-    ? orders.length
-    : (orders?.total ?? orderRows.length);
+  return Array.isArray(orders) ? orders.length : (orders?.total ?? orderRows.length);
+}
 
-  const phone = account?.phone ?? authMe.phone ?? null;
-  const birthday = account?.birthday ?? null;
-  const marketingConsent = account?.marketingConsent === true;
-
-  return {
-    id: authMe.id,
-    email: account?.email ?? authMe.email,
-    firstName,
-    lastName,
-    isActive: authMe.isActive,
-    // Nest: buyer создаётся после register/complete — «подтверждён» = есть аккаунт.
-    isConfirmed: Boolean(authMe.id && authMe.isActive),
-    addresses: addressRows.map(mapAddress),
-    giftCards: { totalCount: account?.hasGiftCertificates ? 1 : 0 },
-    orders: { totalCount: orderTotal },
-    avatar: null,
-    phone,
-    birthday,
-    marketingConsent,
-    metadata: [
-      ...(phone ? [{ key: 'phone', value: phone }] : []),
-      ...(birthday ? [{ key: 'birthday', value: birthday }] : []),
-      { key: 'receiveGreetings', value: marketingConsent ? 'true' : 'false' },
-    ],
-  };
+/** Checkout / profile — адреса + счётчик заказов (lazy после getMe). */
+export async function fetchMeExtras(): Promise<{ addresses: AddressInfo[]; ordersTotal: number }> {
+  const [addresses, ordersTotal] = await Promise.all([
+    fetchMeAddresses(),
+    fetchMeOrdersTotal(),
+  ]);
+  return { addresses, ordersTotal };
 }
 
 export async function requestPasswordReset(email: string, redirectUrl?: string) {

@@ -10,6 +10,7 @@ import { setDefaultAddressService } from '@/graphql/queries/address.service';
 import { AddressTypeEnum } from '@/graphql/types/address.types';
 import { useToast } from '@/components/toast/toast';
 import { getMe } from '@/store/slices/authSlice';
+import { useHydrateMeExtras } from '@/hooks/useHydrateMeExtras';
 import { deleteAddress } from '@/graphql/queries/address.service';
 import {
   formatProfileShippingAddressLine,
@@ -56,6 +57,7 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({
   const reselectOpenedForId = useRef<string | null>(null);
   const isMobile = useScreenMatch();
   const ozonAvailable = useOzonAvailable();
+  useHydrateMeExtras(isAuth);
 
   useEffect(() => {
     if (isAuth && me) {

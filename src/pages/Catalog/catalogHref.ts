@@ -38,8 +38,8 @@ export function catalogHref(
   return qs ? `${base}?${qs}` : base;
 }
 
-/** Desktop page size — denser grid. */
-export const CATALOG_PAGE_SIZE = 48;
+/** Desktop page size — keep first PLP payload lean (sync backend PUBLIC_PRODUCTS_DEFAULT_LIMIT). */
+export const CATALOG_PAGE_SIZE = 24;
 /** Mobile page size — fewer images / Redux cards above the fold. */
 export const CATALOG_PAGE_SIZE_MOBILE = 12;
 

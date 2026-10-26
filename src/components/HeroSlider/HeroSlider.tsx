@@ -1,4 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
 import Slider from 'react-slick';
 import type { CustomArrowProps, Settings } from 'react-slick';
 import styles from './HeroSlider.module.scss';
@@ -138,21 +140,28 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ media }) => {
     <div className={styles.heroSlider}>
       <div className={styles.mediaStage}>
         <Slider ref={sliderRef} {...settings}>
-          {items.map((src, index) => (
+          {items.map((src, index) => {
+            const isActiveSlide = index === active;
+            return (
             <div key={src.id || `${src.url}-${index}`} className={styles.slide}>
               {isVideo(src) ? (
                 <div className={styles.videoWrap}>
-                  <video
-                    ref={(el) => {
-                      videoRefs.current[index] = el;
-                    }}
-                    className={styles.media}
-                    src={src.url}
-                    controls
-                    playsInline
-                    preload="metadata"
-                    aria-label={src.alt}
-                  />
+                  {isActiveSlide ? (
+                    <video
+                      ref={(el) => {
+                        videoRefs.current[index] = el;
+                      }}
+                      className={styles.media}
+                      src={src.url}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      aria-label={src.alt}
+                    />
+                  ) : (
+                    <div className={styles.media} aria-hidden />
+                  )}
+                  {isActiveSlide ? (
                   <button
                     type="button"
                     className={styles.videoFullscreen}
@@ -172,6 +181,7 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ media }) => {
                       />
                     </svg>
                   </button>
+                  ) : null}
                 </div>
               ) : (
                 <button
@@ -180,11 +190,19 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ media }) => {
                   onClick={() => openImageZoom(src.url)}
                   aria-label={`${src.alt}, увеличить`}
                 >
-                  <img className={styles.media} src={src.url} alt={src.alt} />
+                  <img
+                    className={styles.media}
+                    src={src.url}
+                    alt={src.alt}
+                    loading={index === 0 ? 'eager' : 'lazy'}
+                    decoding="async"
+                    fetchPriority={index === 0 ? 'high' : 'auto'}
+                  />
                 </button>
               )}
             </div>
-          ))}
+          );
+          })}
         </Slider>
 
         {items.length > 1 ? (
@@ -213,14 +231,24 @@ const HeroSlider: React.FC<HeroSliderProps> = ({ media }) => {
                   </span>
                 ) : null}
                 {isVideo(src) ? (
-                  <video
-                    src={src.url}
-                    muted
-                    preload="metadata"
-                    className={styles.thumbMedia}
-                  />
+                  active === index ? (
+                    <video
+                      src={src.url}
+                      muted
+                      preload="metadata"
+                      className={styles.thumbMedia}
+                    />
+                  ) : (
+                    <span className={styles.thumbMedia} aria-hidden />
+                  )
                 ) : (
-                  <img src={src.url} alt="" className={styles.thumbMedia} />
+                  <img
+                    src={src.url}
+                    alt=""
+                    className={styles.thumbMedia}
+                    loading="lazy"
+                    decoding="async"
+                  />
                 )}
               </button>
             ))}

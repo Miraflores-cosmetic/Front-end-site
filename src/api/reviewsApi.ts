@@ -300,9 +300,13 @@ export async function getProductReviewsMeta(slug: string): Promise<{
   const cached = cacheGet(productMetaCache, slug);
   if (cached) return cached;
 
-  const page = await getProductPublishedReviews(slug, 1, 1);
-  const meta = cacheGet(productMetaCache, slug);
-  if (meta) return meta;
-
-  return { ratingAvg: null, ratingCount: page.total };
+  const data = await apiFetch<{ ratingAvg: number | null; ratingCount: number }>(
+    `/reviews/product/${encodeURIComponent(slug)}/meta`,
+  );
+  const meta = {
+    ratingAvg: data.ratingAvg,
+    ratingCount: data.ratingCount ?? 0,
+  };
+  cacheSet(productMetaCache, slug, meta);
+  return meta;
 }

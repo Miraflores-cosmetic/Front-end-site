@@ -62,7 +62,7 @@ const BasketDrawer: React.FC = () => {
       voucherKind === 'promo' ? Math.max(0, Math.floor(voucherDiscount || 0)) : 0;
     return goodsSubtotalForFreePvzThreshold(totalToPrice, promoDisc);
   }, [totalToPrice, voucherDiscount, voucherKind]);
-  const giftLine = useApplicableGift(giftThresholdBase);
+  const giftLines = useApplicableGift(giftThresholdBase);
 
   const itemCount = lines.reduce((sum, l) => sum + (l.quantity || 0), 0);
   const finalPrice = Math.max(0, totalToPrice - (voucherDiscount || 0));
@@ -265,7 +265,7 @@ const BasketDrawer: React.FC = () => {
                 <BasketCard {...item} />
               </li>
             ))}
-            {giftLine ? (
+            {giftLines.map((giftLine) => (
               <li key={`gift-${giftLine.variantId}`} className={styles.listItem}>
                 <BasketCard
                   variantId={giftLine.variantId}
@@ -276,7 +276,7 @@ const BasketDrawer: React.FC = () => {
                   isGift
                 />
               </li>
-            ) : null}
+            ))}
           </ul>
 
           <footer className={styles.footer}>

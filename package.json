@@ -24,6 +24,7 @@
     "yookassa-api": "node server/yookassa-api.mjs"
   },
   "dependencies": {
+    "@fontsource/onest": "^5.3.1",
     "@miraflores/order-chat-core": "file:../packages/order-chat-core",
     "@miraflores/order-chat-ui": "file:../packages/order-chat-ui",
     "@miraflores/volume-picker": "file:../packages/volume-picker",

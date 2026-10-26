@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { fetchProductContentBySlug } from '@/api/catalogApi';
 import { getSingleProduct } from '@/graphql/queries/products.service';
 import { productSliceState, GetProductInput, ProductSliceItem } from '@/types/productSlice';
 import { ProductDetailNode } from '@/graphql/types/core.types';
@@ -104,6 +105,16 @@ export const getProductBySlug = createAsyncThunk<ProductDetailNode | null, GetPr
   },
 );
 
+/** Tab HTML — после hero (GET …/products/:slug/content). */
+export const hydrateProductContent = createAsyncThunk<
+  Awaited<ReturnType<typeof fetchProductContentBySlug>>,
+  string
+>('product/hydrateContent', async (slug) => {
+  const trimmed = slug?.trim() || '';
+  if (!trimmed) return null;
+  return fetchProductContentBySlug(trimmed);
+});
+
 const productSlice = createSlice({
   name: 'product',
   initialState,
@@ -158,6 +169,20 @@ const productSlice = createSlice({
         state.item = null;
         state.activeVariantId = null;
         state.notFound = true;
+      })
+      .addCase(hydrateProductContent.fulfilled, (state, action) => {
+        const payload = action.payload;
+        if (!payload || !state.item) return;
+        state.item = {
+          ...state.item,
+          description: payload.descriptionHtml || state.item.description,
+          actionEffectHtml: payload.actionEffectHtml || '',
+          applicationHtml: payload.applicationHtml || '',
+          compositionHtml: payload.compositionHtml || '',
+          importantNoteHtml: payload.importantNoteHtml || '',
+          mirafloresNoteHtml: payload.mirafloresNoteHtml || '',
+          storageHtml: payload.storageHtml || state.item.storageHtml,
+        };
       });
   },
 });

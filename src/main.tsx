@@ -4,9 +4,6 @@ import './style/global.scss';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store/store';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
-
 import App from './App';
 import { ToastProvider } from './components/toast/toast';
 import { captureYrFromUrl } from './lib/yourichAffiliate';

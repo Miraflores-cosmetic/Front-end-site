@@ -13,6 +13,7 @@ import { BESTSELLERS_COLLECTION_SLUG } from '@/api/catalogApi';
 import type { AppDispatch, RootState } from '@/store/store';
 import type { BestSellersProduct } from '@/types/products';
 import MoreLink, { SectionTitleRow } from '@/components/MoreLink/MoreLink';
+import { useHomeCms } from '@/contexts/HomeCmsContext';
 import { HomeSection } from '@/components/home-section/HomeSection';
 import styles from './Bestsellers.module.scss';
 
@@ -95,6 +96,7 @@ export default function Bestsellers({
     (isProductPage || isCatalogPage || isProfilePage ? 32 : 0);
   const stripSize = isCatalogPage ? 'md' : 'lg';
   const dispatch = useDispatch<AppDispatch>();
+  const homeCms = useHomeCms();
   const { bestSellers, loading, hasAttemptedLoad } = useSelector(
     (state: RootState) => state.bestsellerSlice
   );
@@ -105,10 +107,11 @@ export default function Bestsellers({
   const [loadingEtap, setLoadingEtap] = useState(false);
 
   useEffect(() => {
+    if (homeCms?.bestsellers?.length) return;
     if (!collectionId && !filterByEtap && !hasAttemptedLoad && !loading) {
       dispatch(getBestSellers());
     }
-  }, [dispatch, hasAttemptedLoad, loading, filterByEtap, collectionId]);
+  }, [dispatch, hasAttemptedLoad, loading, filterByEtap, collectionId, homeCms]);
 
   useEffect(() => {
     if (!collectionId?.trim()) {
@@ -145,7 +148,7 @@ export default function Bestsellers({
       try {
         const result = await getProductsByCareStageRest(
           filterByEtap,
-          50,
+          isProductPage ? 10 : 50,
           excludeProductSlug,
           excludeProductId,
         );
@@ -163,11 +166,16 @@ export default function Bestsellers({
     return () => {
       cancelled = true;
     };
-  }, [filterByEtap, excludeProductId, excludeProductSlug]);
+  }, [filterByEtap, excludeProductId, excludeProductSlug, isProductPage]);
+
+  const isHomeStrip = !isProductPage && !isCatalogPage && !isProfilePage;
 
   const products = useMemo(() => {
     if (collectionId?.trim()) return collectionProducts;
     if (filterByEtap?.trim()) return etapProducts;
+    if (isHomeStrip && homeCms?.bestsellers?.length) {
+      return excludeProduct(homeCms.bestsellers, excludeProductId, excludeProductSlug);
+    }
     return excludeProduct(bestSellers, excludeProductId, excludeProductSlug);
   }, [
     collectionId,
@@ -177,18 +185,19 @@ export default function Bestsellers({
     bestSellers,
     excludeProductId,
     excludeProductSlug,
+    isHomeStrip,
+    homeCms,
   ]);
 
   const isLoading = loading || loadingCollection || loadingEtap;
-  const isInitialLoading = isLoading && products.length === 0;
+  const isInitialLoading =
+    isLoading && products.length === 0 && !(isHomeStrip && homeCms?.bestsellers?.length);
   const isRefreshing = (loadingCollection || loadingEtap) && products.length > 0;
   const title = collectionTitle ?? 'Бестселлеры';
   const moreHref =
     collectionId && !collectionId.includes('=')
       ? `/catalog?collection=${encodeURIComponent(collectionId)}`
       : `/catalog?collection=${BESTSELLERS_COLLECTION_SLUG}`;
-
-  const isHomeStrip = !isProductPage && !isCatalogPage && !isProfilePage;
 
   return (
     <HomeSection

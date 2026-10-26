@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import check from '@/assets/icons/tick-circle.svg';
 import slide3 from '@/assets/images/item-photo.jpg';
@@ -8,8 +8,7 @@ import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { generateBestsellerTabsOptions } from '@/utils/tabsGenerator';
 import { editorJsToHtml } from '@/utils/editorJsParser';
 import { isVariantOutOfStock } from '@/utils/stock';
-import { getProductBySlug } from '@/store/slices/productSlice';
-import type { AppDispatch, RootState } from '@/store/store';
+import type { RootState } from '@/store/store';
 import { CARE_STAGE_SLUGS, useCareStageTabs } from './hooks/useCareStageTabs';
 import { useProductReviews } from './hooks/useProductReviews';
 import { useProductSeo } from './hooks/useProductSeo';
@@ -29,13 +28,8 @@ export default function ProductDetailView() {
     (state: RootState) => state.product,
   );
   const { slug } = useParams();
-  const dispatch = useDispatch<AppDispatch>();
   const isMobile = useScreenMatch();
   const trackedPdpSlug = useRef<string | null>(null);
-
-  useEffect(() => {
-    dispatch(getProductBySlug({ slug: slug ?? '' }));
-  }, [slug, dispatch]);
 
   useEffect(() => {
     if (!item?.slug || loading) return;

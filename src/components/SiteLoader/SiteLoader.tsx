@@ -9,6 +9,8 @@ import {
   prepareLogoWaveIn,
   resetLogoWaveVisible,
 } from './logoWave';
+import { fetchCategories } from '@/api/catalogApi';
+import { prefetchHomeBundle } from '@/api/settingsApi';
 import styles from './SiteLoader.module.scss';
 
 const BOOT_LOADER_ID = 'site-boot-loader';
@@ -103,6 +105,8 @@ export function SiteLoader() {
     void preloadLogoWaveAnime();
     void import('@/pages/Home/Home');
     void import('@/components/home-hero/HomeHero');
+    prefetchHomeBundle();
+    void fetchCategories();
     setShouldShow(true);
   }, [enabled]);
 
@@ -151,12 +155,15 @@ export function SiteLoader() {
         await new Promise((r) => setTimeout(r, HOLD_AFTER_IN_MS));
         if (cancelled) return;
 
-        await animateLogoWaveOut(logoEl, distance);
+        /* Shell + Hero fetch/paint под шторкой, до wave-out — LCP не ждёт полный gate. */
+        ensureContentReady();
+        await Promise.all([
+          animateLogoWaveOut(logoEl, distance),
+          waitForHomePaint(),
+        ]);
         if (cancelled) return;
 
-        /* Mount только после wave-out; шторка (CSS) + paint Hero параллельно. */
-        ensureContentReady();
-        await Promise.all([animateBgCollapse(bgEl), waitForHomePaint()]);
+        await animateBgCollapse(bgEl);
       } catch {
         /* chunk/network failure — fall through to finishLoader */
       }

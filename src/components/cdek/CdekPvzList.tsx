@@ -157,8 +157,10 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
     normalizeCdekCountryCode(countryCodeProp, 'RU'),
   );
   const [cities, setCities] = useState<City[]>([]);
+  const [searchCities, setSearchCities] = useState<City[]>([]);
   const [citiesLoading, setCitiesLoading] = useState(true);
   const [citiesError, setCitiesError] = useState<string | null>(null);
+  const [citySearchLoading, setCitySearchLoading] = useState(false);
 
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
   const [citySearchQuery, setCitySearchQuery] = useState('');
@@ -171,6 +173,24 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
 
   const country = cdekCountryDef(countryCode);
   const cityHint = (defaultCity || '').trim() || country.defaultCity;
+
+  const fetchCitiesByName = useCallback(
+    async (name: string, signal?: AbortSignal): Promise<City[]> => {
+      const baseUrl = window.location.origin;
+      const url =
+        `${baseUrl}/api/cdek/service?method=location/cities` +
+        `&country_codes=${encodeURIComponent(countryCode)}` +
+        `&city=${encodeURIComponent(name)}` +
+        `&size=20`;
+      const response = await fetch(url, { signal });
+      if (!response.ok) {
+        throw new Error(`Ошибка загрузки городов: ${response.status}`);
+      }
+      const data = await response.json();
+      return Array.isArray(data) ? data : data.items || [];
+    },
+    [countryCode],
+  );
 
   useEffect(() => {
     if (countryCodeProp && countryCodeProp !== countryCode) {
@@ -196,66 +216,105 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
   );
 
   useEffect(() => {
-    const fetchCities = async () => {
+    const ac = new AbortController();
+    const fetchPriorityCities = async () => {
       setCitiesLoading(true);
       setCitiesError(null);
       setSelectedCity(null);
       setPvzList([]);
+      setSearchCities([]);
+      setCitySearchQuery('');
 
       try {
-        const baseUrl = window.location.origin;
-        const url = `${baseUrl}/api/cdek/service?method=location/cities&size=10000&country_codes=${countryCode}`;
-
-        const response = await fetch(url);
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          setCitiesError(`Ошибка загрузки городов: ${response.status}`);
-          throw new Error(`HTTP ${response.status}: ${errorText}`);
+        const names = [...country.priorityCities];
+        if (
+          cityHint &&
+          !names.some((n) => n.toLowerCase() === cityHint.toLowerCase())
+        ) {
+          names.unshift(cityHint);
         }
 
-        const data = await response.json();
-        const citiesList: City[] = Array.isArray(data) ? data : (data.items || []);
+        const chunks = await Promise.all(
+          names.map(async (name) => {
+            try {
+              const list = await fetchCitiesByName(name, ac.signal);
+              const exact =
+                list.find(
+                  (c) => c.city.toLowerCase() === name.toLowerCase(),
+                ) || list[0];
+              return exact || null;
+            } catch {
+              return null;
+            }
+          }),
+        );
 
+        if (ac.signal.aborted) return;
+
+        const byCode = new Map<number, City>();
+        for (const c of chunks) {
+          if (c?.code) byCode.set(c.code, c);
+        }
+        const citiesList = [...byCode.values()];
         if (citiesList.length === 0) {
           setCitiesError('Не удалось загрузить список городов');
           return;
         }
 
-        const sortedCities = citiesList.sort((a, b) =>
-          a.city.localeCompare(b.city, 'ru'),
-        );
-
-        setCities(sortedCities);
+        setCities(citiesList);
 
         const needle = cityHint.toLowerCase();
         const defaultCityData =
-          sortedCities.find((c) => c.city.toLowerCase() === needle) ||
-          sortedCities.find((c) => c.city === country.defaultCity) ||
-          sortedCities.find(
-            (c) =>
-              needle.length >= 3 &&
-              (c.city.toLowerCase().includes(needle) ||
-                needle.includes(c.city.toLowerCase())),
-          );
-
-        if (defaultCityData) {
-          setSelectedCity(defaultCityData);
-        } else if (sortedCities.length > 0) {
-          setSelectedCity(sortedCities[0]);
-        }
+          citiesList.find((c) => c.city.toLowerCase() === needle) ||
+          citiesList.find((c) => c.city === country.defaultCity) ||
+          citiesList[0];
+        setSelectedCity(defaultCityData);
       } catch (error: unknown) {
+        if (ac.signal.aborted) return;
         const message =
           error instanceof Error ? error.message : 'Ошибка загрузки городов';
         setCitiesError(message);
       } finally {
-        setCitiesLoading(false);
+        if (!ac.signal.aborted) setCitiesLoading(false);
       }
     };
 
-    fetchCities();
+    void fetchPriorityCities();
+    return () => ac.abort();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- reload on country
-  }, [countryCode]);
+  }, [countryCode, fetchCitiesByName]);
+
+  /** Поиск города через API СДЭК (без полного дампа страны). */
+  useEffect(() => {
+    const q = citySearchQuery.trim();
+    if (q.length < 2) {
+      setSearchCities([]);
+      setCitySearchLoading(false);
+      return;
+    }
+    const ac = new AbortController();
+    const t = window.setTimeout(() => {
+      setCitySearchLoading(true);
+      void fetchCitiesByName(q, ac.signal)
+        .then((list) => {
+          if (ac.signal.aborted) return;
+          const sorted = [...list].sort((a, b) =>
+            a.city.localeCompare(b.city, 'ru'),
+          );
+          setSearchCities(sorted.slice(0, 40));
+        })
+        .catch(() => {
+          if (!ac.signal.aborted) setSearchCities([]);
+        })
+        .finally(() => {
+          if (!ac.signal.aborted) setCitySearchLoading(false);
+        });
+    }, 280);
+    return () => {
+      ac.abort();
+      window.clearTimeout(t);
+    };
+  }, [citySearchQuery, fetchCitiesByName]);
 
   useEffect(() => {
     if (!selectedCity) return;
@@ -331,23 +390,23 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
   }, [selectedCity]);
 
   const filteredCities = useMemo(() => {
-    const popularNames = country.priorityCities;
-    if (!citySearchQuery.trim()) {
-      const popular = popularNames
-        .map((name) =>
-          cities.find((c) => c.city.toLowerCase() === name.toLowerCase()),
-        )
-        .filter(Boolean) as City[];
-      const popularSet = new Set(popular.map((c) => c.code));
-      const others = cities.filter((c) => !popularSet.has(c.code));
-      return [...popular, ...others].slice(0, 50);
+    if (citySearchQuery.trim().length >= 2) {
+      if (searchCities.length) return searchCities;
+      const query = citySearchQuery.toLowerCase().trim();
+      return cities
+        .filter((c) => c.city.toLowerCase().includes(query))
+        .slice(0, 40);
     }
-
-    const query = citySearchQuery.toLowerCase().trim();
-    return cities
-      .filter((c) => c.city.toLowerCase().includes(query))
-      .slice(0, 50);
-  }, [cities, citySearchQuery, country.priorityCities]);
+    const popularNames = country.priorityCities;
+    const popular = popularNames
+      .map((name) =>
+        cities.find((c) => c.city.toLowerCase() === name.toLowerCase()),
+      )
+      .filter(Boolean) as City[];
+    const popularSet = new Set(popular.map((c) => c.code));
+    const others = cities.filter((c) => !popularSet.has(c.code));
+    return [...popular, ...others].slice(0, 50);
+  }, [cities, citySearchQuery, country.priorityCities, searchCities]);
 
   const filteredPvz = useMemo(() => {
     if (!pvzSearchQuery.trim()) return pvzList;
@@ -362,7 +421,11 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
 
   const handleCitySelect = useCallback((city: City) => {
     setSelectedCity(city);
+    setCities((prev) =>
+      prev.some((c) => c.code === city.code) ? prev : [city, ...prev],
+    );
     setCitySearchQuery('');
+    setSearchCities([]);
     setShowCityDropdown(false);
     setPvzSearchQuery('');
     setShowWidget(false);
@@ -500,8 +563,14 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
                 </div>
 
                 <div className={styles.dropdownList}>
-                  {filteredCities.length === 0 ? (
-                    <div className={styles.dropdownEmpty}>Город не найден</div>
+                  {citySearchLoading ? (
+                    <div className={styles.dropdownEmpty}>Поиск…</div>
+                  ) : filteredCities.length === 0 ? (
+                    <div className={styles.dropdownEmpty}>
+                      {citySearchQuery.trim().length >= 2
+                        ? 'Город не найден'
+                        : 'Начните ввод для поиска'}
+                    </div>
                   ) : (
                     filteredCities.map((city) => (
                       <button

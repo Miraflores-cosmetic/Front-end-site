@@ -1,5 +1,11 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import YandexCdekMap from './YandexCdekMap';
+import {
+  CDEK_COUNTRIES,
+  cdekCountryDef,
+  normalizeCdekCountryCode,
+  type CdekCountryCode,
+} from '@/lib/cdekCountries';
 import { extractRuPostalCode } from '@/utils/extractRuPostalCode';
 import { normalizeCdekPvzFromApi } from '@/utils/normalizeCdekPvz';
 import styles from './CdekPvzList.module.scss';
@@ -13,8 +19,10 @@ export interface CdekPvzInfo {
   workTime?: string;
   phone?: string;
   postalCode?: string;
-  /** Субъект РФ из справочника городов СДЭК (для поля области) */
+  /** Регион из справочника городов СДЭК */
   region?: string;
+  /** ISO-2 страны СДЭК */
+  countryCode: CdekCountryCode;
   lat?: number;
   lon?: number;
   type: 'office' | 'pickup';
@@ -26,6 +34,9 @@ interface CdekPvzListProps {
   initialMode?: 'list' | 'map';
   /** Код выбранного ПВЗ (подсветка в списке). */
   selectedPvzId?: string | null;
+  /** Страна справочника городов (по умолчанию RU). */
+  countryCode?: CdekCountryCode;
+  onCountryChange?: (code: CdekCountryCode) => void;
 }
 
 interface City {
@@ -53,19 +64,6 @@ interface Pvz {
     address?: string;
   };
 }
-
-const POPULAR_CITIES = [
-  'Москва',
-  'Санкт-Петербург',
-  'Новосибирск',
-  'Екатеринбург',
-  'Казань',
-  'Нижний Новгород',
-  'Челябинск',
-  'Самара',
-  'Омск',
-  'Ростов-на-Дону',
-];
 
 function IconPin({ className }: { className?: string }) {
   return (
@@ -149,10 +147,15 @@ function IconSpinner({ className }: { className?: string }) {
 
 const CdekPvzList: React.FC<CdekPvzListProps> = ({
   onChoose,
-  defaultCity = 'Москва',
+  defaultCity,
   initialMode = 'list',
   selectedPvzId = null,
+  countryCode: countryCodeProp,
+  onCountryChange,
 }) => {
+  const [countryCode, setCountryCode] = useState<CdekCountryCode>(
+    normalizeCdekCountryCode(countryCodeProp, 'RU'),
+  );
   const [cities, setCities] = useState<City[]>([]);
   const [citiesLoading, setCitiesLoading] = useState(true);
   const [citiesError, setCitiesError] = useState<string | null>(null);
@@ -166,18 +169,42 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
   const [pvzSearchQuery, setPvzSearchQuery] = useState('');
   const [showWidget, setShowWidget] = useState(initialMode === 'map');
 
+  const country = cdekCountryDef(countryCode);
+  const cityHint = (defaultCity || '').trim() || country.defaultCity;
+
+  useEffect(() => {
+    if (countryCodeProp && countryCodeProp !== countryCode) {
+      setCountryCode(normalizeCdekCountryCode(countryCodeProp, 'RU'));
+    }
+  }, [countryCodeProp, countryCode]);
+
   useEffect(() => {
     setShowWidget(initialMode === 'map');
   }, [initialMode]);
+
+  const changeCountry = useCallback(
+    (next: CdekCountryCode) => {
+      if (next === countryCode) return;
+      setCountryCode(next);
+      setSelectedCity(null);
+      setPvzList([]);
+      setCitySearchQuery('');
+      setPvzSearchQuery('');
+      onCountryChange?.(next);
+    },
+    [countryCode, onCountryChange],
+  );
 
   useEffect(() => {
     const fetchCities = async () => {
       setCitiesLoading(true);
       setCitiesError(null);
+      setSelectedCity(null);
+      setPvzList([]);
 
       try {
         const baseUrl = window.location.origin;
-        const url = `${baseUrl}/api/cdek/service?method=location/cities&size=10000&country_codes=RU`;
+        const url = `${baseUrl}/api/cdek/service?method=location/cities&size=10000&country_codes=${countryCode}`;
 
         const response = await fetch(url);
 
@@ -201,9 +228,10 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
 
         setCities(sortedCities);
 
-        const needle = defaultCity.trim().toLowerCase();
+        const needle = cityHint.toLowerCase();
         const defaultCityData =
           sortedCities.find((c) => c.city.toLowerCase() === needle) ||
+          sortedCities.find((c) => c.city === country.defaultCity) ||
           sortedCities.find(
             (c) =>
               needle.length >= 3 &&
@@ -214,9 +242,7 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
         if (defaultCityData) {
           setSelectedCity(defaultCityData);
         } else if (sortedCities.length > 0) {
-          const moscow = sortedCities.find((c) => c.city === 'Москва');
-          const cityToSet = moscow || sortedCities[0];
-          setSelectedCity(cityToSet);
+          setSelectedCity(sortedCities[0]);
         }
       } catch (error: unknown) {
         const message =
@@ -228,7 +254,8 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
     };
 
     fetchCities();
-  }, [defaultCity]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reload on country
+  }, [countryCode]);
 
   useEffect(() => {
     if (!selectedCity) return;
@@ -304,14 +331,15 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
   }, [selectedCity]);
 
   const filteredCities = useMemo(() => {
+    const popularNames = country.priorityCities;
     if (!citySearchQuery.trim()) {
-      const popular = cities.filter((c) =>
-        POPULAR_CITIES.some((p) => c.city.toLowerCase() === p.toLowerCase()),
-      );
-      const others = cities.filter(
-        (c) =>
-          !POPULAR_CITIES.some((p) => c.city.toLowerCase() === p.toLowerCase()),
-      );
+      const popular = popularNames
+        .map((name) =>
+          cities.find((c) => c.city.toLowerCase() === name.toLowerCase()),
+        )
+        .filter(Boolean) as City[];
+      const popularSet = new Set(popular.map((c) => c.code));
+      const others = cities.filter((c) => !popularSet.has(c.code));
       return [...popular, ...others].slice(0, 50);
     }
 
@@ -319,7 +347,7 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
     return cities
       .filter((c) => c.city.toLowerCase().includes(query))
       .slice(0, 50);
-  }, [cities, citySearchQuery]);
+  }, [cities, citySearchQuery, country.priorityCities]);
 
   const filteredPvz = useMemo(() => {
     if (!pvzSearchQuery.trim()) return pvzList;
@@ -365,12 +393,13 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
         phone: pvz.phone,
         postalCode: resolvePvzPostal(pvz),
         region: selectedCity?.region,
+        countryCode,
         lat: typeof lat === 'number' && Number.isFinite(lat) ? lat : undefined,
         lon: typeof lon === 'number' && Number.isFinite(lon) ? lon : undefined,
         type: 'office',
       };
     },
-    [selectedCity, resolvePvzPostal],
+    [selectedCity, resolvePvzPostal, countryCode],
   );
 
   const handleMapSelect = useCallback(
@@ -402,6 +431,26 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
 
   return (
     <div className={styles.root}>
+      <div className={styles.field}>
+        <p className={styles.label}>Страна</p>
+        <div className={styles.countryTabs} role="tablist" aria-label="Страна СДЭК">
+          {CDEK_COUNTRIES.map((c) => (
+            <button
+              key={c.code}
+              type="button"
+              role="tab"
+              aria-selected={countryCode === c.code}
+              className={`${styles.countryTab} ${
+                countryCode === c.code ? styles.countryTabActive : ''
+              }`}
+              onClick={() => changeCountry(c.code)}
+            >
+              {c.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className={`${styles.cityDropdown} city-dropdown-container`}>
         <p className={styles.label}>
           <IconPin className={styles.icon} />

@@ -39,6 +39,27 @@ export const formatPhoneNumber = (value: string): string => {
     return formatted;
   }
 
+  // Belarus +375 (XX) XXX-XX-XX
+  if (input.startsWith('375')) {
+    const nums = input.slice(0, 12);
+    let formatted = '+375';
+    if (nums.length > 3) formatted += ' (' + nums.slice(3, 5);
+    if (nums.length > 5) formatted += ') ' + nums.slice(5, 8);
+    if (nums.length > 8) formatted += '-' + nums.slice(8, 10);
+    if (nums.length > 10) formatted += '-' + nums.slice(10, 12);
+    return formatted;
+  }
+
+  // Kyrgyzstan +996 XXX XXX-XXX
+  if (input.startsWith('996')) {
+    const nums = input.slice(0, 12);
+    let formatted = '+996';
+    if (nums.length > 3) formatted += ' ' + nums.slice(3, 6);
+    if (nums.length > 6) formatted += ' ' + nums.slice(6, 9);
+    if (nums.length > 9) formatted += '-' + nums.slice(9, 12);
+    return formatted;
+  }
+
   // 4. Fallback for other inputs (just add +)
   return '+' + input;
 };

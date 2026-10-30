@@ -278,8 +278,13 @@ function useCdekOnlyEstimate(lines: CheckoutLine[], address: AddressInfo | null)
                     return;
                 }
 
+                const metaCc =
+                    meta?.carrier === 'cdek' ? (meta.cc || '').trim().toUpperCase() : '';
                 const toLocation: Record<string, string | number> = {
-                    country_code: address.country?.code || 'RU',
+                    country_code:
+                        (metaCc && /^[A-Z]{2}$/.test(metaCc)
+                            ? metaCc
+                            : address.country?.code) || 'RU',
                 };
                 if (Number.isFinite(cityCode) && cityCode > 0) {
                     toLocation.code = cityCode;

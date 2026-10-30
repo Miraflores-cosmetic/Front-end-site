@@ -24,8 +24,14 @@ import {
     GUEST_SHIPPING_ADDRESS_ID,
     saveGuestShippingAddress,
 } from '@/utils/guestShippingAddress';
+import {
+    CDEK_COUNTRIES,
+    cdekCountryDef,
+    normalizeCdekCountryCode,
+    type CdekCountryCode,
+} from '@/lib/cdekCountries';
 
-function isRuPostalCode(raw: string | undefined | null): boolean {
+function isCisPostalCode(raw: string | undefined | null): boolean {
     const digits = (raw || '').replace(/\D/g, '');
     return digits.length === 6;
 }
@@ -124,7 +130,7 @@ function applyCdekPvzToForm(prev: AddressInput, info: CdekPvzInfo): AddressInput
         ...prev,
         city: nextCity || prev.city,
         streetAddress1: line1 || prev.streetAddress1,
-        country: 'RU',
+        country: info.countryCode || prev.country || 'RU',
         countryArea,
         postalCode,
     };
@@ -204,10 +210,13 @@ const AddressDrawer: React.FC = () => {
     const [cdekPvzDraft, setCdekPvzDraft] = useState<{
         id: string;
         cityCode: string;
+        countryCode: CdekCountryCode;
         lat: string;
         lon: string;
         label: string;
     } | null>(null);
+    /** Страна СДЭК (ПВЗ и курьер) */
+    const [cdekCountry, setCdekCountry] = useState<CdekCountryCode>('RU');
     /** Для сохранённой строки меты Яндекс ПВЗ */
     const [yandexPvzDraft, setYandexPvzDraft] = useState<{
         id: string;
@@ -273,10 +282,16 @@ const AddressDrawer: React.FC = () => {
             });
             setDeliveryMethod(parseDeliveryMethodFromStreet2(seed.streetAddress2));
             const ym = parseVspAddressMeta(seed.streetAddress2);
+            const seedCc = normalizeCdekCountryCode(
+                ym?.cc || seed.country?.code,
+                'RU',
+            );
+            setCdekCountry(seedCc);
             if (ym?.carrier === 'cdek' && ym.dropoff === 'pvz' && ym.pvz) {
                 setCdekPvzDraft({
                     id: ym.pvz,
                     cityCode: (ym.cid || '').trim(),
+                    countryCode: seedCc,
                     lat: ym.lat || '',
                     lon: ym.lon || '',
                     label: seed.streetAddress1 || '',
@@ -322,6 +337,7 @@ const AddressDrawer: React.FC = () => {
         } else {
             setFormData({ ...EMPTY_FORM });
             setDeliveryMethod('cdek_pvz');
+            setCdekCountry('RU');
             setCdekPvzDraft(null);
             setYandexPvzDraft(null);
             setYandexCourierLl(null);
@@ -370,7 +386,17 @@ const AddressDrawer: React.FC = () => {
             payload.apartment = (payload.apartment || '').trim();
             if (!payload.cityArea) payload.cityArea = '';
             if (!payload.countryArea) payload.countryArea = '';
-            if (payload.country === 'RU') {
+            {
+                const isCdekMethod =
+                    deliveryMethod === 'cdek_pvz' || deliveryMethod === 'cdek_courier';
+                if (isCdekMethod) {
+                    payload.country = cdekPvzDraft?.countryCode || cdekCountry;
+                } else if (
+                    deliveryMethod.startsWith('yandex_') ||
+                    deliveryMethod.startsWith('ozon_')
+                ) {
+                    payload.country = 'RU';
+                }
                 const tail = buildDeliveryNoteForSaleor(deliveryMethod, payload);
 
                 if (deliveryMethod === 'cdek_pvz') {
@@ -379,6 +405,7 @@ const AddressDrawer: React.FC = () => {
                         setIsLoading(false);
                         return;
                     }
+                    const cc = cdekPvzDraft.countryCode || cdekCountry;
                     payload.streetAddress2 = buildStreetAddress2WithMeta(
                         {
                             carrier: 'cdek',
@@ -387,12 +414,13 @@ const AddressDrawer: React.FC = () => {
                             pvz: cdekPvzDraft.id,
                             cid: cdekPvzDraft.cityCode || '',
                             dropoff: 'pvz',
+                            cc,
                         },
                         tail,
                         COMMENT_MAX,
                     );
                 } else if (deliveryMethod === 'cdek_courier') {
-                    if (!isRuPostalCode(payload.postalCode)) {
+                    if (!isCisPostalCode(payload.postalCode)) {
                         setFieldErrors((prev) => ({
                             ...prev,
                             postalCode: 'Укажите 6-значный индекс',
@@ -409,6 +437,7 @@ const AddressDrawer: React.FC = () => {
                             pvz: '',
                             cid: '',
                             dropoff: 'courier',
+                            cc: cdekCountry,
                         },
                         tail,
                         COMMENT_MAX,
@@ -483,8 +512,6 @@ const AddressDrawer: React.FC = () => {
                 } else {
                     payload.streetAddress2 = clampAddressField(tail, COMMENT_MAX);
                 }
-            } else {
-                payload.streetAddress2 = payload.streetAddress2?.trim() || '';
             }
 
             payload.streetAddress1 = clampAddressField(payload.streetAddress1, 256);
@@ -603,10 +630,26 @@ const AddressDrawer: React.FC = () => {
                                     )}
                                     <CdekPvzList
                                         selectedPvzId={cdekPvzDraft?.id ?? null}
+                                        countryCode={cdekCountry}
+                                        onCountryChange={(code) => {
+                                            setCdekCountry(code);
+                                            setCdekPvzDraft(null);
+                                            setFormData((prev) => ({
+                                                ...prev,
+                                                country: code,
+                                                city: cdekCountryDef(code).defaultCity,
+                                                streetAddress1: '',
+                                                postalCode: '',
+                                                countryArea: '',
+                                            }));
+                                        }}
                                         onChoose={(info: CdekPvzInfo) => {
+                                            const cc = info.countryCode || cdekCountry;
+                                            setCdekCountry(cc);
                                             setCdekPvzDraft({
                                                 id: info.id,
                                                 cityCode: (info.cityCode || '').trim(),
+                                                countryCode: cc,
                                                 lat:
                                                     info.lat != null && Number.isFinite(info.lat)
                                                         ? String(info.lat)
@@ -619,7 +662,10 @@ const AddressDrawer: React.FC = () => {
                                             });
                                             setFormData((prev) => applyCdekPvzToForm(prev, info));
                                         }}
-                                        defaultCity={formData.city.trim() || 'Москва'}
+                                        defaultCity={
+                                            formData.city.trim() ||
+                                            cdekCountryDef(cdekCountry).defaultCity
+                                        }
                                         initialMode="map"
                                     />
                                 </div>
@@ -632,6 +678,38 @@ const AddressDrawer: React.FC = () => {
                                         Укажите ниже полный адрес доставки: улицу, дом, квартиру, подъезд и домофон при
                                         необходимости. Индекс и город помогут курьеру найти вас быстрее.
                                     </p>
+                                    <div
+                                        className={styles.deliveryMethodGrid}
+                                        role="tablist"
+                                        aria-label="Страна СДЭК"
+                                    >
+                                        {CDEK_COUNTRIES.map((c) => (
+                                            <button
+                                                key={c.code}
+                                                type="button"
+                                                role="tab"
+                                                aria-selected={cdekCountry === c.code}
+                                                className={`${styles.deliveryMethodChip} ${
+                                                    cdekCountry === c.code
+                                                        ? styles.deliveryMethodChipActive
+                                                        : ''
+                                                }`}
+                                                onClick={() => {
+                                                    setCdekCountry(c.code);
+                                                    setFormData((prev) => ({
+                                                        ...prev,
+                                                        country: c.code,
+                                                        city:
+                                                            prev.country === c.code
+                                                                ? prev.city
+                                                                : c.defaultCity,
+                                                    }));
+                                                }}
+                                            >
+                                                {c.label}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
 

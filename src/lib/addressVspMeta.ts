@@ -18,6 +18,8 @@ export interface VspAddressMeta {
      */
     cid: string;
     dropoff: VspDropoff;
+    /** СДЭК: ISO-2 страны назначения (RU/KZ/BY/KG) */
+    cc?: string;
 }
 
 const VSP_META_PREFIX = '__VSP:';
@@ -68,6 +70,7 @@ export function parseVspAddressMeta(streetAddress2: string | null | undefined): 
     }
     if (kv.carrier !== 'yandex' && kv.carrier !== 'cdek' && kv.carrier !== 'ozon') return null;
     const dropoff = kv.dropoff === 'courier' ? 'courier' : 'pvz';
+    const ccRaw = (kv.cc || '').trim().toUpperCase();
     return {
         carrier: kv.carrier,
         lon: kv.lon || '',
@@ -75,17 +78,20 @@ export function parseVspAddressMeta(streetAddress2: string | null | undefined): 
         pvz: decodeMetaValue(kv.pvz || ''),
         cid: decodeMetaValue(kv.cid || ''),
         dropoff,
+        ...(ccRaw ? { cc: ccRaw } : {}),
     };
 }
 
 /** Собирает первую строку меты (__VSP:...__). */
 export function buildVspMetaLine(meta: VspAddressMeta): string {
-    const { carrier, lon, lat, pvz, cid, dropoff } = meta;
+    const { carrier, lon, lat, pvz, cid, dropoff, cc } = meta;
     const cidPart =
         cid && cid.trim()
             ? `|cid=${encodeURIComponent(cid.trim())}`
             : '';
-    return `${VSP_META_PREFIX}carrier=${carrier}|lon=${lon}|lat=${lat}|pvz=${encodeURIComponent(pvz)}|dropoff=${dropoff}${cidPart}__`;
+    const ccPart =
+        cc && cc.trim() ? `|cc=${cc.trim().toUpperCase()}` : '';
+    return `${VSP_META_PREFIX}carrier=${carrier}|lon=${lon}|lat=${lat}|pvz=${encodeURIComponent(pvz)}|dropoff=${dropoff}${cidPart}${ccPart}__`;
 }
 
 export function buildStreetAddress2WithMeta(

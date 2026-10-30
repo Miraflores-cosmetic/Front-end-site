@@ -27,6 +27,7 @@ import {
 import {
     CDEK_COUNTRIES,
     cdekCountryDef,
+    isCdekCountryCode,
     normalizeCdekCountryCode,
     type CdekCountryCode,
 } from '@/lib/cdekCountries';
@@ -54,12 +55,17 @@ function isOzonMethod(id: DeliveryMethodId): boolean {
     return id === 'ozon_pvz' || id === 'ozon_courier';
 }
 
-function visibleDeliveryOptions(ozonAvailable: boolean) {
-    return DELIVERY_OPTIONS.filter(
-        (opt) =>
-            (YANDEX_DELIVERY_ENABLED || !isYandexMethod(opt.id)) &&
-            (ozonAvailable || !isOzonMethod(opt.id)),
-    );
+function visibleDeliveryOptions(ozonAvailable: boolean, countryCode: string) {
+    return DELIVERY_OPTIONS.filter((opt) => {
+        // Яндекс / Ozon — только РФ; СДЭК — RU/KZ/BY/KG
+        if (isYandexMethod(opt.id) || isOzonMethod(opt.id)) {
+            if (countryCode !== 'RU') return false;
+            if (isYandexMethod(opt.id) && !YANDEX_DELIVERY_ENABLED) return false;
+            if (isOzonMethod(opt.id) && !ozonAvailable) return false;
+            return true;
+        }
+        return isCdekCountryCode(countryCode);
+    });
 }
 
 const DELIVERY_TYPE_LINE: Record<DeliveryMethodId, string> = {
@@ -246,7 +252,10 @@ const AddressDrawer: React.FC = () => {
     const isEditMode = Boolean(editingAddressId);
 
     const ozonAvailable = useOzonAvailable();
-    const deliveryOptions = useMemo(() => visibleDeliveryOptions(ozonAvailable), [ozonAvailable]);
+    const deliveryOptions = useMemo(
+        () => visibleDeliveryOptions(ozonAvailable, formData.country || 'RU'),
+        [ozonAvailable, formData.country],
+    );
     /** Выбранный Ozon стал недоступен — переключили на СДЭК и объясняем почему. */
     const [ozonFellBack, setOzonFellBack] = useState(false);
 
@@ -261,6 +270,18 @@ const AddressDrawer: React.FC = () => {
         setOzonCourierLl(null);
         setOzonFellBack(true);
     }, [ozonAvailable, deliveryMethod]);
+
+    /** Вне РФ Яндекс/Ozon недоступны — оставляем СДЭК. */
+    useEffect(() => {
+        const cc = formData.country || 'RU';
+        if (cc === 'RU') return;
+        if (!isYandexMethod(deliveryMethod) && !isOzonMethod(deliveryMethod)) return;
+        setDeliveryMethod('cdek_pvz');
+        setYandexPvzDraft(null);
+        setYandexCourierLl(null);
+        setOzonPvzDraft(null);
+        setOzonCourierLl(null);
+    }, [formData.country, deliveryMethod]);
 
     useEffect(() => {
         if (activeDrawer !== 'address') return;
@@ -580,7 +601,7 @@ const AddressDrawer: React.FC = () => {
 
                 {/* Address Information Group */}
                 <article className={styles.formFields}>
-                    {formData.country === 'RU' && (
+                    {isCdekCountryCode(formData.country) && (
                         <>
                             <div className={styles.deliveryMethodSection}>
                                 <p className={styles.deliveryMethodLabel}>Способ доставки</p>

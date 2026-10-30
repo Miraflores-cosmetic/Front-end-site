@@ -6,9 +6,12 @@ import {
   normalizeCdekCountryCode,
   type CdekCountryCode,
 } from '@/lib/cdekCountries';
+import { getYandexMapApiKey } from '@/lib/yandexMapApiKey';
 import { extractRuPostalCode } from '@/utils/extractRuPostalCode';
 import { normalizeCdekPvzFromApi } from '@/utils/normalizeCdekPvz';
 import styles from './CdekPvzList.module.scss';
+
+const HAS_YANDEX_MAP_KEY = Boolean(getYandexMapApiKey());
 
 export interface CdekPvzInfo {
   id: string;
@@ -169,7 +172,10 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
   const [pvzList, setPvzList] = useState<Pvz[]>([]);
   const [pvzLoading, setPvzLoading] = useState(false);
   const [pvzSearchQuery, setPvzSearchQuery] = useState('');
-  const [showWidget, setShowWidget] = useState(initialMode === 'map');
+  /** Карта только при ключе Яндекс; иначе список — выбор ПВЗ для KZ/BY/KG не ломается. */
+  const [showWidget, setShowWidget] = useState(
+    initialMode === 'map' && HAS_YANDEX_MAP_KEY,
+  );
 
   const country = cdekCountryDef(countryCode);
   const cityHint = (defaultCity || '').trim() || country.defaultCity;
@@ -199,7 +205,7 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
   }, [countryCodeProp, countryCode]);
 
   useEffect(() => {
-    setShowWidget(initialMode === 'map');
+    setShowWidget(initialMode === 'map' && HAS_YANDEX_MAP_KEY);
   }, [initialMode]);
 
   const changeCountry = useCallback(
@@ -610,20 +616,30 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setShowWidget(true)}
+              onClick={() => {
+                if (!HAS_YANDEX_MAP_KEY) return;
+                setShowWidget(true);
+              }}
               className={`${styles.modeBtn} ${showWidget ? styles.modeBtnActive : ''}`}
+              disabled={!HAS_YANDEX_MAP_KEY}
+              title={
+                HAS_YANDEX_MAP_KEY
+                  ? undefined
+                  : 'Нужен ключ Яндекс.Карт при сборке Front'
+              }
             >
               <IconMap className={styles.icon} />
               Карта
             </button>
           </div>
 
-          {showWidget ? (
+          {showWidget && HAS_YANDEX_MAP_KEY ? (
             <YandexCdekMap
               pvzList={pvzList}
               selectedCity={selectedCity}
               onSelect={handleMapSelect}
               loading={pvzLoading}
+              fallbackCenter={country.mapCenter}
             />
           ) : (
             <>
@@ -654,16 +670,20 @@ const CdekPvzList: React.FC<CdekPvzListProps> = ({
                     <div className={styles.pvzEmptyHint}>
                       {pvzSearchQuery
                         ? 'Попробуйте изменить поисковый запрос'
-                        : `Попробуйте открыть карту для поиска ПВЗ в ${selectedCity.city}`}
+                        : HAS_YANDEX_MAP_KEY
+                          ? `Попробуйте открыть карту для поиска ПВЗ в ${selectedCity.city}`
+                          : `Пункты для ${selectedCity.city} не найдены — выберите другой город`}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => setShowWidget(true)}
-                      className={styles.mapCta}
-                    >
-                      <IconMap className={styles.icon} />
-                      Открыть карту СДЭК
-                    </button>
+                    {HAS_YANDEX_MAP_KEY ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowWidget(true)}
+                        className={styles.mapCta}
+                      >
+                        <IconMap className={styles.icon} />
+                        Открыть карту СДЭК
+                      </button>
+                    ) : null}
                   </div>
                 ) : (
                   <>

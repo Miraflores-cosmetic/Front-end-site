@@ -33,6 +33,8 @@ interface YandexCdekMapProps {
   } | null;
   onSelect: (pvz: Pvz) => void;
   loading?: boolean;
+  /** Центр карты, если у города нет координат (столица страны СДЭК). */
+  fallbackCenter?: readonly [number, number];
 }
 
 // В Vite переменные с префиксом VITE_ доступны автоматически
@@ -44,6 +46,7 @@ const YandexCdekMap: React.FC<YandexCdekMapProps> = ({
   selectedCity,
   onSelect,
   loading = false,
+  fallbackCenter = [55.751574, 37.573856],
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -120,9 +123,13 @@ const YandexCdekMap: React.FC<YandexCdekMapProps> = ({
         mapRef.current = null;
       }
 
-      const center = selectedCity?.latitude && selectedCity?.longitude
-        ? [selectedCity.latitude, selectedCity.longitude]
-        : [55.751574, 37.573856]; // Москва по умолчанию
+      const center =
+        selectedCity?.latitude != null &&
+        selectedCity?.longitude != null &&
+        Number.isFinite(selectedCity.latitude) &&
+        Number.isFinite(selectedCity.longitude)
+          ? [selectedCity.latitude, selectedCity.longitude]
+          : [fallbackCenter[0], fallbackCenter[1]];
 
       mapRef.current = new window.ymaps.Map(containerRef.current, {
         center,
@@ -153,7 +160,7 @@ const YandexCdekMap: React.FC<YandexCdekMapProps> = ({
         mapRef.current = null;
       }
     };
-  }, [mapLoading, selectedCity]);
+  }, [mapLoading, selectedCity, fallbackCenter]);
 
   // Обновление меток при изменении списка ПВЗ
   useEffect(() => {

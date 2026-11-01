@@ -1,7 +1,12 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { fetchProductContentBySlug } from '@/api/catalogApi';
 import { getSingleProduct } from '@/graphql/queries/products.service';
-import { productSliceState, GetProductInput, ProductSliceItem } from '@/types/productSlice';
+import {
+  productSliceState,
+  GetProductInput,
+  ProductSliceItem,
+  type ProductContentPayload,
+} from '@/types/productSlice';
 import { ProductDetailNode } from '@/graphql/types/core.types';
 import { isVariantOutOfStock } from '@/utils/stock';
 
@@ -9,6 +14,7 @@ const initialState: productSliceState = {
   loading: false,
   notFound: false,
   requestedSlug: null,
+  pendingContent: null,
   error: null,
   item: null,
   activeVariantId: null,
@@ -47,6 +53,22 @@ function mapDetailToItem(p: ProductDetailNode): ProductSliceItem {
     thumbnail: p.thumbnail?.url || '',
     variants: p.productVariants.edges,
     attributes: p.attributes,
+  };
+}
+
+function applyContentToItem(
+  item: ProductSliceItem,
+  payload: ProductContentPayload,
+): ProductSliceItem {
+  return {
+    ...item,
+    description: payload.descriptionHtml || item.description,
+    actionEffectHtml: payload.actionEffectHtml || '',
+    applicationHtml: payload.applicationHtml || '',
+    compositionHtml: payload.compositionHtml || '',
+    importantNoteHtml: payload.importantNoteHtml || '',
+    mirafloresNoteHtml: payload.mirafloresNoteHtml || '',
+    storageHtml: payload.storageHtml || item.storageHtml,
   };
 }
 
@@ -128,6 +150,7 @@ const productSlice = createSlice({
       state.notFound = false;
       state.error = null;
       state.requestedSlug = null;
+      state.pendingContent = null;
       state.loading = false;
     },
   },
@@ -141,6 +164,7 @@ const productSlice = createSlice({
         // Сразу сбрасываем, чтобы не показывать предыдущий/placeholder товар
         state.item = null;
         state.activeVariantId = null;
+        state.pendingContent = null;
       })
       .addCase(getProductBySlug.fulfilled, (state, action) => {
         const slug = action.meta.arg.slug?.trim() || '';
@@ -153,10 +177,16 @@ const productSlice = createSlice({
           state.item = null;
           state.activeVariantId = null;
           state.notFound = true;
+          state.pendingContent = null;
           return;
         }
         state.notFound = false;
-        state.item = mapDetailToItem(action.payload);
+        let item = mapDetailToItem(action.payload);
+        if (state.pendingContent) {
+          item = applyContentToItem(item, state.pendingContent);
+          state.pendingContent = null;
+        }
+        state.item = item;
         state.activeVariantId = pickDefaultVariantId(action.payload.productVariants.edges);
       })
       .addCase(getProductBySlug.rejected, (state, action) => {
@@ -169,20 +199,22 @@ const productSlice = createSlice({
         state.item = null;
         state.activeVariantId = null;
         state.notFound = true;
+        state.pendingContent = null;
       })
       .addCase(hydrateProductContent.fulfilled, (state, action) => {
+        const slug = (action.meta.arg || '').trim();
+        if (state.requestedSlug && slug && slug !== state.requestedSlug) {
+          return;
+        }
         const payload = action.payload;
-        if (!payload || !state.item) return;
-        state.item = {
-          ...state.item,
-          description: payload.descriptionHtml || state.item.description,
-          actionEffectHtml: payload.actionEffectHtml || '',
-          applicationHtml: payload.applicationHtml || '',
-          compositionHtml: payload.compositionHtml || '',
-          importantNoteHtml: payload.importantNoteHtml || '',
-          mirafloresNoteHtml: payload.mirafloresNoteHtml || '',
-          storageHtml: payload.storageHtml || state.item.storageHtml,
-        };
+        if (!payload) return;
+        if (!state.item) {
+          // Content быстрее hero — применим в getProductBySlug.fulfilled
+          state.pendingContent = payload;
+          return;
+        }
+        state.item = applyContentToItem(state.item, payload);
+        state.pendingContent = null;
       });
   },
 });

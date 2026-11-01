@@ -1,11 +1,28 @@
 import { SerializedError } from '@reduxjs/toolkit';
 
+/** HTML табов PDP с GET …/products/:slug/content */
+export type ProductContentPayload = {
+  descriptionHtml?: string | null;
+  actionEffectHtml?: string | null;
+  applicationHtml?: string | null;
+  compositionHtml?: string | null;
+  importantNoteHtml?: string | null;
+  mirafloresNoteHtml?: string | null;
+  storageHtml?: string | null;
+  extraHtml?: string | null;
+};
+
 export interface productSliceState {
   item: ProductSliceItem | null;
   loading: boolean;
   notFound: boolean;
   /** slug последнего запрошенного товара — отсекает stale fulfilled */
   requestedSlug: string | null;
+  /**
+   * Content может прийти раньше hero (`fields=hero`).
+   * Держим до появления item, иначе табы «Доп. информация» теряются.
+   */
+  pendingContent: ProductContentPayload | null;
   error: SerializedError | null;
   activeVariantId: null | string;
 }

@@ -161,7 +161,7 @@ async function loadSearchProductHits(q: string): Promise<SearchProductHit[]> {
     inflight = searchCatalog(key)
       .then((search) => {
         const hits =
-          search.groups?.find((g) => g.key === 'products')?.items ?? [];
+          search.groups?.find((g) => g.key === 'product')?.items ?? [];
         searchHitsCache.set(key, hits);
         return hits;
       })

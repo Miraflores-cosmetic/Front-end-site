@@ -636,7 +636,7 @@ const SearchDrawer: React.FC = () => {
                   inputMode="search"
                   enterKeyHint="search"
                   className={styles.input}
-                  placeholder="Название товара или категории"
+                  placeholder="Товар, состав, статья или категория"
                   value={q}
                   onChange={(e) => {
                     setQ(e.target.value);

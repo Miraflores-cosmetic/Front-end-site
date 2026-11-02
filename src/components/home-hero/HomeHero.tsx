@@ -7,6 +7,7 @@ import drop from '@/assets/images/drop.png';
 import flower from '@/assets/images/flower.webp';
 import flowerSmall from '@/assets/images/flowerSmall.webp';
 import lineTo from '@/assets/icons/lineTo.svg';
+import { SITE_GRATITUDE_HREF } from '@/config/siteNavLinks';
 import { scrollToAnchor } from '@/utils/scrollToAnchor';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { useHomeCms } from '@/contexts/HomeCmsContext';
@@ -16,7 +17,7 @@ const SLIDE_MS = 9000;
 
 const CTAS = [
   { label: 'Подобрать уход', href: '/quiz', primary: true },
-  { label: 'Программа благодарности', href: '#gratitude-program', primary: false },
+  { label: 'Программа благодарности', href: SITE_GRATITUDE_HREF, primary: false },
   { label: 'Шаг за шагом к чистой коже', href: '#steps-block', primary: false },
 ] as const;
 

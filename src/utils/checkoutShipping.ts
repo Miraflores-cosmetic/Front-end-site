@@ -5,6 +5,7 @@ import {
 } from '@/lib/addressVspMeta';
 import { isOzonAvailable, ozonUnavailableMessage } from '@/lib/carrierAvailability';
 import { checkoutCarriersLabel, YANDEX_DELIVERY_ENABLED } from '@/lib/deliveryCarriers';
+import { isClarificationComment } from '@/utils/addressClarification';
 
 /** Есть явный перевозчик в streetAddress2 (СДЭК / Яндекс / Ozon / __VSP__). */
 export function hasCheckoutDeliveryCarrier(
@@ -107,6 +108,10 @@ export function isCheckoutReadyAddress(
   address: AddressInfo | null | undefined,
 ): boolean {
   if (!address) return false;
+  // Клиент не нашёл ПВЗ/адрес — оформляем без перевозчика (оператор уточнит).
+  if (isClarificationComment(address.streetAddress2)) {
+    return true;
+  }
   if (!hasCheckoutDeliveryCarrier(address.streetAddress2)) return false;
   if (needsDeliveryPointReselection(address)) return false;
   return true;

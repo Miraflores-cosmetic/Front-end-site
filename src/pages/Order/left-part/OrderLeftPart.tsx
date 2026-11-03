@@ -28,7 +28,7 @@ import {
 import { extractPvzCodeFromStreet2 } from '@/lib/addressVspMeta';
 import { checkoutCarriersLabel } from '@/lib/deliveryCarriers';
 import { refreshOzonAvailability } from '@/lib/carrierAvailability';
-import { syncCartLines } from '@/store/slices/checkoutSlice';
+import { clearCart, syncCartLines } from '@/store/slices/checkoutSlice';
 import { AppDispatch } from '@/store/store';
 import { useToast } from '@/components/toast/toast';
 import { MetrikaGoal, reachGoal } from '@/lib/metrika';
@@ -42,6 +42,12 @@ import {
   GIFT_HOLD_CAPTURED_TOAST,
   GIFT_HOLD_RESERVED,
 } from '@/utils/giftHoldCopy';
+import {
+  ADDRESS_CLARIFICATION_OPERATOR_NOTE,
+  isAddressClarification,
+} from '@/utils/addressClarification';
+import { clearGuestShippingAddress } from '@/utils/guestShippingAddress';
+import { clearCheckoutClarificationDraft } from '@/utils/checkoutClarificationDraft';
 import {
   buildCheckoutFingerprint,
   buildOrderSuccessReturnUrl,
@@ -103,11 +109,14 @@ const OrderLeftPart: React.FC = () => {
     shippingQuoteMeta,
     shippingQuoteClientEstimateRub,
     freePvzShippingApplied,
+    needsAddressClarification: checkoutNeedsAddressClarification,
     payable,
   } = useOrderCheckout();
   const [confirmationToken, setConfirmationToken] = useState<string | null>(null);
   const [showYooKassaWidget, setShowYooKassaWidget] = useState(false);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
+  /** Sync lock: React setState не успевает до второго клика → дубли create. */
+  const submitInFlightRef = useRef(false);
   /** Сумма с Nest после create/pay — CTA, если разошлась с client payableTotal. */
   const [chargedTotal, setChargedTotal] = useState<number | null>(null);
   const [validationErrors, setValidationErrors] = useState<{
@@ -201,6 +210,8 @@ const OrderLeftPart: React.FC = () => {
   }, [applySavedAddress]);
 
   const handlePayment = async () => {
+    if (submitInFlightRef.current || isCreatingPayment) return;
+
     const errors: {
       name?: string;
       email?: string;
@@ -229,7 +240,7 @@ const OrderLeftPart: React.FC = () => {
     if (!giftDenomOnly) {
       if (!selectedAddress) {
         errors.address = 'Выберите или добавьте адрес доставки';
-      } else if (payable.hasPayableLines) {
+      } else if (!isAddressClarification(selectedAddress) && payable.hasPayableLines) {
         const shippingMethod = resolveCheckoutShippingMethod(selectedAddress.streetAddress2);
         if (!shippingMethod) {
           errors.address =
@@ -276,20 +287,24 @@ const OrderLeftPart: React.FC = () => {
       return;
     }
 
+    const addressClarification = isAddressClarification(selectedAddress);
+
     /** Один итог с summary/CTA: Nest order.total ≈ payableTotal. */
-    const shippingAmount = giftDenomOnly
-      ? 0
-      : payable.hasPayableLines
-        ? (payable.shippingRub ?? 0)
-        : 0;
-    const shippingMethod = giftDenomOnly
-      ? null
-      : resolveCheckoutShippingMethod(selectedAddress!.streetAddress2);
+    const shippingAmount =
+      giftDenomOnly || addressClarification
+        ? 0
+        : payable.hasPayableLines
+          ? (payable.shippingRub ?? 0)
+          : 0;
+    const shippingMethod =
+      giftDenomOnly || addressClarification
+        ? null
+        : resolveCheckoutShippingMethod(selectedAddress!.streetAddress2);
     const quoteClientEstimate =
-      giftDenomOnly || !shippingMethod
+      giftDenomOnly || addressClarification || !shippingMethod
         ? shippingAmount
         : (shippingQuoteClientEstimateRub ?? shippingAmount);
-    if (!giftDenomOnly && !shippingMethod) {
+    if (!giftDenomOnly && !addressClarification && !shippingMethod) {
       toast.error(
         disabledCarrierMessage(selectedAddress) ??
           `Выберите адрес со способом доставки (${checkoutCarriersLabel()})`,
@@ -300,6 +315,7 @@ const OrderLeftPart: React.FC = () => {
     const phoneDigits = normalizePhoneDigits(formData.phone);
     const phoneE164 = `+${phoneDigits}`;
 
+    submitInFlightRef.current = true;
     setIsCreatingPayment(true);
     try {
       const syncResult = await dispatch(syncCartLines()).unwrap();
@@ -332,12 +348,13 @@ const OrderLeftPart: React.FC = () => {
       /** API create/quote — только variantId+qty (без unitPrice). */
       const apiLines = orderLines.map(({ variantId, qty }) => ({ variantId, qty }));
 
-      const recipientName = giftDenomOnly
-        ? formData.name.trim()
-        : [selectedAddress!.firstName, selectedAddress!.lastName]
-            .map((x) => (x || '').trim())
-            .filter(Boolean)
-            .join(' ');
+      const recipientName =
+        giftDenomOnly || addressClarification
+          ? formData.name.trim()
+          : [selectedAddress!.firstName, selectedAddress!.lastName]
+              .map((x) => (x || '').trim())
+              .filter(Boolean)
+              .join(' ') || formData.name.trim();
       const shippingAddress: {
         city: string;
         address: string;
@@ -366,31 +383,47 @@ const OrderLeftPart: React.FC = () => {
             phone: phoneE164,
             recipientName: recipientName || undefined,
           }
-        : {
-            city: selectedAddress!.city,
-            address: selectedAddress!.streetAddress1,
-            apartment: selectedAddress!.apartment || undefined,
-            region: selectedAddress!.countryArea || undefined,
-            district: selectedAddress!.cityArea || undefined,
-            postalCode: selectedAddress!.postalCode || undefined,
-            comment: selectedAddress!.streetAddress2 || undefined,
-            pvzCode: extractPvzCodeFromStreet2(selectedAddress!.streetAddress2) || undefined,
-            phone: selectedAddress!.phone?.trim() || undefined,
-            recipientName: recipientName || undefined,
-            ...(shippingQuoteMeta
-              ? {
-                  carrierQuote: {
-                    tariffId: shippingQuoteMeta.tariffId ?? null,
-                    tariffName: shippingQuoteMeta.tariffName ?? null,
-                    daysMin: shippingQuoteMeta.daysMin ?? null,
-                    daysMax: shippingQuoteMeta.daysMax ?? null,
-                    cost: quoteClientEstimate,
-                    method: shippingMethod,
-                    source: 'client_estimate',
-                  },
-                }
-              : {}),
-          };
+        : addressClarification
+          ? {
+              city: selectedAddress!.city?.trim() || '—',
+              address:
+                selectedAddress!.streetAddress1?.trim() ||
+                'Адрес уточнит оператор',
+              apartment: selectedAddress!.apartment || undefined,
+              region: selectedAddress!.countryArea || undefined,
+              district: selectedAddress!.cityArea || undefined,
+              postalCode: selectedAddress!.postalCode || undefined,
+              comment: selectedAddress!.streetAddress2 || undefined,
+              phone: selectedAddress!.phone?.trim() || phoneE164,
+              recipientName: recipientName || undefined,
+            }
+          : {
+              city: selectedAddress!.city,
+              address: selectedAddress!.streetAddress1,
+              apartment: selectedAddress!.apartment || undefined,
+              region: selectedAddress!.countryArea || undefined,
+              district: selectedAddress!.cityArea || undefined,
+              postalCode: selectedAddress!.postalCode || undefined,
+              comment: selectedAddress!.streetAddress2 || undefined,
+              pvzCode:
+                extractPvzCodeFromStreet2(selectedAddress!.streetAddress2) ||
+                undefined,
+              phone: selectedAddress!.phone?.trim() || undefined,
+              recipientName: recipientName || undefined,
+              ...(shippingQuoteMeta
+                ? {
+                    carrierQuote: {
+                      tariffId: shippingQuoteMeta.tariffId ?? null,
+                      tariffName: shippingQuoteMeta.tariffName ?? null,
+                      daysMin: shippingQuoteMeta.daysMin ?? null,
+                      daysMax: shippingQuoteMeta.daysMax ?? null,
+                      cost: quoteClientEstimate,
+                      method: shippingMethod,
+                      source: 'client_estimate',
+                    },
+                  }
+                : {}),
+            };
 
       const promoCode = voucherKind === 'gift' ? null : voucherCode || null;
       const giftCertificateCode = voucherKind === 'gift' ? voucherCode || null : null;
@@ -403,7 +436,9 @@ const OrderLeftPart: React.FC = () => {
         phone: phoneE164,
         customerName: formData.name.trim(),
         customerNote,
-        shippingMethod: shippingMethod ?? 'DIGITAL',
+        shippingMethod: addressClarification
+          ? 'CLARIFICATION'
+          : (shippingMethod ?? 'DIGITAL'),
         shippingAddress,
         promoCode,
         giftCertificateCode,
@@ -464,23 +499,37 @@ const OrderLeftPart: React.FC = () => {
 
       const pending = readPendingCheckoutOrder();
       if (pending && pending.fingerprint === fingerprint) {
+        // Clarification: повторный клик / double-submit → тот же заказ, без create/pay.
+        if (addressClarification) {
+          toast.success(
+            `Заказ №${pending.orderNumber} оформлен. ${ADDRESS_CLARIFICATION_OPERATOR_NOTE}`,
+          );
+          navigate(me ? '/profile' : '/', { replace: true });
+          return;
+        }
         try {
           await openPayWidget(pending.orderId, pending.orderNumber, pending.payToken);
           return;
         } catch (reuseErr) {
           console.warn('Pending order pay reuse failed, creating a new order', reuseErr);
-          try {
-            await abandonOrder(pending.orderId, pending.payToken);
-          } catch {
-            // ignore
+          const reuseToken = pending.payToken?.trim();
+          if (reuseToken) {
+            try {
+              await abandonOrder(pending.orderId, reuseToken);
+            } catch {
+              // ignore
+            }
           }
           clearPendingCheckoutOrder();
         }
       } else if (pending && pending.fingerprint !== fingerprint) {
-        try {
-          await abandonOrder(pending.orderId, pending.payToken);
-        } catch {
-          // ignore
+        const staleToken = pending.payToken?.trim();
+        if (staleToken) {
+          try {
+            await abandonOrder(pending.orderId, staleToken);
+          } catch {
+            // ignore
+          }
         }
         clearPendingCheckoutOrder();
       }
@@ -503,6 +552,20 @@ const OrderLeftPart: React.FC = () => {
           promoCode,
           giftCertificateCode,
           shippingAddress,
+        });
+      } else if (addressClarification) {
+        order = await createOrder({
+          lines: apiLines,
+          email: emailTrimmed,
+          phone: phoneE164,
+          customerName: formData.name.trim(),
+          customerNote,
+          guestId: getOrCreateGuestId(),
+          idempotencyKey,
+          promoCode,
+          giftCertificateCode,
+          shippingAddress,
+          needsAddressClarification: true,
         });
       } else {
         const quoteRes = await requestShippingQuote({
@@ -539,10 +602,6 @@ const OrderLeftPart: React.FC = () => {
         });
       }
 
-      if (!order.payToken) {
-        throw new Error('Сервер не вернул payToken');
-      }
-
       if (giftCertificateCode) {
         toast.success(GIFT_HOLD_CAPTURED_TOAST);
       }
@@ -565,6 +624,32 @@ const OrderLeftPart: React.FC = () => {
         }
       }
 
+      if (addressClarification) {
+        // payToken не выдаётся пока needsAddressClarification — виджет не открываем.
+        // Pending без token: double-submit reuse по fingerprint (см. выше).
+        writePendingCheckoutOrder({
+          orderId: order.id,
+          orderNumber: order.number,
+          payToken: '',
+          idempotencyKey,
+          fingerprint,
+        });
+        clearGuestShippingAddress();
+        clearCheckoutClarificationDraft();
+        dispatch(clearCart());
+        toast.success(
+          `Заказ №${order.number} оформлен. ${ADDRESS_CLARIFICATION_OPERATOR_NOTE}`,
+        );
+        navigate(me ? '/profile' : '/', { replace: true });
+        return;
+      }
+
+      if (!order.payToken) {
+        throw new Error('Сервер не вернул payToken');
+      }
+
+      // Пишем pending до navigate: double-submit / retry с тем же fingerprint
+      // вернёт тот же заказ (idempotency + reuse выше), а не новый UUID.
       writePendingCheckoutOrder({
         orderId: order.id,
         orderNumber: order.number,
@@ -583,6 +668,7 @@ const OrderLeftPart: React.FC = () => {
           : 'Ошибка создания платежа. Пожалуйста, попробуйте позже.',
       );
     } finally {
+      submitInFlightRef.current = false;
       setIsCreatingPayment(false);
     }
   };
@@ -702,8 +788,18 @@ const OrderLeftPart: React.FC = () => {
     };
   }, [lines, payable, giftLines]);
 
+  const needsAddressClarification = isAddressClarification(selectedAddress);
+
   const payLabel = React.useMemo(() => {
-    if (isCreatingPayment) return 'Создание платежа...';
+    if (isCreatingPayment) {
+      return needsAddressClarification ? 'Оформление...' : 'Создание платежа...';
+    }
+    if (needsAddressClarification) {
+      const displayTotal = chargedTotal ?? payable.payableTotal;
+      if (displayTotal == null) return 'Оформить';
+      const amount = Math.round(displayTotal).toLocaleString('ru-RU');
+      return `Оформить · ${amount}₽`;
+    }
     if (payable.hasPayableLines && !payable.shippingReady) {
       return 'Оформить и оплатить';
     }
@@ -713,15 +809,16 @@ const OrderLeftPart: React.FC = () => {
     }
     const amount = Math.round(displayTotal).toLocaleString('ru-RU');
     return `Оформить и оплатить · ${amount}₽`;
-  }, [isCreatingPayment, payable, chargedTotal]);
+  }, [isCreatingPayment, payable, chargedTotal, needsAddressClarification]);
 
   const payDisabled =
     isCreatingPayment ||
     showYooKassaWidget ||
     (!giftDenomOnly &&
+      !needsAddressClarification &&
       payable.hasPayableLines &&
       (cdekShippingLoading || !payable.shippingReady || payable.payableTotal == null)) ||
-    (giftDenomOnly && payable.payableTotal == null);
+    ((giftDenomOnly || needsAddressClarification) && payable.payableTotal == null);
 
   return (
     <section className={styles.left}>
@@ -778,6 +875,7 @@ const OrderLeftPart: React.FC = () => {
             shippingLoading={cdekShippingLoading}
             shippingError={cdekShippingError ?? null}
             freePvzShippingApplied={freePvzShippingApplied}
+            needsAddressClarification={checkoutNeedsAddressClarification}
             addressSelected={Boolean(selectedAddress)}
             hasPayableLines={mobileAccordionData.hasPayableLines}
           />
@@ -937,7 +1035,8 @@ const OrderLeftPart: React.FC = () => {
           />
         </figure>
         <p className={styles.agreement}>
-          Нажимая на кнопку «Оформить и оплатить», я соглашаюсь с условиями{' '}
+          Нажимая на кнопку «{needsAddressClarification ? 'Оформить' : 'Оформить и оплатить'}»,
+          я соглашаюсь с условиями{' '}
           <Link to="/info/oferta-i-usloviia-polzovaniia">Публичной оферты</Link>{' '}
           и выражаю своё согласие на обработку моих персональных данных в соответствии с{' '}
           <Link to="/info/politika-konfidentsialnosti">Политикой конфиденциальности</Link>

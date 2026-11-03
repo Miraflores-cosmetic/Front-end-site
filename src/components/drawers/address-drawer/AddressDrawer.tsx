@@ -24,6 +24,8 @@ import {
     GUEST_SHIPPING_ADDRESS_ID,
     saveGuestShippingAddress,
 } from '@/utils/guestShippingAddress';
+import { buildClarificationAddressInfo } from '@/utils/addressClarification';
+import { saveCheckoutClarificationDraft } from '@/utils/checkoutClarificationDraft';
 import {
     CDEK_COUNTRIES,
     cdekCountryDef,
@@ -381,6 +383,39 @@ const AddressDrawer: React.FC = () => {
         dispatch(closeDrawer());
     };
 
+    /**
+     * Клиент не нашёл ПВЗ/адрес.
+     * Guest → guest localStorage draft.
+     * Logged-in → ephemeral sessionStorage (не Saleor addresses, не cross-device).
+     */
+    const handleAddressNotFound = () => {
+        const clarification = buildClarificationAddressInfo({
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            phone: formData.phone,
+            city: formData.city,
+            countryArea: formData.countryArea,
+            cityArea: formData.cityArea,
+            streetAddress1: formData.streetAddress1,
+            postalCode: formData.postalCode,
+            apartment: formData.apartment,
+            country: {
+                code: (formData.country || 'RU').trim() || 'RU',
+                country:
+                    ((formData.country || 'RU').trim() || 'RU') === 'RU'
+                        ? 'Russia'
+                        : (formData.country || 'RU').trim(),
+            },
+        });
+        if (isAuth) {
+            saveCheckoutClarificationDraft(clarification);
+        } else {
+            saveGuestShippingAddress(clarification);
+        }
+        toast.success('Адрес отмечен — оператор уточнит доставку');
+        handleClose();
+    };
+
     const handleSubmit = async () => {
         if (!formData.country) {
             toast.error('Пожалуйста, введите код страны (например, RU)');
@@ -631,6 +666,13 @@ const AddressDrawer: React.FC = () => {
                                         </button>
                                     ))}
                                 </div>
+                                <button
+                                    type="button"
+                                    className={styles.addressNotFoundBtn}
+                                    onClick={handleAddressNotFound}
+                                >
+                                    Не удалось найти адрес
+                                </button>
                             </div>
 
                             {deliveryMethod === 'cdek_pvz' && (

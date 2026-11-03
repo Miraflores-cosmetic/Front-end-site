@@ -24,6 +24,7 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
   shippingLoading = false,
   shippingError = null,
   freePvzShippingApplied = false,
+  needsAddressClarification = false,
 }) => {
   const dispatch = useDispatch<AppDispatch>();
   const [isOpen, setIsOpen] = useState(false);
@@ -39,6 +40,9 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
 
   const shippingText = useMemo(() => {
     if (!hasPayableLines) return null;
+    if (needsAddressClarification) {
+      return { kind: 'muted' as const, value: 'уточняется' };
+    }
     if (shippingLoading) return { kind: 'muted' as const, value: 'Расчёт…' };
     if (!shippingLoading && shippingError) return { kind: 'error' as const, value: shippingError };
     if (!shippingLoading && !shippingError && shippingRub != null) {
@@ -50,7 +54,15 @@ const TotalAccordion: React.FC<TotalAccordionProps> = ({
     if (!shippingLoading && !shippingError && shippingRub == null && !addressSelected)
       return { kind: 'muted' as const, value: 'Выберите адрес' };
     return { kind: 'muted' as const, value: '—' };
-  }, [hasPayableLines, shippingLoading, shippingError, shippingRub, addressSelected, freePvzShippingApplied]);
+  }, [
+    hasPayableLines,
+    needsAddressClarification,
+    shippingLoading,
+    shippingError,
+    shippingRub,
+    addressSelected,
+    freePvzShippingApplied,
+  ]);
 
   useEffect(() => {
     getCartTextPage().then(page => {

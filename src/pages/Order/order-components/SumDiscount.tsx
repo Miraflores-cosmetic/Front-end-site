@@ -76,33 +76,39 @@ const SumDiscount = () => {
             в том числе Доставка
           </p>
           <div className={styles.shippingValueCol}>
-            {orderCheckout?.cdekShippingLoading && (
-              <p className={styles.shippingValueMuted}>Расчёт…</p>
+            {orderCheckout?.needsAddressClarification ? (
+              <p className={styles.shippingValueMuted}>уточняется</p>
+            ) : (
+              <>
+                {orderCheckout?.cdekShippingLoading && (
+                  <p className={styles.shippingValueMuted}>Расчёт…</p>
+                )}
+                {!orderCheckout?.cdekShippingLoading && orderCheckout?.cdekShippingError && (
+                  <p className={styles.shippingValueError}>{orderCheckout.cdekShippingError}</p>
+                )}
+                {!orderCheckout?.cdekShippingLoading &&
+                  !orderCheckout?.cdekShippingError &&
+                  payable.shippingRub != null && (
+                    <p className={styles.shippingValue}>
+                      {orderCheckout?.freePvzShippingApplied || payable.shippingRub === 0
+                        ? 'бесплатно'
+                        : `${formatPrice(payable.shippingRub)}₽`}
+                    </p>
+                  )}
+                {!orderCheckout?.cdekShippingLoading &&
+                  !orderCheckout?.cdekShippingError &&
+                  payable.shippingRub == null &&
+                  !orderCheckout?.selectedAddress && (
+                    <p className={styles.shippingValueMuted}>Выберите адрес</p>
+                  )}
+                {!orderCheckout?.cdekShippingLoading &&
+                  !orderCheckout?.cdekShippingError &&
+                  payable.shippingRub == null &&
+                  orderCheckout?.selectedAddress && (
+                    <p className={styles.shippingValueMuted}>—</p>
+                  )}
+              </>
             )}
-            {!orderCheckout?.cdekShippingLoading && orderCheckout?.cdekShippingError && (
-              <p className={styles.shippingValueError}>{orderCheckout.cdekShippingError}</p>
-            )}
-            {!orderCheckout?.cdekShippingLoading &&
-              !orderCheckout?.cdekShippingError &&
-              payable.shippingRub != null && (
-                <p className={styles.shippingValue}>
-                  {orderCheckout?.freePvzShippingApplied || payable.shippingRub === 0
-                    ? 'бесплатно'
-                    : `${formatPrice(payable.shippingRub)}₽`}
-                </p>
-              )}
-            {!orderCheckout?.cdekShippingLoading &&
-              !orderCheckout?.cdekShippingError &&
-              payable.shippingRub == null &&
-              !orderCheckout?.selectedAddress && (
-                <p className={styles.shippingValueMuted}>Выберите адрес</p>
-              )}
-            {!orderCheckout?.cdekShippingLoading &&
-              !orderCheckout?.cdekShippingError &&
-              payable.shippingRub == null &&
-              orderCheckout?.selectedAddress && (
-                <p className={styles.shippingValueMuted}>—</p>
-              )}
           </div>
         </div>
       )}

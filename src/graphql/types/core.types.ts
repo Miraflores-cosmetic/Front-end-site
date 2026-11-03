@@ -123,6 +123,8 @@ export interface OrderNode extends Node {
   paymentStatusDisplay?: string;
   /** Неоплаченный заказ: можно открыть виджет ЮKassa из ЛК */
   canPay?: boolean;
+  /** Оплата заблокирована: оператор уточняет адрес доставки */
+  needsAddressClarification?: boolean;
   payToken?: string | null;
   payExpiresAt?: string | null;
   total: {

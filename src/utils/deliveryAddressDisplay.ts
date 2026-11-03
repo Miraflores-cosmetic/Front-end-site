@@ -1,5 +1,9 @@
 import type { AddressInfo } from '@/types/auth';
 import { parseVspAddressMeta } from '@/lib/addressVspMeta';
+import {
+  ADDRESS_CLARIFICATION_LABEL,
+  isClarificationComment,
+} from '@/utils/addressClarification';
 
 /**
  * Достаёт подпись способа из Saleor streetAddress2:
@@ -18,6 +22,9 @@ export function getDeliveryTypeLabelFromStreet2(street2: string | undefined | nu
     }
 
     const s = (street2 || '').trim();
+    if (isClarificationComment(s)) {
+        return ADDRESS_CLARIFICATION_LABEL;
+    }
     if (!s) return 'Адрес';
 
     const prefix = 'Тип доставки:';

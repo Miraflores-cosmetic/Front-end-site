@@ -28,8 +28,10 @@ async function invalidatePendingAfterCartEdit() {
   const pending = readPendingCheckoutOrder();
   if (!pending) return;
   clearPendingCheckoutOrder();
+  const token = pending.payToken?.trim();
+  if (!token) return; // clarification pending — без payToken abandon не нужен
   try {
-    await abandonOrder(pending.orderId, pending.payToken);
+    await abandonOrder(pending.orderId, token);
   } catch {
     // TTL / expire подчистит; не блокируем UI корзины
   }

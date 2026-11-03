@@ -29,7 +29,24 @@ import {
   loadGuestShippingAddress,
   subscribeGuestShippingAddress,
 } from '@/utils/guestShippingAddress';
+import {
+  clearCheckoutClarificationDraft,
+  loadCheckoutClarificationDraft,
+  subscribeCheckoutClarificationDraft,
+} from '@/utils/checkoutClarificationDraft';
+import {
+  ADDRESS_CLARIFICATION_OPERATOR_NOTE,
+  isAddressClarification,
+} from '@/utils/addressClarification';
 import { useOrderCheckoutOptional } from '@/pages/Order/OrderCheckoutContext';
+
+/** Logged-in: ephemeral session draft only — never guest localStorage / Saleor. */
+function mergeAuthClarification(list: AddressInfo[]): AddressInfo[] {
+  const draft = loadCheckoutClarificationDraft();
+  if (!draft || !isAddressClarification(draft)) return list;
+  const withoutDup = list.filter((a) => a.id !== draft.id);
+  return [draft, ...withoutDup];
+}
 interface DeliveryProfileProps {
   onSelectAddress: (address: AddressInfo) => void;
   /** Подсветка блока, если адрес не выбран / невалиден при submit. */
@@ -61,7 +78,7 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({
 
   useEffect(() => {
     if (isAuth && me) {
-      const list = me.addresses || [];
+      const list = mergeAuthClarification(me.addresses || []);
       setAddresses(list);
 
       if (list.length === 0) {
@@ -76,6 +93,13 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({
         if (isCheckoutReadyAddress(stillThere)) {
           onSelectAddress(stillThere);
         }
+        return;
+      }
+
+      const clarification = list.find((a) => isAddressClarification(a));
+      if (clarification && isCheckoutReadyAddress(clarification)) {
+        setSelectedId(clarification.id);
+        onSelectAddress(clarification);
         return;
       }
 
@@ -107,6 +131,22 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({
       }
     }
   }, [me, isAuth, onSelectAddress, clearSelectedAddress, ozonAvailable]);
+
+  useEffect(() => {
+    if (!isAuth) return;
+    return subscribeCheckoutClarificationDraft((draft) => {
+      const base = me?.addresses || [];
+      const list =
+        draft && isAddressClarification(draft)
+          ? mergeAuthClarification(base)
+          : base;
+      setAddresses(list);
+      if (draft && isAddressClarification(draft) && isCheckoutReadyAddress(draft)) {
+        setSelectedId(draft.id);
+        onSelectAddress(draft);
+      }
+    });
+  }, [isAuth, me?.addresses, onSelectAddress]);
 
   useEffect(() => {
     if (isAuth) return;
@@ -205,11 +245,24 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({
       return;
     }
 
+    const target = addresses.find((a) => a.id === addressId);
     if (!isAuth) {
       clearGuestShippingAddress();
       setAddresses([]);
       setSelectedId('');
       clearSelectedAddress?.();
+      setOpenMenuId(null);
+      toast.success('Адрес удалён');
+      return;
+    }
+    if (target && isAddressClarification(target)) {
+      clearCheckoutClarificationDraft();
+      const next = me?.addresses || [];
+      setAddresses(next);
+      if (selectedId === addressId) {
+        setSelectedId('');
+        clearSelectedAddress?.();
+      }
       setOpenMenuId(null);
       toast.success('Адрес удалён');
       return;
@@ -276,7 +329,15 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({
                       <p className={styles.deliveryType}>
                         Тип доставки: {getDeliveryTypeLabelFromStreet2(address.streetAddress2)}
                       </p>
-                      <p className={styles.address}>{formatProfileShippingAddressLine(address)}</p>
+                      {isAddressClarification(address) ? (
+                        <p className={styles.clarificationNote} role="status">
+                          {ADDRESS_CLARIFICATION_OPERATOR_NOTE}
+                        </p>
+                      ) : (
+                        <p className={styles.address}>
+                          {formatProfileShippingAddressLine(address)}
+                        </p>
+                      )}
                       {hasDisabledCarrier(address) ? (
                         <p className={styles.reselectHint} role="status">
                           Служба сейчас недоступна — выберите другой способ доставки
@@ -307,15 +368,19 @@ const DeliveryProfile: React.FC<DeliveryProfileProps> = ({
                   </button>
                   {openMenuId === address.id && (
                     <div className={styles.menu} role="menu">
-                      <button
-                        type="button"
-                        role="menuitem"
-                        className={styles.menuItem}
-                        onClick={() => handleEdit(address)}
-                      >
-                        Изменить
-                      </button>
-                      {isAuth && !address.isDefaultShippingAddress ? (
+                      {!isAddressClarification(address) ? (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          className={styles.menuItem}
+                          onClick={() => handleEdit(address)}
+                        >
+                          Изменить
+                        </button>
+                      ) : null}
+                      {isAuth &&
+                      !isAddressClarification(address) &&
+                      !address.isDefaultShippingAddress ? (
                         <button
                           type="button"
                           role="menuitem"

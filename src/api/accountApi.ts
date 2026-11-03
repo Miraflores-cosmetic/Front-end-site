@@ -49,6 +49,8 @@ type JcosOrderSummary = {
   tracking: string | null;
   trackingProvider: string | null;
   canPay?: boolean;
+  /** Клиент не нашёл адрес — оплата заблокирована, пока оператор не уточнит. */
+  needsAddressClarification?: boolean;
   payToken?: string | null;
   payExpiresAt?: string | null;
 };
@@ -161,9 +163,11 @@ function mapOrderStatus(status: string): OrderNode['status'] {
 
 function mapOrderToNode(o: JcosOrderSummary): OrderNode {
   const statusUpper = o.status.toUpperCase();
-  const canPay =
-    o.canPay ??
-    (statusUpper === 'AWAITING_PAYMENT' || statusUpper === 'NEW');
+  const needsAddressClarification = Boolean(o.needsAddressClarification);
+  const canPay = needsAddressClarification
+    ? false
+    : (o.canPay ??
+      (statusUpper === 'AWAITING_PAYMENT' || statusUpper === 'NEW'));
   return {
     id: o.id,
     number: o.number,
@@ -179,8 +183,9 @@ function mapOrderToNode(o: JcosOrderSummary): OrderNode {
     userEmail: '',
     tracking: o.tracking,
     trackingProvider: o.trackingProvider,
+    needsAddressClarification,
     canPay,
-    payToken: o.payToken ?? null,
+    payToken: canPay ? (o.payToken ?? null) : null,
     payExpiresAt: o.payExpiresAt ?? null,
     lines: o.items.map((item) => ({
       id: item.id,

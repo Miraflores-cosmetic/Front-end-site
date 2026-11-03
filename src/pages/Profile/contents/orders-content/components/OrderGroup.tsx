@@ -39,6 +39,7 @@ export type OrderGroupProps = {
     status?: string;
     statusDisplay?: string;
     canPay?: boolean;
+    needsAddressClarification?: boolean;
     payToken?: string | null;
     payExpiresAt?: string | null;
     lines?: {
@@ -99,10 +100,13 @@ export function OrderGroup({
   const toast = useToast();
   const status = order.statusDisplay || order.status;
   const statusKey = normalizeOrderStatus(status);
+  const needsAddressClarification = Boolean(order.needsAddressClarification);
+  // Не OR'ить статус поверх canPay=false — иначе пробьём блок clarification.
   const canPay =
-    Boolean(order.canPay) ||
-    statusKey === 'AWAITING_PAYMENT' ||
-    statusKey === 'NEW';
+    !needsAddressClarification &&
+    (order.canPay === true ||
+      (order.canPay == null &&
+        (statusKey === 'AWAITING_PAYMENT' || statusKey === 'NEW')));
   const tracking = order.tracking?.trim() || '';
   const trackingHref = tracking ? orderTrackingUrl(order.trackingProvider, tracking) : null;
   const trackingProviderLabel = orderTrackingProviderLabel(order.trackingProvider);
@@ -260,11 +264,15 @@ export function OrderGroup({
                   <span>−{formatRub(order.giftCertificateAmount ?? 0)}</span>
                 </p>
               ) : null}
-              {typeof order.shippingCost === 'number' ? (
+              {typeof order.shippingCost === 'number' || needsAddressClarification ? (
                 <p className={styles.orderBreakdownRow}>
                   <span>Доставка</span>
                   <span>
-                    {order.shippingCost === 0 ? 'бесплатно' : formatRub(order.shippingCost)}
+                    {needsAddressClarification
+                      ? 'уточняется'
+                      : order.shippingCost === 0
+                        ? 'бесплатно'
+                        : formatRub(order.shippingCost ?? 0)}
                   </span>
                 </p>
               ) : null}
@@ -276,7 +284,11 @@ export function OrderGroup({
           </p>
         </div>
 
-        {canPay && !confirmationToken ? (
+        {needsAddressClarification ? (
+          <p className={styles.clarificationNote} role="status">
+            Оператор уточняет адрес
+          </p>
+        ) : canPay && !confirmationToken ? (
           <div className={styles.orderActions}>
             <button
               type="button"

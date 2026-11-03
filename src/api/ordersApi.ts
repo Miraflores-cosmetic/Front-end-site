@@ -76,6 +76,8 @@ export type CreateOrderInput = {
   shippingMethod?: CheckoutShippingMethod | null;
   /** HMAC quote из requestShippingQuote; не нужен для gift-denom-only. */
   shippingQuote?: string | null;
+  /** Клиент не нашёл адрес — без quote / без оплаты на витрине. */
+  needsAddressClarification?: boolean;
   /** YouRich attribution (?yr= / cookies); обычно подставляется в createOrder. */
   affiliate?: {
     refHash?: string | null;

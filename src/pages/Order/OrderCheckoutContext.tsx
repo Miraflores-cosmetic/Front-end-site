@@ -10,11 +10,16 @@ import {
     qualifiesForFreePvzShipping,
 } from '@/utils/freePvzShipping';
 import { isCheckoutReadyAddress } from '@/utils/checkoutShipping';
+import { isAddressClarification } from '@/utils/addressClarification';
 import { calcPayableTotals, type PayableTotals } from '@/utils/payableTotal';
 import {
     loadGuestShippingAddress,
     subscribeGuestShippingAddress,
 } from '@/utils/guestShippingAddress';
+import {
+    loadCheckoutClarificationDraft,
+    subscribeCheckoutClarificationDraft,
+} from '@/utils/checkoutClarificationDraft';
 import { useCdekShippingEstimate, type ShippingEstimateMeta } from './useCdekShippingEstimate';
 import { revalidateVoucher } from '@/store/slices/checkoutSlice';
 import { apiFetch } from '@/api/apiClient';
@@ -48,6 +53,8 @@ export type OrderCheckoutContextValue = {
     /** Без добавочной стоимости — для requestShippingQuote.clientEstimate. */
     shippingQuoteClientEstimateRub: number | null;
     freePvzShippingApplied: boolean;
+    /** Клиент не нашёл адрес — доставка ещё не посчитана (не «бесплатно»). */
+    needsAddressClarification: boolean;
     payable: PayableTotals;
 };
 
@@ -69,7 +76,15 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
         DELIVERY_SURCHARGE_DEFAULTS,
     );
     const prevEmailRef = useRef('');
-    const { rub, loading, error, quoteMeta } = useCdekShippingEstimate(lines, selectedAddress);
+    const addressNeedsClarification = isAddressClarification(selectedAddress);
+    const { rub, loading, error, quoteMeta } = useCdekShippingEstimate(
+        lines,
+        addressNeedsClarification ? null : selectedAddress,
+    );
+    const shippingRub = addressNeedsClarification ? 0 : rub;
+    const shippingLoading = addressNeedsClarification ? false : loading;
+    const shippingError = addressNeedsClarification ? null : error;
+    const shippingQuoteMeta = addressNeedsClarification ? null : quoteMeta;
     const { threshold } = useProgressBarCartModel();
 
     const applySavedAddress = useCallback((a: AddressInfo) => {
@@ -110,6 +125,16 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
         });
     }, [isAuth, applySavedAddress]);
 
+    /** Logged-in: ephemeral clarification draft (session), не account addresses. */
+    useEffect(() => {
+        if (!isAuth) return;
+        const draft = loadCheckoutClarificationDraft();
+        if (draft) applySavedAddress(draft);
+        return subscribeCheckoutClarificationDraft((next) => {
+            if (next) applySavedAddress(next);
+        });
+    }, [isAuth, applySavedAddress]);
+
     useEffect(() => {
         const email = checkoutEmail.trim();
         if (!voucherCode || !EMAIL_RE.test(email)) return;
@@ -128,25 +153,50 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
     );
 
     const freePvzShippingApplied = useMemo(() => {
-        if (loading || error || rub == null || !selectedAddress) return false;
+        if (addressNeedsClarification) return false;
+        if (shippingLoading || shippingError || shippingRub == null || !selectedAddress) {
+            return false;
+        }
         return (
             qualifiesForFreePvzShipping(subtotalForFreePvz, threshold) &&
             isPvzDeliveryAddress(selectedAddress)
         );
-    }, [loading, error, rub, selectedAddress, subtotalForFreePvz, threshold]);
+    }, [
+        addressNeedsClarification,
+        shippingLoading,
+        shippingError,
+        shippingRub,
+        selectedAddress,
+        subtotalForFreePvz,
+        threshold,
+    ]);
 
     const checkoutShippingMethod = useMemo(
-        () => resolveCheckoutShippingMethod(selectedAddress?.streetAddress2),
-        [selectedAddress?.streetAddress2],
+        () =>
+            addressNeedsClarification
+                ? null
+                : resolveCheckoutShippingMethod(selectedAddress?.streetAddress2),
+        [addressNeedsClarification, selectedAddress?.streetAddress2],
     );
 
     const effectiveShippingRub = useMemo(() => {
-        if (rub == null) return null;
+        if (addressNeedsClarification) return 0;
+        if (shippingRub == null) return null;
         if (freePvzShippingApplied) return 0;
-        return withDeliverySurcharge(rub, checkoutShippingMethod, deliverySurcharges) ?? rub;
-    }, [rub, freePvzShippingApplied, checkoutShippingMethod, deliverySurcharges]);
+        return (
+            withDeliverySurcharge(shippingRub, checkoutShippingMethod, deliverySurcharges) ??
+            shippingRub
+        );
+    }, [
+        addressNeedsClarification,
+        shippingRub,
+        freePvzShippingApplied,
+        checkoutShippingMethod,
+        deliverySurcharges,
+    ]);
 
     const shippingQuoteClientEstimateRub = useMemo(() => {
+        if (addressNeedsClarification) return 0;
         if (freePvzShippingApplied) return 0;
         if (effectiveShippingRub == null) return null;
         if (!checkoutShippingMethod) return effectiveShippingRub;
@@ -156,6 +206,7 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
             deliverySurcharges,
         );
     }, [
+        addressNeedsClarification,
         freePvzShippingApplied,
         effectiveShippingRub,
         checkoutShippingMethod,
@@ -169,10 +220,17 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
                 voucherDiscount,
                 voucherKind,
                 shippingRub: effectiveShippingRub,
-                shippingLoading: loading,
-                shippingError: error,
+                shippingLoading,
+                shippingError,
             }),
-        [lines, voucherDiscount, voucherKind, effectiveShippingRub, loading, error],
+        [
+            lines,
+            voucherDiscount,
+            voucherKind,
+            effectiveShippingRub,
+            shippingLoading,
+            shippingError,
+        ],
     );
 
     // Gift validate зависит от shipping: пересчитываем applyAmount при смене тарифа.
@@ -197,11 +255,12 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
             checkoutEmail,
             setCheckoutEmail,
             cdekShippingRub: effectiveShippingRub,
-            cdekShippingLoading: loading,
-            cdekShippingError: error,
-            shippingQuoteMeta: quoteMeta,
+            cdekShippingLoading: shippingLoading,
+            cdekShippingError: shippingError,
+            shippingQuoteMeta,
             shippingQuoteClientEstimateRub,
             freePvzShippingApplied,
+            needsAddressClarification: addressNeedsClarification,
             payable,
         }),
         [
@@ -210,11 +269,12 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
             clearSelectedAddress,
             checkoutEmail,
             effectiveShippingRub,
-            loading,
-            error,
-            quoteMeta,
+            shippingLoading,
+            shippingError,
+            shippingQuoteMeta,
             shippingQuoteClientEstimateRub,
             freePvzShippingApplied,
+            addressNeedsClarification,
             payable,
         ],
     );

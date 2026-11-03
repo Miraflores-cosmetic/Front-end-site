@@ -40,4 +40,6 @@ export interface TotalAccordionProps {
   shippingLoading?: boolean;
   shippingError?: string | null;
   freePvzShippingApplied?: boolean;
+  /** Пока оператор уточняет адрес — не показывать «бесплатно». */
+  needsAddressClarification?: boolean;
 }

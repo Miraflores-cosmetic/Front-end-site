@@ -107,6 +107,9 @@ const OrderPay: React.FC = () => {
     })();
   }, [searchParams]);
 
+  const addressClarification =
+    Boolean(error) && /оператор уточняет адрес/i.test(error || '');
+
   if (confirmationToken) {
     return (
       <div className={styles.successContainer}>
@@ -133,8 +136,12 @@ const OrderPay: React.FC = () => {
           </>
         ) : (
           <>
-            <h1 className={`${styles.title} ${styles.titleError}`}>Не удалось оплатить</h1>
-            <p className={styles.subtitle}>{error}</p>
+            <h1 className={`${styles.title} ${styles.titleError}`}>
+              {addressClarification ? 'Оплата пока недоступна' : 'Не удалось оплатить'}
+            </h1>
+            <p className={styles.subtitle}>
+              {addressClarification ? 'Оператор уточняет адрес' : error}
+            </p>
             <Link to="/profile?tab=orders" className={styles.buttonPrimary}>
               К заказам
             </Link>

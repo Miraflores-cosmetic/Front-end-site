@@ -102,7 +102,9 @@ export function readPendingCheckoutOrder(): PendingCheckoutOrder | null {
   const payToken = sessionStorage.getItem(PENDING_PAY_TOKEN_KEY) || '';
   const idempotencyKey = sessionStorage.getItem(PENDING_IDEMPOTENCY_KEY) || '';
   const fingerprint = sessionStorage.getItem(PENDING_CHECKOUT_FP_KEY) || '';
-  if (!orderId || !payToken) return null;
+  // payToken может быть пустым: clarification create не выдаёт HMAC
+  // (виджет не открываем). Reuse / abandon без token — no-op на сервере.
+  if (!orderId) return null;
   return { orderId, orderNumber, payToken, idempotencyKey, fingerprint };
 }
 

@@ -286,17 +286,6 @@ export function OrderGroup({
             >
               {paying ? 'Открываем оплату…' : 'Оплатить'}
             </button>
-            {order.payExpiresAt ? (
-              <p className={styles.payHint}>
-                Оплатите до{' '}
-                {new Date(order.payExpiresAt).toLocaleString('ru-RU', {
-                  day: 'numeric',
-                  month: 'short',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </p>
-            ) : null}
           </div>
         ) : null}
 

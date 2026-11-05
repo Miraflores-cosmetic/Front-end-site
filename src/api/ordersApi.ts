@@ -118,7 +118,10 @@ export type CheckoutStatusResponse = {
   number?: string;
   orderId?: string;
   paid?: boolean;
+  orderStatus?: string;
+  total?: number;
   message?: string;
+  latePayment?: boolean;
 };
 
 export type OzonShippingEstimate = {
@@ -163,6 +166,43 @@ export async function payOrder(
 ): Promise<PayOrderResponse> {
   return apiJson(
     `/orders/${encodeURIComponent(orderId)}/pay`,
+    'POST',
+    payToken ? { payToken } : {},
+  );
+}
+
+export type YandexPayConfig = {
+  enabled: boolean;
+  merchantId?: string;
+  env?: 'SANDBOX' | 'PRODUCTION';
+};
+
+export type YandexPayOrderResponse = {
+  alreadyPaid?: boolean;
+  orderId: string;
+  number: string;
+  total: number;
+  paymentId?: string;
+  paymentUrl?: string;
+  payToken?: string | null;
+  message?: string | string[];
+};
+
+export async function fetchYandexPayConfig(): Promise<YandexPayConfig> {
+  try {
+    return await apiJson('/orders/yandexpay/config', 'GET');
+  } catch {
+    return { enabled: false };
+  }
+}
+
+/** Merchant API create → paymentUrl для YaPay.onPayButtonClick. */
+export async function createYandexPayPayment(
+  orderId: string,
+  payToken?: string | null,
+): Promise<YandexPayOrderResponse> {
+  return apiJson(
+    `/orders/${encodeURIComponent(orderId)}/pay/yandexpay`,
     'POST',
     payToken ? { payToken } : {},
   );

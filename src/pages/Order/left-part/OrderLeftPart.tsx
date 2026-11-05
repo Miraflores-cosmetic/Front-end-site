@@ -11,6 +11,7 @@ import DeliveryProfile from '@/components/delivery-profile/DeliveryProfile';
 import TotalAccordion from '../total-accordion/TotalAccordion';
 import Certificate from '../order-components/Certificate';
 import YooKassaWidget from '@/components/yookassa/YooKassaWidget';
+import YandexPayButton from '@/components/yandex-pay/YandexPayButton';
 
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { useSelector, useDispatch } from 'react-redux';
@@ -114,6 +115,14 @@ const OrderLeftPart: React.FC = () => {
   } = useOrderCheckout();
   const [confirmationToken, setConfirmationToken] = useState<string | null>(null);
   const [showYooKassaWidget, setShowYooKassaWidget] = useState(false);
+  const [pendingPay, setPendingPay] = useState<{
+    orderId: string;
+    orderNumber: string;
+    payToken: string;
+    total: number;
+  } | null>(null);
+  /** После exclusive YaPay — re-pay ЮKassa без полного submit формы. */
+  const [yooRestoreBusy, setYooRestoreBusy] = useState(false);
   const [isCreatingPayment, setIsCreatingPayment] = useState(false);
   /** Sync lock: React setState не успевает до второго клика → дубли create. */
   const submitInFlightRef = useRef(false);
@@ -489,6 +498,16 @@ const OrderLeftPart: React.FC = () => {
         });
 
         if (payResult.confirmationToken) {
+          const total =
+            typeof payResult.total === 'number' && Number.isFinite(payResult.total)
+              ? Math.round(payResult.total)
+              : Math.round(payable.payableTotal ?? 0);
+          setPendingPay({
+            orderId,
+            orderNumber,
+            payToken,
+            total,
+          });
           setConfirmationToken(payResult.confirmationToken);
           setShowYooKassaWidget(true);
           reachGoal(MetrikaGoal.paymentOpen, { orderId, orderNumber });
@@ -700,6 +719,7 @@ const OrderLeftPart: React.FC = () => {
   const handleYooKassaClose = useCallback(() => {
     setConfirmationToken(null);
     setShowYooKassaWidget(false);
+    setPendingPay(null);
   }, []);
 
   // Сброс server charge, если клиентский итог изменился (корзина / доставка / промо).
@@ -977,7 +997,7 @@ const OrderLeftPart: React.FC = () => {
         </div>
       </section>
 
-      {showYooKassaWidget && confirmationToken && (
+      {showYooKassaWidget && pendingPay && (
         <div style={{ marginBottom: '24px' }}>
           {voucherKind === 'gift' ? (
             <p
@@ -992,15 +1012,98 @@ const OrderLeftPart: React.FC = () => {
               {GIFT_HOLD_RESERVED}
             </p>
           ) : null}
-          <YooKassaWidget
-            confirmationToken={confirmationToken}
-            returnUrl={yooKassaReturnUrl}
-            onSuccess={handleYooKassaSuccess}
-            onError={handleYooKassaError}
-            onClose={() => {
-              handleYooKassaClose();
+          <YandexPayButton
+            orderId={pendingPay.orderId}
+            payToken={pendingPay.payToken}
+            totalAmount={pendingPay.total}
+            onExclusiveStart={() => {
+              // Nest гасит PENDING ЮKassa — виджет с этим token больше невалиден.
+              setConfirmationToken(null);
             }}
+            onAlreadyPaid={handleYooKassaSuccess}
+            onError={(msg) => toast.error(msg)}
           />
+          {confirmationToken ? (
+            <>
+              <p
+                style={{
+                  margin: '0 0 12px',
+                  fontSize: 13,
+                  lineHeight: 1.4,
+                  opacity: 0.75,
+                  textAlign: 'center',
+                }}
+              >
+                или картой / СБП
+              </p>
+              <YooKassaWidget
+                confirmationToken={confirmationToken}
+                returnUrl={yooKassaReturnUrl}
+                onSuccess={handleYooKassaSuccess}
+                onError={handleYooKassaError}
+                onClose={() => {
+                  handleYooKassaClose();
+                }}
+              />
+            </>
+          ) : (
+            <div style={{ margin: '0 0 12px', textAlign: 'center' }}>
+              <p
+                style={{
+                  margin: '0 0 10px',
+                  fontSize: 13,
+                  lineHeight: 1.4,
+                  opacity: 0.75,
+                }}
+              >
+                Выбран Яндекс Пэй. Можно вернуться к карте / СБП без перезагрузки.
+              </p>
+              <CustomButton
+                type="button"
+                label={yooRestoreBusy ? 'Открываем…' : 'Оплатить картой / СБП'}
+                disabled={yooRestoreBusy || !pendingPay}
+                onClick={() => {
+                  if (!pendingPay || yooRestoreBusy) return;
+                  void (async () => {
+                    setYooRestoreBusy(true);
+                    try {
+                      const payResult = await payOrder(
+                        pendingPay.orderId,
+                        pendingPay.payToken,
+                      );
+                      if (payResult.alreadyPaid) {
+                        handleYooKassaSuccess();
+                        return;
+                      }
+                      if (!payResult.confirmationToken) {
+                        throw new Error('Не получен токен ЮKassa');
+                      }
+                      if (
+                        typeof payResult.total === 'number' &&
+                        Number.isFinite(payResult.total)
+                      ) {
+                        setPendingPay((prev) =>
+                          prev
+                            ? { ...prev, total: Math.round(payResult.total) }
+                            : prev,
+                        );
+                      }
+                      setConfirmationToken(payResult.confirmationToken);
+                      setShowYooKassaWidget(true);
+                    } catch (e) {
+                      toast.error(
+                        e instanceof Error
+                          ? e.message
+                          : 'Не удалось открыть оплату картой',
+                      );
+                    } finally {
+                      setYooRestoreBusy(false);
+                    }
+                  })();
+                }}
+              />
+            </div>
+          )}
           <button
             type="button"
             className={styles.agreement}

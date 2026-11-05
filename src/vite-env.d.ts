@@ -15,6 +15,8 @@ interface ImportMetaEnv {
   readonly VITE_YANDEX_DELIVERY_ENABLED?: string;
   /** Яндекс.Метрика counter id (default 112462177). */
   readonly VITE_YANDEX_METRIKA_ID?: string;
+  /** Публичный Merchant ID (основной источник — GET /orders/yandexpay/config). */
+  readonly VITE_YANDEX_PAY_MERCHANT_ID?: string;
 }
 
 interface ImportMeta {

@@ -20,6 +20,7 @@ import { AddressInfo } from '@/types/auth';
 import { formatPhoneNumber } from '@/utils/phoneFormatter';
 import { useOrderCheckout } from '../OrderCheckoutContext';
 import { createOrder, payOrder, abandonOrder, requestShippingQuote } from '@/api/ordersApi';
+import { ApiError, getApiErrorCode } from '@/api/apiClient';
 import { getOrCreateGuestId, uploadsUrl } from '@/api/apiClient';
 import {
   disabledCarrierMessage,
@@ -43,6 +44,15 @@ import {
   GIFT_HOLD_CAPTURED_TOAST,
   GIFT_HOLD_RESERVED,
 } from '@/utils/giftHoldCopy';
+import { useSamplePurchaseRules } from '@/hooks/useSamplePurchaseRules';
+import {
+  DEFAULT_SAMPLE_RULES_ARTICLE_URL,
+  notifyCartSyncRemovals,
+} from '@/utils/cartSyncRemovalToasts';
+import {
+  sampleAlreadyPurchasedToastMessage,
+  sampleGuestToastMessage,
+} from '@/components/sample-purchase/samplePurchaseToasts';
 import {
   ADDRESS_CLARIFICATION_OPERATOR_NOTE,
   isAddressClarification,
@@ -89,6 +99,7 @@ const COMMENT_MAX = 1000;
 const OrderLeftPart: React.FC = () => {
   const navigate = useNavigate();
   const toast = useToast();
+  const sampleRules = useSamplePurchaseRules();
   const { me } = useSelector((state: RootState) => state.authSlice);
   const isMobile = useScreenMatch();
 
@@ -329,8 +340,10 @@ const OrderLeftPart: React.FC = () => {
     try {
       const syncResult = await dispatch(syncCartLines()).unwrap();
       if (syncResult.removed?.length) {
-        toast.error(
-          `Часть товаров недоступна и убрана из корзины (${syncResult.removed.length}). Проверьте корзину и попробуйте снова.`,
+        notifyCartSyncRemovals(
+          toast,
+          syncResult.removed,
+          sampleRules?.sampleRulesArticleUrl ?? DEFAULT_SAMPLE_RULES_ARTICLE_URL,
         );
         return;
       }
@@ -681,10 +694,26 @@ const OrderLeftPart: React.FC = () => {
     } catch (error: unknown) {
       console.error('Error creating payment:', error);
       if (shippingMethod === 'OZON') void refreshOzonAvailability(true);
+      const code = getApiErrorCode(error);
+      if (code === 'sample_guest') {
+        toast.warning(sampleGuestToastMessage(), 4500);
+        return;
+      }
+      if (code === 'sample_already_purchased') {
+        toast.warning(
+          sampleAlreadyPurchasedToastMessage(
+            sampleRules?.sampleRulesArticleUrl ?? DEFAULT_SAMPLE_RULES_ARTICLE_URL,
+          ),
+          5000,
+        );
+        return;
+      }
       toast.error(
-        error instanceof Error
+        error instanceof ApiError
           ? error.message
-          : 'Ошибка создания платежа. Пожалуйста, попробуйте позже.',
+          : error instanceof Error
+            ? error.message
+            : 'Ошибка создания платежа. Пожалуйста, попробуйте позже.',
       );
     } finally {
       submitInFlightRef.current = false;

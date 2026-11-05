@@ -11,10 +11,12 @@ import styles from './toast.module.scss';
 
 type ToastType = 'success' | 'error' | 'warning';
 
+type ToastMessage = ReactNode;
+
 interface ToastContextType {
-  success: (message: string) => void;
-  error: (message: string) => void;
-  warning: (message: string) => void;
+  success: (message: ToastMessage, durationMs?: number) => void;
+  error: (message: ToastMessage, durationMs?: number) => void;
+  warning: (message: ToastMessage, durationMs?: number) => void;
 }
 
 interface ToastProviderProps {
@@ -35,12 +37,12 @@ const DEFAULT_DURATION_MS = 2800;
 
 export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
   const [open, setOpen] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState<ToastMessage>('');
   const [toastType, setToastType] = useState<ToastType>('success');
   const [durationMs, setDurationMs] = useState(DEFAULT_DURATION_MS);
   const [animKey, setAnimKey] = useState(0);
 
-  const show = useCallback((type: ToastType, next: string, nextDuration = DEFAULT_DURATION_MS) => {
+  const show = useCallback((type: ToastType, next: ToastMessage, nextDuration = DEFAULT_DURATION_MS) => {
     setToastType(type);
     setMessage(next);
     setDurationMs(nextDuration);
@@ -56,9 +58,9 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
 
   const toast = useMemo<ToastContextType>(
     () => ({
-      success: (message: string) => show('success', message),
-      error: (message: string) => show('error', message),
-      warning: (message: string) => show('warning', message),
+      success: (message, durationMs) => show('success', message, durationMs),
+      error: (message, durationMs) => show('error', message, durationMs),
+      warning: (message, durationMs) => show('warning', message, durationMs),
     }),
     [show],
   );

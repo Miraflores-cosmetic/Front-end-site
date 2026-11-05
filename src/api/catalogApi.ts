@@ -62,6 +62,7 @@ type JcosVariant = {
   stock: number;
   stockReserve: number;
   available: number;
+  isSample?: boolean;
   /** Omit when variant uses product-level gallery. */
   images?: JcosVariantImage[];
 };
@@ -105,6 +106,7 @@ export type JcosProductDetail = {
   canonicalPath: string | null;
   seoNoIndex: boolean;
   contentDeferred?: boolean;
+  samplePurchaseRules?: SamplePurchaseRules;
 };
 
 export type JcosProductContent = Pick<
@@ -170,7 +172,11 @@ export type CartSyncResponse = {
     isGiftDenom?: boolean;
   }>;
   removedKeys: string[];
-  removedLines?: Array<{ key: string; reason: 'oos' | 'missing'; name?: string }>;
+  removedLines?: Array<{
+    key: string;
+    reason: 'oos' | 'missing' | 'sample_guest' | 'sample_already_purchased';
+    name?: string;
+  }>;
   listSubtotal: number;
   subtotal: number;
   campaignDiscountTotal: number;
@@ -209,6 +215,7 @@ function mapVariantNode(v: JcosVariant, productImages: JcosVariantImage[]) {
       id: v.id,
       sku: v.sku || '',
       name: v.name,
+      isSample: v.isSample === true,
       orderMinQty: Math.max(1, v.orderMinQty ?? 1),
       quantityLimitPerCustomer: v.orderMaxQty,
       trackInventory: true,
@@ -382,6 +389,7 @@ export function adaptProductDetail(p: JcosProductDetail): ProductDetailNode {
     ogImageUrl: p.ogImageUrl ? uploadsUrl(p.ogImageUrl) || p.ogImageUrl : null,
     canonicalPath: p.canonicalPath,
     seoNoIndex: p.seoNoIndex,
+    samplePurchaseRules: p.samplePurchaseRules,
   } as ProductDetailNode;
 }
 
@@ -512,6 +520,33 @@ export function clearCatalogApiCaches() {
 
 export async function syncCart(lines: CartSyncLine[]): Promise<CartSyncResponse> {
   return apiJson('/catalog/cart/sync', 'POST', { lines });
+}
+
+export type SamplePurchaseRules = {
+  sampleRulesArticleSlug: string;
+  sampleRulesArticleUrl: string | null;
+  sampleVariantNoticeHtml: string | null;
+};
+
+export type SampleEligibilityResponse = SamplePurchaseRules & {
+  variants: Record<
+    string,
+    {
+      isSample: boolean;
+      eligible: boolean;
+      reason?: 'guest' | 'already_purchased' | 'unknown_variant';
+    }
+  >;
+};
+
+export async function fetchSamplePurchaseRules(): Promise<SamplePurchaseRules> {
+  return apiJson('/catalog/samples/rules', 'GET');
+}
+
+export async function fetchSampleEligibility(
+  variantIds: string[],
+): Promise<SampleEligibilityResponse> {
+  return apiJson('/catalog/samples/eligibility', 'POST', { variantIds });
 }
 
 export async function resolveCollectionSlug(saleorGid: string): Promise<string | null> {

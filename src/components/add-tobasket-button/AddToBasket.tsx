@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { useSamplePurchaseRules } from '@/hooks/useSamplePurchaseRules';
+import { isProductVariantSample } from '@/utils/sampleVariant';
+import { runSampleAtcGuard } from '@/utils/sampleAtcGuard';
 import styles from './AddToBasket.module.scss';
 import { useDispatch, useSelector } from 'react-redux';
 import { useToast } from '@/components/toast/toast';
@@ -36,6 +39,10 @@ interface AddToCartButtonProps {
   oldPrice?: number | null;
   discount?: number | null;
   size: string;
+  /** Флаг пробника с API (приоритет над именем) */
+  variantIsSample?: boolean | null;
+  /** Имя варианта (объём / «Пробник») — для правил пробников */
+  variantName?: string | null;
   slug?: string;
   disabled?: boolean;
   productId?: string;
@@ -68,6 +75,8 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   oldPrice = null,
   discount = null,
   size,
+  variantName = null,
+  variantIsSample = null,
   slug,
   disabled = false,
   productId,
@@ -83,7 +92,10 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
 
   const dispatch = useDispatch();
   const toast = useToast();
+  const sampleRules = useSamplePurchaseRules();
+  const isAuth = useSelector((state: RootState) => state.authSlice.isAuth);
   const cartLines = useSelector((state: RootState) => state.checkout.lines);
+  const [sampleCheckPending, setSampleCheckPending] = useState(false);
   const cartItem = useSelector((state: RootState) =>
     state.checkout.lines.find((item) => item.variantId === activeVariantId),
   );
@@ -91,7 +103,10 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
   const count = cartItem?.quantity || 0;
   const limitSrc = cartItem?.quantityLimitPerCustomer ?? quantityLimitPerCustomer;
   const availSrc = cartItem?.quantityAvailable ?? quantityAvailable;
-  const maxQ = effectiveLineQuantityCap(limitSrc, availSrc);
+  const maxQ = (() => {
+    const cap = effectiveLineQuantityCap(limitSrc, availSrc);
+    return isProductVariantSample({ name: variantName ?? size, isSample: variantIsSample }) ? Math.min(cap, 1) : cap;
+  })();
   const atLimit = count > 0 && count >= maxQ;
   const lineKey = activeVariantId ? { variantId: activeVariantId } : null;
 
@@ -100,10 +115,26 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
     quantityAvailable: cartItem?.quantityAvailable ?? quantityAvailable
   });
 
-  const handleAdd = () => {
-    if (disabled) return;
+  const handleAdd = async () => {
+    if (disabled || sampleCheckPending) return;
 
     if (preferAddButton && onRequestAdd) {
+      if (activeVariantId && count === 0) {
+        setSampleCheckPending(true);
+        try {
+          const ok = await runSampleAtcGuard({
+            variantId: activeVariantId,
+            variantName: variantName ?? size,
+            variantIsSample,
+            isAuth,
+            toast,
+            rules: sampleRules,
+          });
+          if (!ok) return;
+        } finally {
+          setSampleCheckPending(false);
+        }
+      }
       onRequestAdd();
       return;
     }
@@ -113,6 +144,23 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
     if (lineOutOfStock) {
       toast.error('Нет в наличии');
       return;
+    }
+
+    if (count === 0) {
+      setSampleCheckPending(true);
+      try {
+        const ok = await runSampleAtcGuard({
+          variantId: activeVariantId,
+          variantName: variantName ?? size,
+          variantIsSample,
+          isAuth,
+          toast,
+          rules: sampleRules,
+        });
+        if (!ok) return;
+      } finally {
+        setSampleCheckPending(false);
+      }
     }
 
     if (count === 0) {
@@ -213,7 +261,7 @@ const AddToCartButton: React.FC<AddToCartButtonProps> = ({
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           type='button'
-          disabled={disabled || (!preferAddButton && lineOutOfStock)}
+          disabled={disabled || sampleCheckPending || (!preferAddButton && lineOutOfStock)}
         >
           {buttonText}
         </button>

@@ -7,6 +7,8 @@ import AddToCartButton from '@/components/add-tobasket-button/AddToBasket';
 import type { ProductSliceItem, ProductVariant } from '@/types/productSlice';
 import { getVolumeFromVariant } from '@/utils/getVolumeFromVariant';
 import { sanitizeCmsHtml } from '@/utils/sanitizeCmsHtml';
+import { isProductVariantSample } from '@/utils/sampleVariant';
+import { useSamplePurchaseRules } from '@/hooks/useSamplePurchaseRules';
 import styles from '../ProductDetail.module.scss';
 
 type ProductBuyBoxProps = {
@@ -52,8 +54,25 @@ export function ProductBuyBox({
     '';
 
   const volume = getVolumeFromVariant(activeVariant);
+  const sampleRulesHook = useSamplePurchaseRules();
+  const sampleRules = item.samplePurchaseRules ?? sampleRulesHook;
+  const variantLabel = activeVariant?.node?.name ?? volume;
+  const isSample = isProductVariantSample({
+    name: variantLabel,
+    isSample: activeVariant?.node?.isSample,
+  });
+  const sampleRulesPending =
+    isSample && !item.samplePurchaseRules && sampleRulesHook == null;
   const reviewsHref = `/reviews?product=${encodeURIComponent(item.slug)}`;
   const safeShortHtml = sanitizeCmsHtml(pageShortHtml);
+  const sampleNoticeRaw =
+    sampleRules?.sampleVariantNoticeHtml?.trim() ||
+    (isSample && sampleRules?.sampleRulesArticleUrl
+      ? `<p>Один пробник каждого товара — один раз на аккаунт. <a href="${sampleRules.sampleRulesArticleUrl}">Правила приобретения пробников</a></p>`
+      : '');
+  const safeSampleNotice = sampleNoticeRaw
+    ? sanitizeCmsHtml(sampleNoticeRaw)
+    : '';
   const formatPrice = (amount: number) => Math.round(amount).toLocaleString('ru-RU');
 
   return (
@@ -104,6 +123,8 @@ export function ProductBuyBox({
             oldPrice={oldPrice}
             discount={discount}
             size={volume}
+            variantIsSample={activeVariant?.node?.isSample ?? null}
+            variantName={variantLabel}
             slug={item.slug}
             defaultText="Добавить в корзину"
             activeText="Добавить в корзину"
@@ -122,6 +143,17 @@ export function ProductBuyBox({
       </div>
 
       <div className={styles.infoBottom}>
+        {sampleRulesPending ? (
+          <div
+            className={styles.sampleNoticeSkeleton}
+            aria-hidden
+          />
+        ) : isSample && safeSampleNotice ? (
+          <div
+            className={styles.desc}
+            dangerouslySetInnerHTML={{ __html: safeSampleNotice }}
+          />
+        ) : null}
         {safeShortHtml ? (
           <div
             className={styles.desc}

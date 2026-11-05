@@ -13,12 +13,18 @@ import { clearRegisterPassword } from '@/api/registerSession';
 export class ApiError extends Error {
   status: number;
   body: unknown;
+  /** Nest structured errors (e.g. sample_guest). */
+  code?: string;
 
   constructor(message: string, status: number, body?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.body = body;
+    if (body && typeof body === 'object' && body !== null && 'code' in body) {
+      const c = (body as { code: unknown }).code;
+      if (typeof c === 'string' && c.trim()) this.code = c.trim();
+    }
   }
 }
 
@@ -104,6 +110,18 @@ function buildUrl(path: string, query?: ApiFetchOptions['query']): string {
   }
   const q = sp.toString();
   return q ? `${base}?${q}` : base;
+}
+
+export function getApiErrorCode(err: unknown): string | undefined {
+  if (err instanceof ApiError && err.code) return err.code;
+  if (err && typeof err === 'object' && 'body' in err) {
+    const body = (err as { body: unknown }).body;
+    if (body && typeof body === 'object' && body !== null && 'code' in body) {
+      const c = (body as { code: unknown }).code;
+      return typeof c === 'string' ? c : undefined;
+    }
+  }
+  return undefined;
 }
 
 export async function apiFetch<T = unknown>(

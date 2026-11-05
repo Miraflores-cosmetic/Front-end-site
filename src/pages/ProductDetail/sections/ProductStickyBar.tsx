@@ -69,6 +69,8 @@ export function ProductStickyBar({
           oldPrice={oldPrice}
           discount={discount}
           size={volume}
+          variantIsSample={activeVariant?.node?.isSample ?? null}
+            variantName={activeVariant?.node?.name ?? volume}
           slug={item.slug}
           defaultText="В корзину"
           activeText="В корзину"

@@ -1,5 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSamplePurchaseRules } from '@/hooks/useSamplePurchaseRules';
+import { runSampleAtcGuard } from '@/utils/sampleAtcGuard';
+import { isProductVariantSample } from '@/utils/sampleVariant';
 import type { VolumePickerOption } from '@miraflores/volume-picker';
 import { useToast } from '@/components/toast/toast';
 import { addItemToCart } from '@/store/slices/checkoutSlice';
@@ -66,8 +69,11 @@ export function useCardVolumeCart({
 }: UseCardVolumeCartArgs) {
   const dispatch = useDispatch();
   const toast = useToast();
+  const sampleRules = useSamplePurchaseRules();
+  const isAuth = useSelector((state: RootState) => state.authSlice.isAuth);
   const cartLines = useSelector((state: RootState) => state.checkout.lines);
   const [volumeModalOpen, setVolumeModalOpen] = useState(false);
+  const [sampleCheckPending, setSampleCheckPending] = useState(false);
 
   const volumeOptions = useMemo((): VolumePickerOption[] => {
     if (isGiftCertificates) return [];
@@ -97,9 +103,11 @@ export function useCardVolumeCart({
   }, []);
 
   const addVariantToCart = useCallback(
-    (variant: ProductVariant) => {
+    async (variant: ProductVariant) => {
       const variantId = variant.node.id;
       if (!variantId) return;
+      if (sampleCheckPending) return;
+
       const oos = isVariantOutOfStock({
         trackInventory: variant.node.trackInventory ?? true,
         quantityAvailable: variant.node.quantityAvailable ?? null,
@@ -108,6 +116,29 @@ export function useCardVolumeCart({
         toast.error('Нет в наличии');
         return;
       }
+
+      if (
+        isProductVariantSample({
+          name: variant.node.name,
+          isSample: variant.node.isSample,
+        })
+      ) {
+        setSampleCheckPending(true);
+        try {
+          const ok = await runSampleAtcGuard({
+            variantId,
+            variantName: variant.node.name,
+            variantIsSample: variant.node.isSample,
+            isAuth,
+            toast,
+            rules: sampleRules,
+          });
+          if (!ok) return;
+        } finally {
+          setSampleCheckPending(false);
+        }
+      }
+
       const giftDenom = isGiftDenomVariantId(variantId);
       if (
         cartWouldMixGiftAndPhysical(cartLines, {
@@ -154,13 +185,13 @@ export function useCardVolumeCart({
       }
       toast.success(giftDenom ? 'Сертификат добавлен в корзину' : 'Товар добавлен в корзину');
     },
-    [cartLines, dispatch, mainImage, product, toast],
+    [cartLines, dispatch, isAuth, mainImage, product, sampleCheckPending, sampleRules, toast],
   );
 
   const onVolumeSelect = useCallback(
     (option: VolumePickerOption) => {
       const variant = (product.productVariants ?? []).find((v) => v.node.id === option.id);
-      if (variant) addVariantToCart(variant);
+      if (variant) void addVariantToCart(variant);
       setVolumeModalOpen(false);
     },
     [addVariantToCart, product.productVariants],
@@ -186,6 +217,8 @@ export function useCardVolumeCart({
       disabled: needsVolumePick ? false : outOfStock,
       onRequestAdd: needsVolumePick ? openVolumeModal : undefined,
       preferAddButton: needsVolumePick,
+      variantName: activeVariant?.node?.name ?? null,
+      variantIsSample: activeVariant?.node?.isSample ?? null,
     }),
     [
       activeVariant,

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { fetchProductContentBySlug } from '@/api/catalogApi';
+import { fetchProductContentBySlug, type SamplePurchaseRules } from '@/api/catalogApi';
+import { seedSamplePurchaseRulesCache } from '@/hooks/useSamplePurchaseRules';
 import { getSingleProduct } from '@/graphql/queries/products.service';
 import {
   productSliceState,
@@ -9,6 +10,7 @@ import {
 } from '@/types/productSlice';
 import { ProductDetailNode } from '@/graphql/types/core.types';
 import { isVariantOutOfStock } from '@/utils/stock';
+import { isProductVariantSample } from '@/utils/sampleVariant';
 
 const initialState: productSliceState = {
   loading: false,
@@ -20,7 +22,10 @@ const initialState: productSliceState = {
   activeVariantId: null,
 };
 
-function mapDetailToItem(p: ProductDetailNode): ProductSliceItem {
+function mapDetailToItem(
+  p: ProductDetailNode,
+  samplePurchaseRules?: SamplePurchaseRules | null,
+): ProductSliceItem {
   return {
     id: String(p.id),
     name: p.name,
@@ -53,6 +58,7 @@ function mapDetailToItem(p: ProductDetailNode): ProductSliceItem {
     thumbnail: p.thumbnail?.url || '',
     variants: p.productVariants.edges,
     attributes: p.attributes,
+    samplePurchaseRules: samplePurchaseRules ?? p.samplePurchaseRules ?? null,
   };
 }
 
@@ -72,12 +78,6 @@ function applyContentToItem(
   };
 }
 
-function isSampleVariantName(name: string | null | undefined): boolean {
-  const n = (name ?? '').trim().toLowerCase();
-  if (!n) return false;
-  return n === 'пробник' || n.includes('пробник');
-}
-
 function variantUnitPrice(
   edge: ProductDetailNode['productVariants']['edges'][number],
 ): number {
@@ -92,7 +92,10 @@ function pickDefaultVariantId(
 
   const rank = (edge: (typeof edges)[number]) => {
     const price = variantUnitPrice(edge);
-    const sample = isSampleVariantName(edge.node.name);
+    const sample = isProductVariantSample({
+      name: edge.node.name,
+      isSample: edge.node.isSample,
+    });
     const oos = isVariantOutOfStock({
       trackInventory: edge.node.trackInventory,
       quantityAvailable: edge.node.quantityAvailable,
@@ -181,7 +184,10 @@ const productSlice = createSlice({
           return;
         }
         state.notFound = false;
-        let item = mapDetailToItem(action.payload);
+        if (action.payload.samplePurchaseRules) {
+          seedSamplePurchaseRulesCache(action.payload.samplePurchaseRules);
+        }
+        let item = mapDetailToItem(action.payload, action.payload.samplePurchaseRules);
         if (state.pendingContent) {
           item = applyContentToItem(item, state.pendingContent);
           state.pendingContent = null;

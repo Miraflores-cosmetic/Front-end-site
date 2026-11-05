@@ -16,6 +16,11 @@ import {
   GIFT_HOLD_APPLIED_TOAST,
   GIFT_HOLD_WILL_RESERVE,
 } from '@/utils/giftHoldCopy';
+import { useSamplePurchaseRules } from '@/hooks/useSamplePurchaseRules';
+import {
+  DEFAULT_SAMPLE_RULES_ARTICLE_URL,
+  notifyCartSyncRemovals,
+} from '@/utils/cartSyncRemovalToasts';
 
 function CloseIcon() {
   return (
@@ -35,6 +40,9 @@ const BasketDrawer: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const toast = useToast();
+  const sampleRules = useSamplePurchaseRules();
+  const rulesArticleUrl =
+    sampleRules?.sampleRulesArticleUrl ?? DEFAULT_SAMPLE_RULES_ARTICLE_URL;
   const progressBar = useProgressBarCartModel();
 
   const { lines, voucherCode, voucherDiscount, voucherKind } = useSelector(
@@ -100,19 +108,7 @@ const BasketDrawer: React.FC = () => {
         const syncResult = await dispatch(syncCartLines()).unwrap();
         if (cancelled) return;
         const removed = syncResult.removed ?? [];
-        if (!removed.length) return;
-        const names = removed
-          .map((r) => ('name' in r ? r.name : undefined))
-          .filter(Boolean)
-          .slice(0, 3);
-        const oos = removed.some((r) => r.reason === 'oos');
-        toast.error(
-          names.length
-            ? `${oos ? 'Нет в наличии' : 'Недоступны'}: ${names.join(', ')}${
-                removed.length > names.length ? '…' : ''
-              }`
-            : `Убрано из корзины: ${removed.length} поз.`,
-        );
+        notifyCartSyncRemovals(toast, removed, rulesArticleUrl);
       } catch {
         /* тихо — пользователь увидит ошибку при «Оформить» */
       }
@@ -136,18 +132,7 @@ const BasketDrawer: React.FC = () => {
       const syncResult = await dispatch(syncCartLines()).unwrap();
       const removed = syncResult.removed ?? [];
       if (removed.length) {
-        const names = removed
-          .map((r) => ('name' in r ? r.name : undefined))
-          .filter(Boolean)
-          .slice(0, 3);
-        const oos = removed.some((r) => r.reason === 'oos');
-        toast.error(
-          names.length
-            ? `${oos ? 'Нет в наличии' : 'Недоступны'}: ${names.join(', ')}${
-                removed.length > names.length ? '…' : ''
-              }`
-            : `Убрано из корзины: ${removed.length} поз. (нет в наличии)`,
-        );
+        notifyCartSyncRemovals(toast, removed, rulesArticleUrl);
         setIsOrdering(false);
         return;
       }

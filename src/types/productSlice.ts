@@ -63,6 +63,7 @@ export interface ProductSliceItem {
   variants: ProductVariant[];
   thumbnail: string;
   attributes: Attribute[];
+  samplePurchaseRules?: import('@/api/catalogApi').SamplePurchaseRules | null;
 }
 
 export interface ProductVariant {
@@ -70,6 +71,7 @@ export interface ProductVariant {
     id: string;
     sku: string;
     name: string;
+    isSample?: boolean;
     orderMinQty?: number | null;
     quantityAvailable?: number | null;
     trackInventory?: boolean | null;

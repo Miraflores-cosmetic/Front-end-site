@@ -861,3 +861,26 @@
     min-width: 0;
   }
 }
+
+.sampleNoticeSkeleton {
+  min-height: 3.5rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.04) 25%,
+    rgba(0, 0, 0, 0.08) 37%,
+    rgba(0, 0, 0, 0.04) 63%
+  );
+  background-size: 400% 100%;
+  animation: sampleNoticeShimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes sampleNoticeShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}

@@ -59,6 +59,7 @@ export interface ProductDetailNode extends ProductNode {
   ogImageUrl?: string | null;
   canonicalPath?: string | null;
   seoNoIndex?: boolean;
+  samplePurchaseRules?: import('@/api/catalogApi').SamplePurchaseRules;
   productType: {
     name: string;
   };

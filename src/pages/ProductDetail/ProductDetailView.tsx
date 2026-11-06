@@ -20,6 +20,7 @@ import { ProductCareSection } from './sections/ProductCareSection';
 import { ProductBreadcrumbs } from './sections/ProductBreadcrumbs';
 import { ProductDetailSkeleton } from './sections/ProductDetailSkeleton';
 import { ProductNotFound } from './sections/ProductNotFound';
+import { ProductJsonLd } from './components/ProductJsonLd';
 import { MetrikaGoal, markPdpVisited, reachGoal } from '@/lib/metrika';
 import styles from './ProductDetail.module.scss';
 
@@ -156,6 +157,7 @@ export default function ProductDetailView() {
 
   return (
     <>
+      <ProductJsonLd item={item} variants={item.variants ?? []} />
       <ProductBreadcrumbs productName={item.name} category={item.category} />
       <section className={styles.bestSellerInfo}>
         <h1 className={styles.titleMobile} aria-hidden={!isMobile}>

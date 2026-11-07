@@ -6,7 +6,9 @@ import { useOrderCheckoutOptional } from '../OrderCheckoutContext';
 import { GIFT_HOLD_WILL_RESERVE } from '@/utils/giftHoldCopy';
 
 const SumDiscount = () => {
-  const { voucherCode, voucherKind } = useSelector((state: RootState) => state.checkout);
+  const { voucherCode, voucherKind, useReferralWallet } = useSelector(
+    (state: RootState) => state.checkout,
+  );
   const orderCheckout = useOrderCheckoutOptional();
   const payable = orderCheckout?.payable;
 
@@ -55,13 +57,19 @@ const SumDiscount = () => {
           <p className={styles.value}>-{formatPrice(payable.catalogDiscount)}₽</p>
         </div>
       )}
-      {voucherCode && payable.voucherDiscount > 0 && (
+      {voucherCode && payable.voucherDiscount > 0 && !useReferralWallet && (
         <div className={styles.promocodeWrapper}>
           <p className={styles.name}>{voucherKind === 'gift' ? 'Сертификат' : 'Промокод'}</p>
           <p className={styles.value}>-{formatPrice(payable.voucherDiscount)}₽</p>
         </div>
       )}
-      {voucherKind === 'gift' ? (
+      {useReferralWallet && payable.referralWalletAmount > 0 && (
+        <div className={styles.promocodeWrapper}>
+          <p className={styles.name}>Реферальный баланс</p>
+          <p className={styles.value}>-{formatPrice(payable.referralWalletAmount)}₽</p>
+        </div>
+      )}
+      {voucherKind === 'gift' && !useReferralWallet ? (
         <p className={styles.giftShippingNote} role="note">
           {GIFT_HOLD_WILL_RESERVE}
         </p>

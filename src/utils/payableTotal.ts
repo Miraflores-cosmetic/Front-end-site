@@ -6,6 +6,10 @@ export type PayableTotalsInput = {
   voucherDiscount?: number | null;
   /** gift покрывает товары+доставку; promo — только товары. */
   voucherKind?: VoucherKind | null;
+  /**
+   * Списание реф. кошелька (₽). XOR с voucher — как gift: гасит товары+доставку.
+   */
+  referralWalletAmount?: number | null;
   /** Эффективная доставка ₽; null — расчёт ещё не готов / ошибка. */
   shippingRub: number | null;
   shippingLoading?: boolean;
@@ -19,6 +23,7 @@ export type PayableTotals = {
   totalOldPrice: number;
   catalogDiscount: number;
   voucherDiscount: number;
+  referralWalletAmount: number;
   /** Товары после промо/сертификата (для gift — до вычета части на доставку). */
   goodsTotal: number;
   hasPayableLines: boolean;
@@ -27,7 +32,7 @@ export type PayableTotals = {
   shippingReady: boolean;
   /**
    * К оплате.
-   * gift: max(0, goods + shipping − voucher).
+   * gift/wallet: max(0, goods + shipping − credit).
    * promo/нет: max(0, goods − voucher) + shipping.
    * null, если есть платные товары, а доставка ещё не готова.
    */
@@ -60,7 +65,18 @@ export function calcPayableTotals(input: PayableTotalsInput): PayableTotals {
 
   const catalogDiscount = Math.max(0, totalOldPrice - goodsSubtotal);
   const voucherDiscount = Math.max(0, Math.floor(input.voucherDiscount || 0));
+  const referralWalletAmount = Math.max(
+    0,
+    Math.floor(input.referralWalletAmount || 0),
+  );
   const isGiftVoucher = input.voucherKind === 'gift';
+  /** Wallet spend — как gift: покрывает товары+доставку (XOR с voucher). */
+  const storeCreditCoversShipping = isGiftVoucher || referralWalletAmount > 0;
+  const storeCredit = isGiftVoucher
+    ? voucherDiscount
+    : referralWalletAmount > 0
+      ? referralWalletAmount
+      : 0;
   const giftDenomOnly = isGiftDenomOnlyCart(lines);
   /** Платные physical-позиции (нужна доставка). gift-denom — digital. */
   const hasPayableLines = lines.some((l) => !l.isGift && !lineIsGiftDenom(l));
@@ -78,16 +94,16 @@ export function calcPayableTotals(input: PayableTotalsInput): PayableTotals {
       shippingRub != null &&
       !input.shippingError);
 
-  // Для отображения строки «товары»: gift сначала гасит товары, остаток — доставку.
-  const goodsTotal = isGiftVoucher
-    ? Math.max(0, goodsSubtotal - Math.min(voucherDiscount, goodsSubtotal))
+  // Для отображения строки «товары»: gift/wallet сначала гасит товары, остаток — доставку.
+  const goodsTotal = storeCreditCoversShipping
+    ? Math.max(0, goodsSubtotal - Math.min(storeCredit, goodsSubtotal))
     : Math.max(0, goodsSubtotal - voucherDiscount);
 
   let payableTotal: number | null = null;
   if (shippingReady) {
     const ship = shippingRub ?? 0;
-    payableTotal = isGiftVoucher
-      ? Math.max(0, goodsSubtotal + ship - voucherDiscount)
+    payableTotal = storeCreditCoversShipping
+      ? Math.max(0, goodsSubtotal + ship - storeCredit)
       : goodsTotal + ship;
   }
 
@@ -96,7 +112,8 @@ export function calcPayableTotals(input: PayableTotalsInput): PayableTotals {
     goodsSubtotal,
     totalOldPrice,
     catalogDiscount,
-    voucherDiscount,
+    voucherDiscount: isGiftVoucher || !referralWalletAmount ? voucherDiscount : 0,
+    referralWalletAmount,
     goodsTotal,
     hasPayableLines,
     shippingRub,

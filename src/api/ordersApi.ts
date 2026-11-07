@@ -1,4 +1,5 @@
 import { apiJson, getOrCreateGuestId } from '@/api/apiClient';
+import { getMirafloresReferral } from '@/lib/mirafloresReferral';
 import { getYourichAffiliate } from '@/lib/yourichAffiliate';
 import type { CheckoutShippingMethod } from '@/utils/checkoutShipping';
 
@@ -70,6 +71,8 @@ export type CreateOrderInput = {
   guestId?: string;
   promoCode?: string | null;
   giftCertificateCode?: string | null;
+  /** XOR с promo/gift; только JWT buyer. */
+  useReferralWallet?: boolean;
   idempotencyKey: string;
   shippingAddress: ShippingAddressInput;
   /** Не нужен для digital gift-denom-only. */
@@ -83,6 +86,10 @@ export type CreateOrderInput = {
     refHash?: string | null;
     extUserId?: string | null;
   } | null;
+  /** Miraflores referral (?mf=CODE); обычно подставляется в createOrder. */
+  referral?: {
+    code?: string | null;
+  } | null;
 };
 
 export type CreatedOrder = {
@@ -93,6 +100,8 @@ export type CreatedOrder = {
   total: number;
   promoCode: string | null;
   status: string;
+  /** 0 ₽: Nest переводит в PAID без виджета ЮKassa */
+  alreadyPaid?: boolean;
   payToken?: string | null;
   items?: Array<{
     variantId?: string | null;
@@ -146,6 +155,8 @@ export async function requestShippingQuote(
 export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder> {
   const affiliate =
     input.affiliate !== undefined ? input.affiliate : getYourichAffiliate();
+  const referral =
+    input.referral !== undefined ? input.referral : getMirafloresReferral();
   return apiJson('/orders', 'POST', {
     ...input,
     guestId: input.guestId ?? getOrCreateGuestId(),
@@ -155,6 +166,11 @@ export async function createOrder(input: CreateOrderInput): Promise<CreatedOrder
             ...(affiliate.refHash ? { refHash: affiliate.refHash } : {}),
             ...(affiliate.extUserId ? { extUserId: affiliate.extUserId } : {}),
           },
+        }
+      : {}),
+    ...(referral?.code
+      ? {
+          referral: { code: referral.code },
         }
       : {}),
   });

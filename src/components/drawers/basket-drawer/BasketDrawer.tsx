@@ -50,6 +50,10 @@ const BasketDrawer: React.FC = () => {
   );
   const activeDrawer = useSelector((state: RootState) => state.drawer.activeDrawer);
   const meEmail = useSelector((state: RootState) => state.authSlice.me?.email);
+  const isAuth = useSelector((state: RootState) => state.authSlice.isAuth);
+  const referralWalletAvailable = useSelector(
+    (state: RootState) => state.authSlice.me?.referralWalletAvailable ?? 0,
+  );
   const prevDrawerRef = useRef(activeDrawer);
 
   const { totalFromPrice, totalToPrice } = useMemo(() => {
@@ -265,6 +269,12 @@ const BasketDrawer: React.FC = () => {
           </ul>
 
           <footer className={styles.footer}>
+            {isAuth && referralWalletAvailable > 0 ? (
+              <p className={styles.progressNote} role="note">
+                Реферальный баланс: {referralWalletAvailable.toLocaleString('ru-RU')} ₽ —
+                можно списать при оформлении (нельзя с промокодом или сертификатом).
+              </p>
+            ) : null}
             <div className={styles.promoRow}>
               <div className={styles.promoField}>
                 <TextField

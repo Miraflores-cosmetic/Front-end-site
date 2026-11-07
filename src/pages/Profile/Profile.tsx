@@ -8,6 +8,7 @@ import { useScreenMatch } from '@/hooks/useScreenMatch';
 import InfoMobileContent from './contents/info-content/mobile-content/InfoMobileContent';
 import FavoritesContent from './contents/favorites-content/FavoritesContent';
 import QuizCareContent from './contents/quiz-care/QuizCareContent';
+import ReferralContent from './contents/bonuses-content/ReferralContent';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
@@ -17,7 +18,7 @@ import { LogoutConfirmationModal } from '@/components/logout-confirmation-modal/
 import { VIEWPORT_MOBILE_MAX } from '@/constants/viewport';
 import { openOrderChat } from '@/lib/orderChat/orderChatEvents';
 
-const VALID_PROFILE_TABS: TabId[] = ['info', 'orders', 'favorites', 'quiz'];
+const VALID_PROFILE_TABS: TabId[] = ['info', 'orders', 'favorites', 'quiz', 'referral'];
 
 function parseProfileTab(tabParam: string | null): TabId {
   if (tabParam && VALID_PROFILE_TABS.includes(tabParam as TabId)) {
@@ -54,6 +55,7 @@ const ProfilePage: React.FC = () => {
     { id: 'info' as TabId, label: 'ОБЩАЯ ИНФОРМАЦИЯ' },
     { id: 'orders' as TabId, label: 'ЗАКАЗЫ' },
     { id: 'favorites' as TabId, label: 'ИЗБРАННОЕ' },
+    { id: 'referral' as TabId, label: 'РЕФЕРАЛЬНАЯ ПРОГРАММА', shortLabel: 'БОНУСЫ' },
     { id: 'quiz' as TabId, label: 'МОЙ УХОД' },
     { id: 'logout' as TabId, label: 'ВЫЙТИ' },
   ];
@@ -71,6 +73,8 @@ const ProfilePage: React.FC = () => {
           return <OrdersContent setOpenAccordion={setOpenAccordion} />;
         case 'favorites':
           return <FavoritesContent setOpenAccordion={setOpenAccordion} />;
+        case 'referral':
+          return <ReferralContent setOpenAccordion={setOpenAccordion} />;
         case 'quiz':
           return <QuizCareContent setOpenAccordion={setOpenAccordion} />;
         case 'logout':

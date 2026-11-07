@@ -6,9 +6,11 @@ import { Provider } from 'react-redux';
 import { store } from './store/store';
 import App from './App';
 import { ToastProvider } from './components/toast/toast';
+import { captureMfFromUrl } from './lib/mirafloresReferral';
 import { captureYrFromUrl } from './lib/yourichAffiliate';
 
 captureYrFromUrl();
+captureMfFromUrl();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

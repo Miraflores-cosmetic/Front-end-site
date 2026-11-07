@@ -5,6 +5,10 @@ export function sampleGuestToastMessage(): React.ReactNode {
   return (
     <>
       Пробники доступны только зарегистрированным покупателям.{' '}
+      <Link to="/sign-up" style={{ color: 'inherit', textDecoration: 'underline' }}>
+        Зарегистрироваться
+      </Link>
+      {' · '}
       <Link to="/sign-in" style={{ color: 'inherit', textDecoration: 'underline' }}>
         Войти
       </Link>

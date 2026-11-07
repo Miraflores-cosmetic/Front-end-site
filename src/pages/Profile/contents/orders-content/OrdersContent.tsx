@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import styles from './OrdersContent.module.scss';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import { TabId } from '../../side-bar/SideBar';
@@ -32,6 +33,7 @@ interface OrdersContentProps {
 }
 
 const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [activeTab, setActiveTab] = useState<OrderFilterTab>('all');
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +46,7 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
   } | null>(null);
   const isMobile = useScreenMatch();
   const toast = useToast();
+  const deepLinkOrder = searchParams.get('order')?.trim() || null;
 
   useEffect(() => {
     async function loadOrders() {
@@ -87,6 +90,21 @@ const OrdersContent: React.FC<OrdersContentProps> = ({ setOpenAccordion }) => {
       ),
     [orders, activeTab],
   );
+
+  useEffect(() => {
+    if (!deepLinkOrder || loading) return;
+    if (activeTab !== 'all') {
+      setActiveTab('all');
+      return;
+    }
+    const el = document.getElementById(`order-${deepLinkOrder}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('order');
+    setSearchParams(next, { replace: true });
+  }, [loading, deepLinkOrder, activeTab, searchParams, setSearchParams]);
 
   const handleReviewClick = (productId: string, productName: string, orderId: string) => {
     setSelectedProductForReview({ id: productId, name: productName, orderId });

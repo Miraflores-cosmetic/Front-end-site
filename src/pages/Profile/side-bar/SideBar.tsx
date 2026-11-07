@@ -3,11 +3,13 @@ import { Link } from 'react-router-dom';
 import styles from './SideBar.module.scss';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 
-export type TabId = 'info' | 'orders' | 'favorites' | 'quiz' | 'logout';
+export type TabId = 'info' | 'orders' | 'favorites' | 'quiz' | 'referral' | 'logout';
 
 export interface MenuItem {
   id: TabId;
   label: string;
+  /** Короче для mobile accordion, если label не влезает */
+  shortLabel?: string;
 }
 
 export interface SidebarProps {
@@ -74,7 +76,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                       aria-controls={isMobile ? `profile-panel-${item.id}` : undefined}
                       onClick={() => handleClick(item.id)}
                     >
-                      {item.label}
+                      {isMobile && item.shortLabel ? item.shortLabel : item.label}
                       <span
                         className={activeTab === item.id ? styles.activeDot : styles.notActiveDot}
                         aria-hidden

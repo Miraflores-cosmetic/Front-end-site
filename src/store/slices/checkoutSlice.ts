@@ -100,6 +100,7 @@ const initialState: CheckoutState = {
   voucherKind: null,
   voucherEmail: null,
   hydrated: false,
+  useReferralWallet: false,
 };
 
 export const initializeCart = createAsyncThunk('checkout/initialize', async () => {
@@ -355,6 +356,7 @@ const checkoutSlice = createSlice({
       state.voucherDiscount = 0;
       state.voucherKind = null;
       state.voucherEmail = null;
+      state.useReferralWallet = false;
       persistCheckout(state);
     },
 
@@ -364,6 +366,18 @@ const checkoutSlice = createSlice({
       state.voucherKind = null;
       state.voucherEmail = null;
       persistCheckout(state);
+    },
+
+    /** XOR: включение кошелька сбрасывает promo/gift. */
+    setUseReferralWallet(state, action: PayloadAction<boolean>) {
+      state.useReferralWallet = action.payload === true;
+      if (state.useReferralWallet) {
+        state.voucherCode = null;
+        state.voucherDiscount = 0;
+        state.voucherKind = null;
+        state.voucherEmail = null;
+      }
+      // не persist — только сессия checkout
     },
   },
 
@@ -406,6 +420,8 @@ const checkoutSlice = createSlice({
         const arg = action.meta.arg;
         state.voucherEmail =
           typeof arg === 'string' ? null : arg.email?.trim() || null;
+        // XOR с реф. кошельком
+        state.useReferralWallet = false;
         state.loading = false;
         state.error = null;
         persistCheckout(state);
@@ -424,6 +440,7 @@ export const {
   decreaseQuantity,
   clearCart,
   removeVoucherCode,
+  setUseReferralWallet,
 } = checkoutSlice.actions;
 
 export default checkoutSlice.reducer;

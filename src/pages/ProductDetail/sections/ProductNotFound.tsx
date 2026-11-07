@@ -1,8 +1,15 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useDocumentSeo } from '@/hooks/useDocumentSeo';
 import styles from '../ProductDetail.module.scss';
 
 export function ProductNotFound() {
+  useDocumentSeo({
+    title: 'Товар не найден',
+    titleAsIs: true,
+    description: 'Товар снят с публикации или ссылка устарела.',
+    noIndex: true,
+  });
   return (
     <section className={styles.productNotFound} aria-labelledby="product-not-found-title">
       <h1 id="product-not-found-title" className={styles.productNotFoundTitle}>

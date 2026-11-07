@@ -208,7 +208,11 @@ export function OrderGroup({
   ) : null;
 
   return (
-    <article className={styles.orderGroup}>
+    <article
+      className={styles.orderGroup}
+      id={`order-${order.number}`}
+      data-order-number={String(order.number)}
+    >
       <div className={styles.orderGroupMain}>
         <header className={styles.orderHead}>
           <div className={styles.orderHeadInfo}>

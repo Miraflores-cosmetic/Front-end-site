@@ -85,6 +85,30 @@
         } catch (e) {}
       })();
     </script>
+    <!-- Miraflores referral: early ?mf= (отдельно от YouRich ?yr=) -->
+    <script>
+      (function () {
+        try {
+          var p = new URLSearchParams(location.search);
+          var mf = (p.get('mf') || p.get('ref') || '').trim().toUpperCase();
+          if (!mf && location.hash.indexOf('?') !== -1) {
+            var hp = new URLSearchParams(
+              location.hash.slice(location.hash.indexOf('?') + 1),
+            );
+            mf = (hp.get('mf') || hp.get('ref') || '').trim().toUpperCase();
+          }
+          if (!mf || mf.length < 3 || mf.length > 16 || !/^[A-Z0-9]+$/.test(mf))
+            return;
+          localStorage.setItem(
+            'miraflores.mf.ref.v1',
+            JSON.stringify({
+              value: mf,
+              exp: Date.now() + 60 * 24 * 60 * 60 * 1000,
+            }),
+          );
+        } catch (e) {}
+      })();
+    </script>
     <script>
       !(function (y, o, u, r, i, c, h) {
         (y.yourich =

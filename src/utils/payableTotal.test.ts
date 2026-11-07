@@ -28,7 +28,6 @@ describe('calcPayableTotals', () => {
     expect(t.payableTotal).toBeNull();
     expect(t.shippingReady).toBe(false);
   });
-});
 
   it('gift-denom-only: shippingReady without carrier quote', () => {
     const t = calcPayableTotals({
@@ -50,3 +49,13 @@ describe('calcPayableTotals', () => {
     expect(t.payableTotal).toBe(3000);
   });
 
+  it('referralWalletAmount гасит товары+доставку', () => {
+    const t = calcPayableTotals({
+      lines: lines as never,
+      referralWalletAmount: 1500,
+      shippingRub: 349,
+    });
+    expect(t.referralWalletAmount).toBe(1500);
+    expect(t.payableTotal).toBe(849);
+  });
+});

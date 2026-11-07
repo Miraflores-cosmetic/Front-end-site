@@ -6,7 +6,11 @@ import minus from '@/assets/icons/minus.svg';
 import { TextField } from '@/components/text-field/TextField';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState, AppDispatch } from '@/store/store';
-import { applyVoucherCode, removeVoucherCode } from '@/store/slices/checkoutSlice';
+import {
+  applyVoucherCode,
+  removeVoucherCode,
+  setUseReferralWallet,
+} from '@/store/slices/checkoutSlice';
 import { useToast } from '@/components/toast/toast';
 import {
   GIFT_HOLD_APPLIED_TOAST,
@@ -20,11 +24,22 @@ const Certificate = () => {
   const [promoCode, setPromoCode] = useState('');
   const [isApplying, setIsApplying] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
-  const { voucherCode, voucherKind } = useSelector((state: RootState) => state.checkout);
+  const { voucherCode, voucherKind, useReferralWallet } = useSelector(
+    (state: RootState) => state.checkout,
+  );
+  const isAuth = useSelector((s: RootState) => s.authSlice.isAuth);
+  const referralWalletAvailable = useSelector(
+    (s: RootState) => s.authSlice.me?.referralWalletAvailable ?? 0,
+  );
+  const referralEnabled = useSelector(
+    (s: RootState) => s.authSlice.me?.referralEnabled === true,
+  );
   const toast = useToast();
   const orderCheckout = useOrderCheckoutOptional();
   const checkoutEmail = orderCheckout?.checkoutEmail?.trim() || '';
   const expanded = Boolean(voucherCode) || isInputOpen;
+  const walletAvailable = Math.max(0, Math.floor(referralWalletAvailable || 0));
+  const showWallet = isAuth && referralEnabled && walletAvailable > 0;
 
   const EMAIL_RE =
     /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
@@ -83,11 +98,44 @@ const Certificate = () => {
 
   return (
     <section className={styles.certificateWrapper}>
+      {showWallet ? (
+        <label className={styles.promoWrapper} style={{ cursor: 'pointer' }}>
+          <div className={styles.promoWrapperLeft}>
+            <input
+              type="checkbox"
+              checked={useReferralWallet}
+              onChange={(e) => {
+                dispatch(setUseReferralWallet(e.target.checked));
+                if (e.target.checked && voucherCode) {
+                  toast.success('Промокод/сертификат сброшен — нельзя совмещать с реф. балансом');
+                }
+              }}
+              aria-describedby="referral-wallet-hint"
+            />
+            <p className={styles.promoTxt}>
+              Списать реферальный баланс ({walletAvailable.toLocaleString('ru-RU')} ₽)
+            </p>
+          </div>
+        </label>
+      ) : null}
+      {showWallet ? (
+        <p id="referral-wallet-hint" className={styles.giftShippingNote} role="note">
+          Нельзя совмещать с промокодом или подарочным сертификатом. Списание резервируется при
+          оформлении заказа.
+        </p>
+      ) : null}
+
       <button
         type="button"
         className={`${styles.promoWrapper} ${expanded ? styles.promoWrapperOpen : ''}`}
         onClick={handleToggleInput}
         aria-expanded={expanded}
+        disabled={useReferralWallet}
+        title={
+          useReferralWallet
+            ? 'Сначала снимите списание реферального баланса'
+            : undefined
+        }
       >
         <div className={styles.promoWrapperLeft}>
           <img src={promocode} alt="" className={styles.promocode} aria-hidden />
@@ -102,7 +150,7 @@ const Certificate = () => {
         </span>
       </button>
 
-      {isInputOpen && !voucherCode && (
+      {isInputOpen && !voucherCode && !useReferralWallet && (
         <div className={styles.promoInputWrapper}>
           <TextField
             label="Промокод или сертификат"
@@ -126,7 +174,7 @@ const Certificate = () => {
 
       {voucherCode && <p className={styles.SALE}>{voucherCode}</p>}
 
-      {(isInputOpen || voucherKind === 'gift') && (
+      {(isInputOpen || voucherKind === 'gift') && !useReferralWallet && (
         <p className={styles.giftShippingNote} role="note">
           {GIFT_HOLD_WILL_RESERVE}
         </p>

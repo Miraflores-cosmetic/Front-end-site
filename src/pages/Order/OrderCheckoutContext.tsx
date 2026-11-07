@@ -12,6 +12,7 @@ import {
 import { isCheckoutReadyAddress } from '@/utils/checkoutShipping';
 import { isAddressClarification } from '@/utils/addressClarification';
 import { calcPayableTotals, type PayableTotals } from '@/utils/payableTotal';
+import { computeReferralSpendAmount } from '@/utils/referralSpendAmount';
 import {
     loadGuestShippingAddress,
     subscribeGuestShippingAddress,
@@ -66,10 +67,18 @@ export function useOrderCheckoutOptional(): OrderCheckoutContextValue | null {
 
 export function OrderCheckoutProvider({ children }: { children: React.ReactNode }) {
     const dispatch = useDispatch<AppDispatch>();
-    const { lines, voucherDiscount, voucherCode, voucherKind } = useSelector(
-        (s: RootState) => s.checkout,
-    );
+    const { lines, voucherDiscount, voucherCode, voucherKind, useReferralWallet } =
+        useSelector((s: RootState) => s.checkout);
     const isAuth = useSelector((s: RootState) => s.authSlice.isAuth);
+    const referralWalletAvailable = useSelector(
+        (s: RootState) => s.authSlice.me?.referralWalletAvailable ?? 0,
+    );
+    const referralEnabled = useSelector(
+        (s: RootState) => s.authSlice.me?.referralEnabled === true,
+    );
+    const referralSpendCapPercent = useSelector(
+        (s: RootState) => s.authSlice.me?.referralSpendCapPercent ?? 0,
+    );
     const [selectedAddress, setSelectedAddress] = useState<AddressInfo | null>(null);
     const [checkoutEmail, setCheckoutEmail] = useState('');
     const [deliverySurcharges, setDeliverySurcharges] = useState<DeliverySurcharges>(
@@ -213,12 +222,46 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
         deliverySurcharges,
     ]);
 
+    const referralWalletAmount = useMemo(() => {
+        if (!isAuth || !useReferralWallet || !referralEnabled) return 0;
+        const available = Math.max(0, Math.floor(referralWalletAvailable || 0));
+        if (available < 1) return 0;
+        // Payable до wallet (XOR → без voucher), затем min(available, floor(payable×cap%)).
+        const beforeWallet = calcPayableTotals({
+            lines,
+            voucherDiscount: 0,
+            voucherKind: null,
+            referralWalletAmount: 0,
+            shippingRub: effectiveShippingRub,
+            shippingLoading,
+            shippingError,
+        });
+        if (beforeWallet.payableTotal == null) return 0;
+        return computeReferralSpendAmount({
+            available,
+            payableRub: beforeWallet.payableTotal,
+            spendCapPercent: referralSpendCapPercent,
+            enabled: true,
+        });
+    }, [
+        isAuth,
+        useReferralWallet,
+        referralEnabled,
+        referralWalletAvailable,
+        referralSpendCapPercent,
+        lines,
+        effectiveShippingRub,
+        shippingLoading,
+        shippingError,
+    ]);
+
     const payable = useMemo(
         () =>
             calcPayableTotals({
                 lines,
-                voucherDiscount,
-                voucherKind,
+                voucherDiscount: useReferralWallet ? 0 : voucherDiscount,
+                voucherKind: useReferralWallet ? null : voucherKind,
+                referralWalletAmount,
                 shippingRub: effectiveShippingRub,
                 shippingLoading,
                 shippingError,
@@ -227,6 +270,8 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
             lines,
             voucherDiscount,
             voucherKind,
+            useReferralWallet,
+            referralWalletAmount,
             effectiveShippingRub,
             shippingLoading,
             shippingError,

@@ -178,6 +178,10 @@ function buildMeFromAuth(
     birthday?: string | null;
     marketingConsent?: boolean;
     hasGiftCertificates?: boolean;
+    referralWalletAvailable?: number;
+    referralWalletPending?: number;
+    referralEnabled?: boolean;
+    referralSpendCapPercent?: number;
   } | null,
   extras?: { addresses?: AddressInfo[]; ordersTotal?: number },
 ): MeInfo {
@@ -186,6 +190,19 @@ function buildMeFromAuth(
   const phone = account?.phone ?? authMe.phone ?? null;
   const birthday = account?.birthday ?? null;
   const marketingConsent = account?.marketingConsent === true;
+  const referralWalletAvailable = Math.max(
+    0,
+    Math.floor(Number(account?.referralWalletAvailable) || 0),
+  );
+  const referralWalletPending = Math.max(
+    0,
+    Math.floor(Number(account?.referralWalletPending) || 0),
+  );
+  const referralEnabled = account?.referralEnabled === true;
+  const referralSpendCapPercent = Math.min(
+    100,
+    Math.max(0, Math.floor(Number(account?.referralSpendCapPercent) || 0)),
+  );
 
   return {
     id: authMe.id,
@@ -202,6 +219,10 @@ function buildMeFromAuth(
     phone,
     birthday,
     marketingConsent,
+    referralWalletAvailable,
+    referralWalletPending,
+    referralEnabled,
+    referralSpendCapPercent,
     metadata: [
       ...(phone ? [{ key: 'phone', value: phone }] : []),
       ...(birthday ? [{ key: 'birthday', value: birthday }] : []),
@@ -228,6 +249,10 @@ export async function getMeInfo(): Promise<MeInfo> {
       birthday?: string | null;
       marketingConsent?: boolean;
       hasGiftCertificates?: boolean;
+      referralWalletAvailable?: number;
+      referralWalletPending?: number;
+      referralEnabled?: boolean;
+      referralSpendCapPercent?: number;
     }>('/account/me').catch(() => null),
   ]);
 

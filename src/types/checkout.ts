@@ -49,6 +49,11 @@ export interface CheckoutState extends CheckoutStateInLocalStorage {
   voucherEmail: string | null;
   /** true после initializeCart — для empty-redirect на /order */
   hydrated: boolean;
+  /**
+   * Списать реф. баланс (XOR с promo/gift). Не в localStorage —
+   * только на сессию checkout.
+   */
+  useReferralWallet: boolean;
 }
 
 // ------------------------------------

@@ -147,7 +147,7 @@ const OrderLeftPart: React.FC = () => {
     general?: string;
   }>({});
   const { lines } = useSelector((state: RootState) => state.checkout);
-  const { voucherCode, voucherKind, voucherDiscount } = useSelector(
+  const { voucherCode, voucherKind, voucherDiscount, useReferralWallet } = useSelector(
     (state: RootState) => state.checkout,
   );
   const dispatch = useDispatch<AppDispatch>();
@@ -447,8 +447,10 @@ const OrderLeftPart: React.FC = () => {
                 : {}),
             };
 
-      const promoCode = voucherKind === 'gift' ? null : voucherCode || null;
-      const giftCertificateCode = voucherKind === 'gift' ? voucherCode || null : null;
+      const promoCode =
+        useReferralWallet || voucherKind === 'gift' ? null : voucherCode || null;
+      const giftCertificateCode =
+        useReferralWallet || voucherKind !== 'gift' ? null : voucherCode || null;
 
       const customerNote = formData.comment.trim().slice(0, COMMENT_MAX) || null;
 
@@ -572,6 +574,7 @@ const OrderLeftPart: React.FC = () => {
           : `ik-${Date.now()}`;
 
       let order;
+      const walletSpend = useReferralWallet ? true : undefined;
       if (giftDenomOnly) {
         order = await createOrder({
           lines: apiLines,
@@ -583,6 +586,7 @@ const OrderLeftPart: React.FC = () => {
           idempotencyKey,
           promoCode,
           giftCertificateCode,
+          useReferralWallet: walletSpend,
           shippingAddress,
         });
       } else if (addressClarification) {
@@ -596,6 +600,7 @@ const OrderLeftPart: React.FC = () => {
           idempotencyKey,
           promoCode,
           giftCertificateCode,
+          useReferralWallet: walletSpend,
           shippingAddress,
           needsAddressClarification: true,
         });
@@ -628,6 +633,7 @@ const OrderLeftPart: React.FC = () => {
           idempotencyKey,
           promoCode,
           giftCertificateCode,
+          useReferralWallet: walletSpend,
           shippingQuote: quoteRes.quote,
           shippingMethod: quoteRes.method,
           shippingAddress,
@@ -654,6 +660,22 @@ const OrderLeftPart: React.FC = () => {
             'Часть подарков благодарности недоступна — оформляем заказ с доступными',
           );
         }
+      }
+
+      const checkoutAlreadyPaid =
+        order.alreadyPaid === true ||
+        order.status === 'PAID' ||
+        (typeof order.total === 'number' && order.total <= 0);
+
+      if (checkoutAlreadyPaid) {
+        clearPendingCheckoutOrder();
+        clearGuestShippingAddress();
+        dispatch(clearCart());
+        window.location.href = buildOrderSuccessReturnUrl({
+          orderId: order.id,
+          orderNumber: order.number,
+        });
+        return;
       }
 
       if (addressClarification) {

@@ -113,6 +113,15 @@ const LegacyAboutArticleToArticles: React.FC = () => {
   return <Navigate to={`/articles/${slug ?? ''}`} replace />;
 };
 
+/** Превью в админке и legacy Next (site): /blog → витрина /articles */
+const LegacyBlogToArticles: React.FC = () => {
+  const { slug } = useParams();
+  if (!slug?.trim()) {
+    return <Navigate to="/articles" replace />;
+  }
+  return <Navigate to={`/articles/${slug}`} replace />;
+};
+
 /** Nest / Admin historically: /login/reset-password?t=… → Front /reset-password?token=… */
 const LegacyResetPasswordRedirect: React.FC = () => {
   const [sp] = useSearchParams();
@@ -317,6 +326,8 @@ const App: React.FC = () => {
         />
         <Route path='/about/articles' element={<Navigate to='/articles' replace />} />
         <Route path='/about/articles/:slug' element={<LegacyAboutArticleToArticles />} />
+        <Route path='/blog' element={<Navigate to='/articles' replace />} />
+        <Route path='/blog/:slug' element={<LegacyBlogToArticles />} />
         <Route
           path='/info/:slug'
           element={

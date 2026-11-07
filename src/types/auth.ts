@@ -31,6 +31,14 @@ export interface MeInfo {
   phone?: string | null;
   birthday?: string | null;
   marketingConsent?: boolean;
+  /** Available ₽ реф. кошелька (POSTED). */
+  referralWalletAvailable?: number;
+  /** Pending ₽ (карантин). */
+  referralWalletPending?: number;
+  /** Программа включена (spend gated). */
+  referralEnabled?: boolean;
+  /** Cap % от payable до wallet — checkout preview. */
+  referralSpendCapPercent?: number;
 }
 
 export interface ProfileAvatar {

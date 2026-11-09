@@ -2,12 +2,15 @@ import { afterEach, describe, expect, it } from 'vitest';
 import {
   MF_REF_TTL_MS,
   captureMfFromUrl,
+  getMfRefTtlMs,
   getMirafloresReferral,
   parseMfParam,
+  setMfRefTtlDays,
 } from './mirafloresReferral';
 
 afterEach(() => {
   localStorage.clear();
+  setMfRefTtlDays(60);
   window.history.replaceState({}, '', '/');
 });
 
@@ -54,5 +57,16 @@ describe('captureMfFromUrl / getMirafloresReferral', () => {
       }),
     );
     expect(getMirafloresReferral()).toEqual({ code: 'LIVECODE' });
+  });
+
+  it('setMfRefTtlDays влияет на exp нового capture', () => {
+    setMfRefTtlDays(7);
+    expect(getMfRefTtlMs()).toBe(7 * 24 * 60 * 60 * 1000);
+    const before = Date.now();
+    window.history.replaceState({}, '', '/?mf=ttlcode1');
+    captureMfFromUrl();
+    const raw = JSON.parse(localStorage.getItem('miraflores.mf.ref.v1')!);
+    expect(raw.exp).toBeGreaterThanOrEqual(before + 7 * 24 * 60 * 60 * 1000 - 50);
+    expect(raw.exp).toBeLessThanOrEqual(Date.now() + 7 * 24 * 60 * 60 * 1000 + 50);
   });
 });

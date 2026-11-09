@@ -16,6 +16,7 @@ import {
   clearRegisterPassword,
 } from '@/api/registerSession';
 import type { MeInfo, AddressInfo, AuthTokenResult } from '@/types/auth';
+import { setMfRefTtlDays } from '@/lib/mirafloresReferral';
 
 export {
   stashRegisterPassword,
@@ -182,6 +183,7 @@ function buildMeFromAuth(
     referralWalletPending?: number;
     referralEnabled?: boolean;
     referralSpendCapPercent?: number;
+    referralLinkTtlDays?: number;
   } | null,
   extras?: { addresses?: AddressInfo[]; ordersTotal?: number },
 ): MeInfo {
@@ -203,6 +205,13 @@ function buildMeFromAuth(
     100,
     Math.max(0, Math.floor(Number(account?.referralSpendCapPercent) || 0)),
   );
+  const referralLinkTtlDays = Math.min(
+    3650,
+    Math.max(1, Math.floor(Number(account?.referralLinkTtlDays) || 60)),
+  );
+  if (account?.referralLinkTtlDays != null) {
+    setMfRefTtlDays(referralLinkTtlDays);
+  }
 
   return {
     id: authMe.id,
@@ -223,6 +232,7 @@ function buildMeFromAuth(
     referralWalletPending,
     referralEnabled,
     referralSpendCapPercent,
+    referralLinkTtlDays,
     metadata: [
       ...(phone ? [{ key: 'phone', value: phone }] : []),
       ...(birthday ? [{ key: 'birthday', value: birthday }] : []),
@@ -253,6 +263,7 @@ export async function getMeInfo(): Promise<MeInfo> {
       referralWalletPending?: number;
       referralEnabled?: boolean;
       referralSpendCapPercent?: number;
+      referralLinkTtlDays?: number;
     }>('/account/me').catch(() => null),
   ]);
 

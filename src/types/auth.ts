@@ -39,6 +39,8 @@ export interface MeInfo {
   referralEnabled?: boolean;
   /** Cap % от payable до wallet — checkout preview. */
   referralSpendCapPercent?: number;
+  /** TTL attribution ?mf= (дни) — Front localStorage. */
+  referralLinkTtlDays?: number;
 }
 
 export interface ProfileAvatar {

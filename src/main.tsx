@@ -6,11 +6,19 @@ import { Provider } from 'react-redux';
 import { store } from './store/store';
 import App from './App';
 import { ToastProvider } from './components/toast/toast';
-import { captureMfFromUrl } from './lib/mirafloresReferral';
+import { fetchReferralPublicSettings } from './api/referralApi';
+import { captureMfFromUrl, setMfRefTtlDays } from './lib/mirafloresReferral';
 import { captureYrFromUrl } from './lib/yourichAffiliate';
 
 captureYrFromUrl();
 captureMfFromUrl();
+
+/** Admin linkTtlDays → localStorage TTL для следующих ?mf= (и текущий cache). */
+void fetchReferralPublicSettings()
+  .then((s) => setMfRefTtlDays(s.linkTtlDays))
+  .catch(() => {
+    /* keep cached / default 60d */
+  });
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

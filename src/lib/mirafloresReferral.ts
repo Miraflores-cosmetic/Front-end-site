@@ -1,7 +1,7 @@
 /**
  * Внутренняя рефка Miraflores (?mf=CODE) — отдельно от YouRich (?yr=).
- * TTL по умолчанию 60д (совпадает с seed ReferralSettings.linkTtlDays);
- * фактический TTL для новых кликов можно сузить позже из config API.
+ * Attribution в localStorage (не cookie). TTL из admin `linkTtlDays`
+ * (`GET /settings/referral`, `/account/me` referralLinkTtlDays); fallback 60д.
  */
 
 export type MirafloresReferral = {
@@ -9,19 +9,65 @@ export type MirafloresReferral = {
 };
 
 const LS_KEY = 'miraflores.mf.ref.v1';
-/** Default TTL — как Yourich / admin seed. */
-export const MF_REF_TTL_MS = 60 * 24 * 60 * 60 * 1000;
+const TTL_DAYS_LS_KEY = 'miraflores.mf.ttlDays.v1';
+/** Default TTL — как admin seed ReferralSettings.linkTtlDays. */
+export const MF_REF_DEFAULT_TTL_DAYS = 60;
+export const MF_REF_TTL_MS = MF_REF_DEFAULT_TTL_DAYS * 24 * 60 * 60 * 1000;
 const MAX_LEN = 16;
 const CODE_RE = /^[A-Z0-9]{3,16}$/;
 
 type TimedValue = { value: string; exp: number };
+
+let cachedTtlMs = MF_REF_TTL_MS;
+
+function clampTtlDays(raw: unknown): number {
+  const n = Math.floor(Number(raw));
+  if (!Number.isFinite(n)) return MF_REF_DEFAULT_TTL_DAYS;
+  return Math.min(3650, Math.max(1, n));
+}
+
+function readCachedTtlDays(): number | null {
+  if (typeof localStorage === 'undefined') return null;
+  try {
+    const raw = localStorage.getItem(TTL_DAYS_LS_KEY);
+    if (!raw) return null;
+    return clampTtlDays(raw);
+  } catch {
+    return null;
+  }
+}
+
+/** Hydrate TTL from last known admin value (before network). */
+function bootTtlFromCache(): void {
+  const days = readCachedTtlDays();
+  if (days != null) cachedTtlMs = days * 24 * 60 * 60 * 1000;
+}
+bootTtlFromCache();
+
+/** Apply admin `linkTtlDays` for subsequent captureMfFromUrl writes. */
+export function setMfRefTtlDays(days: unknown): number {
+  const d = clampTtlDays(days);
+  cachedTtlMs = d * 24 * 60 * 60 * 1000;
+  if (typeof localStorage !== 'undefined') {
+    try {
+      localStorage.setItem(TTL_DAYS_LS_KEY, String(d));
+    } catch {
+      // ignore
+    }
+  }
+  return d;
+}
+
+export function getMfRefTtlMs(): number {
+  return cachedTtlMs;
+}
 
 function clipCode(raw: string): string | null {
   const c = raw.trim().toUpperCase().slice(0, MAX_LEN);
   return CODE_RE.test(c) ? c : null;
 }
 
-function writeCode(code: string, ttlMs = MF_REF_TTL_MS): void {
+function writeCode(code: string, ttlMs = cachedTtlMs): void {
   if (typeof localStorage === 'undefined') return;
   try {
     const payload: TimedValue = { value: code, exp: Date.now() + ttlMs };
@@ -63,7 +109,7 @@ export function parseMfParam(search: string, hash = ''): string | null {
   }
 }
 
-/** Persist ?mf= ASAP (before SPA navigation). */
+/** Persist ?mf= ASAP (before SPA navigation). Uses current admin TTL. */
 export function captureMfFromUrl(search?: string, hash?: string): string | null {
   if (typeof window === 'undefined') return null;
   const code = parseMfParam(

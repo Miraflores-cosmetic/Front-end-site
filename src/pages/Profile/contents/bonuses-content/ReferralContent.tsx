@@ -15,6 +15,7 @@ import {
   fetchReferralDashboard,
   fetchReferralLedger,
   type ReferralDashboard,
+  type ReferralLedgerFilter,
   type ReferralLedgerItem,
   type ReferralLedgerKind,
   type ReferralLedgerStatus,
@@ -23,6 +24,7 @@ import {
   buildReferralShareUrl,
   fillReferralShareText,
 } from '@/utils/referralShare';
+import { setMfRefTtlDays } from '@/lib/mirafloresReferral';
 import type { RootState } from '@/store/store';
 
 /** Cap % из ReferralSettings (админка) — dashboard, иначе /me. */
@@ -30,15 +32,8 @@ function clampSpendCapPercent(raw: unknown): number {
   return Math.min(100, Math.max(0, Math.floor(Number(raw) || 0)));
 }
 
-type HistoryFilter = 'all' | 'pending' | 'spend';
+type HistoryFilter = ReferralLedgerFilter;
 type CopyAction = 'short' | 'utm' | 'share';
-
-const SPEND_KINDS = new Set<ReferralLedgerKind>([
-  'SPEND_HOLD',
-  'SPEND_CAPTURE',
-  'SPEND_RELEASE',
-  'CLAWBACK',
-]);
 
 function formatRub(n: number): string {
   return `${Math.abs(n).toLocaleString('ru-RU')} ₽`;
@@ -79,12 +74,6 @@ function statusChip(status: ReferralLedgerStatus): { label: string; className: s
   if (status === 'PENDING') return { label: 'Ожидает', className: styles.chipPending };
   if (status === 'VOIDED') return { label: 'Отменено', className: styles.chipVoided };
   return null;
-}
-
-function matchesHistoryFilter(item: ReferralLedgerItem, filter: HistoryFilter): boolean {
-  if (filter === 'all') return true;
-  if (filter === 'pending') return item.status === 'PENDING';
-  return SPEND_KINDS.has(item.kind);
 }
 
 interface ReferralContentProps {
@@ -141,15 +130,18 @@ const ReferralContent: React.FC<ReferralContentProps> = ({ setOpenAccordion }) =
     });
   }, [dash, fullShareLink]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (filter: HistoryFilter = 'all') => {
     setLoading(true);
     setError(null);
+    setItems([]);
+    setNextCursor(null);
     try {
       const [d, ledger] = await Promise.all([
         fetchReferralDashboard(),
-        fetchReferralLedger({ limit: 20 }),
+        fetchReferralLedger({ limit: 20, filter }),
       ]);
       setDash(d);
+      if (d.linkTtlDays != null) setMfRefTtlDays(d.linkTtlDays);
       setItems(ledger.items);
       setNextCursor(ledger.nextCursor);
     } catch (e) {
@@ -160,8 +152,8 @@ const ReferralContent: React.FC<ReferralContentProps> = ({ setOpenAccordion }) =
   }, []);
 
   useEffect(() => {
-    void load();
-  }, [load]);
+    void load(historyFilter);
+  }, [load, historyFilter]);
 
   useEffect(() => {
     setCanNativeShare(
@@ -203,7 +195,7 @@ const ReferralContent: React.FC<ReferralContentProps> = ({ setOpenAccordion }) =
     setEnsuring(true);
     try {
       await ensureReferralCode();
-      await load();
+      await load(historyFilter);
       toast.success('Ссылка готова');
       announce('Ссылка готова');
     } catch (e) {
@@ -217,7 +209,11 @@ const ReferralContent: React.FC<ReferralContentProps> = ({ setOpenAccordion }) =
     if (!nextCursor || loadingMore) return;
     setLoadingMore(true);
     try {
-      const ledger = await fetchReferralLedger({ limit: 20, cursor: nextCursor });
+      const ledger = await fetchReferralLedger({
+        limit: 20,
+        cursor: nextCursor,
+        filter: historyFilter,
+      });
       setItems((prev) => [...prev, ...ledger.items]);
       setNextCursor(ledger.nextCursor);
     } catch (e) {
@@ -284,7 +280,7 @@ const ReferralContent: React.FC<ReferralContentProps> = ({ setOpenAccordion }) =
         <p className={styles.error}>{error}</p>
         <div className={styles.retryRow}>
           <div className={styles.primaryAction}>
-            <Button text="Повторить" onClick={() => void load()} />
+            <Button text="Повторить" onClick={() => void load(historyFilter)} />
           </div>
         </div>
       </ProfileSection>
@@ -296,10 +292,12 @@ const ReferralContent: React.FC<ReferralContentProps> = ({ setOpenAccordion }) =
   const enabled = dash?.enabled === true;
   const spendCapPercent =
     clampSpendCapPercent(dash?.spendCapPercent) || meSpendCapPercent;
-  const historyEmpty = items.length === 0;
+  const historyEmpty = !loading && items.length === 0 && historyFilter === 'all';
+  const filterEmpty = !loading && items.length === 0 && historyFilter !== 'all';
   const linkReady = Boolean(dash?.linkPath && dash.codeActive);
-  const filteredItems = items.filter((item) => matchesHistoryFilter(item, historyFilter));
-  const showFilters = !historyEmpty;
+  /** Chips после первой загрузки с историей или при активном фильтре. */
+  const showFilters =
+    Boolean(dash) && (historyFilter !== 'all' || items.length > 0 || Boolean(nextCursor));
 
   return (
     <ProfileSection {...sectionProps}>
@@ -498,15 +496,11 @@ const ReferralContent: React.FC<ReferralContentProps> = ({ setOpenAccordion }) =
 
         {historyEmpty ? (
           <p className={styles.empty}>Поделитесь ссылкой — здесь появятся начисления</p>
-        ) : filteredItems.length === 0 ? (
-          <p className={styles.empty}>
-            {nextCursor
-              ? 'В загруженных операциях нет совпадений — нажмите «Показать ещё»'
-              : 'Нет операций в этом фильтре'}
-          </p>
-        ) : (
+        ) : filterEmpty ? (
+          <p className={styles.empty}>Нет операций в этом фильтре</p>
+        ) : items.length === 0 && loading ? null : (
           <ul className={styles.historyList}>
-            {filteredItems.map((item) => {
+            {items.map((item) => {
               const positive = item.amount > 0;
               const chip = statusChip(item.status);
               return (

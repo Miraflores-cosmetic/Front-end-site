@@ -10,6 +10,7 @@ import CustomButton from '@/components/custom-button/CustomButton';
 import DeliveryProfile from '@/components/delivery-profile/DeliveryProfile';
 import TotalAccordion from '../total-accordion/TotalAccordion';
 import Certificate from '../order-components/Certificate';
+import { MfInviteeCheckoutHint } from '@/components/MfInviteeBanner/MfInviteeBanner';
 import YooKassaWidget from '@/components/yookassa/YooKassaWidget';
 import YandexPayButton from '@/components/yandex-pay/YandexPayButton';
 
@@ -951,6 +952,7 @@ const OrderLeftPart: React.FC = () => {
             hasPayableLines={mobileAccordionData.hasPayableLines}
           />
           <Certificate />
+          <MfInviteeCheckoutHint />
         </section>
       )}
 

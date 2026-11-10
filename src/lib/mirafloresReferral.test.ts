@@ -5,6 +5,7 @@ import {
   getMfRefTtlMs,
   getMirafloresReferral,
   parseMfParam,
+  rewriteMfRefExpiry,
   setMfRefTtlDays,
 } from './mirafloresReferral';
 
@@ -68,5 +69,19 @@ describe('captureMfFromUrl / getMirafloresReferral', () => {
     const raw = JSON.parse(localStorage.getItem('miraflores.mf.ref.v1')!);
     expect(raw.exp).toBeGreaterThanOrEqual(before + 7 * 24 * 60 * 60 * 1000 - 50);
     expect(raw.exp).toBeLessThanOrEqual(Date.now() + 7 * 24 * 60 * 60 * 1000 + 50);
+  });
+
+  it('rewriteMfRefExpiry переписывает exp после смены TTL (boot race)', () => {
+    window.history.replaceState({}, '', '/?mf=bootcode');
+    captureMfFromUrl(); // default 60d
+    const before = JSON.parse(localStorage.getItem('miraflores.mf.ref.v1')!);
+    setMfRefTtlDays(14);
+    expect(rewriteMfRefExpiry()).toBe(true);
+    const after = JSON.parse(localStorage.getItem('miraflores.mf.ref.v1')!);
+    expect(after.value).toBe(before.value);
+    expect(after.exp).toBeLessThan(before.exp);
+    expect(after.exp).toBeGreaterThanOrEqual(
+      Date.now() + 14 * 24 * 60 * 60 * 1000 - 50,
+    );
   });
 });

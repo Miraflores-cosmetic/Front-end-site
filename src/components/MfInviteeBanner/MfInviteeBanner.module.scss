@@ -1,0 +1,93 @@
+@use '@/style/variables.scss' as *;
+
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 16px;
+  margin: 0;
+  padding: 12px 16px;
+  background: linear-gradient(
+    100deg,
+    rgba(41, 114, 48, 0.1) 0%,
+    rgba(250, 249, 245, 0.95) 55%
+  );
+  border-bottom: 1px solid rgba(41, 114, 48, 0.18);
+  color: $black;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.text {
+  margin: 0;
+  flex: 1 1 12rem;
+  max-width: 40rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: $black;
+  color: $white;
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+
+  &:hover {
+    opacity: 0.9;
+  }
+}
+
+.linkGhost {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 8px;
+  background: transparent;
+  color: $black;
+  border: 1px solid rgba(110, 109, 103, 0.35);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.dismiss {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: $gray-6e;
+  font-size: 13px;
+  min-height: 44px;
+  padding: 0 8px;
+  cursor: pointer;
+}
+
+.checkoutNote {
+  margin: 0 0 12px;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: rgba(41, 114, 48, 0.08);
+  border: 1px solid rgba(41, 114, 48, 0.16);
+  font-size: 14px;
+  line-height: 1.45;
+  color: $black;
+
+  a {
+    color: inherit;
+    font-weight: 600;
+  }
+}

@@ -6,16 +6,25 @@ import { Provider } from 'react-redux';
 import { store } from './store/store';
 import App from './App';
 import { ToastProvider } from './components/toast/toast';
-import { fetchReferralPublicSettings } from './api/referralApi';
-import { captureMfFromUrl, setMfRefTtlDays } from './lib/mirafloresReferral';
+import { fetchReferralPublicSettings, postMfVisit } from './api/referralApi';
+import {
+  captureMfFromUrl,
+  rewriteMfRefExpiry,
+  setMfRefTtlDays,
+} from './lib/mirafloresReferral';
 import { captureYrFromUrl } from './lib/yourichAffiliate';
 
 captureYrFromUrl();
-captureMfFromUrl();
+/** Capture ASAP (may use default/cached TTL); rewrite exp after settings fetch. */
+const mfBootCode = captureMfFromUrl();
+if (mfBootCode) postMfVisit(mfBootCode);
 
-/** Admin linkTtlDays → localStorage TTL для следующих ?mf= (и текущий cache). */
+/** Admin linkTtlDays → cache + переписать exp текущего ?mf= (иначе первый визит = 60д). */
 void fetchReferralPublicSettings()
-  .then((s) => setMfRefTtlDays(s.linkTtlDays))
+  .then((s) => {
+    setMfRefTtlDays(s.linkTtlDays);
+    rewriteMfRefExpiry();
+  })
   .catch(() => {
     /* keep cached / default 60d */
   });

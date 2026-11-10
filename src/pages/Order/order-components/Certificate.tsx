@@ -31,15 +31,13 @@ const Certificate = () => {
   const referralWalletAvailable = useSelector(
     (s: RootState) => s.authSlice.me?.referralWalletAvailable ?? 0,
   );
-  const referralEnabled = useSelector(
-    (s: RootState) => s.authSlice.me?.referralEnabled === true,
-  );
   const toast = useToast();
   const orderCheckout = useOrderCheckoutOptional();
   const checkoutEmail = orderCheckout?.checkoutEmail?.trim() || '';
   const expanded = Boolean(voucherCode) || isInputOpen;
   const walletAvailable = Math.max(0, Math.floor(referralWalletAvailable || 0));
-  const showWallet = isAuth && referralEnabled && walletAvailable > 0;
+  // enabled гейтит earn; spend доступен при балансе > 0 и выключенной программе.
+  const showWallet = isAuth && walletAvailable > 0;
 
   const EMAIL_RE =
     /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;

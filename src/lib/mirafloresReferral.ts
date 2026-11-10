@@ -1,7 +1,8 @@
 /**
  * Внутренняя рефка Miraflores (?mf=CODE) — отдельно от YouRich (?yr=).
- * Attribution в localStorage (не cookie). TTL из admin `linkTtlDays`
- * (`GET /settings/referral`, `/account/me` referralLinkTtlDays); fallback 60д.
+ * Клиент: attribution в localStorage (не cookie). TTL из admin `linkTtlDays`.
+ * Сервер дополнительно держит sticky `User.referredByUserId` (регистрация /
+ * первый заказ / bind) и подставляет код в createOrder в пределах того же TTL.
  */
 
 export type MirafloresReferral = {
@@ -60,6 +61,29 @@ export function setMfRefTtlDays(days: unknown): number {
 
 export function getMfRefTtlMs(): number {
   return cachedTtlMs;
+}
+
+/**
+ * Переписать exp уже сохранённого ?mf= под текущий cachedTtlMs.
+ * Нужно после fetch linkTtlDays: captureMfFromUrl() на boot часто раньше настроек.
+ */
+export function rewriteMfRefExpiry(ttlMs = cachedTtlMs): boolean {
+  if (typeof localStorage === 'undefined') return false;
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw) as TimedValue;
+    const code = clipCode(String(parsed?.value ?? ''));
+    if (!code) return false;
+    if (parsed.exp && Date.now() > parsed.exp) {
+      localStorage.removeItem(LS_KEY);
+      return false;
+    }
+    writeCode(code, ttlMs);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function clipCode(raw: string): string | null {

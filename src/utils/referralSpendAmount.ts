@@ -1,14 +1,15 @@
 /**
  * Зеркало backend ReferralWalletService.computeSpendAmount:
  * min(available, floor(payable × cap%), payable).
+ * `enabled` игнорируется: программа off гейтит earn, не spend.
  */
 export function computeReferralSpendAmount(opts: {
   available: number;
   payableRub: number;
   spendCapPercent: number;
+  /** @deprecated не влияет на сумму (earn-gate, не spend). */
   enabled?: boolean;
 }): number {
-  if (opts.enabled === false) return 0;
   const payable = Math.max(0, Math.floor(opts.payableRub));
   const available = Math.max(0, Math.floor(opts.available));
   const capPct = Math.min(100, Math.max(0, Math.floor(opts.spendCapPercent)));

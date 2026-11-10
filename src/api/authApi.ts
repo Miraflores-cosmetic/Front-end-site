@@ -16,7 +16,18 @@ import {
   clearRegisterPassword,
 } from '@/api/registerSession';
 import type { MeInfo, AddressInfo, AuthTokenResult } from '@/types/auth';
-import { setMfRefTtlDays } from '@/lib/mirafloresReferral';
+import { bindReferralCode } from '@/api/referralApi';
+import { getMirafloresReferral, setMfRefTtlDays } from '@/lib/mirafloresReferral';
+
+async function bindStickyReferralFromLs(): Promise<void> {
+  const ref = getMirafloresReferral();
+  if (!ref?.code) return;
+  try {
+    await bindReferralCode(ref.code);
+  } catch {
+    /* non-blocking */
+  }
+}
 
 export {
   stashRegisterPassword,
@@ -105,6 +116,7 @@ export async function getToken(email: string, password: string): Promise<AuthTok
     { skipAuth: true },
   );
   setAccessToken(data.access_token);
+  void bindStickyReferralFromLs();
   return {
     token: data.access_token,
     errors: [],
@@ -358,12 +370,14 @@ export async function completeRegistrationWithPassword(
       completionToken,
       password,
       guestId: getOrCreateGuestId() || undefined,
+      referralCode: getMirafloresReferral()?.code || undefined,
     },
     { skipAuth: true },
   );
   clearCompletionToken();
   clearRegisterPassword();
   setAccessToken(data.access_token);
+  void bindStickyReferralFromLs();
   return {
     ok: true,
     token: data.access_token,
@@ -401,12 +415,14 @@ export async function verifyEmailCodeAndComplete(email: string, code: string) {
         completionToken: verify.completionToken,
         password,
         guestId: getOrCreateGuestId() || undefined,
+        referralCode: getMirafloresReferral()?.code || undefined,
       },
       { skipAuth: true },
     );
     clearRegisterPassword();
     clearCompletionToken();
     setAccessToken(data.access_token);
+    void bindStickyReferralFromLs();
     return {
       ok: true,
       token: data.access_token,

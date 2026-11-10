@@ -19,7 +19,7 @@ describe('computeReferralSpendAmount', () => {
     ).toBe(100);
   });
 
-  it('enabled=false → 0', () => {
+  it('enabled=false не блокирует spend', () => {
     expect(
       computeReferralSpendAmount({
         available: 5000,
@@ -27,6 +27,6 @@ describe('computeReferralSpendAmount', () => {
         spendCapPercent: 100,
         enabled: false,
       }),
-    ).toBe(0);
+    ).toBe(4000);
   });
 });

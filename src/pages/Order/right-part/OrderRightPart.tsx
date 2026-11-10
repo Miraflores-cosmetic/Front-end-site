@@ -3,6 +3,7 @@ import styles from './OrderRightPart.module.scss';
 import { useScreenMatch } from '@/hooks/useScreenMatch';
 import CardList, { OrderProduct } from '../order-components/CardList';
 import Certificate from '../order-components/Certificate';
+import { MfInviteeCheckoutHint } from '@/components/MfInviteeBanner/MfInviteeBanner';
 import SumDiscount from '../order-components/SumDiscount';
 import InfoContent from '../order-components/Info';
 import { useDispatch, useSelector } from 'react-redux';
@@ -90,6 +91,7 @@ const OrderRightPart: React.FC = () => {
             <CardList cartData={formattedCartData} />
           </article>
           <Certificate />
+          <MfInviteeCheckoutHint />
           <section className={styles.discountPromo}>
             <p>
               Скидка по промо-кодам НЕ РАСПРОСТРАНЯЕТСЯ на товары уже со скидками, наборы, товары не

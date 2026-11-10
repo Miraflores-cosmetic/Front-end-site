@@ -17,6 +17,7 @@ import { SpinnerLoader } from '@/components/spinner/SpinnerLoader';
 import { MetrikaRouteTracker } from '@/components/MetrikaRouteTracker';
 import Header from '@/components/Header/Header';
 import Footer from '@/components/Footer/Footer';
+import { MfInviteeBanner } from '@/components/MfInviteeBanner/MfInviteeBanner';
 import footerStyles from '@/components/Footer/Footer.module.scss';
 import { resolvePostAuthRedirect } from '@/utils/authRedirect';
 import { QuizContentProvider } from '@/contexts/QuizContentContext';
@@ -283,6 +284,7 @@ const App: React.FC = () => {
       <AppShellGate>
       <Spinner />
       <AppHeader />
+      <MfInviteeBanner />
       <Routes>
         <Route path='/' element={<LazyRoute><Home /></LazyRoute>} />
         <Route path='/sign-in' element={<LazyRoute><SignIn /></LazyRoute>} />

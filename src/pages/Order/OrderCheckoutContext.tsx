@@ -73,9 +73,6 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
     const referralWalletAvailable = useSelector(
         (s: RootState) => s.authSlice.me?.referralWalletAvailable ?? 0,
     );
-    const referralEnabled = useSelector(
-        (s: RootState) => s.authSlice.me?.referralEnabled === true,
-    );
     const referralSpendCapPercent = useSelector(
         (s: RootState) => s.authSlice.me?.referralSpendCapPercent ?? 0,
     );
@@ -223,7 +220,8 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
     ]);
 
     const referralWalletAmount = useMemo(() => {
-        if (!isAuth || !useReferralWallet || !referralEnabled) return 0;
+        // enabled гейтит earn, не spend — баланс списываем и при выключенной программе.
+        if (!isAuth || !useReferralWallet) return 0;
         const available = Math.max(0, Math.floor(referralWalletAvailable || 0));
         if (available < 1) return 0;
         // Payable до wallet (XOR → без voucher), затем min(available, floor(payable×cap%)).
@@ -246,7 +244,6 @@ export function OrderCheckoutProvider({ children }: { children: React.ReactNode 
     }, [
         isAuth,
         useReferralWallet,
-        referralEnabled,
         referralWalletAvailable,
         referralSpendCapPercent,
         lines,

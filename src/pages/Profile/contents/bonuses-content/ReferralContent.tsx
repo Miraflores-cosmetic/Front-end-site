@@ -14,6 +14,7 @@ import {
   ensureReferralCode,
   fetchReferralDashboard,
   fetchReferralLedger,
+  quarantineHint,
   type ReferralDashboard,
   type ReferralLedgerFilter,
   type ReferralLedgerItem,
@@ -68,6 +69,11 @@ function kindLabel(kind: ReferralLedgerKind): string {
     default:
       return kind;
   }
+}
+
+/** Ссылка в «Мои заказы» только на свой spend; EARN/INVITEE/CLAWBACK — заказ друга → 404. */
+function historyOrderLinkable(kind: ReferralLedgerKind): boolean {
+  return kind === 'SPEND_HOLD' || kind === 'SPEND_RELEASE' || kind === 'SPEND_CAPTURE';
 }
 
 function statusChip(status: ReferralLedgerStatus): { label: string; className: string } | null {
@@ -307,13 +313,15 @@ const ReferralContent: React.FC<ReferralContentProps> = ({ setOpenAccordion }) =
 
       {!enabled ? (
         <p className={styles.banner} role="status">
-          Программа временно недоступна. Баланс и история сохраняются.
+          Новые начисления временно не создаются. Уже накопленный баланс можно
+          списать при оформлении заказа; история сохраняется.
         </p>
       ) : null}
 
       <p className={styles.lead}>
-        Делитесь ссылкой — бонусы начисляются после оплаты заказа друга. Списать можно при
-        оформлении вместо промокода или сертификата.
+        Делитесь ссылкой — вам начисляется{' '}
+        <strong>{dash?.earnPercent ?? '—'}%</strong> от суммы товаров друга (после скидок).
+        Списать бонусы можно при оформлении вместо промокода или сертификата.
       </p>
 
       <section className={styles.heroBalance} aria-label="Баланс">
@@ -354,14 +362,27 @@ const ReferralContent: React.FC<ReferralContentProps> = ({ setOpenAccordion }) =
           </div>
         </dl>
 
+        <p className={styles.capHint}>
+          {quarantineHint(dash?.quarantineMode, dash?.quarantineDays)}
+        </p>
+
+        {(dash?.friendsInvited ?? 0) > 0 || (dash?.friendsWithEarn ?? 0) > 0 ? (
+          <p className={styles.capHint}>
+            Друзей по ссылке: {dash?.friendsInvited ?? 0}
+            {(dash?.friendsWithEarn ?? 0) > 0
+              ? ` · с начислением: ${dash?.friendsWithEarn}`
+              : ''}
+          </p>
+        ) : null}
+
         {dash?.inviteeBonusEnabled && (dash.inviteeBonusRub ?? 0) > 0 ? (
           <p className={styles.capHint}>
-            Друг по вашей ссылке получит бонус {formatRub(dash.inviteeBonusRub)} за первый
+            Друг по вашей ссылке получит бонус {formatRub(dash.inviteeBonusRub ?? 0)} за первый
             подходящий заказ — только если он авторизован.
           </p>
         ) : null}
 
-        {available > 0 && enabled ? (
+        {available > 0 ? (
           <div className={styles.spendCta}>
             {cartCount > 0 ? (
               <Link to="/order" className={styles.secondaryBtn}>
@@ -508,7 +529,7 @@ const ReferralContent: React.FC<ReferralContentProps> = ({ setOpenAccordion }) =
                   <div className={styles.historyMeta}>
                     <p className={styles.historyKind}>
                       {kindLabel(item.kind)}
-                      {item.orderNumber ? (
+                      {item.orderNumber && historyOrderLinkable(item.kind) ? (
                         <>
                           {' · '}
                           <Link

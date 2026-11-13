@@ -260,6 +260,28 @@ $order-chat-col: 88px;
   }
 }
 
+.orderBalanceDue {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 4px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  color: #9a3412;
+
+  span:last-child {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.balancePayHint {
+  margin: 0 0 10px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: $gray-6e;
+}
+
 .orderBreakdown {
   display: flex;
   flex-direction: column;
@@ -289,6 +311,13 @@ $order-chat-col: 88px;
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 16px;
+
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+  }
 }
 
 /* Кнопка чата: колонка на всю высоту карточки */
@@ -428,6 +457,13 @@ $order-chat-col: 88px;
 
   &:hover:not(:disabled) {
     background: #1f1f1f;
+  }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    text-align: center;
+    padding: 14px 20px;
+    font-size: 15px;
   }
 }
 

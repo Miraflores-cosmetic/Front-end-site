@@ -49,11 +49,32 @@ type JcosOrderSummary = {
   tracking: string | null;
   trackingProvider: string | null;
   canPay?: boolean;
+  /** К доплате по заказу (₽), если сумма заказа > учтённых платежей. */
+  balanceDue?: number;
+  /** Доплата доступна (PAID/PACKING до отправки). */
+  canPayBalance?: boolean;
+  refundedAmount?: number;
   /** Клиент не нашёл адрес — оплата заблокирована, пока оператор не уточнит. */
   needsAddressClarification?: boolean;
   payToken?: string | null;
   payExpiresAt?: string | null;
 };
+
+export type OrderBalancePaymentResponse = {
+  amount: number;
+  confirmationUrl: string;
+  paymentId: string;
+  reused: boolean;
+};
+
+export async function createOrderBalancePayment(
+  orderId: string,
+): Promise<OrderBalancePaymentResponse> {
+  return apiJson(
+    `/account/orders/${encodeURIComponent(orderId)}/balance-payment`,
+    'POST',
+  );
+}
 
 export function mapJcosAddressToInfo(a: JcosAddress): AddressInfo {
   const parts = (a.recipientName || '').trim().split(/\s+/);
@@ -185,6 +206,8 @@ function mapOrderToNode(o: JcosOrderSummary): OrderNode {
     trackingProvider: o.trackingProvider,
     needsAddressClarification,
     canPay,
+    balanceDue: o.balanceDue ?? 0,
+    canPayBalance: Boolean(o.canPayBalance),
     payToken: canPay ? (o.payToken ?? null) : null,
     payExpiresAt: o.payExpiresAt ?? null,
     lines: o.items.map((item) => ({

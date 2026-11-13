@@ -4,7 +4,7 @@ import {
   orderTrackingProviderLabel,
   orderTrackingUrl,
 } from '@/lib/orderTracking';
-import { getOrder } from '@/api/accountApi';
+import { createOrderBalancePayment, getOrder } from '@/api/accountApi';
 import { payOrder } from '@/api/ordersApi';
 import {
   buildOrderSuccessReturnUrl,
@@ -39,6 +39,8 @@ export type OrderGroupProps = {
     status?: string;
     statusDisplay?: string;
     canPay?: boolean;
+    balanceDue?: number;
+    canPayBalance?: boolean;
     needsAddressClarification?: boolean;
     payToken?: string | null;
     payExpiresAt?: string | null;
@@ -130,8 +132,30 @@ export function OrderGroup({
     }) ?? [];
 
   const [paying, setPaying] = useState(false);
+  const [balancePaying, setBalancePaying] = useState(false);
   const [confirmationToken, setConfirmationToken] = useState<string | null>(null);
   const [returnUrl, setReturnUrl] = useState('');
+
+  const balanceDue = Math.max(0, Math.round(Number(order.balanceDue) || 0));
+  const canPayBalance =
+    Boolean(order.canPayBalance) && balanceDue > 0 && !needsAddressClarification;
+
+  const handleBalancePay = async () => {
+    if (!canPayBalance || balancePaying) return;
+    setBalancePaying(true);
+    try {
+      const res = await createOrderBalancePayment(order.id);
+      const url = res.confirmationUrl?.trim();
+      if (!url) {
+        throw new Error('Не получена ссылка на оплату');
+      }
+      window.location.href = url;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Не удалось открыть оплату';
+      toast.error(msg);
+      setBalancePaying(false);
+    }
+  };
 
   const handlePay = async () => {
     if (paying) return;
@@ -286,12 +310,32 @@ export function OrderGroup({
             <span>Итого</span>
             <span>{formatRub(Number(order.total?.gross?.amount ?? 0))}</span>
           </p>
+          {balanceDue > 0 ? (
+            <p className={styles.orderBalanceDue} role="status">
+              <span>К доплате</span>
+              <span>{formatRub(balanceDue)}</span>
+            </p>
+          ) : null}
         </div>
 
         {needsAddressClarification ? (
           <p className={styles.clarificationNote} role="status">
             Оператор уточняет адрес
           </p>
+        ) : canPayBalance ? (
+          <div className={styles.orderActions}>
+            <p className={styles.balancePayHint}>
+              По заказу требуется доплата. После нажатия откроется защищённая страница ЮKassa.
+            </p>
+            <button
+              type="button"
+              className={styles.payBtn}
+              disabled={balancePaying}
+              onClick={() => void handleBalancePay()}
+            >
+              {balancePaying ? 'Переходим к оплате…' : `Оплатить ${formatRub(balanceDue)}`}
+            </button>
+          </div>
         ) : canPay && !confirmationToken ? (
           <div className={styles.orderActions}>
             <button

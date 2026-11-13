@@ -128,6 +128,8 @@ export interface OrderNode extends Node {
   needsAddressClarification?: boolean;
   payToken?: string | null;
   payExpiresAt?: string | null;
+  balanceDue?: number;
+  canPayBalance?: boolean;
   total: {
     gross: { amount: number; currency: string };
   };

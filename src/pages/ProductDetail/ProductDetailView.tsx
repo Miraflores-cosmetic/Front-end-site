@@ -160,6 +160,11 @@ export default function ProductDetailView() {
       <ProductJsonLd item={item} variants={item.variants ?? []} />
       <ProductBreadcrumbs productName={item.name} category={item.category} />
       <section className={styles.bestSellerInfo}>
+        {productTypeValue ? (
+          <p className={styles.productTypeLabelMobile} aria-hidden={!isMobile}>
+            {productTypeValue}
+          </p>
+        ) : null}
         <h1 className={styles.titleMobile} aria-hidden={!isMobile}>
           {item.name}
         </h1>

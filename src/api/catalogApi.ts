@@ -55,6 +55,8 @@ type JcosVariant = {
   slug: string;
   volumeMl: number | null;
   sku: string | null;
+  /** Название из нац. каталога (вариант). */
+  nationalCatalogName?: string | null;
   price: number;
   compareAt: number | null;
   orderMinQty: number;
@@ -210,24 +212,53 @@ function pricingBlock(price: number, compareAt: number | null) {
 
 function mapVariantNode(v: JcosVariant, productImages: JcosVariantImage[]) {
   const imageSource = v.images?.length ? v.images : productImages;
+  const nationalCatalogName = v.nationalCatalogName?.trim() || '';
+  const attributes = [
+    ...(v.volumeMl
+      ? [
+          {
+            attribute: { id: 'volume', name: 'Объём', slug: 'obem' },
+            values: [
+              {
+                name: `${v.volumeMl} мл`,
+                slug: String(v.volumeMl),
+                plainText: `${v.volumeMl} мл`,
+              },
+            ],
+          },
+        ]
+      : []),
+    ...(nationalCatalogName
+      ? [
+          {
+            attribute: {
+              id: 'national-catalog-name',
+              name: 'Название из нац. каталога',
+              slug: 'nazvanie-iz-nacionalnogo-kataloga',
+            },
+            values: [
+              {
+                name: nationalCatalogName,
+                slug: 'national-catalog-name',
+                plainText: nationalCatalogName,
+              },
+            ],
+          },
+        ]
+      : []),
+  ];
   return {
     node: {
       id: v.id,
       sku: v.sku || '',
       name: v.name,
+      nationalCatalogName: nationalCatalogName || null,
       isSample: v.isSample === true,
       orderMinQty: Math.max(1, v.orderMinQty ?? 1),
       quantityLimitPerCustomer: v.orderMaxQty,
       trackInventory: true,
       quantityAvailable: v.available,
-      attributes: v.volumeMl
-        ? [
-            {
-              attribute: { id: 'volume', name: 'Объём', slug: 'obem' },
-              values: [{ name: `${v.volumeMl} мл`, slug: String(v.volumeMl), plainText: `${v.volumeMl} мл` }],
-            },
-          ]
-        : [],
+      attributes,
       media: imageSource.map((img) => ({
         id: img.id,
         url: uploadsUrl(img.url) || img.url,

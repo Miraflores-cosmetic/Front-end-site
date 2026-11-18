@@ -71,6 +71,8 @@ export interface ProductVariant {
     id: string;
     sku: string;
     name: string;
+    /** Название из нац. каталога */
+    nationalCatalogName?: string | null;
     isSample?: boolean;
     orderMinQty?: number | null;
     quantityAvailable?: number | null;

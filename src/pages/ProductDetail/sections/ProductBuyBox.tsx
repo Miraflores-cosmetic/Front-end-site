@@ -48,10 +48,12 @@ export function ProductBuyBox({
     (attr) => attr.attribute?.slug === 'nazvanie-iz-nacionalnogo-kataloga',
   );
   const nazvanieValue =
-    nazvanieAttr?.values?.[0]?.name ??
-    nazvanieAttr?.values?.[0]?.plainText ??
-    nazvanieAttr?.values?.[0]?.slug ??
+    activeVariant?.node?.nationalCatalogName?.trim() ||
+    nazvanieAttr?.values?.[0]?.name ||
+    nazvanieAttr?.values?.[0]?.plainText ||
+    nazvanieAttr?.values?.[0]?.slug ||
     '';
+  const productTypeValue = item.productTypeName?.trim() || '';
 
   const volume = getVolumeFromVariant(activeVariant);
   const sampleRulesHook = useSamplePurchaseRules();
@@ -78,9 +80,14 @@ export function ProductBuyBox({
   return (
     <article className={styles.infoPart}>
       <div className={styles.infoTop}>
-        <h1 className={styles.title} aria-hidden={titleAriaHidden || undefined}>
-          {item.name}
-        </h1>
+        <div className={styles.titleBlock}>
+          {productTypeValue ? (
+            <p className={styles.productTypeLabel}>{productTypeValue}</p>
+          ) : null}
+          <h1 className={styles.title} aria-hidden={titleAriaHidden || undefined}>
+            {item.name}
+          </h1>
+        </div>
         {skuValue || nazvanieValue ? (
           <div className={styles.productMetaBlock}>
             {nazvanieValue ? (

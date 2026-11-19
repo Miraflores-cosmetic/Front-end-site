@@ -405,11 +405,15 @@
       @media (max-width: 768px) {
         display: block;
         margin: 0 0 8px;
-        color: #6e6d67;
-        font-family: 'Commissioner', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-        font-size: 14px;
-        font-weight: 300;
-        line-height: 1.4;
+        padding: 0;
+        color: #000;
+        font-family: 'Avenir Next', sans-serif;
+        font-style: normal;
+        font-weight: 600;
+        font-size: 12px;
+        line-height: 16px;
+        letter-spacing: 1.4px;
+        text-transform: uppercase;
         text-align: start;
         order: -2;
       }
@@ -607,11 +611,15 @@
 
         .productTypeLabel {
           margin: 0;
-          color: #6e6d67;
-          font-family: 'Commissioner', 'Avenir Next', 'Helvetica Neue', Arial, sans-serif;
-          font-size: 16px;
-          font-weight: 300;
-          line-height: 1.4;
+          padding: 0;
+          color: #000;
+          font-family: 'Avenir Next', sans-serif;
+          font-style: normal;
+          font-weight: 600;
+          font-size: 13px;
+          line-height: 17px;
+          letter-spacing: 1.4px;
+          text-transform: uppercase;
           text-align: start;
 
           @media (max-width: 768px) {

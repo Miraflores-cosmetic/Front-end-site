@@ -124,7 +124,12 @@ const OzonPvzList: React.FC<OzonPvzListProps> = ({
         apiJson<OzonPickupPointsResponse>(
             '/delivery/ozon/pickup-points',
             'POST',
-            { lat: center.lat, lon: center.lon },
+            {
+                lat: center.lat,
+                lon: center.lon,
+                radiusKm: 45,
+                limit: 450,
+            },
             { skipUnauthorizedNotify: true },
         )
             .then((res) => {

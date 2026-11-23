@@ -128,7 +128,8 @@ const OzonPvzList: React.FC<OzonPvzListProps> = ({
                 lat: center.lat,
                 lon: center.lon,
                 radiusKm: 45,
-                limit: 450,
+                limit: 700,
+                detailLimit: 200,
             },
             { skipUnauthorizedNotify: true },
         )
@@ -363,7 +364,7 @@ const OzonPvzList: React.FC<OzonPvzListProps> = ({
                                         </span>
                                         <span className={styles.pointBody}>
                                             <span className={styles.pointTitle}>
-                                                {p.address || p.name}
+                                                {p.address || p.name || `ПВЗ #${p.id}`}
                                                 {badge && <span className={styles.badge}>{badge}</span>}
                                             </span>
                                             {p.address && p.name !== p.address && (

@@ -1,7 +1,11 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ChevronDown, Clock, Loader2, Map as MapIcon, MapPin, Search } from 'lucide-react';
 import { apiJson, ApiError } from '@/api/apiClient';
-import YandexPvzMap, { OZON_PVZ_PALETTE, type YandexPvzBrief } from '@/components/yandex/YandexPvzMap';
+import YandexPvzMap, {
+    OZON_PVZ_PALETTE,
+    type PvzMapViewport,
+    type YandexPvzBrief,
+} from '@/components/yandex/YandexPvzMap';
 import { orderedOzonCityNames, resolveOzonCityCenter, type OzonCityCenter } from '@/lib/ozonCityCenters';
 import { geocodeCityCenter } from '@/lib/yandexMapsLoader';
 import { setOzonAvailability } from '@/lib/carrierAvailability';
@@ -35,10 +39,11 @@ function typeLabel(type: string): string | null {
 }
 
 function toBrief(p: OzonPickupPoint): YandexPvzBrief {
+    const addressLine = p.address.trim() || 'Адрес появится после выбора пункта';
     return {
         id: p.id,
         name: p.name,
-        addressLine: p.address,
+        addressLine,
         city: p.city,
         postalCode: p.postalCode,
         region: p.region,
@@ -57,6 +62,19 @@ type OzonPickupPointsResponse = {
 
 const UNAVAILABLE_TEXT =
     'Ozon Доставка временно недоступна. Попробуйте позже или выберите другую службу.';
+
+/** Прямоугольник вокруг города для режима «Список». */
+function cityViewport(center: OzonCityCenter): PvzMapViewport {
+    const pad = 0.35;
+    return {
+        lat: center.lat,
+        lon: center.lon,
+        south: center.lat - pad,
+        west: center.lon - pad,
+        north: center.lat + pad,
+        east: center.lon + pad,
+    };
+}
 
 function errorText(e: unknown): string {
     if (e instanceof ApiError && e.status >= 500) return UNAVAILABLE_TEXT;
@@ -86,6 +104,8 @@ const OzonPvzList: React.FC<OzonPvzListProps> = ({
     const [search, setSearch] = useState('');
     const [mode, setMode] = useState<'list' | 'map'>(initialMode);
     const cityBoxRef = useRef<HTMLDivElement>(null);
+    const fetchGenRef = useRef(0);
+    const lastViewportRef = useRef<string>('');
 
     useEffect(() => {
         let cancelled = false;
@@ -115,47 +135,73 @@ const OzonPvzList: React.FC<OzonPvzListProps> = ({
         return () => document.removeEventListener('mousedown', onDown);
     }, [cityOpen]);
 
-    useEffect(() => {
-        if (!center) return;
-        let cancelled = false;
-        setLoading(true);
-        setError(null);
-        setPoints([]);
-        apiJson<OzonPickupPointsResponse>(
-            '/delivery/ozon/pickup-points',
-            'POST',
-            {
-                lat: center.lat,
-                lon: center.lon,
-                radiusKm: 45,
-                limit: 700,
-                detailLimit: 200,
-            },
-            { skipUnauthorizedNotify: true },
-        )
-            .then((res) => {
-                if (cancelled) return;
+    const loadViewport = useCallback(
+        async (vp: PvzMapViewport, detailLimit: number) => {
+            const vpKey = [vp.south, vp.west, vp.north, vp.east]
+                .map((n) => n.toFixed(4))
+                .join(',');
+            if (vpKey === lastViewportRef.current) return;
+            lastViewportRef.current = vpKey;
+
+            const gen = ++fetchGenRef.current;
+            setLoading(true);
+            setError(null);
+            try {
+                const res = await apiJson<OzonPickupPointsResponse>(
+                    '/delivery/ozon/pickup-points',
+                    'POST',
+                    {
+                        lat: vp.lat,
+                        lon: vp.lon,
+                        south: vp.south,
+                        west: vp.west,
+                        north: vp.north,
+                        east: vp.east,
+                        limit: 600,
+                        detailLimit,
+                    },
+                    { skipUnauthorizedNotify: true },
+                );
+                if (gen !== fetchGenRef.current) return;
                 if (res.available === false) {
                     setOzonAvailability({ available: false, message: res.message ?? null });
                     setError(res.message || UNAVAILABLE_TEXT);
+                    setPoints([]);
                     return;
                 }
                 if (res.degraded) {
                     setError(res.message || UNAVAILABLE_TEXT);
+                    setPoints([]);
                     return;
                 }
                 setPoints(Array.isArray(res.points) ? res.points : []);
-            })
-            .catch((e: unknown) => {
-                if (!cancelled) setError(errorText(e));
-            })
-            .finally(() => {
-                if (!cancelled) setLoading(false);
-            });
-        return () => {
-            cancelled = true;
-        };
-    }, [center, reloadKey]);
+            } catch (e: unknown) {
+                if (gen === fetchGenRef.current) setError(errorText(e));
+            } finally {
+                if (gen === fetchGenRef.current) setLoading(false);
+            }
+        },
+        [],
+    );
+
+    useEffect(() => {
+        if (!center) return;
+        lastViewportRef.current = '';
+        setPoints([]);
+        if (mode === 'list') {
+            void loadViewport(cityViewport(center), 200);
+        } else {
+            setLoading(true);
+        }
+    }, [center, reloadKey, mode, loadViewport]);
+
+    const handleMapViewport = useCallback(
+        (vp: PvzMapViewport) => {
+            if (mode !== 'map') return;
+            void loadViewport(vp, 100);
+        },
+        [mode, loadViewport],
+    );
 
     const filteredCities = useMemo(() => {
         const q = cityQuery.trim().toLowerCase();
@@ -202,9 +248,34 @@ const OzonPvzList: React.FC<OzonPvzListProps> = ({
         [center],
     );
     const handleMapSelect = useCallback(
-        (b: YandexPvzBrief) => {
-            const p = byId.get(b.id);
-            if (p) onChoose(p);
+        async (b: YandexPvzBrief) => {
+            let p = byId.get(b.id);
+            if (!p) return;
+            if (!p.address.trim()) {
+                const pad = 0.015;
+                try {
+                    const res = await apiJson<OzonPickupPointsResponse>(
+                        '/delivery/ozon/pickup-points',
+                        'POST',
+                        {
+                            lat: p.lat,
+                            lon: p.lon,
+                            south: p.lat - pad,
+                            west: p.lon - pad,
+                            north: p.lat + pad,
+                            east: p.lon + pad,
+                            limit: 30,
+                            detailLimit: 30,
+                        },
+                        { skipUnauthorizedNotify: true },
+                    );
+                    const detailed = res.points?.find((x) => x.id === p.id);
+                    if (detailed?.address?.trim()) p = detailed;
+                } catch {
+                    /* оформим заказ с координатами и id */
+                }
+            }
+            onChoose(p);
         },
         [byId, onChoose],
     );
@@ -309,7 +380,10 @@ const OzonPvzList: React.FC<OzonPvzListProps> = ({
                     <button
                         type="button"
                         className={styles.retryBtn}
-                        onClick={() => setReloadKey((k) => k + 1)}
+                        onClick={() => {
+                            lastViewportRef.current = '';
+                            setReloadKey((k) => k + 1);
+                        }}
                         disabled={loading}
                     >
                         Повторить
@@ -317,11 +391,20 @@ const OzonPvzList: React.FC<OzonPvzListProps> = ({
                 </div>
             )}
 
+            {mode === 'map' && (
+                <p className={styles.mapHint}>
+                    Подвиньте или увеличьте карту — покажем пункты Ozon в видимой области. Нажмите
+                    маркер или кластер и «Выбрать этот пункт».
+                </p>
+            )}
+
             {mode === 'map' ? (
                 <YandexPvzMap
                     pvzList={briefs}
                     selectedCity={mapCity}
-                    onSelect={handleMapSelect}
+                    onSelect={(b) => void handleMapSelect(b)}
+                    onViewportChange={handleMapViewport}
+                    autoFitMarkers={false}
                     loading={loading || !center}
                     palette={OZON_PVZ_PALETTE}
                 />

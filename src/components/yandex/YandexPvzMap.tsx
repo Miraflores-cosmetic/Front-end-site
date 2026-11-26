@@ -48,12 +48,25 @@ export const OZON_PVZ_PALETTE: PvzMapPalette = {
     clusterPreset: 'islands#blueClusterIcons',
 };
 
+export type PvzMapViewport = {
+    lat: number;
+    lon: number;
+    south: number;
+    west: number;
+    north: number;
+    east: number;
+};
+
 interface YandexPvzMapProps {
     pvzList: YandexPvzBrief[];
     selectedCity: { city: string; latitude?: number; longitude?: number } | null;
     onSelect: (pvz: YandexPvzBrief) => void;
     loading?: boolean;
     palette?: PvzMapPalette;
+    /** Подгрузка ПВЗ при переносе/зуме карты (Ozon). */
+    onViewportChange?: (viewport: PvzMapViewport) => void;
+    /** Не сбрасывать зум при каждом обновлении маркеров. */
+    autoFitMarkers?: boolean;
 }
 
 function escapeHtml(s: string): string {
@@ -71,10 +84,16 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
     onSelect,
     loading = false,
     palette = YANDEX_PALETTE,
+    onViewportChange,
+    autoFitMarkers = true,
 }) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<any>(null);
     const clustererRef = useRef<any>(null);
+    const viewportTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const didFitRef = useRef(false);
+    const onViewportChangeRef = useRef(onViewportChange);
+    onViewportChangeRef.current = onViewportChange;
     const [mapLoading, setMapLoading] = useState(true);
     const [mapReady, setMapReady] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -172,16 +191,46 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
 
             mapRef.current.geoObjects.add(clustererRef.current);
 
+            const publishViewport = () => {
+                const map = mapRef.current;
+                const cb = onViewportChangeRef.current;
+                if (!map || !cb) return;
+                const b = map.getBounds();
+                const c = map.getCenter();
+                if (!b || !c) return;
+                cb({
+                    lat: c[0],
+                    lon: c[1],
+                    south: b[0][0],
+                    west: b[0][1],
+                    north: b[1][0],
+                    east: b[1][1],
+                });
+            };
+
+            const scheduleViewport = () => {
+                if (!onViewportChangeRef.current) return;
+                if (viewportTimerRef.current) clearTimeout(viewportTimerRef.current);
+                viewportTimerRef.current = setTimeout(publishViewport, 400);
+            };
+
+            if (onViewportChangeRef.current) {
+                mapRef.current.events.add('actionend', scheduleViewport);
+                setTimeout(scheduleViewport, 0);
+            }
+
             setMapReady(true);
         };
 
         window.ymaps.ready(initMap);
 
         return () => {
+            if (viewportTimerRef.current) clearTimeout(viewportTimerRef.current);
             if (mapRef.current) {
                 mapRef.current.destroy();
                 mapRef.current = null;
             }
+            didFitRef.current = false;
         };
     }, [mapLoading, selectedCity, palette.clusterPreset]);
 
@@ -243,7 +292,8 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
 
         clustererRef.current.add(placemarks);
 
-        if (placemarks.length > 0) {
+        if (placemarks.length > 0 && autoFitMarkers && !didFitRef.current) {
+            didFitRef.current = true;
             mapRef.current
                 .setBounds(clustererRef.current.getBounds(), {
                     checkZoomRange: true,
@@ -251,7 +301,11 @@ const YandexPvzMap: React.FC<YandexPvzMapProps> = ({
                 })
                 .catch(() => {});
         }
-    }, [pvzList, mapReady, palette.accent]);
+    }, [pvzList, mapReady, palette.accent, autoFitMarkers]);
+
+    useEffect(() => {
+        didFitRef.current = false;
+    }, [selectedCity?.city, selectedCity?.latitude, selectedCity?.longitude]);
 
     useEffect(() => {
         window.selectYandexPvz = (id: string) => {

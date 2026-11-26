@@ -269,7 +269,7 @@ const OzonPvzList: React.FC<OzonPvzListProps> = ({
                         },
                         { skipUnauthorizedNotify: true },
                     );
-                    const detailed = res.points?.find((x) => x.id === p.id);
+                    const detailed = res.points?.find((x) => x.id === b.id);
                     if (detailed?.address?.trim()) p = detailed;
                 } catch {
                     /* оформим заказ с координатами и id */
